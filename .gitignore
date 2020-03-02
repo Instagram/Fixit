@@ -1,0 +1,13 @@
+*.swp
+*.swo
+*.pyc
+*.pyo
+*.egg-info/
+.pyre/
+__pycache__/
+.tox/
+docs/build/
+dist/
+docs/source/.ipynb_checkpoints/
+build/
+.coverage
