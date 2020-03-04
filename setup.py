@@ -49,6 +49,7 @@ setuptools.setup(
             "pyre-check",
             "Sphinx",
             "sphinx-rtd-theme",
+            "tox",
         ]
     },
     classifiers=[
