@@ -6,8 +6,7 @@
 import libcst as cst
 
 from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid
-from fixit.common.utils import ValidTestCase as Valid
+from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class GatherSequentialAwaitRule(CstLintRule):

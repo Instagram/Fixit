@@ -14,6 +14,7 @@ from fixit.common.base import CstLintRule
 from fixit.common.testing import LintRuleTest
 from fixit.rule_lint_engine import RULES
 
+
 if TYPE_CHECKING:
     from fixit.common.utils import ValidTestCase, InvalidTestCase
 

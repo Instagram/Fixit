@@ -3,9 +3,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from libcst.testing.utils import (
+from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
-)  # noqa IG69: this module is only used by tests
+)
 
 from fixit import rule_lint_engine
 

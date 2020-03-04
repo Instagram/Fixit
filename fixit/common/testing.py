@@ -5,7 +5,7 @@
 
 import re
 import textwrap
-from typing import Iterable, Optional, Tuple, Type, Union, Any
+from typing import Iterable, Optional, Tuple, Type, Union
 
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
@@ -22,13 +22,15 @@ def _dedent(src: str) -> str:
     src = re.sub(r"\A\n", "", src)
     return textwrap.dedent(src)
 
-def data_provider_DEPRECATED(fn_data_provider):
+
+def data_provider_DEPRECATED(fn_data_provider):  # noqa: C901
     """
     NOTE: This data provider method is deprecated in favor of a newer version.  Please
     use that one instead.
 
     Data provider decorator, allows another callable to provide the data for the testself.
     """
+    # TODO: data_provider_DEPRECATED should be replaced by data_provider
     def test_decorator(fn):
         def repl(self, *args) -> None:
             provided_data = fn_data_provider(self)
@@ -87,7 +89,6 @@ def data_provider_DEPRECATED(fn_data_provider):
         return repl
 
     return test_decorator
-
 
 
 # We can't use an ABCMeta here, because of metaclass conflicts

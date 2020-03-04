@@ -17,6 +17,7 @@ from typing import Callable, Collection, Iterable, Iterator, Tuple, TypeVar, Uni
 
 from fixit.common.config import REPO_ROOT
 
+
 _MapPathsOperationConfigT = TypeVar("_MapPathsOperationConfigT")
 _MapPathsOperationResultT = TypeVar("_MapPathsOperationResultT")
 _MapPathsOperationT = Callable[

@@ -7,8 +7,7 @@ import libcst as cst
 import libcst.matchers as m
 
 from fixit.common.base import CstContext, CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid
-from fixit.common.utils import ValidTestCase as Valid
+from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class ReplaceUnionWithOptionalRule(CstLintRule):

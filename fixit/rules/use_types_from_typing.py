@@ -9,8 +9,8 @@ import libcst
 from libcst.metadata import ScopeProvider
 
 from fixit.common.base import CstContext, CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid
-from fixit.common.utils import ValidTestCase as Valid
+from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+
 
 IG117_REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
     "IG117 You are using builtins.{builtin_type} as a type annotation "

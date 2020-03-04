@@ -7,8 +7,8 @@ import libcst as cst
 import libcst.matchers as m
 
 from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid
-from fixit.common.utils import ValidTestCase as Valid
+from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+
 
 IG66_UNNECESSARY_LIST_COMPREHENSION: str = (
     "IG66 Unnecessary list comprehension - {func} can take a generator, and is likely "
