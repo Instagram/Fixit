@@ -15,8 +15,8 @@ from libcst.metadata import (
 )
 
 from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid
-from fixit.common.utils import ValidTestCase as Valid
+from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+
 
 CLS = "cls"
 

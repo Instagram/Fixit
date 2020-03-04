@@ -12,8 +12,10 @@ import tokenize
 from functools import lru_cache
 from typing import Any, Iterable, List, Optional, Type
 
-from flake8.checker import FileChecker as Flake8FileChecker
-from flake8.checker import Manager as Flake8CheckerManager
+from flake8.checker import (
+    FileChecker as Flake8FileChecker,
+    Manager as Flake8CheckerManager,
+)
 from flake8.formatting.base import BaseFormatter as Flake8BaseFormatter
 from flake8.main.application import Application as Flake8BaseApplication
 from flake8.processor import FileProcessor as Flake8FileProcessor
@@ -22,6 +24,7 @@ from flake8.style_guide import Violation as Flake8Violation
 from fixit.common.config import REPO_ROOT
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
+
 
 __all__ = ["Flake8LintRuleReport", "Flake8PseudoLintRule"]
 

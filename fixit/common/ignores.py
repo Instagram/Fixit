@@ -25,6 +25,7 @@ from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
 
+
 _LintRuleT = Union[Type[CstLintRule], Type[PseudoLintRule]]
 
 

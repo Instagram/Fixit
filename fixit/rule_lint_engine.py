@@ -38,6 +38,7 @@ from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
 
+
 LintRuleCollectionT = List[Union[Type[CstLintRule], Type[PseudoLintRule]]]
 
 

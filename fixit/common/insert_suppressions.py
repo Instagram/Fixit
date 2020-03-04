@@ -8,13 +8,12 @@ import textwrap
 import tokenize
 from collections import deque
 from dataclasses import dataclass
-
-# lint-ignore: IG29: The linter shouldn't depend on distillery's libs
 from enum import Enum
 from io import BytesIO
 from typing import Iterable, Mapping, Optional, Sequence
 
 from fixit.common.line_mapping import LineMappingInfo
+
 
 BODY_PREFIX = "# lint:"
 BODY_PREFIX_WITH_SPACE = f"{BODY_PREFIX} "

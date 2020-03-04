@@ -15,6 +15,7 @@ from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file
 
+
 DUMMY_FILE_PATH = Path(__file__)
 DUMMY_SOURCE = b"pass\npass\npass\n"
 DUMMY_LINT_CODE = "IG00"

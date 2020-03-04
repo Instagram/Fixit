@@ -8,6 +8,7 @@ from bisect import bisect_left
 from dataclasses import dataclass
 from typing import Container, Iterable, Mapping, Optional, Sequence
 
+
 _LOGICAL_LINE_END_MARKERS: Container[int] = (
     tokenize.NL,
     tokenize.NEWLINE,
