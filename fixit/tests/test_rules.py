@@ -3,8 +3,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Mapping, Type, Union
 
 from libcst.testing.utils import data_provider
@@ -16,11 +14,11 @@ from fixit.rule_lint_engine import RULES
 
 
 if TYPE_CHECKING:
-    from fixit.common.utils import ValidTestCase, InvalidTestCase
+    from fixit.common.utils import ValidTestCase, InvalidTestCase  # noqa: F401
 
 
 class TestCase(TypedDict):
-    test_case: Union[ValidTestCase, InvalidTestCase]
+    test_case: Union["ValidTestCase", "InvalidTestCase"]
     rule: Type[CstLintRule]
 
 
@@ -51,7 +49,9 @@ class Test(LintRuleTest):
 
     @data_provider(_gen_test_cases(), test_limit=10000)
     def test(
-        self, test_case: Union[ValidTestCase, InvalidTestCase], rule: Type[CstLintRule]
+        self,
+        test_case: Union["ValidTestCase", "InvalidTestCase"],
+        rule: Type[CstLintRule],
     ) -> None:
         self._test_rule(test_case, rule=rule)
 
