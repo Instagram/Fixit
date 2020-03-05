@@ -39,10 +39,10 @@ class UseTypesFromTypingRule(CstLintRule):
         ),
         Valid(
             """
-    		from typing import Dict, List
-    		def function() -> bool:
-    			return Dict == List
-    		"""
+            from typing import Dict, List
+            def function() -> bool:
+                    return Dict == List
+            """
         ),
     ]
     INVALID = [
