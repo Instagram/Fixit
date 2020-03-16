@@ -8,8 +8,12 @@ Fixit
 ======
 
 .. include:: ../../README.rst
-    :start-after: intro-start
-    :end-before: intro-end
+
+.. toctree::
+   :glob:
+   :caption: Rules:
+
+   rules/*
 
 .. toctree::
    :maxdepth: 2
