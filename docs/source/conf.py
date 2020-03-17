@@ -208,13 +208,15 @@ def strip_class_signature_docstring(app, what, name, obj, options, lines):
             while lines:
                 del lines[0]
 
+
 def write_example_cases(fp, rule, key):
     from textwrap import dedent, indent
+
     if hasattr(rule, key):
         line = f"{key} Code Examples"
-        fp.write("-"*len(line)+"\n")
-        fp.write(line+"\n")
-        fp.write("-"*len(line)+"\n")
+        fp.write("-" * len(line) + "\n")
+        fp.write(line + "\n")
+        fp.write("-" * len(line) + "\n")
         for idx, valid in enumerate(getattr(rule, key)):
             fp.write(f"# {idx + 1}:\n\n")
             fp.write(".. code-block:: python\n\n")
@@ -223,18 +225,22 @@ def write_example_cases(fp, rule, key):
 
 def create_rule_doc():
     from pathlib import Path
+
     directory = Path(__file__).parent / "rules"
     directory.mkdir(exist_ok=True)
     from fixit.rule_lint_engine import RULES
+
     for rule in RULES:
-        rule_name = "".join(f"-{i.lower()}" if i.isupper() else i for i in rule.__name__).lstrip("-")
+        rule_name = "".join(
+            f"-{i.lower()}" if i.isupper() else i for i in rule.__name__
+        ).lstrip("-")
         post_fix_to_remove = "-rule"
         if rule_name.endswith(post_fix_to_remove):
-            rule_name = rule_name[:-len(post_fix_to_remove)]
-            with (directory/f"{rule_name}.rst").open("w") as fp:
-                fp.write("="*len(rule_name) + "\n")
+            rule_name = rule_name[: -len(post_fix_to_remove)]
+            with (directory / f"{rule_name}.rst").open("w") as fp:
+                fp.write("=" * len(rule_name) + "\n")
                 fp.write(rule_name + "\n")
-                fp.write("="*len(rule_name) + "\n")
+                fp.write("=" * len(rule_name) + "\n")
                 write_example_cases(fp, rule, "VALID")
                 write_example_cases(fp, rule, "INVALID")
 
