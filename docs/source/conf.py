@@ -209,18 +209,44 @@ def strip_class_signature_docstring(app, what, name, obj, options, lines):
                 del lines[0]
 
 
+def _clean_code_indent(code: str) -> str:
+    from textwrap import dedent
+
+    return dedent(code).strip()
+
+
+def _add_code_indent(code: str) -> str:
+    from textwrap import indent
+
+    return indent(code, "    ")
+
+
 def write_example_cases(fp, rule, key):
-    from textwrap import dedent, indent
+    import difflib
 
     if hasattr(rule, key):
         line = f"{key} Code Examples"
         fp.write("-" * len(line) + "\n")
         fp.write(line + "\n")
         fp.write("-" * len(line) + "\n")
-        for idx, valid in enumerate(getattr(rule, key)):
+        for idx, example in enumerate(getattr(rule, key)):
             fp.write(f"# {idx + 1}:\n\n")
             fp.write(".. code-block:: python\n\n")
-            fp.write(indent(dedent(valid.code).strip(), "    ") + "\n\n")
+            source = _clean_code_indent(example.code)
+            fp.write(_add_code_indent(source) + "\n\n")
+            if (
+                hasattr(example, "expected_replacement")
+                and example.expected_replacement is not None
+            ):
+                autofix = _clean_code_indent(example.expected_replacement)
+                diff = "\n".join(
+                    difflib.unified_diff(
+                        source.splitlines(), autofix.splitlines(), lineterm=""
+                    )
+                )
+                fp.write("Autofix:\n\n")
+                fp.write(".. code-block:: python\n\n")
+                fp.write(_add_code_indent(diff) + "\n\n")
 
 
 def create_rule_doc():
