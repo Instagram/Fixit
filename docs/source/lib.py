@@ -61,20 +61,31 @@ def write_example_cases(fp, rule, key):
     fp.write(s)
 
 
+def _get_dashed_rule_name_from_camel_case(name: str) -> str:
+    """E.g. convert "ClsInClassmethodRule" as "cls-in-classmethod". """
+    rule_name = "".join(f"-{i.lower()}" if i.isupper() else i for i in name).lstrip("-")
+    post_fix_to_remove = "-rule"
+    if rule_name.endswith(post_fix_to_remove):
+        rule_name = rule_name[: -len(post_fix_to_remove)]
+    return rule_name
+
+
 def create_rule_doc():
     directory = Path(__file__).parent / "rules"
     directory.mkdir(exist_ok=True)
 
     for rule in RULES:
-        rule_name = "".join(
-            f"-{i.lower()}" if i.isupper() else i for i in rule.__name__
-        ).lstrip("-")
-        post_fix_to_remove = "-rule"
-        if rule_name.endswith(post_fix_to_remove):
-            rule_name = rule_name[: -len(post_fix_to_remove)]
-            with (directory / f"{rule_name}.rst").open("w") as fp:
-                fp.write("=" * len(rule_name) + "\n")
-                fp.write(rule_name + "\n")
-                fp.write("=" * len(rule_name) + "\n")
-                write_example_cases(fp, rule, "VALID")
-                write_example_cases(fp, rule, "INVALID")
+        rule_name = _get_dashed_rule_name_from_camel_case(rule.__name__)
+        rule_name_len = len(rule_name)
+        with (directory / f"{rule_name}.rst").open("w") as fp:
+            fp.write(
+                dedent(
+                    f"""\
+                    {"=" * rule_name_len}
+                    {rule_name}
+                    {"=" * rule_name_len}
+                    """
+                )
+            )
+            write_example_cases(fp, rule, "VALID")
+            write_example_cases(fp, rule, "INVALID")
