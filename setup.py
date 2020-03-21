@@ -36,11 +36,7 @@ setuptools.setup(
     package_data={"fixit": ["py.typed"]},
     test_suite="fixit",
     python_requires=">=3.6",
-    install_requires=[
-        "flake8 >= 3.7.9",
-        "libcst >= 0.3.3",
-        "pyyaml >= 5.2",
-    ],
+    install_requires=["flake8 >= 3.7.9", "libcst >= 0.3.3", "pyyaml >= 5.2",],
     extras_require={
         "dev": [
             "black",
