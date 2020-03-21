@@ -193,7 +193,7 @@ class ClsInClassmethodRule(CstLintRule):
 
                 @classmethod
                 def cm(cls):
-                    cls[1] = foo.cm(cls=cls)
+                    cls[1] = foo.cm(a=cls)
             """,
         ),
         Invalid(
