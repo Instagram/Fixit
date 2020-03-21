@@ -209,72 +209,14 @@ def strip_class_signature_docstring(app, what, name, obj, options, lines):
                 del lines[0]
 
 
-def _clean_code_indent(code: str) -> str:
-    from textwrap import dedent
-
-    return dedent(code).strip()
-
-
-def _add_code_indent(code: str) -> str:
-    from textwrap import indent
-
-    return indent(code, "    ")
-
-
-def write_example_cases(fp, rule, key):
-    import difflib
-
-    if hasattr(rule, key):
-        line = f"{key} Code Examples"
-        fp.write("-" * len(line) + "\n")
-        fp.write(line + "\n")
-        fp.write("-" * len(line) + "\n")
-        for idx, example in enumerate(getattr(rule, key)):
-            fp.write(f"# {idx + 1}:\n\n")
-            fp.write(".. code-block:: python\n\n")
-            source = _clean_code_indent(example.code)
-            fp.write(_add_code_indent(source) + "\n\n")
-            if (
-                hasattr(example, "expected_replacement")
-                and example.expected_replacement is not None
-            ):
-                autofix = _clean_code_indent(example.expected_replacement)
-                diff = "\n".join(
-                    difflib.unified_diff(
-                        source.splitlines(), autofix.splitlines(), lineterm=""
-                    )
-                )
-                fp.write("Autofix:\n\n")
-                fp.write(".. code-block:: python\n\n")
-                fp.write(_add_code_indent(diff) + "\n\n")
-
-
-def create_rule_doc():
-    from pathlib import Path
-
-    directory = Path(__file__).parent / "rules"
-    directory.mkdir(exist_ok=True)
-    from fixit.rule_lint_engine import RULES
-
-    for rule in RULES:
-        rule_name = "".join(
-            f"-{i.lower()}" if i.isupper() else i for i in rule.__name__
-        ).lstrip("-")
-        post_fix_to_remove = "-rule"
-        if rule_name.endswith(post_fix_to_remove):
-            rule_name = rule_name[: -len(post_fix_to_remove)]
-            with (directory / f"{rule_name}.rst").open("w") as fp:
-                fp.write("=" * len(rule_name) + "\n")
-                fp.write(rule_name + "\n")
-                fp.write("=" * len(rule_name) + "\n")
-                write_example_cases(fp, rule, "VALID")
-                write_example_cases(fp, rule, "INVALID")
-
-
 def setup(app):
     app.connect("autodoc-process-signature", strip_class_signature)
     app.connect("autodoc-process-docstring", strip_class_signature_docstring)
     app.add_css_file("custom.css")
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent))
+    from lib import create_rule_doc
     create_rule_doc()
 
 
