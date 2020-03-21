@@ -18,7 +18,7 @@ IG117_REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
     + " You should use typing.{correct_type} instead."
 )
 
-BUILTINS_TO_REPLACE: Set[str] = {"dict", "list", "set"}
+BUILTINS_TO_REPLACE: Set[str] = {"dict", "list", "set", "tuple"}
 
 
 class UseTypesFromTypingRule(CstLintRule):
@@ -39,10 +39,16 @@ class UseTypesFromTypingRule(CstLintRule):
         ),
         Valid(
             """
-    		from typing import Dict, List
-    		def function() -> bool:
-    			return Dict == List
-    		"""
+            def function() -> None:
+                thing: Tuple[str]
+            """
+        ),
+        Valid(
+            """
+            from typing import Dict, List
+            def function() -> bool:
+                    return Dict == List
+            """
         ),
     ]
     INVALID = [
@@ -70,6 +76,13 @@ class UseTypesFromTypingRule(CstLintRule):
             """
             def func() -> None:
                 thing: dict[str, str] = {}
+            """,
+            "IG117",
+        ),
+        Invalid(
+            """
+            def func() -> None:
+                thing: tuple[str]
             """,
             "IG117",
         ),
