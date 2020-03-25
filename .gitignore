@@ -3,9 +3,13 @@
 *.pyc
 *.pyo
 *.egg-info/
+.python-version
 .pyre/
 __pycache__/
+.venv/
+venv/
 .tox/
+.vscode/
 docs/build/
 dist/
 docs/source/.ipynb_checkpoints/

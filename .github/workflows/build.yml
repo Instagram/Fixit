@@ -1,0 +1,73 @@
+name: Build
+on: 
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  pull_request:
+
+jobs:
+  docs:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8]
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Set Up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Env
+        run: |
+          python -VV
+      - name: Tox
+        run: |
+          python -m pip install tox
+          tox --version
+      - name: Sphinx
+        run: |
+          tox -e docs
+      - name: Upload
+        uses: actions/upload-artifact@v1
+        with:
+          name: fixit-docs
+          path: docs/build/
+
+  fixit:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [macOS-latest, ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Set Up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Env
+        run: |
+          python -VV
+      - name: Tox
+        run: |
+          python -m pip install tox
+          tox --version
+      - name: Test
+        run: |
+          tox -e $(python .github/scripts/tox_job.py)
+      - name: Lint
+        run: |
+          tox -e lint
+      - name: Coverage
+        run: |
+          tox -e coverage
+        continue-on-error: true
