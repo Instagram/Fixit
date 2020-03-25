@@ -32,7 +32,7 @@ jobs:
           tox --version
       - name: Test
         run: |
-          tox -e $(python -c 'import sys; m, n, *_ = sys.version_info; print(f"py{m}{n}")')
+          tox -e $(python .github/scripts/tox_job.py)
       - name: Lint
         run: |
           tox -e lint
