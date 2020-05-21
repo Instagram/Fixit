@@ -7,7 +7,7 @@ from libcst.testing.utils import (  # noqa IG69: this module is only used by tes
     UnitTest,
 )
 
-from fixit import rule_lint_engine
+from fixit.rule_lint_engine import get_rules
 
 
 class TestsForAllLintRules(UnitTest):
@@ -15,7 +15,7 @@ class TestsForAllLintRules(UnitTest):
 
     def test_rule_has_oncall(self) -> None:
         failures = []
-        for rule in rule_lint_engine.RULES:
+        for rule in get_rules():
             if getattr(rule, "ONCALL_SHORTNAME", None) is None:
                 failures.append(
                     f"{rule.__name__} has no ONCALL_SHORTNAME set, "

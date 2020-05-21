@@ -26,7 +26,6 @@ from typing import (
 )
 
 import libcst as cst
-import yaml
 from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import CstContext, CstLintRule
@@ -58,20 +57,9 @@ def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleT
     return results
 
 
-def _find_rules() -> LintRuleCollectionT:
-    path = Path(__file__).parent / ".lint.config.yaml"
-    if not path.exists():
-        raise Exception(f"Missing lint config file: {path}")
-    config = yaml.safe_load(path.open())
-    if not isinstance(config, dict):
-        raise Exception(f"Missing config in lint config file: {path}")
-    if "packages" in config and isinstance(config["packages"], list):
-        packages: List[str] = config["packages"]
-    else:
-        raise Exception(f"Missing packages secction in lint config file: {path}")
-
+def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
     rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = {Flake8PseudoLintRule}
-    for package in packages:
+    for package in ["fixit.rules"] + extra_packages:
         for _module_name, module in import_submodules(package).items():
             for name in dir(module):
                 try:
@@ -86,9 +74,6 @@ def _find_rules() -> LintRuleCollectionT:
                 except TypeError:
                     continue
     return list(rules)
-
-
-RULES: LintRuleCollectionT = _find_rules()
 
 
 def _detect_encoding(source: bytes) -> str:
@@ -126,7 +111,7 @@ def lint_file(
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
-    rules: LintRuleCollectionT = RULES,
+    rules: LintRuleCollectionT,
 ) -> Collection[BaseLintRuleReport]:
     """
     May raise a SyntaxError, which should be handled by the
@@ -203,7 +188,7 @@ def lint_file_and_apply_patches(
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
-    rules: LintRuleCollectionT = RULES,
+    rules: LintRuleCollectionT,
 ) -> LintRuleReportsWithAppliedPatches:
     """
     Runs `lint_file` in a loop, patching the one auto-fixable report on each iteration

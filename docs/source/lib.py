@@ -7,7 +7,7 @@ import difflib
 from pathlib import Path
 from textwrap import dedent, indent
 
-from fixit.rule_lint_engine import RULES
+from fixit.rule_lint_engine import get_rules
 
 
 def _add_code_indent(code: str) -> str:
@@ -74,7 +74,7 @@ def create_rule_doc():
     directory = Path(__file__).parent / "rules"
     directory.mkdir(exist_ok=True)
 
-    for rule in RULES:
+    for rule in get_rules():
         rule_name = _get_dashed_rule_name_from_camel_case(rule.__name__)
         rule_name_len = len(rule_name)
         with (directory / f"{rule_name}.rst").open("w") as fp:
