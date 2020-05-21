@@ -10,7 +10,7 @@ from mypy_extensions import TypedDict
 
 from fixit.common.base import CstLintRule
 from fixit.common.testing import LintRuleTest
-from fixit.rule_lint_engine import RULES
+from fixit.rule_lint_engine import get_rules
 
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class TestCase(TypedDict):
 
 def _gen_test_cases() -> Mapping[str, TestCase]:
     cases = {}
-    for rule in RULES:
+    for rule in get_rules():
         if not issubclass(rule, CstLintRule):
             continue
         if hasattr(rule, "VALID"):

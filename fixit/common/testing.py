@@ -104,7 +104,7 @@ class LintRuleTest(UnitTest):
         if type(self) is not LintRuleTest:
             self.assertIn(
                 rule,
-                rule_lint_engine.RULES,
+                rule_lint_engine.get_rules(),
                 "rule must be in static_analysis.lint.rule_lint_engine.RULES",
             )
 
