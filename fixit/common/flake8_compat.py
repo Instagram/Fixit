@@ -21,7 +21,6 @@ from flake8.main.application import Application as Flake8BaseApplication
 from flake8.processor import FileProcessor as Flake8FileProcessor
 from flake8.style_guide import Violation as Flake8Violation
 
-from fixit.common.config import REPO_ROOT
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
 
@@ -181,7 +180,7 @@ class Flake8PseudoLintRule(PseudoLintRule):
         app = get_cached_application_instance()
         app.reset(self.context)
         # TODO: use self.context.source, self.context.tokens, and self.context.ast
-        app.run_checks([str(REPO_ROOT / self.context.file_path)])
+        app.run_checks([str(self.context.file_path)])
         # when we call report, it'll store the results to app.accumulator
         app.report()
 
