@@ -5,6 +5,7 @@
 
 import re
 import textwrap
+from pathlib import Path
 from typing import Iterable, Optional, Tuple, Type, Union
 
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
@@ -13,7 +14,6 @@ from libcst.testing.utils import (  # noqa IG69: this module is only used by tes
 
 from fixit import rule_lint_engine
 from fixit.common.base import CstLintRule
-from fixit.common.config import REPO_ROOT
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import InvalidTestCase, ValidTestCase
 
@@ -157,7 +157,7 @@ class LintRuleTest(UnitTest):
         rule = self.RULE if rule is None else rule
         self._test_rule_in_list(rule)
         reports = rule_lint_engine.lint_file(
-            REPO_ROOT / test_case.filename,
+            Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],

@@ -30,7 +30,7 @@ from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, REPO_ROOT, get_config
+from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, get_config
 from fixit.common.flake8_compat import Flake8PseudoLintRule
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
@@ -105,7 +105,7 @@ def _visit_cst_rules_with_context(
 
 
 def lint_file(
-    file_path: Union[str, Path],
+    file_path: Path,
     source: bytes,
     *,
     use_ignore_byte_markers: bool = True,
@@ -121,7 +121,6 @@ def lint_file(
         return []
 
     # pre-process these arguments
-    file_path = Path(file_path).resolve().relative_to(REPO_ROOT)
     config = config if config is not None else get_config(file_path)
 
     tokens = None
@@ -182,7 +181,7 @@ class LintRuleReportsWithAppliedPatches:
 
 
 def lint_file_and_apply_patches(
-    file_path: Union[str, Path],
+    file_path: Path,
     source: bytes,
     *,
     use_ignore_byte_markers: bool = True,

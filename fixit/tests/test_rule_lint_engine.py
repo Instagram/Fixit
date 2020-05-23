@@ -3,12 +3,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from pathlib import Path
+
 import libcst as cst
 from libcst.testing.utils import UnitTest, data_provider
 
 from fixit import rule_lint_engine
 from fixit.common.base import CstLintRule
-from fixit.common.config import REPO_ROOT
 
 
 class BadCallCstLintRule(CstLintRule):
@@ -101,7 +102,7 @@ class RuleLintEngineTest(UnitTest):
         expected_report_count: int,
     ) -> None:
         reports = rule_lint_engine.lint_file(
-            REPO_ROOT / "dummy_filename.py",
+            Path("dummy_filename.py"),
             source,
             use_ignore_byte_markers=use_ignore_byte_markers,
             use_ignore_comments=use_ignore_comments,
@@ -115,7 +116,7 @@ class RuleLintEngineTest(UnitTest):
         expected_output = b"((obj.attr).another_attr)\n"
 
         result = rule_lint_engine.lint_file_and_apply_patches(
-            REPO_ROOT / "dummy_filename.py",
+            Path("dummy_filename.py"),
             source,
             config={},
             rules=[ParenthesizeAttributeLintRule],
