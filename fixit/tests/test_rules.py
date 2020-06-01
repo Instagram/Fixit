@@ -52,8 +52,6 @@ class Test(LintRuleTest):
         test_case: Union["ValidTestCase", "InvalidTestCase"],
         rule: Type[CstLintRule],
     ) -> None:
-        print("RULE")
-        print(rule)
         self._test_rule(test_case, rule=rule)
 
     # pyre-ignore[14]: `test_rule` overrides method defined in `LintRuleTest`
