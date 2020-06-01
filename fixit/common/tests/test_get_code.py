@@ -9,8 +9,6 @@ from fixit.common.base import _get_code
 
 
 class GetCodeTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def test_validate_message(self) -> None:
         self.assertEqual(_get_code("IG00 Message"), "IG00")
         with self.assertRaisesRegex(ValueError, "IGXX"):

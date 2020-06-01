@@ -37,7 +37,6 @@ class _RenameTransformer(cst.CSTTransformer):
 
 
 class ClsInClassmethodRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     METADATA_DEPENDENCIES = (QualifiedNameProvider, ScopeProvider)
     MESSAGE = "IG132 when using @classmethod, the first argument must be 'cls'."
     VALID = [

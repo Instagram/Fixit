@@ -108,9 +108,6 @@ def pyfmt(path: Union[str, Path]) -> None:
     """
     Given a path, run isort-black on the code and write the updated file back to disk.
 
-    Derived from `static_analysis.codemod.common.cli`, but it operates on a path instead
-    of a code string.
-
     CAUTION: This function has a large overhead (multiple forks, tons of disk IO).
     """
 

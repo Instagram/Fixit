@@ -10,7 +10,6 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class GatherSequentialAwaitRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     MESSAGE: str = (
         "IG02 Using await in a loop will run async function sequentially. Use "
         + "asyncio.gather() to run async functions concurrently. See more "

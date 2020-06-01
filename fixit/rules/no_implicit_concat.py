@@ -12,7 +12,6 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class UsePlusForStringConcatRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     MESSAGE: str = (
         "IG131 Implicit string concatenation detected, please add '+' to be explicit. "
         + 'E.g. a tuple or a call ("a" "b") with a missing comma makes the multiple strings '

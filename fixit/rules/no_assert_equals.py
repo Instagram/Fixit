@@ -11,7 +11,6 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class NoAssertEqualsRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     MESSAGE: str = (
         'IG64 "assertEquals" is deprecated, use "assertEqual" instead.\n'
         + "See https://docs.python.org/2/library/unittest.html#deprecated-aliases and https://bugs.python.org/issue9424."

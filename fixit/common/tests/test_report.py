@@ -14,8 +14,6 @@ from fixit.common.report import AstLintRuleReport, BaseLintRuleReport, CstLintRu
 
 
 class LintRuleReportTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     @data_provider(
         {
             "AstLintRuleReport": [

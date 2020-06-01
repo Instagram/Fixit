@@ -13,8 +13,6 @@ from fixit.common.comments import CommentInfo
 
 
 class CommentInfoTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def test_comment_info(self) -> None:
         # A comment on a line with no other leading tokens is a "comment on own line".
         # In contrast, trailing comments come after other tokens on the same line.

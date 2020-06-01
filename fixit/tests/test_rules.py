@@ -45,7 +45,6 @@ def _gen_test_cases() -> Mapping[str, TestCase]:
 
 
 class Test(LintRuleTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
 
     @data_provider(_gen_test_cases(), test_limit=10000)
     def test(
@@ -53,6 +52,8 @@ class Test(LintRuleTest):
         test_case: Union["ValidTestCase", "InvalidTestCase"],
         rule: Type[CstLintRule],
     ) -> None:
+        print("RULE")
+        print(rule)
         self._test_rule(test_case, rule=rule)
 
     # pyre-ignore[14]: `test_rule` overrides method defined in `LintRuleTest`

@@ -13,8 +13,6 @@ from fixit.common.autofix import LintPatch
 
 
 class AutofixTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     @data_provider(
         {
             "full_module": {

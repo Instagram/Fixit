@@ -11,8 +11,6 @@ from fixit.rule_lint_engine import get_rules
 
 
 class TestsForAllLintRules(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def test_rule_has_oncall(self) -> None:
         failures = []
         for rule in get_rules():

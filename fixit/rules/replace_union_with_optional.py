@@ -11,7 +11,6 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class ReplaceUnionWithOptionalRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     MESSAGE: str = (
         "IG125 `Optional[T]` is preferred over `Union[T, None]` or `Union[None, T]`. "
         + "Learn more: https://docs.python.org/3/library/typing.html#typing.Optional"

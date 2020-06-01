@@ -10,7 +10,6 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class ComparePrimitivesByEqualRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     MESSAGE = "IG85 Don't use `is` or `is not` to compare primitives, as they compare references. Use == or != instead."
     VALID = [
         Valid("a == 1"),

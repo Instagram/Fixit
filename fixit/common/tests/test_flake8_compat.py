@@ -13,8 +13,6 @@ from fixit.rule_lint_engine import lint_file
 
 
 class Flake8PseudoLintRuleTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def test_lint_file(self) -> None:
         context = PseudoContext(
             file_path=Path("dummy/file/path.py"), source=b"undefined_fn()\n"
