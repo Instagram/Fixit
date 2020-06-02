@@ -103,7 +103,7 @@ class LintRuleTest(UnitTest):
             self.assertIn(
                 rule,
                 rule_lint_engine.get_rules(),
-                "rule must be in fixit.lint.rule_lint_engine.RULES",
+                "rule must be in fixit.rule_lint_engine.get_rules()",
             )
 
     def __test_case_data_provider(
