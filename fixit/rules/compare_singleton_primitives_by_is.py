@@ -6,9 +6,10 @@
 from typing import FrozenSet, Union
 
 import libcst as cst
+from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
+
 from fixit.common.base import CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
-from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 
 class CompareSingletonPrimitivesByIsRule(CstLintRule):
@@ -17,6 +18,7 @@ class CompareSingletonPrimitivesByIsRule(CstLintRule):
     The == operator checks equality, when in this scenario, we want to check identity.
     See Flake8 rules E711 (https://www.flake8rules.com/rules/E711.html) and E712 (https://www.flake8rules.com/rules/E712.html).
     """
+
     MESSAGE: str = (
         "IG149 Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identiy."
         + " Use `is` or `is not` instead."

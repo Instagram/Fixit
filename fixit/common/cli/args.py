@@ -15,8 +15,7 @@ from fixit.common.config import REPO_ROOT
 def _import_rule(name: str) -> LintRuleT:
     rule_module_name, rule_class_name = name.split(".")
     rule_class = getattr(
-        importlib.import_module(f"fixit.rules.{rule_module_name}"),
-        rule_class_name,
+        importlib.import_module(f"fixit.rules.{rule_module_name}"), rule_class_name,
     )
     return rule_class
 
