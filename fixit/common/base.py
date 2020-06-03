@@ -82,7 +82,6 @@ class CstContext(BaseContext):
 
 
 class CstLintRule(BatchableCSTVisitor, metaclass=ABCMeta):
-    ONCALL_SHORTNAME: Optional[str] = None
     #: a short message in one or two sentences show to user when the rule is violated.
     MESSAGE: Optional[str] = None
 

@@ -94,8 +94,6 @@ def data_provider_DEPRECATED(fn_data_provider):  # noqa: C901
 # We can't use an ABCMeta here, because of metaclass conflicts
 # pyre-fixme[13]: Attribute `VALID` is never initialized.
 class LintRuleTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     RULE: Type[CstLintRule]
     VALID: Iterable[ValidTestCase]
     INVALID: Iterable[InvalidTestCase]
@@ -105,7 +103,7 @@ class LintRuleTest(UnitTest):
             self.assertIn(
                 rule,
                 rule_lint_engine.get_rules(),
-                "rule must be in static_analysis.lint.rule_lint_engine.RULES",
+                "rule must be in fixit.rule_lint_engine.get_rules()",
             )
 
     def __test_case_data_provider(

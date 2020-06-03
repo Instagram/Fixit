@@ -174,8 +174,6 @@ class Flake8PseudoLintRule(PseudoLintRule):
     releases of flake8.
     """
 
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def lint_file(self) -> Iterable[Flake8LintRuleReport]:
         app = get_cached_application_instance()
         app.reset(self.context)

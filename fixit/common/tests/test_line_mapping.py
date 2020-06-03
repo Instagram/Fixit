@@ -14,8 +14,6 @@ from fixit.common.line_mapping import LineMappingInfo
 
 
 class LineMappingInfoTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     @data_provider(
         {
             "simple": {

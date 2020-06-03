@@ -45,8 +45,6 @@ class ParenthesizeAttributeLintRule(CstLintRule):
 
 
 class RuleLintEngineTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     @data_provider(
         {
             "good_call": {

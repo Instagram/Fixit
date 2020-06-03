@@ -13,7 +13,6 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class NoStaticIfConditionRule(CstLintRule):
-    ONCALL_SHORTNAME = "ig_creation_backend"
     MESSAGE: str = (
         "IG104 Your if condition appears to evalute to a static value (eg `or True`, `and False`). "
         + "Please double check this logic and if it is actually temporary debug code."

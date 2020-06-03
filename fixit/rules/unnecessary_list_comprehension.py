@@ -21,7 +21,6 @@ class UnnecessaryListComprehensionRule(CstLintRule):
     A derivative of flake8-comprehensions's C407 rule.
     """
 
-    ONCALL_SHORTNAME = "instagram_server_framework"
     VALID = [
         Valid("any(val for val in iterable)"),
         Valid("all(val for val in iterable)"),

@@ -23,8 +23,6 @@ DUMMY_LINT_MESSAGE = "dummy lint message"
 
 
 class PseudoContextTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def setUp(self) -> None:
         self.dummy_tokens = tuple(tokenize.tokenize(io.BytesIO(DUMMY_SOURCE).readline))
         self.dummy_ast_tree = ast.parse(DUMMY_SOURCE)
@@ -49,8 +47,6 @@ class PseudoContextTest(UnitTest):
 
 
 class PseudoLintRuleTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def test_pseudo_lint_rule(self) -> None:
         class DummyLintRuleReport(BaseLintRuleReport):
             pass

@@ -15,8 +15,7 @@ from fixit.common.config import REPO_ROOT
 def _import_rule(name: str) -> LintRuleT:
     rule_module_name, rule_class_name = name.split(".")
     rule_class = getattr(
-        importlib.import_module(f"static_analysis.lint.rules.{rule_module_name}"),
-        rule_class_name,
+        importlib.import_module(f"fixit.rules.{rule_module_name}"), rule_class_name,
     )
     return rule_class
 
@@ -28,7 +27,7 @@ def get_rule_parser() -> argparse.ArgumentParser:
         type=_import_rule,
         help=(
             "The name of the file (minus the path and extension) and class joined with "
-            + "a '.' that defines your lint rule in static_analysis/lint/rules/*.py. "
+            + "a '.' that defines your lint rule in fixit/rules/*.py. "
             + "(e.g. no_asserts.NoAssertsLintRule)"
         ),
     )

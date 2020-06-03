@@ -22,7 +22,6 @@ BUILTINS_TO_REPLACE: Set[str] = {"dict", "list", "set", "tuple"}
 
 
 class UseTypesFromTypingRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     METADATA_DEPENDENCIES = (ScopeProvider,)
     VALID = [
         Valid(

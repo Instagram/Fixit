@@ -45,8 +45,6 @@ def _gen_test_cases() -> Mapping[str, TestCase]:
 
 
 class Test(LintRuleTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     @data_provider(_gen_test_cases(), test_limit=10000)
     def test(
         self,

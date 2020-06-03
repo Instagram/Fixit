@@ -1,4 +1,7 @@
-# @oncall instagram_server_framework
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 from pathlib import Path
 
@@ -18,8 +21,6 @@ class _ExtendedLintRuleReportFormatter(LintRuleReportFormatter):
 
 
 class LintRuleReportFormatterTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def setUp(self) -> None:
         self.report = CstLintRuleReport(
             file_path=Path("fake/path.py"),
@@ -68,8 +69,6 @@ class LintRuleReportFormatterTest(UnitTest):
 
 
 class FormatWarningTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     def test_format_warning(self) -> None:
         self.assertEqual(
             format_warning("Some long warning message that should be wrapped.", 20),

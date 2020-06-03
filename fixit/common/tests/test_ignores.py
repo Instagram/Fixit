@@ -19,8 +19,6 @@ from fixit.common.report import CstLintRuleReport
 
 
 class IgnoreInfoTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     @data_provider(
         {
             # A noqa comment can be used without a specified code, which will ignore all

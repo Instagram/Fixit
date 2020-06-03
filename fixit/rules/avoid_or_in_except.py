@@ -11,7 +11,6 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class AvoidOrInExceptRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     MESSAGE: str = (
         "IG54 Avoid using 'or' in an except block. For example:"
         + "'except ValueError or TypeError' only catches 'ValueError'. Instead, use "

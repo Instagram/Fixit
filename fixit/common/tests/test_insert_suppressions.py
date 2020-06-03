@@ -16,8 +16,6 @@ from fixit.common.insert_suppressions import (
 
 
 class InsertSuppressionsTest(UnitTest):
-    ONCALL_SHORTNAME = "instagram_server_framework"
-
     @data_provider(
         {
             "simple_fixme": {
