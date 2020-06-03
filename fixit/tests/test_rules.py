@@ -3,28 +3,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import copy
 import re
 import textwrap
 import unittest
 from dataclasses import dataclass
-from functools import wraps
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
-)
-
-from libcst.testing.utils import data_provider
-from mypy_extensions import TypedDict
+from typing import Callable, Dict, Mapping, Sequence, Tuple, Type, Union
 
 from fixit.common.base import CstLintRule
 from fixit.common.report import BaseLintRuleReport
@@ -38,64 +22,67 @@ class TestCasePrecursor:
     test_methods: Mapping[str, Union[ValidTestCase, InvalidTestCase]]
 
 
+def _gen_test_methods_for_rule(rule) -> Tuple[TestCasePrecursor, int]:
+    valid_tcs = dict()
+    invalid_tcs = dict()
+    num_methods = 0
+    if issubclass(rule, CstLintRule):
+
+        if hasattr(rule, "VALID"):
+            # pyre-ignore[16]: `CstLintRule` has no attribute `VALID`.
+            for idx, test_case in enumerate(rule.VALID):
+                valid_tcs[f"test_VALID_{idx}"] = test_case
+                num_methods += 1
+        if hasattr(rule, "INVALID"):
+            # pyre-ignore[16]: `CstLintRule` has no attribute `INVALID`.
+            for idx, test_case in enumerate(rule.INVALID):
+                invalid_tcs[f"test_INVALID_{idx}"] = test_case
+                num_methods += 1
+    return (
+        TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs}),
+        num_methods,
+    )
+
+
+def _gen_all_test_methods() -> Tuple[Sequence[TestCasePrecursor], int]:
+    cases = []
+    total_test_methods = 0
+    for rule in get_rules():
+        if not issubclass(rule, CstLintRule):
+            continue
+        test_cases_for_rule, num_test_methods = _gen_test_methods_for_rule(rule)
+        cases.append(test_cases_for_rule)
+        total_test_methods += num_test_methods
+    return cases, total_test_methods
+
+
+def populate_data_provider_tests(
+    test_cases: Sequence[TestCasePrecursor],
+) -> Tuple[Mapping[str, unittest.TestCase], int]:
+    test_cases_to_add: Dict[str, unittest.TestCase] = {}
+    for test_case in test_cases:
+        rule_name = test_case.rule.__name__
+        test_methods_to_add: Dict[str, Callable] = dict()
+
+        for test_method_name, test_method_data in test_case.test_methods.items():
+
+            def test_method(
+                self: object,
+                data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
+                rule: Type[CstLintRule] = test_case.rule,
+            ) -> object:
+                return self._test_method(data, rule)
+
+            test_method.__name__ = test_method_name
+            test_methods_to_add[test_method_name] = test_method
+
+        test_case_type = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
+        test_cases_to_add.update({rule_name: test_case_type})
+    return test_cases_to_add
+
+
 def setupModule():
     """ Aggregate all the lint rules defined in 'fixit.rule_lint_engine.get_rules()' and convert them into dynamically-named classes inherting from LintRuleTestCase """
-
-    def _gen_test_methods_for_rule(rule) -> Tuple[TestCasePrecursor, int]:
-        valid_tcs = dict()
-        invalid_tcs = dict()
-        num_methods = 0
-        if issubclass(rule, CstLintRule):
-
-            if hasattr(rule, "VALID"):
-                # pyre-ignore[16]: `CstLintRule` has no attribute `VALID`.
-                for idx, test_case in enumerate(rule.VALID):
-                    valid_tcs[f"test_VALID_{idx}"] = test_case
-                    num_methods += 1
-            if hasattr(rule, "INVALID"):
-                # pyre-ignore[16]: `CstLintRule` has no attribute `INVALID`.
-                for idx, test_case in enumerate(rule.INVALID):
-                    invalid_tcs[f"test_INVALID_{idx}"] = test_case
-                    num_methods += 1
-        return (
-            TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs}),
-            num_methods,
-        )
-
-    def _gen_all_test_methods() -> Tuple[Sequence[TestCasePrecursor], int]:
-        cases = []
-        total_test_methods = 0
-        for rule in get_rules():
-            if not issubclass(rule, CstLintRule):
-                continue
-            test_cases_for_rule, num_test_methods = _gen_test_methods_for_rule(rule)
-            cases.append(test_cases_for_rule)
-            total_test_methods += num_test_methods
-        return cases, total_test_methods
-
-    def populate_data_provider_tests(
-        test_cases: Sequence[TestCasePrecursor],
-    ) -> Tuple[Mapping[str, unittest.TestCase], int]:
-        test_cases_to_add: Dict[str, unittest.TestCase] = {}
-        for test_case in test_cases:
-            rule_name = test_case.rule.__name__
-            test_methods_to_add: Dict[str, Callable] = dict()
-
-            for test_method_name, test_method_data in test_case.test_methods.items():
-
-                def test_method(
-                    self: object,
-                    data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
-                    rule: Type[CstLintRule] = test_case.rule,
-                ) -> object:
-                    return self._test_method(data, rule)
-
-                test_method.__name__ = test_method_name
-                test_methods_to_add[test_method_name] = test_method
-
-            test_case_type = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
-            test_cases_to_add.update({rule_name: test_case_type})
-        return test_cases_to_add
 
     test_cases, total_test_methods = _gen_all_test_methods()
     return populate_data_provider_tests(test_cases), total_test_methods
