@@ -33,56 +33,14 @@ from fixit.rule_lint_engine import get_rules, lint_file
 
 
 @dataclass(frozen=True)
-class TestCase:
+class TestCasePrecursor:
     rule: Type[CstLintRule]
     test_methods: Mapping[str, Union[ValidTestCase, InvalidTestCase]]
 
 
-class BaseTestMeta(type):
-    def __new__(cls, name: str, bases: Tuple[type, ...], dct: Dict[str, Any]) -> object:
-        test_cases: Sequence[TestCase] = cls._gen_test_cases()
-        cls.populate_data_provider_tests(dct, test_cases)
-        return super().__new__(cls, name, bases, dict(dct))
-
-    @classmethod
-    def populate_data_provider_tests(cls, dct, test_cases: Sequence[TestCase]) -> None:
-        test_cases_to_add: Dict[str, unittest.TestCase] = {}
-        for test_case in test_cases:
-            rule_name = test_case.rule.__name__
-            test_methods_to_add: Dict[str, Callable] = dict()
-
-            for test_method_name, test_method_data in test_case.test_methods.items():
-                # member = dct["_test_case"]
-
-                # @wraps(member)
-                def test_method(
-                    self: object,
-                    data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
-                    rule: Type[CstLintRule] = test_case.rule,
-                ) -> object:
-                    return self._test_case(data, rule)
-
-                test_method.__name__ = test_method_name
-                test_methods_to_add[test_method_name] = test_method
-
-            test_case_type = type(
-                rule_name, (LintRuleTestCaseStub,), test_methods_to_add
-            )
-            test_cases_to_add.update({rule_name: test_case_type})
-        dct.update(test_cases_to_add)
-
-    @classmethod
-    def _gen_test_cases(cls) -> Sequence[TestCase]:
-        cases = []
-        for rule in get_rules():
-            if not issubclass(rule, CstLintRule):
-                continue
-            test_cases_for_rule = cls._gen_test_case(rule)
-            cases.append(test_cases_for_rule)
-        return cases
-
-    @classmethod
-    def _gen_test_case(cls, rule) -> TestCase:
+def setupModule():
+    """ Aggregate all the lint rules defined in 'fixit.rule_lint_engine.get_rules()' and convert them into dynamically-named classes inherting from LintRuleTestCase """
+    def _gen_test_case(rule) -> TestCasePrecursor:
         valid_tcs = dict()
         invalid_tcs = dict()
         if issubclass(rule, CstLintRule):
@@ -95,10 +53,44 @@ class BaseTestMeta(type):
                 # pyre-ignore[16]: `CstLintRule` has no attribute `INVALID`.
                 for idx, test_case in enumerate(rule.INVALID):
                     invalid_tcs[f"test_INVALID_{idx}"] = test_case
-        return TestCase(rule=rule, test_methods={**valid_tcs, **invalid_tcs})
+        return TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs})
 
+    def _gen_test_cases() -> Sequence[TestCasePrecursor]:
+        cases = []
+        for rule in get_rules():
+            if not issubclass(rule, CstLintRule):
+                continue
+            test_cases_for_rule = _gen_test_case(rule)
+            cases.append(test_cases_for_rule)
+        return cases
 
-class LintRuleTestCaseStub(unittest.TestCase):
+    def populate_data_provider_tests(test_cases: Sequence[TestCasePrecursor]) -> None:
+        test_cases_to_add: Dict[str, unittest.TestCase] = {}
+        for test_case in test_cases:
+            rule_name = test_case.rule.__name__
+            test_methods_to_add: Dict[str, Callable] = dict()
+
+            for test_method_name, test_method_data in test_case.test_methods.items():
+                def test_method(
+                    self: object,
+                    data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
+                    rule: Type[CstLintRule] = test_case.rule,
+                ) -> object:
+                    return self._test_case(data, rule)
+
+                test_method.__name__ = test_method_name
+                test_methods_to_add[test_method_name] = test_method
+
+            test_case_type = type(
+                rule_name, (LintRuleTestCase,), test_methods_to_add
+            )
+            test_cases_to_add.update({rule_name: test_case_type})
+        return test_cases_to_add
+
+    test_cases = _gen_test_cases()
+    return populate_data_provider_tests(test_cases)
+
+class LintRuleTestCase(unittest.TestCase):
     @staticmethod
     def _dedent(src: str) -> str:
         src = re.sub(r"\A\n", "", src)
@@ -123,8 +115,8 @@ class LintRuleTestCaseStub(unittest.TestCase):
                 "The rule for this test case has an auto-fix, but no expected source was specified."
             )
 
-        expected_replacement = _dedent(expected_replacement)
-        patched_code = patch.apply(_dedent(test_case.code))
+        expected_replacement = LintRuleTestCase._dedent(expected_replacement)
+        patched_code = patch.apply(LintRuleTestCase._dedent(test_case.code))
         if patched_code != expected_replacement:
             raise AssertionError(
                 "Auto-fix did not produce expected result.\n"
@@ -137,7 +129,7 @@ class LintRuleTestCaseStub(unittest.TestCase):
     ) -> None:
         reports = lint_file(
             Path(test_case.filename),
-            LintRuleTestCaseStub._dedent(test_case.code).encode("utf-8"),
+            LintRuleTestCase._dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],
         )
@@ -179,8 +171,4 @@ class LintRuleTestCaseStub(unittest.TestCase):
                     f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
                 )
 
-            LintRuleTestCaseStub._validate_patch(report, test_case)
-
-
-class TestLintRules(unittest.TestSuite, metaclass=BaseTestMeta):
-    pass
+            LintRuleTestCase._validate_patch(report, test_case)
