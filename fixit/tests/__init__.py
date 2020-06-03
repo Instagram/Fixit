@@ -2,7 +2,11 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-import fixit.tests.test_rules as test_rules
+
+import importlib
+
+
+test_rules = importlib.import_module("fixit.tests.test_rules")
 
 
 for lint_rule, test_case in test_rules.setupModule()[0].items():
