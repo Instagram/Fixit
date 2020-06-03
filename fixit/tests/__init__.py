@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 import fixit.tests.test_rules
 
+
 for lint_rule, test_case in test_rules.setupModule().items():
     """ Add the unittest.TestCase types returned from setupModule to the module's attribute """
     setattr(test_rules, lint_rule, test_case)

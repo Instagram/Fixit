@@ -40,6 +40,7 @@ class TestCasePrecursor:
 
 def setupModule():
     """ Aggregate all the lint rules defined in 'fixit.rule_lint_engine.get_rules()' and convert them into dynamically-named classes inherting from LintRuleTestCase """
+
     def _gen_test_case(rule) -> TestCasePrecursor:
         valid_tcs = dict()
         invalid_tcs = dict()
@@ -71,6 +72,7 @@ def setupModule():
             test_methods_to_add: Dict[str, Callable] = dict()
 
             for test_method_name, test_method_data in test_case.test_methods.items():
+
                 def test_method(
                     self: object,
                     data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
@@ -81,14 +83,13 @@ def setupModule():
                 test_method.__name__ = test_method_name
                 test_methods_to_add[test_method_name] = test_method
 
-            test_case_type = type(
-                rule_name, (LintRuleTestCase,), test_methods_to_add
-            )
+            test_case_type = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
             test_cases_to_add.update({rule_name: test_case_type})
         return test_cases_to_add
 
     test_cases = _gen_test_cases()
     return populate_data_provider_tests(test_cases)
+
 
 class LintRuleTestCase(unittest.TestCase):
     @staticmethod
