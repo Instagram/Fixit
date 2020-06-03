@@ -4,4 +4,4 @@
 # LICENSE file in the root directory of this source tree.
 
 
-FIXIT_VERSION: str = "0.0.dev2"
+FIXIT_VERSION: str = "0.0.dev3"
