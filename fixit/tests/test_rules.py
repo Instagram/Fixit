@@ -12,6 +12,7 @@ from typing import Callable, Dict, Mapping, Sequence, Tuple, Type, Union
 
 from fixit.common.base import CstLintRule
 from fixit.common.report import BaseLintRuleReport
+from fixit.common.testing import LintRuleTest
 from fixit.common.utils import InvalidTestCase, ValidTestCase  # noqa: F401
 from fixit.rule_lint_engine import get_rules, lint_file
 
@@ -76,45 +77,12 @@ def add_lint_rule_tests_to_module() -> None:
 
 
 class LintRuleTestCase(unittest.TestCase):
-    @staticmethod
-    def _dedent(src: str) -> str:
-        src = re.sub(r"\A\n", "", src)
-        return textwrap.dedent(src)
-
-    @staticmethod
-    def _validate_patch(
-        report: BaseLintRuleReport, test_case: InvalidTestCase
-    ) -> unittest.TestResult:
-        patch = report.patch
-        expected_replacement = test_case.expected_replacement
-
-        if patch is None:
-            if expected_replacement is not None:
-                raise AssertionError(
-                    "The rule for this test case has no auto-fix, but expected source was specified."
-                )
-            return
-
-        if expected_replacement is None:
-            raise AssertionError(
-                "The rule for this test case has an auto-fix, but no expected source was specified."
-            )
-
-        expected_replacement = LintRuleTestCase._dedent(expected_replacement)
-        patched_code = patch.apply(LintRuleTestCase._dedent(test_case.code))
-        if patched_code != expected_replacement:
-            raise AssertionError(
-                "Auto-fix did not produce expected result.\n"
-                + f"Expected:\n{expected_replacement}\n"
-                + f"But found:\n{patched_code}"
-            )
-
     def _test_method(
         self, test_case: Union[ValidTestCase, InvalidTestCase], rule: Type[CstLintRule],
     ) -> None:
         reports = lint_file(
             Path(test_case.filename),
-            LintRuleTestCase._dedent(test_case.code).encode("utf-8"),
+            LintRuleTest.dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],
         )
@@ -156,7 +124,7 @@ class LintRuleTestCase(unittest.TestCase):
                     f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
                 )
 
-            LintRuleTestCase._validate_patch(report, test_case)
+            LintRuleTest.validate_patch(report, test_case)
 
 
 add_lint_rule_tests_to_module()
