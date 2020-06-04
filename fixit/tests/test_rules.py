@@ -6,15 +6,12 @@
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, Mapping, Sequence, Tuple, Type, Union
+from typing import Callable, Dict, Mapping, Sequence, Type, Union
 
 from fixit.common.base import CstLintRule
 from fixit.common.testing import LintRuleTest
 from fixit.common.utils import InvalidTestCase, ValidTestCase  # noqa: F401
 from fixit.rule_lint_engine import get_rules, lint_file
-
-
-DEFAULT_MAX_LINT_TESTS: int = 256
 
 
 @dataclass(frozen=True)
@@ -23,30 +20,24 @@ class TestCasePrecursor:
     test_methods: Mapping[str, Union[ValidTestCase, InvalidTestCase]]
 
 
-def _gen_test_methods_for_rule(rule) -> Tuple[TestCasePrecursor, int]:
+def _gen_test_methods_for_rule(rule) -> TestCasePrecursor:
     """ Aggregates all of the cases inside a single CstLintRule's VALID and INVALID attributes
     and maps them to altered names with a `test_` prefix so that 'unittest' can discover them
     later on and an index postfix so that individual tests can be selected from the command line.
     """
     valid_tcs = dict()
     invalid_tcs = dict()
-    num_methods = 0
     if issubclass(rule, CstLintRule):
 
         if hasattr(rule, "VALID"):
             # pyre-ignore[16]: `CstLintRule` has no attribute `VALID`.
             for idx, test_case in enumerate(rule.VALID):
                 valid_tcs[f"test_VALID_{idx}"] = test_case
-                num_methods += 1
         if hasattr(rule, "INVALID"):
             # pyre-ignore[16]: `CstLintRule` has no attribute `INVALID`.
             for idx, test_case in enumerate(rule.INVALID):
                 invalid_tcs[f"test_INVALID_{idx}"] = test_case
-                num_methods += 1
-    return (
-        TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs}),
-        num_methods,
-    )
+    return TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs})
 
 
 def _gen_all_test_methods() -> Sequence[TestCasePrecursor]:
@@ -58,12 +49,12 @@ def _gen_all_test_methods() -> Sequence[TestCasePrecursor]:
     for rule in get_rules():
         if not issubclass(rule, CstLintRule):
             continue
-        test_cases_for_rule, num_test_methods = _gen_test_methods_for_rule(rule)
+        test_cases_for_rule = _gen_test_methods_for_rule(rule)
         cases.append(test_cases_for_rule)
     return cases
 
 
-def add_lint_rule_tests_to_module(max_tests: int = DEFAULT_MAX_LINT_TESTS) -> None:
+def add_lint_rule_tests_to_module() -> None:
     """
     Creates LintRuleTestCase types from CstLintRule types and adds them to module's attributes
     in order to be discoverable by 'unittest'.
@@ -71,7 +62,6 @@ def add_lint_rule_tests_to_module(max_tests: int = DEFAULT_MAX_LINT_TESTS) -> No
     for test_case in _gen_all_test_methods():
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
-        num_tests = len(test_case.test_methods.items())
 
         for test_method_name, test_method_data in test_case.test_methods.items():
 
@@ -82,26 +72,8 @@ def add_lint_rule_tests_to_module(max_tests: int = DEFAULT_MAX_LINT_TESTS) -> No
             ) -> unittest.TestResult:
                 return self._test_method(data, rule)
 
-            def error_method(
-                self: object,
-                max_tests: int = max_tests,
-                num_tests: int = num_tests,
-                rule_name: str = rule_name,
-            ) -> unittest.TestResult:
-                raise AssertionError(
-                    f"{rule_name} generated {num_tests} tests but the limit is "
-                    + f"{max_tests}. You can increase the number of "
-                    + "allowed tests by specifying max_tests, but please "
-                    + "consider whether you really need to test all of "
-                    + "these combinations."
-                )
-
-            if num_tests > max_tests:
-                error_method.__name__ = test_method_name
-                test_methods_to_add[test_method_name] = error_method
-            else:
-                test_method.__name__ = test_method_name
-                test_methods_to_add[test_method_name] = test_method
+            test_method.__name__ = test_method_name
+            test_methods_to_add[test_method_name] = test_method
 
         test_case_class = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
         globals()[rule_name] = test_case_class
@@ -158,4 +130,4 @@ class LintRuleTestCase(unittest.TestCase):
             LintRuleTest.validate_patch(report, test_case)
 
 
-add_lint_rule_tests_to_module(max_tests=DEFAULT_MAX_LINT_TESTS)
+add_lint_rule_tests_to_module()
