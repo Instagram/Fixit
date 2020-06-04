@@ -6,7 +6,7 @@
 import re
 import textwrap
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, Type, Union
+from typing import Iterable, Optional, Type, Union
 
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,

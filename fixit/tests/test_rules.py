@@ -3,15 +3,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import re
-import textwrap
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Mapping, Sequence, Tuple, Type, Union
 
 from fixit.common.base import CstLintRule
-from fixit.common.report import BaseLintRuleReport
 from fixit.common.testing import LintRuleTest
 from fixit.common.utils import InvalidTestCase, ValidTestCase  # noqa: F401
 from fixit.rule_lint_engine import get_rules, lint_file
