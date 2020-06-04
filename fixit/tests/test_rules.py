@@ -44,23 +44,18 @@ def _gen_test_methods_for_rule(rule) -> Tuple[TestCasePrecursor, int]:
     )
 
 
-def _gen_all_test_methods() -> Tuple[Sequence[TestCasePrecursor], int]:
+def _gen_all_test_methods() -> Sequence[TestCasePrecursor]:
     cases = []
-    total_test_methods = 0
     for rule in get_rules():
         if not issubclass(rule, CstLintRule):
             continue
         test_cases_for_rule, num_test_methods = _gen_test_methods_for_rule(rule)
         cases.append(test_cases_for_rule)
-        total_test_methods += num_test_methods
-    return cases, total_test_methods
+    return cases
 
 
-def populate_data_provider_tests(
-    test_cases: Sequence[TestCasePrecursor],
-) -> Tuple[Mapping[str, unittest.TestCase], int]:
-    test_cases_to_add: Dict[str, unittest.TestCase] = {}
-    for test_case in test_cases:
+def add_lint_rule_tests_to_module() -> None:
+    for test_case in _gen_all_test_methods():
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
 
@@ -76,16 +71,8 @@ def populate_data_provider_tests(
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method
 
-        test_case_type = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
-        test_cases_to_add.update({rule_name: test_case_type})
-    return test_cases_to_add
-
-
-def setupModule():
-    """ Aggregate all the lint rules defined in 'fixit.rule_lint_engine.get_rules()' and convert them into dynamically-named classes inherting from LintRuleTestCase """
-
-    test_cases, total_test_methods = _gen_all_test_methods()
-    return populate_data_provider_tests(test_cases), total_test_methods
+        test_case_class = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
+        globals()[rule_name] = test_case_class
 
 
 class LintRuleTestCase(unittest.TestCase):
@@ -170,3 +157,6 @@ class LintRuleTestCase(unittest.TestCase):
                 )
 
             LintRuleTestCase._validate_patch(report, test_case)
+
+
+add_lint_rule_tests_to_module()
