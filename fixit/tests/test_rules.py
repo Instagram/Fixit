@@ -21,6 +21,10 @@ class TestCasePrecursor:
 
 
 def _gen_test_methods_for_rule(rule) -> Tuple[TestCasePrecursor, int]:
+    """ Aggregates all of the cases inside a single CstLintRule's VALID and INVALID attributes
+    and maps them to altered names with a `test_` prefix so that 'unittest' can discover them
+    later on and an index postfix so that individual tests can be selected from the command line.
+    """
     valid_tcs = dict()
     invalid_tcs = dict()
     num_methods = 0
@@ -43,6 +47,10 @@ def _gen_test_methods_for_rule(rule) -> Tuple[TestCasePrecursor, int]:
 
 
 def _gen_all_test_methods() -> Sequence[TestCasePrecursor]:
+    """
+    Converts all discoverable lint rules to type `TestCasePrecursor` to ease further TestCase
+    creation later on.
+    """
     cases = []
     for rule in get_rules():
         if not issubclass(rule, CstLintRule):
@@ -53,6 +61,10 @@ def _gen_all_test_methods() -> Sequence[TestCasePrecursor]:
 
 
 def add_lint_rule_tests_to_module() -> None:
+    """
+    Creates LintRuleTestCase types from CstLintRule types and adds them to module's attributes
+    in order to be discoverable by 'unittest'.
+    """
     for test_case in _gen_all_test_methods():
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
