@@ -14,6 +14,9 @@ from fixit.common.utils import InvalidTestCase, ValidTestCase  # noqa: F401
 from fixit.rule_lint_engine import get_rules, lint_file
 
 
+DEFAULT_MAX_LINT_TESTS: int = 256
+
+
 @dataclass(frozen=True)
 class TestCasePrecursor:
     rule: Type[CstLintRule]
@@ -60,7 +63,7 @@ def _gen_all_test_methods() -> Sequence[TestCasePrecursor]:
     return cases
 
 
-def add_lint_rule_tests_to_module() -> None:
+def add_lint_rule_tests_to_module(max_tests: int = DEFAULT_MAX_LINT_TESTS) -> None:
     """
     Creates LintRuleTestCase types from CstLintRule types and adds them to module's attributes
     in order to be discoverable by 'unittest'.
@@ -68,6 +71,7 @@ def add_lint_rule_tests_to_module() -> None:
     for test_case in _gen_all_test_methods():
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
+        num_tests = len(test_case.test_methods.items())
 
         for test_method_name, test_method_data in test_case.test_methods.items():
 
@@ -75,11 +79,29 @@ def add_lint_rule_tests_to_module() -> None:
                 self: object,
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
-            ) -> object:
+            ) -> unittest.TestResult:
                 return self._test_method(data, rule)
 
-            test_method.__name__ = test_method_name
-            test_methods_to_add[test_method_name] = test_method
+            def error_method(
+                self: object,
+                max_tests: int = max_tests,
+                num_tests: int = num_tests,
+                rule_name: str = rule_name,
+            ) -> unittest.TestResult:
+                raise AssertionError(
+                    f"{rule_name} generated {num_tests} tests but the limit is "
+                    + f"{max_tests}. You can increase the number of "
+                    + "allowed tests by specifying max_tests, but please "
+                    + "consider whether you really need to test all of "
+                    + "these combinations."
+                )
+
+            if num_tests > max_tests:
+                error_method.__name__ = test_method_name
+                test_methods_to_add[test_method_name] = error_method
+            else:
+                test_method.__name__ = test_method_name
+                test_methods_to_add[test_method_name] = test_method
 
         test_case_class = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
         globals()[rule_name] = test_case_class
@@ -136,4 +158,4 @@ class LintRuleTestCase(unittest.TestCase):
             LintRuleTest.validate_patch(report, test_case)
 
 
-add_lint_rule_tests_to_module()
+add_lint_rule_tests_to_module(max_tests=DEFAULT_MAX_LINT_TESTS)
