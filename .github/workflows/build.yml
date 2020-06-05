@@ -91,6 +91,6 @@ jobs:
           source /tmp/fixit-env/bin/activate
           python -VV
           python -m pip install --upgrade pip
-          pip install tox
-          if [ -f requirements.txt ]; then pip install -r requirements-dev.txt; fi
-          tox -e pyre
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pyre --preserve-pythonpath check
