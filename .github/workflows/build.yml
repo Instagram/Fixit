@@ -68,7 +68,29 @@ jobs:
       - name: Coverage
         run: |
           tox -e coverage
+        continue-on-error: true
+
+  pyre:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7]
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Set Up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Pyre
         run: |
+          python -m venv /tmp/fixit-env/
+          source /tmp/fixit-env/bin/activate
+          python -VV
+          python -m pip install --upgrade pip
+          pip install tox
+          if [ -f requirements.txt ]; then pip install -r requirements-dev.txt; fi
           tox -e pyre
-        continue-on-error: true
