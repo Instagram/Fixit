@@ -1,8 +1,7 @@
 name: Build
-on: 
+on:
   push:
     branches:
-      - master
     tags:
       - v*
   pull_request:
@@ -70,4 +69,7 @@ jobs:
       - name: Coverage
         run: |
           tox -e coverage
+      - name: Pyre
+        run: |
+          tox -e pyre
         continue-on-error: true
