@@ -20,7 +20,7 @@ class TestCasePrecursor:
     test_methods: Mapping[str, Union[ValidTestCase, InvalidTestCase]]
 
 
-def _gen_test_methods_for_rule(rule) -> TestCasePrecursor:
+def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
     """ Aggregates all of the cases inside a single CstLintRule's VALID and INVALID attributes
     and maps them to altered names with a `test_` prefix so that 'unittest' can discover them
     later on and an index postfix so that individual tests can be selected from the command line.
@@ -49,6 +49,8 @@ def _gen_all_test_methods() -> Sequence[TestCasePrecursor]:
     for rule in get_rules():
         if not issubclass(rule, CstLintRule):
             continue
+        # pyre-ignore[6]: Expected `Type[CstLintRule]` for 1st anonymous parameter to call
+        # `_gen_test_methods_for_rule` but got `Union[Type[CstLintRule], Type[PseudoLintRule]]`.
         test_cases_for_rule = _gen_test_methods_for_rule(rule)
         cases.append(test_cases_for_rule)
     return cases
@@ -66,10 +68,10 @@ def add_lint_rule_tests_to_module() -> None:
         for test_method_name, test_method_data in test_case.test_methods.items():
 
             def test_method(
-                self: object,
+                self: Type[LintRuleTestCase],
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
-            ) -> unittest.TestResult:
+            ) -> None:
                 return self._test_method(data, rule)
 
             test_method.__name__ = test_method_name
