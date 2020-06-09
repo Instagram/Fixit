@@ -6,7 +6,7 @@
 import re
 import textwrap
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, Type, Union
+from typing import Iterable, Optional, Type, Union
 
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
@@ -21,74 +21,6 @@ from fixit.common.utils import InvalidTestCase, ValidTestCase
 def _dedent(src: str) -> str:
     src = re.sub(r"\A\n", "", src)
     return textwrap.dedent(src)
-
-
-def data_provider_DEPRECATED(fn_data_provider):  # noqa: C901
-    """
-    NOTE: This data provider method is deprecated in favor of a newer version.  Please
-    use that one instead.
-
-    Data provider decorator, allows another callable to provide the data for the testself.
-    """
-    # TODO: data_provider_DEPRECATED should be replaced by data_provider
-    def test_decorator(fn):
-        def repl(self, *args) -> None:
-            provided_data = fn_data_provider(self)
-            for data_idx, data_entry in enumerate(provided_data):
-                if isinstance(provided_data, dict):
-                    func_args = provided_data[data_entry]
-                    dataset_name = f"'{data_entry}'"
-                else:
-                    func_args = data_entry
-                    dataset_name = str(data_idx)
-                # Set the index of the current iteration on the test class itself and clean it
-                # up afterwards.  This allows the test to figure out which test case it's currently
-                # processing.
-                self._data_provider_index = data_idx
-                try:
-                    if isinstance(func_args, dict):
-                        fn(self, **func_args)
-                    else:
-                        fn(self, *func_args)
-                except Exception:
-                    print()
-                    print(f"Exception caught with data set {dataset_name}:", func_args)
-                    raise
-            try:
-                delattr(self, "_data_provider_index")
-            except AttributeError:
-                pass
-
-        async def async_repl(self, *args) -> None:
-            provided_data = fn_data_provider(self)
-            for data_idx, data_entry in enumerate(provided_data):
-                if isinstance(provided_data, dict):
-                    func_args = provided_data[data_entry]
-                    dataset_name = f"'{data_entry}'"
-                else:
-                    func_args = data_entry
-                    dataset_name = str(data_idx)
-                # Set the index of the current iteration on the test class itself and clean it
-                # up afterwards.  This allows the test to figure out which test case it's currently
-                # processing.
-                self._data_provider_index = data_idx
-                try:
-                    if isinstance(func_args, dict):
-                        fn(self, **func_args)
-                    else:
-                        fn(self, *func_args)
-                except Exception:
-                    print()
-                    print(f"Exception caught with data set {dataset_name}:", func_args)
-                    raise
-            try:
-                delattr(self, "_data_provider_index")
-            except AttributeError:
-                pass
-
-        return repl
-
-    return test_decorator
 
 
 # We can't use an ABCMeta here, because of metaclass conflicts
@@ -106,19 +38,8 @@ class LintRuleTest(UnitTest):
                 "rule must be in fixit.rule_lint_engine.get_rules()",
             )
 
-    def __test_case_data_provider(
-        self,
-    ) -> Iterable[Tuple[Union[ValidTestCase, InvalidTestCase]]]:
-        # don't execute this test for the base class
-        if type(self) is not LintRuleTest:
-            for vtc in self.VALID:
-                yield (vtc,)
-            for itc in self.INVALID:
-                yield (itc,)
-
-    def validate_patch(
-        self, report: BaseLintRuleReport, test_case: InvalidTestCase
-    ) -> None:
+    @staticmethod
+    def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> None:
         patch = report.patch
         expected_replacement = test_case.expected_replacement
 
@@ -142,10 +63,6 @@ class LintRuleTest(UnitTest):
                 + f"Expected:\n{expected_replacement}\n"
                 + f"But found:\n{patched_code}"
             )
-
-    @data_provider_DEPRECATED(__test_case_data_provider)
-    def test_rule(self, test_case: Union[ValidTestCase, InvalidTestCase]) -> None:
-        self._test_rule(test_case)
 
     def _test_rule(
         self,
@@ -198,4 +115,4 @@ class LintRuleTest(UnitTest):
                     f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
                 )
 
-            self.validate_patch(report, test_case)
+            LintRuleTest.validate_patch(report, test_case)
