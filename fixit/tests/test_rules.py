@@ -72,6 +72,7 @@ def add_lint_rule_tests_to_module() -> None:
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
             ) -> None:
+                # pyre-ignore[20]: Call `LintRuleTestCase._test_method` expects argument `rule`.
                 return self._test_method(data, rule)
 
             test_method.__name__ = test_method_name
