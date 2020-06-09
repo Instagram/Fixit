@@ -18,17 +18,17 @@ from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import InvalidTestCase, ValidTestCase
 
 
+def _dedent(src: str) -> str:
+    src = re.sub(r"\A\n", "", src)
+    return textwrap.dedent(src)
+
+
 # We can't use an ABCMeta here, because of metaclass conflicts
 # pyre-fixme[13]: Attribute `VALID` is never initialized.
 class LintRuleTest(UnitTest):
     RULE: Type[CstLintRule]
     VALID: Iterable[ValidTestCase]
     INVALID: Iterable[InvalidTestCase]
-
-    @staticmethod
-    def dedent(src: str) -> str:
-        src = re.sub(r"\A\n", "", src)
-        return textwrap.dedent(src)
 
     def _test_rule_in_list(self, rule: Type[CstLintRule]) -> None:
         if type(self) is not LintRuleTest:
@@ -55,8 +55,8 @@ class LintRuleTest(UnitTest):
                 "The rule for this test case has an auto-fix, but no expected source was specified."
             )
 
-        expected_replacement = LintRuleTest.dedent(expected_replacement)
-        patched_code = patch.apply(LintRuleTest.dedent(test_case.code))
+        expected_replacement = _dedent(expected_replacement)
+        patched_code = patch.apply(_dedent(test_case.code))
         if patched_code != expected_replacement:
             raise AssertionError(
                 "Auto-fix did not produce expected result.\n"
@@ -73,7 +73,7 @@ class LintRuleTest(UnitTest):
         self._test_rule_in_list(rule)
         reports = rule_lint_engine.lint_file(
             Path(test_case.filename),
-            LintRuleTest.dedent(test_case.code).encode("utf-8"),
+            _dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],
         )

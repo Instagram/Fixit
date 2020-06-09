@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Callable, Dict, Mapping, Sequence, Type, Union
 
 from fixit.common.base import CstLintRule
-from fixit.common.testing import LintRuleTest
+from fixit.common.testing import LintRuleTest, _dedent
 from fixit.common.utils import InvalidTestCase, ValidTestCase  # noqa: F401
 from fixit.rule_lint_engine import get_rules, lint_file
 
@@ -87,7 +87,7 @@ class LintRuleTestCase(unittest.TestCase):
     ) -> None:
         reports = lint_file(
             Path(test_case.filename),
-            LintRuleTest.dedent(test_case.code).encode("utf-8"),
+            _dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],
         )
