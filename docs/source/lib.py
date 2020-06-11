@@ -6,7 +6,9 @@
 import difflib
 from pathlib import Path
 from textwrap import dedent, indent
+from typing import IO
 
+from fixit.common.base import LintRuleT
 from fixit.rule_lint_engine import get_rules
 
 
@@ -14,10 +16,11 @@ def _add_code_indent(code: str) -> str:
     return indent(code, "    ") + "\n"
 
 
-def write_example_cases(fp, rule, key):
+def write_example_cases(fp: IO[str], rule: LintRuleT, key: str) -> None:
     s = ""
-    if rule.__doc__:
-        s += dedent(rule.__doc__)
+    doc = rule.__doc__
+    if doc:
+        s += dedent(doc)
     if hasattr(rule, key):
         line = f"{key} Code Examples"
         line_len = len(line)
@@ -70,7 +73,7 @@ def _get_dashed_rule_name_from_camel_case(name: str) -> str:
     return rule_name
 
 
-def create_rule_doc():
+def create_rule_doc() -> None:
     directory = Path(__file__).parent / "rules"
     directory.mkdir(exist_ok=True)
 

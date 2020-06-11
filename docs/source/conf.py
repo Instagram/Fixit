@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # -*- coding: utf-8 -*-
-#
+# pyre-unsafe
 # Configuration file for the Sphinx documentation builder.
 #
 # This file does only contain a selection of the most common options. For a
