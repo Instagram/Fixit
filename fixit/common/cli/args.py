@@ -12,11 +12,9 @@ from fixit.common.cli import LintWorkers
 from fixit.common.config import REPO_ROOT
 
 
-def _import_rule(name: str) -> LintRuleT:
-    rule_module_name, rule_class_name = name.split(".")
-    rule_class = getattr(
-        importlib.import_module(f"fixit.rules.{rule_module_name}"), rule_class_name,
-    )
+def _import_rule(path_to_rule_class: str) -> LintRuleT:
+    rule_module_path, rule_class_name = path_to_rule_class.rsplit(".", 1)
+    rule_class = getattr(importlib.import_module(rule_module_path), rule_class_name,)
     return rule_class
 
 
@@ -26,9 +24,9 @@ def get_rule_parser() -> argparse.ArgumentParser:
         "rule",
         type=_import_rule,
         help=(
-            "The name of the file (minus the path and extension) and class joined with "
-            + "a '.' that defines your lint rule in fixit/rules/*.py. "
-            + "(e.g. no_asserts.NoAssertsLintRule)"
+            "The full name of the module and class joined with "
+            + "a '.' that defines your lint rule. "
+            + "(e.g. fixit.rules.no_assert_equals.NoAssertEqualsRule)"
         ),
     )
     return parser
