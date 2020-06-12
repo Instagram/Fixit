@@ -5,9 +5,9 @@
 
 # noqa-file: IG01: Asserts are okay in this file, because it's not used in prod
 
+import argparse
 import ast
 import io
-import optparse
 import tokenize
 from functools import lru_cache
 from typing import Any, Iterable, List, Optional, Type
@@ -35,7 +35,7 @@ class Flake8CompatAccumulatingFormatter(Flake8BaseFormatter):
     """
 
     def __init__(
-        self, options: optparse.Values, accumulator: List[Flake8Violation]
+        self, options: argparse.Namespace, accumulator: List[Flake8Violation]
     ) -> None:
         super().__init__(options)
         self.accumulator: List[Flake8Violation] = accumulator
@@ -113,7 +113,9 @@ class Flake8CompatCheckerManager(Flake8CheckerManager):
                 paths[0], checks, self.options, context=self.context
             )
         ]
-        self.checkers = [checker for checker in checkers if checker.should_process]
+        self._all_checkers = self.checkers = [
+            checker for checker in checkers if checker.should_process
+        ]
 
 
 class Flake8CompatApplication(Flake8BaseApplication):
