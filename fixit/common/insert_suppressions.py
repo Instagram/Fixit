@@ -160,8 +160,8 @@ def insert_suppressions(
             if target_line == line_number:
                 indent = indentations[line_number]
                 width = max(code_width - len(indent), min_comment_width)
-                for l in comments_queue.popleft().to_lines(width):
-                    updated_lines.append(f"{indent}{l}\n".encode(encoding))
+                for line in comments_queue.popleft().to_lines(width):
+                    updated_lines.append(f"{indent}{line}\n".encode(encoding))
             else:
                 break
         updated_lines.append(line_bytes)

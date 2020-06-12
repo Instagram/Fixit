@@ -53,7 +53,7 @@ def write_example_cases(fp: IO[str], rule: LintRuleT, key: str) -> None:
                     )
                 )
                 s += dedent(
-                    f"""
+                    """
                     Autofix:
 
                     .. code-block:: python
