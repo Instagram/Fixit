@@ -113,6 +113,8 @@ class Flake8CompatCheckerManager(Flake8CheckerManager):
                 paths[0], checks, self.options, context=self.context
             )
         ]
+        # Necessary for the flake8 changes introduced here https://github.com/PyCQA/flake8/commit/bfb79b46c807168dbc25fd1e9e41359c4558256f
+        # Flake8's Manager class now uses the parameter self._all_checkers to store the checkers
         self._all_checkers = self.checkers = [
             checker for checker in checkers if checker.should_process
         ]
