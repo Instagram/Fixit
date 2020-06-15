@@ -2,7 +2,6 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
 from pathlib import Path
 
 import libcst as cst
@@ -22,8 +21,9 @@ class _ExtendedLintRuleReportFormatter(LintRuleReportFormatter):
 
 class LintRuleReportFormatterTest(UnitTest):
     def setUp(self) -> None:
+        self.fake_filepath = Path("fake/path.py")
         self.report = CstLintRuleReport(
-            file_path=Path("fake/path.py"),
+            file_path=self.fake_filepath,
             node=cst.parse_statement("pass\n"),
             code="IG00",
             message=(
@@ -42,7 +42,8 @@ class LintRuleReportFormatterTest(UnitTest):
         self.assertEqual(
             full_formatter.format(self.report),
             (
-                "fake/path.py:1:1\n"
+                str(self.fake_filepath)
+                + ":1:1\n"
                 + "    IG00 Some long\n"
                 + "    message that\n"
                 + "    should span\n"
@@ -58,7 +59,9 @@ class LintRuleReportFormatterTest(UnitTest):
 
     def test_format_compact(self) -> None:
         compact_formatter = LintRuleReportFormatter(width=20, compact=True)
-        self.assertEqual(compact_formatter.format(self.report), "fake/path.py:1:1")
+        self.assertEqual(
+            compact_formatter.format(self.report), str(self.fake_filepath) + ":1:1",
+        )
 
     def test_format_extended(self) -> None:
         extended_formatter = _ExtendedLintRuleReportFormatter(width=100, compact=False)
