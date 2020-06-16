@@ -26,7 +26,7 @@ from typing import (
 )
 
 import libcst as cst
-from libcst.metadata import MetadataWrapper
+from libcst.metadata import FullRepoManager, MetadataWrapper, TypeInferenceProvider
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
@@ -112,6 +112,7 @@ def lint_file(
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
+    timeout: int = 1,
 ) -> Collection[BaseLintRuleReport]:
     """
     May raise a SyntaxError, which should be handled by the
@@ -142,20 +143,25 @@ def lint_file(
     evaluated_rules = [
         r for r in rules if not ignore_info or ignore_info.should_evaluate_rule(r)
     ]
-    # Categorize lint rules.
-    cst_rules = cast(
-        Collection[Type[CstLintRule]],
-        [r for r in evaluated_rules if issubclass(r, CstLintRule)],
-    )
-    pseudo_rules = cast(
-        Collection[Type[PseudoLintRule]],
-        [r for r in evaluated_rules if issubclass(r, PseudoLintRule)],
-    )
+
+    # Iterate over rules and categorize lint rules, while grabbing dependencies.
+    cst_rules: List[CstLintRule] = []
+    pseudo_rules: List[PseudoLintRule] = []
+    type_inference_rules: List[CstLintRule] = []
+    for rule in evaluated_rules:
+        if issubclass(rule, CstLintRule):
+            if TypeInferenceProvider in rule.get_inherited_dependencies():
+                type_inference_rules.append(rule)
+            else:
+                cst_rules.append(rule)
+        elif issubclass(rule, PseudoLintRule):
+            pseudo_rules.append(rule)
+
+    cst_rules = cast(Collection[Type[CstLintRule]], cst_rules,)
+    pseudo_rules = cast(Collection[Type[PseudoLintRule]], pseudo_rules,)
 
     # `self.context.report()` accumulates reports into the context object, we'll copy
     # those into our local `reports` list.
-    ast_tree = None
-    cst_wrapper = None
     reports = []
     if cst_rules:
         cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
@@ -163,9 +169,24 @@ def lint_file(
         _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
         reports.extend(cst_context.reports)
     if pseudo_rules:
-        psuedo_context = PseudoContext(file_path, source, tokens, ast_tree)
+        pseudo_context = PseudoContext(file_path, source, tokens, None)
         for pr_cls in pseudo_rules:
-            reports.extend(pr_cls(psuedo_context).lint_file())
+            reports.extend(pr_cls(pseudo_context).lint_file())
+    if type_inference_rules:
+        full_repo_manager = FullRepoManager(
+            repo_root_dir=file_path,
+            paths=[file_path],
+            providers=(TypeInferenceProvider,),
+            timeout=timeout,
+        )
+        type_inference_wrapper = full_repo_manager.get_metadata_wrapper_for_path(
+            path=file_path
+        )
+        context = CstContext(type_inference_wrapper, source, file_path, config)
+        _visit_cst_rules_with_context(
+            type_inference_wrapper, type_inference_rules, context
+        )
+        reports.extend(context.reports)
 
     # filter the accumulated errors that should be noqa'ed
     if ignore_info:
