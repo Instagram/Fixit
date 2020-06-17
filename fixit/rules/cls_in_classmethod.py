@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import List, cast
+from typing import List, Union
 
 import libcst as cst
 from libcst.metadata import (
@@ -22,7 +22,9 @@ CLS = "cls"
 
 
 class _RenameTransformer(cst.CSTTransformer):
-    def __init__(self, names: List[cst.Name], new_name: str) -> None:
+    def __init__(
+        self, names: List[Union[cst.Name, cst.Attribute]], new_name: str
+    ) -> None:
         self.names = names
         self.new_name = new_name
 
@@ -272,17 +274,18 @@ class ClsInClassmethodRule(CstLintRule):
             self.report(node)
             return
 
-        refs: List[cst.Name] = []
+        refs: List[Union[cst.Name, cst.Attribute]] = []
         assignments = scope[p0_name.value]
         for a in assignments:
             if isinstance(a, Assignment):
-                if isinstance(a.node, cst.Name):
-                    refs.append(cast(cst.Name, a.node))
-                elif isinstance(a.node, cst.Param):
-                    refs.append(cast(cst.Param, a.node).name)
+                assign_node = a.node
+                if isinstance(assign_node, cst.Name):
+                    refs.append(assign_node)
+                elif isinstance(assign_node, cst.Param):
+                    refs.append(assign_node.name)
                 # There are other types of possible assignment nodes: ClassDef,
                 # FunctionDef, Import, etc. We deliberately do not handle those here.
             refs += [r.node for r in a.references]
 
-        repl = cast(cst.FunctionDef, node.visit(_RenameTransformer(refs, CLS)))
+        repl = node.visit(_RenameTransformer(refs, CLS))
         self.report(node, replacement=repl)
