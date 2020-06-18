@@ -7,6 +7,7 @@ import importlib
 import inspect
 import io
 import pkgutil
+import subprocess
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +21,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     Type,
     Union,
     cast,
@@ -104,6 +106,28 @@ def _visit_cst_rules_with_context(
     )
 
 
+def split_rules(
+    evaluated_rules: LintRuleCollectionT,
+) -> Tuple[
+    List[Type[CstLintRule]], List[Type[PseudoLintRule]], List[Type[CstLintRule]]
+]:
+    # Iterate over rules and categorize lint rules, while grabbing dependencies.
+    cst_rules: List[Type[CstLintRule]] = []
+    pseudo_rules: List[Type[PseudoLintRule]] = []
+    type_inference_rules: List[Type[CstLintRule]] = []
+    for rule in evaluated_rules:
+        if issubclass(rule, CstLintRule):
+            # pyre-fixme[16]: PseudoLintRule type has no attribute `get_inherited_dependencies`.
+            if TypeInferenceProvider in rule.get_inherited_dependencies():
+                type_inference_rules.append(cast(Type[CstLintRule], rule))
+            else:
+                cst_rules.append(cast(Type[CstLintRule], rule))
+        elif issubclass(rule, PseudoLintRule):
+            pseudo_rules.append(cast(Type[PseudoLintRule], rule))
+
+    return cst_rules, pseudo_rules, type_inference_rules
+
+
 def lint_file(
     file_path: Path,
     source: bytes,
@@ -144,23 +168,9 @@ def lint_file(
         r for r in rules if not ignore_info or ignore_info.should_evaluate_rule(r)
     ]
 
-    # Iterate over rules and categorize lint rules, while grabbing dependencies.
-    cst_rules: List[CstLintRule] = []
-    pseudo_rules: List[PseudoLintRule] = []
-    type_inference_rules: List[CstLintRule] = []
-    for rule in evaluated_rules:
-        if issubclass(rule, CstLintRule):
-            if TypeInferenceProvider in rule.get_inherited_dependencies():
-                type_inference_rules.append(rule)
-            else:
-                cst_rules.append(rule)
-        elif issubclass(rule, PseudoLintRule):
-            pseudo_rules.append(rule)
+    cst_rules, pseudo_rules, type_inference_rules = split_rules(evaluated_rules)
 
-    cst_rules = cast(Collection[Type[CstLintRule]], cst_rules,)
-    pseudo_rules = cast(Collection[Type[PseudoLintRule]], pseudo_rules,)
-
-    # `self.context.report()` accumulates reports into the context object, we'll copy
+    # `self.context.report()` accumulates #reports into the context object, we'll copy
     # those into our local `reports` list.
     reports = []
     if cst_rules:
@@ -174,19 +184,28 @@ def lint_file(
             reports.extend(pr_cls(pseudo_context).lint_file())
     if type_inference_rules:
         full_repo_manager = FullRepoManager(
-            repo_root_dir=file_path,
-            paths=[file_path],
-            providers=(TypeInferenceProvider,),
+            repo_root_dir=str(file_path),
+            paths=[str(file_path)],
+            providers={
+                provider
+                for rule in type_inference_rules
+                for provider in rule.get_inherited_dependencies()
+            },
             timeout=timeout,
         )
-        type_inference_wrapper = full_repo_manager.get_metadata_wrapper_for_path(
-            path=file_path
-        )
-        context = CstContext(type_inference_wrapper, source, file_path, config)
-        _visit_cst_rules_with_context(
-            type_inference_wrapper, type_inference_rules, context
-        )
-        reports.extend(context.reports)
+        try:
+            type_inference_wrapper = full_repo_manager.get_metadata_wrapper_for_path(
+                path=str(file_path)
+            )
+        except subprocess.TimeoutExpired:
+            # TODO: how do we want to handle some lint rules potentially failing due to Pyre timeouts?
+            pass
+        else:
+            context = CstContext(type_inference_wrapper, source, file_path, config)
+            _visit_cst_rules_with_context(
+                type_inference_wrapper, type_inference_rules, context
+            )
+            reports.extend(context.reports)
 
     # filter the accumulated errors that should be noqa'ed
     if ignore_info:
