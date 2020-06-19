@@ -5,11 +5,16 @@
 
 import json
 import subprocess
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import libcst as cst
-from libcst.metadata import MetadataWrapper, TypeInferenceProvider
+from libcst.metadata import (
+    MetadataWrapper,
+    QualifiedNameProvider,
+    TypeInferenceProvider,
+)
 from libcst.metadata.type_inference_provider import PyreData
 from libcst.testing.utils import UnitTest, data_provider
 
@@ -27,7 +32,7 @@ class BadCallCstLintRule(CstLintRule):
 
 
 class DummyTypingRule(CstLintRule):
-    METADATA_DEPENDENCIES = (TypeInferenceProvider,)
+    METADATA_DEPENDENCIES = (TypeInferenceProvider, QualifiedNameProvider)
 
     def visit_Name(self, node: cst.Name) -> None:
         if node in self.metadata[TypeInferenceProvider]:
@@ -172,8 +177,39 @@ class RuleLintEngineTestPyreIntegration(UnitTest):
             rules=[DummyTypingRule],
         )
 
-        # We're expecting DummyTypingRule to raise one lint error
+        # We're expecting DummyTypingRule to raise one lint error on line 3
         self.assertEqual(len(reports), 1)
+        # pyre-ignore[16]: `typing.Collection` has no attribute `__getitem__`.
+        self.assertEqual(reports[0].line, 3)
+
+    @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
+    def test_type_inference_with_real_file_paths(
+        self, mock_gen_cache: MagicMock
+    ) -> None:
+        # Test that file paths are properly resolved by FullRepoManager
+        data: PyreData = json.loads(self.PYRE_TYPES_FILE.read_text())
+
+        with tempfile.NamedTemporaryFile(
+            "w+b", dir=Path(__file__).parent, suffix=".py"
+        ) as dummy_file:
+            # pyre-ignore[6]: Expected `str` for 1st anonymous parameter to call `typing.IO.write` but got `bytes`.
+            dummy_file.write(str.encode(_dedent(self.SOURCE_CODE)))
+            dummy_file.seek(0)
+
+            mock_gen_cache.return_value = {dummy_file.name: data}
+
+            reports = rule_lint_engine.lint_file(
+                file_path=Path(dummy_file.name),
+                # pyre-ignore[6]: Expected `bytes` for 2nd parameter `source` to call `rule_lint_engine.lint_file` but got `str`.
+                source=dummy_file.read(),
+                config={},
+                rules=[DummyTypingRule],
+            )
+
+            # Again, we are expecting one lint report on line 3
+            self.assertEqual(len(reports), 1)
+            # pyre-ignore[16]: `typing.Collection` has no attribute `__getitem__`.
+            self.assertEqual(reports[0].line, 3)
 
     @patch("pathlib.Path.read_text")
     @patch("libcst.metadata.TypeInferenceProvider.gen_cache")

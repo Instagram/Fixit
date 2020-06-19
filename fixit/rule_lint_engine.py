@@ -32,7 +32,7 @@ from libcst.metadata import FullRepoManager, MetadataWrapper, TypeInferenceProvi
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, get_config
+from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, FIXIT_ROOT, get_config
 from fixit.common.flake8_compat import Flake8PseudoLintRule
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
@@ -136,6 +136,7 @@ def lint_file(
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
+    repo_root_dir: Path = FIXIT_ROOT,
     timeout: int = 1,
 ) -> Collection[BaseLintRuleReport]:
     """
@@ -184,7 +185,7 @@ def lint_file(
             reports.extend(pr_cls(pseudo_context).lint_file())
     if type_inference_rules:
         full_repo_manager = FullRepoManager(
-            repo_root_dir=str(file_path),
+            repo_root_dir=str(repo_root_dir),
             paths=[str(file_path)],
             providers={
                 provider
