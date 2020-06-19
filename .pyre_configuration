@@ -3,7 +3,8 @@
         "."
     ],
     "exclude": [
-        ".*/\\.tox/.*"
+        ".*/\\.tox/.*",
+        ".*/fixit/tests/helpers"
     ],
     "strict": true
 }

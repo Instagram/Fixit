@@ -5,7 +5,6 @@
 
 import json
 import subprocess
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -154,6 +153,7 @@ class RuleLintEngineTestPyreIntegration(UnitTest):
 
     # File containing Pyre typing output for the code in SOURCE_CODE
     PYRE_TYPES_FILE: Path = FIXIT_ROOT / "tests" / "helpers" / "pyre_types.json"
+    SOURCE_CODE_TEST_FILE: Path = FIXIT_ROOT / "tests" / "helpers" / "pyre_test.py"
 
     @patch("libcst.metadata.FullRepoManager.get_metadata_wrapper_for_path")
     def test_type_inference_lint(self, mock_get_metadata: MagicMock) -> None:
@@ -189,19 +189,15 @@ class RuleLintEngineTestPyreIntegration(UnitTest):
         # Test that file paths are properly resolved by FullRepoManager
         data: PyreData = json.loads(self.PYRE_TYPES_FILE.read_text())
 
-        with tempfile.NamedTemporaryFile(
-            "w+b", dir=Path(__file__).parent, suffix=".py"
-        ) as dummy_file:
-            # pyre-ignore[6]: Expected `str` for 1st anonymous parameter to call `typing.IO.write` but got `bytes`.
-            dummy_file.write(str.encode(_dedent(self.SOURCE_CODE)))
-            dummy_file.seek(0)
+        with open(self.SOURCE_CODE_TEST_FILE, "w") as dummy_file:
+            dummy_file.write(_dedent(self.SOURCE_CODE))
 
+        with open(self.SOURCE_CODE_TEST_FILE, "r+") as dummy_file:
             mock_gen_cache.return_value = {dummy_file.name: data}
 
             reports = rule_lint_engine.lint_file(
-                file_path=Path(dummy_file.name),
-                # pyre-ignore[6]: Expected `bytes` for 2nd parameter `source` to call `rule_lint_engine.lint_file` but got `str`.
-                source=dummy_file.read(),
+                file_path=self.SOURCE_CODE_TEST_FILE,
+                source=str.encode(dummy_file.read()),
                 config={},
                 rules=[DummyTypingRule],
             )
@@ -210,6 +206,7 @@ class RuleLintEngineTestPyreIntegration(UnitTest):
             self.assertEqual(len(reports), 1)
             # pyre-ignore[16]: `typing.Collection` has no attribute `__getitem__`.
             self.assertEqual(reports[0].line, 3)
+            dummy_file.truncate(0)
 
     @patch("pathlib.Path.read_text")
     @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
