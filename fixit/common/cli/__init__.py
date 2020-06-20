@@ -6,16 +6,32 @@
 """
 Shared utilities for tools that need to run lint rules from the command line.
 """
-
+import argparse
 import itertools
+import json
 import multiprocessing
 import os
 import subprocess
+import sys
+import traceback
+from dataclasses import asdict, dataclass
 from enum import Enum  # noqa: IG29: The linter shouldn't depend on distillery's libs
 from pathlib import Path
-from typing import Callable, Collection, Iterable, Iterator, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Collection,
+    Generator,
+    Iterable,
+    Iterator,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from fixit.common.config import REPO_ROOT
+from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
+from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
 
 
 _MapPathsOperationConfigT = TypeVar("_MapPathsOperationConfigT")
@@ -119,3 +135,62 @@ def pyfmt(path: Union[str, Path]) -> None:
     formatted = subprocess.check_output(args, env={})
     with open(path, "wb") as f:
         f.write(formatted)
+
+
+@dataclass(frozen=True)
+class LintOpts:
+    rules: LintRuleCollectionT
+    success_report: Type[LintSuccessReportBase]
+    failure_report: Type[LintFailureReportBase]
+
+
+def get_file_lint_result_json(path: Path, opts: LintOpts) -> str:
+    try:
+        with open(path, "rb") as f:
+            source = f.read()
+        result = opts.success_report.create(
+            path, lint_file(path, source, rules=opts.rules)
+        )
+    except Exception:
+        tb_str = traceback.format_exc()
+        result = opts.failure_report.create(path, tb_str)
+    return json.dumps(asdict(result))
+
+
+def ipc_main(opts: LintOpts) -> None:
+    """
+    Given a LintOpts config with lint rules and lint success/failure report formatter,
+    this IPC helper took paths of source file paths from either stdin (newline-delimited
+    UTF-8 values), list of paths in a path file (with @paths arg) or a list of paths as
+    args. Results are formed as JSON and delimited by
+    newlines. It uses a multi process pool and the results are streamed to stdout as soon
+    as they're available. For stdin paths, they are evaluated as soon as they're read from
+    the pipe.
+    """
+    parser = argparse.ArgumentParser(
+        description="Runs Fixit lint rules and print results as console output.",
+        fromfile_prefix_chars="@",
+    )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=LintWorkers.CPU_COUNT,
+        help=(
+            "Number of processes to use when evaluating paths. Defaults to the current "
+            + "number of CPUs."
+        ),
+    )
+    parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
+    args: argparse.Namespace = parser.parse_args()
+    if args.paths:
+        paths: Generator[Path, None, None] = (Path(f) for f in args.paths)
+    else:
+        paths: Generator[Path, None, None] = (Path(p.rstrip("\r\n")) for p in sys.stdin)
+
+    results_iter: Iterator[str] = map_paths(
+        get_file_lint_result_json, paths, opts, workers=args.jobs
+    )
+    for result in results_iter:
+        # Use print outside of the executor to avoid multiple processes trying to write
+        # to stdout in parallel, which could cause a corrupted output.
+        print(result)

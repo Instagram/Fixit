@@ -7,7 +7,7 @@ import abc
 import ast
 from pathlib import Path
 from pickle import PicklingError  # noqa: IG37: We just want PicklingError
-from typing import Optional, Union
+from typing import Collection, Optional, Union
 
 import libcst as cst
 
@@ -112,3 +112,23 @@ class CstLintRuleReport(BaseLintRuleReport):
             ).minimize()
             self._cached_patch = cached
         return cached
+
+
+class LintFailureReportBase(abc.ABC):
+    """An implementation needs to be a dataclass."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def create(path: Path, exception_traceback: str) -> "LintFailureReportBase":
+        ...
+
+
+class LintSuccessReportBase(abc.ABC):
+    """An implementation needs to be a dataclass."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def create(
+        path: Path, reports: Collection[BaseLintRuleReport]
+    ) -> "LintSuccessReportBase":
+        ...
