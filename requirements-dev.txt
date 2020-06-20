@@ -9,3 +9,4 @@ pyre-check==0.0.41
 sphinx-rtd-theme==0.4.3
 prompt-toolkit==2.0.9
 tox==3.14.5
+diff_cover==3.0.1
