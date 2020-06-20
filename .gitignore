@@ -16,3 +16,5 @@ docs/source/.ipynb_checkpoints/
 build/
 .coverage
 docs/source/rules/
+coverage.xml
+coverage_report.html
