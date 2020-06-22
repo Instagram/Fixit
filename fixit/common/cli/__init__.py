@@ -23,6 +23,7 @@ from typing import (
     Generator,
     Iterable,
     Iterator,
+    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -144,17 +145,17 @@ class LintOpts:
     failure_report: Type[LintFailureReportBase]
 
 
-def get_file_lint_result_json(path: Path, opts: LintOpts) -> str:
+def get_file_lint_result_json(path: Path, opts: LintOpts) -> Sequence[str]:
     try:
         with open(path, "rb") as f:
             source = f.read()
-        result = opts.success_report.create(
+        results = opts.success_report.create_reports(
             path, lint_file(path, source, rules=opts.rules)
         )
     except Exception:
         tb_str = traceback.format_exc()
-        result = opts.failure_report.create(path, tb_str)
-    return json.dumps(asdict(result))
+        results = opts.failure_report.create_reports(path, tb_str)
+    return [json.dumps(asdict(r)) for r in results]
 
 
 def ipc_main(opts: LintOpts) -> None:
@@ -187,10 +188,11 @@ def ipc_main(opts: LintOpts) -> None:
     else:
         paths: Generator[Path, None, None] = (Path(p.rstrip("\r\n")) for p in sys.stdin)
 
-    results_iter: Iterator[str] = map_paths(
+    results_iter: Iterator[Sequence[str]] = map_paths(
         get_file_lint_result_json, paths, opts, workers=args.jobs
     )
-    for result in results_iter:
+    for results in results_iter:
         # Use print outside of the executor to avoid multiple processes trying to write
         # to stdout in parallel, which could cause a corrupted output.
-        print(result)
+        for result in results:
+            print(result)

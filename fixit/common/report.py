@@ -7,7 +7,7 @@ import abc
 import ast
 from pathlib import Path
 from pickle import PicklingError  # noqa: IG37: We just want PicklingError
-from typing import Collection, Optional, Union
+from typing import Collection, Optional, Sequence, Union
 
 import libcst as cst
 
@@ -119,7 +119,9 @@ class LintFailureReportBase(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def create(path: Path, exception_traceback: str) -> "LintFailureReportBase":
+    def create_reports(
+        path: Path, exception_traceback: str
+    ) -> Sequence["LintFailureReportBase"]:
         ...
 
 
@@ -128,7 +130,7 @@ class LintSuccessReportBase(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def create(
+    def create_reports(
         path: Path, reports: Collection[BaseLintRuleReport]
-    ) -> "LintSuccessReportBase":
+    ) -> Sequence["LintSuccessReportBase"]:
         ...
