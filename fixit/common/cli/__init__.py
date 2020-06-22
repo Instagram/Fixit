@@ -25,11 +25,18 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    Iterable,
+    Iterator,
+    Mapping,
+    Optional,
+    Tuple,
     TypeVar,
     Union,
 )
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
+from libcst.metadata.wrapper import MetadataWrapper
+
 from fixit.common.config import REPO_ROOT
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -40,7 +47,17 @@ _MapPathsOperationResultT = TypeVar("_MapPathsOperationResultT")
 _MapPathsOperationT = Callable[
     [Path, _MapPathsOperationConfigT], _MapPathsOperationResultT
 ]
+_MapPathsOperationWithMetadataT = Callable[
+    [Path, _MapPathsOperationConfigT, Optional[MetadataWrapper]],
+    _MapPathsOperationResultT,
+]
 _MapPathsWorkerArgsT = Tuple[_MapPathsOperationT, Path, _MapPathsOperationConfigT]
+_MapPathsWorkerArgsWithMetadataT = Tuple[
+    _MapPathsOperationWithMetadataT,
+    Path,
+    _MapPathsOperationConfigT,
+    Optional[MetadataWrapper],
+]
 
 
 def find_files(paths: Iterable[Path]) -> Iterator[Path]:
@@ -58,9 +75,11 @@ def find_files(paths: Iterable[Path]) -> Iterator[Path]:
 
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.
-def _map_paths_worker(args: _MapPathsWorkerArgsT) -> _MapPathsOperationResultT:
-    operation, path, config = args
-    return operation(path, config)
+def _map_paths_worker(
+    args: Union[_MapPathsWorkerArgsT, _MapPathsWorkerArgsWithMetadataT]
+) -> _MapPathsOperationResultT:
+    operation, path, *op_args = args
+    return operation(path, *op_args)
 
 
 def map_paths(
@@ -69,6 +88,7 @@ def map_paths(
     config: _MapPathsOperationConfigT,
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
+    metadata_wrappers: Mapping[Path, MetadataWrapper] = {},
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
@@ -89,9 +109,23 @@ def map_paths(
     if workers is LintWorkers.CPU_COUNT:
         workers = multiprocessing.cpu_count()
 
-    tasks: Collection[_MapPathsWorkerArgsT] = tuple(
-        zip(itertools.repeat(operation), paths, itertools.repeat(config))
-    )
+    if metadata_wrappers:
+        # pyre-ignore[9]: tasks is declared to have type `Collection[typing.Tuple[typing.Callable[[Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]],
+        # Variable[_MapPathsOperationResultT]], Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]]]`
+        # but is used as type `typing.Tuple[typing.Tuple[typing.Callable[[Path, Variable[_MapPathsOperationConfigT]],
+        # Variable[_MapPathsOperationResultT]], Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]], ...]`.
+        tasks: Collection[_MapPathsWorkerArgsWithMetadataT] = tuple(
+            zip(
+                itertools.repeat(operation),
+                paths,
+                itertools.repeat(config),
+                map(metadata_wrappers.get, paths),
+            )
+        )
+    else:
+        tasks: Collection[_MapPathsWorkerArgsT] = tuple(
+            zip(itertools.repeat(operation), paths, itertools.repeat(config))
+        )
     if not tasks:
         # this would result in 0 workers, which will cause multiprocessing.Pool to die
         return

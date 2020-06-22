@@ -7,7 +7,6 @@ import importlib
 import inspect
 import io
 import pkgutil
-import subprocess
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,18 +20,16 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
     Type,
     Union,
-    cast,
 )
 
 import libcst as cst
-from libcst.metadata import FullRepoManager, MetadataWrapper, TypeInferenceProvider
+from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, FIXIT_ROOT, get_config
+from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, get_config
 from fixit.common.flake8_compat import Flake8PseudoLintRule
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
@@ -106,28 +103,6 @@ def _visit_cst_rules_with_context(
     )
 
 
-def split_rules(
-    evaluated_rules: LintRuleCollectionT,
-) -> Tuple[
-    List[Type[CstLintRule]], List[Type[PseudoLintRule]], List[Type[CstLintRule]]
-]:
-    # Iterate over rules and categorize lint rules, while grabbing dependencies.
-    cst_rules: List[Type[CstLintRule]] = []
-    pseudo_rules: List[Type[PseudoLintRule]] = []
-    type_inference_rules: List[Type[CstLintRule]] = []
-    for rule in evaluated_rules:
-        if issubclass(rule, CstLintRule):
-            # pyre-fixme[16]: PseudoLintRule type has no attribute `get_inherited_dependencies`.
-            if TypeInferenceProvider in rule.get_inherited_dependencies():
-                type_inference_rules.append(cast(Type[CstLintRule], rule))
-            else:
-                cst_rules.append(cast(Type[CstLintRule], rule))
-        elif issubclass(rule, PseudoLintRule):
-            pseudo_rules.append(cast(Type[PseudoLintRule], rule))
-
-    return cst_rules, pseudo_rules, type_inference_rules
-
-
 def lint_file(
     file_path: Path,
     source: bytes,
@@ -136,8 +111,7 @@ def lint_file(
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
-    repo_root_dir: Path = FIXIT_ROOT,
-    timeout: int = 1,
+    cst_wrapper: Optional[MetadataWrapper] = None,
 ) -> Collection[BaseLintRuleReport]:
     """
     May raise a SyntaxError, which should be handled by the
@@ -168,45 +142,34 @@ def lint_file(
     evaluated_rules = [
         r for r in rules if not ignore_info or ignore_info.should_evaluate_rule(r)
     ]
+    # Categorize lint rules.
+    cst_rules: List[Type[CstLintRule]] = []
+    pseudo_rules: List[Type[PseudoLintRule]] = []
+    for r in evaluated_rules:
+        if issubclass(r, CstLintRule):
+            # pyre-ignore[6]: Expected `Type[CstLintRule]` for 1st anonymous parameter to call `list.append` but got `Union[Type[CstLintRule], Type[PseudoLintRule]]`
+            cst_rules.append(r)
+        elif issubclass(r, PseudoLintRule):
+            # pyre-ignore[6]: Expected `Type[PseudoLintRule]` for 1st anonymous parameter to call `list.append` but got `Union[Type[CstLintRule], Type[PseudoLintRule]]`.
+            pseudo_rules.append(r)
 
-    cst_rules, pseudo_rules, type_inference_rules = split_rules(evaluated_rules)
-
-    # `self.context.report()` accumulates #reports into the context object, we'll copy
+    # `self.context.report()` accumulates reports into the context object, we'll copy
     # those into our local `reports` list.
+    ast_tree = None
+    cst_wrapper = None
     reports = []
     if cst_rules:
-        cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
+        if cst_wrapper is None:
+            cst_wrapper = MetadataWrapper(
+                cst.parse_module(source), unsafe_skip_copy=True
+            )
         cst_context = CstContext(cst_wrapper, source, file_path, config)
         _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
         reports.extend(cst_context.reports)
     if pseudo_rules:
-        pseudo_context = PseudoContext(file_path, source, tokens, None)
+        psuedo_context = PseudoContext(file_path, source, tokens, ast_tree)
         for pr_cls in pseudo_rules:
-            reports.extend(pr_cls(pseudo_context).lint_file())
-    if type_inference_rules:
-        full_repo_manager = FullRepoManager(
-            repo_root_dir=str(repo_root_dir),
-            paths=[str(file_path)],
-            providers={
-                provider
-                for rule in type_inference_rules
-                for provider in rule.get_inherited_dependencies()
-            },
-            timeout=timeout,
-        )
-        try:
-            type_inference_wrapper = full_repo_manager.get_metadata_wrapper_for_path(
-                path=str(file_path)
-            )
-        except subprocess.TimeoutExpired:
-            # TODO: how do we want to handle some lint rules potentially failing due to Pyre timeouts?
-            pass
-        else:
-            context = CstContext(type_inference_wrapper, source, file_path, config)
-            _visit_cst_rules_with_context(
-                type_inference_wrapper, type_inference_rules, context
-            )
-            reports.extend(context.reports)
+            reports.extend(pr_cls(psuedo_context).lint_file())
 
     # filter the accumulated errors that should be noqa'ed
     if ignore_info:
