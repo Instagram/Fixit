@@ -15,7 +15,6 @@ import subprocess
 import sys
 import traceback
 from dataclasses import asdict, dataclass
-from enum import Enum  # noqa: IG29: The linter shouldn't depend on distillery's libs
 from pathlib import Path
 from typing import (
     Callable,
@@ -30,7 +29,7 @@ from typing import (
     Union,
 )
 
-from fixit.common.cli.args import get_multiprocessing_parser
+from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from fixit.common.config import REPO_ROOT
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -42,16 +41,6 @@ _MapPathsOperationT = Callable[
     [Path, _MapPathsOperationConfigT], _MapPathsOperationResultT
 ]
 _MapPathsWorkerArgsT = Tuple[_MapPathsOperationT, Path, _MapPathsOperationConfigT]
-
-
-class LintWorkers(Enum):
-    # Spawn (up to) one worker process per CPU core
-    CPU_COUNT = "cpu_count"
-    # Disable the process pool, and compute results in the current thread and process.
-    #
-    # This can be useful for debugging, where the process pool may break tracebacks,
-    # debuggers, or profilers.
-    USE_CURRENT_THREAD = "use_current_thread"
 
 
 def find_files(paths: Iterable[Path]) -> Iterator[Path]:
