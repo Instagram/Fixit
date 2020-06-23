@@ -145,7 +145,9 @@ def _gen_all_test_methods(extra_packages: List[str]) -> Sequence[TestCasePrecurs
 
 
 def add_lint_rule_tests_to_module(
-    module_attrs: Dict[str, Any], extra_packages: List[str] = []
+    module_attrs: Dict[str, Any],
+    extra_packages: List[str] = [],
+    test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
 ) -> None:
     """
     Creates LintRuleTestCase types from CstLintRule types and adds them to module's attributes
@@ -168,5 +170,5 @@ def add_lint_rule_tests_to_module(
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method
 
-        test_case_class = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
+        test_case_class = type(rule_name, (test_case_type,), test_methods_to_add)
         module_attrs[rule_name] = test_case_class
