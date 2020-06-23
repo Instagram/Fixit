@@ -175,11 +175,25 @@ def ipc_main(opts: LintOpts) -> None:
         parents=[get_multiprocessing_parser()],
     )
     parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
+    parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
-    if args.paths:
-        paths: Generator[Path, None, None] = (Path(f) for f in args.paths)
+    if args.prefix:
+        prefix_path = Path(args.prefix)
+
+        def process_path(p: str) -> Path:
+            return prefix_path / p
+
     else:
-        paths: Generator[Path, None, None] = (Path(p.rstrip("\r\n")) for p in sys.stdin)
+
+        def process_path(p: str) -> Path:
+            return Path(p)
+
+    if args.paths:
+        paths: Generator[Path, None, None] = (process_path(p) for p in args.paths)
+    else:
+        paths: Generator[Path, None, None] = (
+            process_path(p.rstrip("\r\n")) for p in sys.stdin
+        )
 
     results_iter: Iterator[Sequence[str]] = map_paths(
         get_file_lint_result_json, paths, opts, workers=args.workers
