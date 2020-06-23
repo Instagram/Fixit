@@ -8,7 +8,7 @@ import textwrap
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Mapping, Sequence, Type, Union
+from typing import Any, Callable, Dict, Mapping, Sequence, Type, Union, cast
 
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
@@ -137,9 +137,7 @@ def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecur
     for rule in rules:
         if not issubclass(rule, CstLintRule):
             continue
-        # pyre-ignore[6]: Expected `Type[CstLintRule]` for 1st anonymous parameter to call
-        # `_gen_test_methods_for_rule` but got `Union[Type[CstLintRule], Type[PseudoLintRule]]`.
-        test_cases_for_rule = _gen_test_methods_for_rule(rule)
+        test_cases_for_rule = _gen_test_methods_for_rule(cast(Type[CstLintRule], rule))
         cases.append(test_cases_for_rule)
     return cases
 
