@@ -8,7 +8,7 @@ import textwrap
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Sequence, Type, Union
+from typing import Any, Callable, Dict, Mapping, Sequence, Type, Union
 
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
@@ -17,7 +17,7 @@ from libcst.testing.utils import (  # noqa IG69: this module is only used by tes
 from fixit.common.base import CstLintRule
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import InvalidTestCase, ValidTestCase
-from fixit.rule_lint_engine import get_rules, lint_file
+from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
 
 
 def _dedent(src: str) -> str:
@@ -128,13 +128,13 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
     return TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs})
 
 
-def _gen_all_test_methods(extra_packages: List[str]) -> Sequence[TestCasePrecursor]:
+def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecursor]:
     """
-    Converts all discoverable lint rules to type `TestCasePrecursor` to ease further TestCase
+    Converts all passed-in lint rules to type `TestCasePrecursor` to ease further TestCase
     creation later on.
     """
     cases = []
-    for rule in get_rules(extra_packages):
+    for rule in rules:
         if not issubclass(rule, CstLintRule):
             continue
         # pyre-ignore[6]: Expected `Type[CstLintRule]` for 1st anonymous parameter to call
@@ -146,7 +146,7 @@ def _gen_all_test_methods(extra_packages: List[str]) -> Sequence[TestCasePrecurs
 
 def add_lint_rule_tests_to_module(
     module_attrs: Dict[str, Any],
-    extra_packages: List[str] = [],
+    rules: LintRuleCollectionT = [],
     test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
     custom_test_method_name: str = "_test_method",
 ) -> None:
@@ -154,7 +154,7 @@ def add_lint_rule_tests_to_module(
     Creates LintRuleTestCase types from CstLintRule types and adds them to module's attributes
     in order to be discoverable by 'unittest'.
     """
-    for test_case in _gen_all_test_methods(extra_packages):
+    for test_case in _gen_all_test_methods(rules):
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
 
