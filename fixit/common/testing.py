@@ -149,8 +149,21 @@ def add_lint_rule_tests_to_module(
     custom_test_method_name: str = "_test_method",
 ) -> None:
     """
-    Creates LintRuleTestCase types from CstLintRule types and adds them to module's attributes
-    in order to be discoverable by 'unittest'.
+    Generates classes inheriting from `unittest.TestCase` from the data available in `rules` and adds these to module_attrs.
+    The goal is to facilitate unit test discovery by Python's `unittest` framework. This will provide the capability of
+    testing your lint rules by running commands such as `python -m unittest <your testing module name>`.
+
+    module_attrs: A dictionary of attributes we want to add these test cases to. If adding to a module, you can pass `globals()` as the argument.
+
+    rules: A collection of classes extending `CstLintRule` to be converted to test cases.
+
+    test_case_type: A class extending Python's `unittest.TestCase` that implements a custom test method for testing lint rules to serve as a stencil for test cases.
+    New classes will be generated, and named after each lint rule. They will inherit directly from the class passed into `test_case_type`.
+    If argument is omitted, will default to the `LintRuleTestCase` class from fixit.common.testing.
+
+    custom_test_method_name: A member method of the class passed into `test_case_type` parameter that contains the logic around asserting success or failure of
+    CstLintRule's `ValidTestCase` and `InvalidTestCase` test cases. The method will be dynamically renamed to `test_<VALID/INVALID>_<test case index>` for discovery
+    by unittest. If argument is omitted, `add_lint_rule_tests_to_module` will look for a test method named `_test_method` member of `test_case_type`.
     """
     for test_case in _gen_all_test_methods(rules):
         rule_name = test_case.rule.__name__
