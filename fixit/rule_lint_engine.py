@@ -22,6 +22,7 @@ from typing import (
     Set,
     Type,
     Union,
+    cast,
 )
 
 import libcst as cst
@@ -147,11 +148,9 @@ def lint_file(
     pseudo_rules: List[Type[PseudoLintRule]] = []
     for r in evaluated_rules:
         if issubclass(r, CstLintRule):
-            # pyre-ignore[6]: Expected `Type[CstLintRule]` for 1st anonymous parameter to call `list.append` but got `Union[Type[CstLintRule], Type[PseudoLintRule]]`
-            cst_rules.append(r)
+            cst_rules.append(cast(Type[CstLintRule], r))
         elif issubclass(r, PseudoLintRule):
-            # pyre-ignore[6]: Expected `Type[PseudoLintRule]` for 1st anonymous parameter to call `list.append` but got `Union[Type[CstLintRule], Type[PseudoLintRule]]`.
-            pseudo_rules.append(r)
+            pseudo_rules.append(cast(Type[PseudoLintRule], r))
 
     # `self.context.report()` accumulates reports into the context object, we'll copy
     # those into our local `reports` list.
