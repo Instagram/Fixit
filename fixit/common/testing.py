@@ -148,6 +148,7 @@ def add_lint_rule_tests_to_module(
     module_attrs: Dict[str, Any],
     extra_packages: List[str] = [],
     test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
+    custom_test_method_name: str = "_test_method",
 ) -> None:
     """
     Creates LintRuleTestCase types from CstLintRule types and adds them to module's attributes
@@ -164,8 +165,7 @@ def add_lint_rule_tests_to_module(
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
             ) -> None:
-                # pyre-ignore[20]: Call `LintRuleTestCase._test_method` expects argument `rule`.
-                return self._test_method(data, rule)
+                return getattr(self, custom_test_method_name)(data, rule)
 
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method
