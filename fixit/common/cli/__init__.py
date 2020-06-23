@@ -30,6 +30,7 @@ from typing import (
     Union,
 )
 
+from fixit.common.cli.args import get_multiprocessing_parser
 from fixit.common.config import REPO_ROOT
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -171,15 +172,7 @@ def ipc_main(opts: LintOpts) -> None:
     parser = argparse.ArgumentParser(
         description="Runs Fixit lint rules and print results as console output.",
         fromfile_prefix_chars="@",
-    )
-    parser.add_argument(
-        "--jobs",
-        type=int,
-        default=LintWorkers.CPU_COUNT,
-        help=(
-            "Number of processes to use when evaluating paths. Defaults to the current "
-            + "number of CPUs."
-        ),
+        parents=[get_multiprocessing_parser()],
     )
     parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
     args: argparse.Namespace = parser.parse_args()
@@ -189,7 +182,7 @@ def ipc_main(opts: LintOpts) -> None:
         paths: Generator[Path, None, None] = (Path(p.rstrip("\r\n")) for p in sys.stdin)
 
     results_iter: Iterator[Sequence[str]] = map_paths(
-        get_file_lint_result_json, paths, opts, workers=args.jobs
+        get_file_lint_result_json, paths, opts, workers=args.workers
     )
     for results in results_iter:
         # Use print outside of the executor to avoid multiple processes trying to write
