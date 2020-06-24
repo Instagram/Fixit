@@ -6,16 +6,33 @@
 """
 Shared utilities for tools that need to run lint rules from the command line.
 """
-
+import argparse
 import itertools
+import json
 import multiprocessing
 import os
 import subprocess
-from enum import Enum  # noqa: IG29: The linter shouldn't depend on distillery's libs
+import sys
+import traceback
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable, Collection, Iterable, Iterator, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Collection,
+    Generator,
+    Iterable,
+    Iterator,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
+from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from fixit.common.config import REPO_ROOT
+from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
+from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
 
 
 _MapPathsOperationConfigT = TypeVar("_MapPathsOperationConfigT")
@@ -24,16 +41,6 @@ _MapPathsOperationT = Callable[
     [Path, _MapPathsOperationConfigT], _MapPathsOperationResultT
 ]
 _MapPathsWorkerArgsT = Tuple[_MapPathsOperationT, Path, _MapPathsOperationConfigT]
-
-
-class LintWorkers(Enum):
-    # Spawn (up to) one worker process per CPU core
-    CPU_COUNT = "cpu_count"
-    # Disable the process pool, and compute results in the current thread and process.
-    #
-    # This can be useful for debugging, where the process pool may break tracebacks,
-    # debuggers, or profilers.
-    USE_CURRENT_THREAD = "use_current_thread"
 
 
 def find_files(paths: Iterable[Path]) -> Iterator[Path]:
@@ -119,3 +126,69 @@ def pyfmt(path: Union[str, Path]) -> None:
     formatted = subprocess.check_output(args, env={})
     with open(path, "wb") as f:
         f.write(formatted)
+
+
+@dataclass(frozen=True)
+class LintOpts:
+    rules: LintRuleCollectionT
+    success_report: Type[LintSuccessReportBase]
+    failure_report: Type[LintFailureReportBase]
+
+
+def get_file_lint_result_json(path: Path, opts: LintOpts) -> Sequence[str]:
+    try:
+        with open(path, "rb") as f:
+            source = f.read()
+        results = opts.success_report.create_reports(
+            path, lint_file(path, source, rules=opts.rules)
+        )
+    except Exception:
+        tb_str = traceback.format_exc()
+        results = opts.failure_report.create_reports(path, tb_str)
+    return [json.dumps(asdict(r)) for r in results]
+
+
+def ipc_main(opts: LintOpts) -> None:
+    """
+    Given a LintOpts config with lint rules and lint success/failure report formatter,
+    this IPC helper took paths of source file paths from either stdin (newline-delimited
+    UTF-8 values), list of paths in a path file (with @paths arg) or a list of paths as
+    args. Results are formed as JSON and delimited by
+    newlines. It uses a multi process pool and the results are streamed to stdout as soon
+    as they're available. For stdin paths, they are evaluated as soon as they're read from
+    the pipe.
+    """
+    parser = argparse.ArgumentParser(
+        description="Runs Fixit lint rules and print results as console output.",
+        fromfile_prefix_chars="@",
+        parents=[get_multiprocessing_parser()],
+    )
+    parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
+    parser.add_argument("--prefix", help="A prefix to be added to all paths.")
+    args: argparse.Namespace = parser.parse_args()
+    if args.prefix:
+        prefix_path = Path(args.prefix)
+
+        def process_path(p: str) -> Path:
+            return prefix_path / p
+
+    else:
+
+        def process_path(p: str) -> Path:
+            return Path(p)
+
+    if args.paths:
+        paths: Generator[Path, None, None] = (process_path(p) for p in args.paths)
+    else:
+        paths: Generator[Path, None, None] = (
+            process_path(p.rstrip("\r\n")) for p in sys.stdin
+        )
+
+    results_iter: Iterator[Sequence[str]] = map_paths(
+        get_file_lint_result_json, paths, opts, workers=args.workers
+    )
+    for results in results_iter:
+        # Use print outside of the executor to avoid multiple processes trying to write
+        # to stdout in parallel, which could cause a corrupted output.
+        for result in results:
+            print(result)

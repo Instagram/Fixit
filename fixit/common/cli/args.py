@@ -5,10 +5,10 @@
 
 import argparse
 import importlib
+from enum import Enum
 from pathlib import Path
 
 from fixit.common.base import LintRuleT
-from fixit.common.cli import LintWorkers
 from fixit.common.config import REPO_ROOT
 
 
@@ -104,6 +104,16 @@ def get_skip_autoformatter_parser() -> argparse.ArgumentParser:
         ),
     )
     return parser
+
+
+class LintWorkers(Enum):
+    # Spawn (up to) one worker process per CPU core
+    CPU_COUNT = "cpu_count"
+    # Disable the process pool, and compute results in the current thread and process.
+    #
+    # This can be useful for debugging, where the process pool may break tracebacks,
+    # debuggers, or profilers.
+    USE_CURRENT_THREAD = "use_current_thread"
 
 
 def get_multiprocessing_parser() -> argparse.ArgumentParser:
