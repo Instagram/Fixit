@@ -5,20 +5,20 @@
 
 import subprocess
 from pathlib import Path
-from typing import Collection, Dict, Iterable, List
+from typing import Collection, Dict, Iterable, List, Tuple
 
 from libcst.metadata import FullRepoManager, MetadataWrapper, TypeInferenceProvider
 from libcst.metadata.base_provider import ProviderT
 
-from fixit.common.config import FIXIT_ROOT, PYRE_TIMEOUT
+from fixit.common.config import FIXIT_ROOT, PYRE_TIMEOUT_SECONDS
 
 
-_RepoTypeMetadata = Dict[Path, "MetadataWrapper"]
+_RepoTypeMetadata = Tuple[Dict[Path, "MetadataWrapper"], List[Path]]
 
 
 def get_type_metadata(
     paths: Iterable[Path],
-    timeout: int = PYRE_TIMEOUT,
+    timeout: int = PYRE_TIMEOUT_SECONDS,
     providers: Collection["ProviderT"] = {TypeInferenceProvider},
     repo_root_dir: str = str(FIXIT_ROOT),
 ) -> _RepoTypeMetadata:
@@ -29,29 +29,13 @@ def get_type_metadata(
         timeout=timeout,
     )
 
-    warnings = []
+    failed_paths: List[Path] = []
     repo_type_metadata: Dict[Path, "MetadataWrapper"] = {}
 
     for path in paths:
         try:
             repo_type_metadata[path] = frm.get_metadata_wrapper_for_path(path=str(path))
-        except subprocess.TimeoutExpired as e:
-            warnings.append(e.cmd)
+        except subprocess.TimeoutExpired:
+            failed_paths.append(path)
 
-    if warnings:
-        format_and_print_pyre_warnings(warnings)
-
-    return repo_type_metadata
-
-
-def format_and_print_pyre_warnings(warnings: List[str]) -> None:
-    paths = "\n".join(
-        [
-            '"' + warning.split("path='", 1)[1].replace("')\"", '"')
-            for warning in warnings
-        ]
-    )
-    print(
-        "WARNING: Pyre timed out while trying to gather type information for the following files: "
-        + paths,
-    )
+    return (repo_type_metadata, failed_paths)

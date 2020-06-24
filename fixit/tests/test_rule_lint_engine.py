@@ -22,6 +22,7 @@ class BadCallCstLintRule(CstLintRule):
 class ParenthesizeAttributeLintRule(CstLintRule):
     """
     Transforms the following code:
+
         obj.attr.another_attr
     into:
         ((obj.attr).another_attr)

@@ -67,7 +67,7 @@ class TypeInferenceTest(UnitTest):
 
         mock_get_metadata.return_value = fake_metadata_wrapper
 
-        type_metadata = get_type_metadata([self.DUMMY_PATH])
+        type_metadata, failed_paths = get_type_metadata([self.DUMMY_PATH])
 
         mock_operation: MagicMock = MagicMock(side_effect=_lint_file_caller_func)
 
@@ -85,17 +85,15 @@ class TypeInferenceTest(UnitTest):
             self.DUMMY_PATH, [DummyTypingRule], type_metadata[self.DUMMY_PATH]
         )
 
-    @patch("fixit.common.typing.helpers.format_and_print_pyre_warnings")
     @patch("libcst.metadata.FullRepoManager.get_metadata_wrapper_for_path")
-    def test_type_inference_with_timeout(
-        self, mock_get_metadata: MagicMock, mock_print_pyre_warnings: MagicMock
-    ) -> None:
+    def test_type_inference_with_timeout(self, mock_get_metadata: MagicMock) -> None:
         timeout = 1
-        timeout_error = subprocess.TimeoutExpired(
-            cmd=f"pyre query \"types(path='{self.DUMMY_PATH}')\"", timeout=timeout
-        )
+        timeout_error = subprocess.TimeoutExpired(cmd="pyre query ...", timeout=timeout)
         mock_get_metadata.side_effect = timeout_error
 
-        get_type_metadata(paths=[self.DUMMY_PATH], timeout=timeout)
+        type_metadata, failed_paths = get_type_metadata(
+            paths=[self.DUMMY_PATH], timeout=timeout
+        )
 
-        mock_print_pyre_warnings.assert_called_with([timeout_error.cmd])
+        self.assertEqual(failed_paths, [self.DUMMY_PATH])
+        self.assertEqual(type_metadata, {})

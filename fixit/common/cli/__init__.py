@@ -22,21 +22,18 @@ from typing import (
     Generator,
     Iterable,
     Iterator,
+    Mapping,
+    Optional,
     Sequence,
     Tuple,
     Type,
-    Iterable,
-    Iterator,
-    Mapping,
-    Optional,
-    Tuple,
     TypeVar,
     Union,
 )
 
-from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from libcst.metadata.wrapper import MetadataWrapper
 
+from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from fixit.common.config import REPO_ROOT
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -51,7 +48,11 @@ _MapPathsOperationWithMetadataT = Callable[
     [Path, _MapPathsOperationConfigT, Optional[MetadataWrapper]],
     _MapPathsOperationResultT,
 ]
-_MapPathsWorkerArgsT = Tuple[_MapPathsOperationT, Path, _MapPathsOperationConfigT]
+_MapPathsWorkerArgsT = Tuple[
+    Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
+    Path,
+    _MapPathsOperationConfigT,
+]
 _MapPathsWorkerArgsWithMetadataT = Tuple[
     _MapPathsOperationWithMetadataT,
     Path,
@@ -83,12 +84,12 @@ def _map_paths_worker(
 
 
 def map_paths(
-    operation: _MapPathsOperationT,
+    operation: Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
     paths: Iterable[Path],
     config: _MapPathsOperationConfigT,
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
-    metadata_wrappers: Mapping[Path, MetadataWrapper] = {},
+    metadata_wrappers: Optional[Mapping[Path, MetadataWrapper]] = None,
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
@@ -109,7 +110,7 @@ def map_paths(
     if workers is LintWorkers.CPU_COUNT:
         workers = multiprocessing.cpu_count()
 
-    if metadata_wrappers:
+    if metadata_wrappers is not None:
         # pyre-ignore[9]: tasks is declared to have type `Collection[typing.Tuple[typing.Callable[[Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]],
         # Variable[_MapPathsOperationResultT]], Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]]]`
         # but is used as type `typing.Tuple[typing.Tuple[typing.Callable[[Path, Variable[_MapPathsOperationConfigT]],
