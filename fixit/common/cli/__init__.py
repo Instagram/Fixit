@@ -53,8 +53,11 @@ _MapPathsWorkerArgsT = Tuple[
     Path,
     _MapPathsOperationConfigT,
 ]
+
+# The Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT] is for pyre checks to pass. In practice,
+# if `metadata_wrapper` is passed to `map_paths`, `operation` should only be of type _MapPathsOperationWithMetadataT
 _MapPathsWorkerArgsWithMetadataT = Tuple[
-    _MapPathsOperationWithMetadataT,
+    Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
     Path,
     _MapPathsOperationConfigT,
     Optional[MetadataWrapper],
@@ -100,9 +103,16 @@ def map_paths(
 
     `operation` must be a top-level function (not a method or inner function), since it
     needs to be imported by pickle and used across process boundaries.
+    NOTE: this function does not verify the signature of `operation`. If `metadata_wrappers`
+    is passed in, it is up to the caller to make sure that `operation` is equipped to handle
+    a `MetadataWrapper` argument.
 
     `paths` should only contain file paths (not directories). Use `find_files` if you
     have directory paths and need to expand them.
+
+    `metadata_wrappers` is an optional argument for those callers expecting to use type metadata
+    for linting. If passed, it should be a mapping of Path to a LibCST MetadataWrapper to be used
+    for the linting of the corresponding file.
 
     Results are yielded as soon as they're available, so they may appear out-of-order.
     """
@@ -111,10 +121,6 @@ def map_paths(
         workers = multiprocessing.cpu_count()
 
     if metadata_wrappers is not None:
-        # pyre-ignore[9]: tasks is declared to have type `Collection[typing.Tuple[typing.Callable[[Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]],
-        # Variable[_MapPathsOperationResultT]], Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]]]`
-        # but is used as type `typing.Tuple[typing.Tuple[typing.Callable[[Path, Variable[_MapPathsOperationConfigT]],
-        # Variable[_MapPathsOperationResultT]], Path, Variable[_MapPathsOperationConfigT], Optional[MetadataWrapper]], ...]`.
         tasks: Collection[_MapPathsWorkerArgsWithMetadataT] = tuple(
             zip(
                 itertools.repeat(operation),
