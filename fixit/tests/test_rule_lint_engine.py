@@ -24,11 +24,8 @@ class ParenthesizeAttributeLintRule(CstLintRule):
     Transforms the following code:
 
         obj.attr.another_attr
-
     into:
-
         ((obj.attr).another_attr)
-
     This serves as an easy test case for overlapping lint fixes.
     """
 

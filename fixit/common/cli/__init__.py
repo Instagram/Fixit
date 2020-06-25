@@ -22,12 +22,16 @@ from typing import (
     Generator,
     Iterable,
     Iterator,
+    Mapping,
+    Optional,
     Sequence,
     Tuple,
     Type,
     TypeVar,
     Union,
 )
+
+from libcst.metadata.wrapper import MetadataWrapper
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from fixit.common.config import REPO_ROOT
@@ -40,7 +44,24 @@ _MapPathsOperationResultT = TypeVar("_MapPathsOperationResultT")
 _MapPathsOperationT = Callable[
     [Path, _MapPathsOperationConfigT], _MapPathsOperationResultT
 ]
-_MapPathsWorkerArgsT = Tuple[_MapPathsOperationT, Path, _MapPathsOperationConfigT]
+_MapPathsOperationWithMetadataT = Callable[
+    [Path, _MapPathsOperationConfigT, Optional[MetadataWrapper]],
+    _MapPathsOperationResultT,
+]
+_MapPathsWorkerArgsT = Tuple[
+    Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
+    Path,
+    _MapPathsOperationConfigT,
+]
+
+# The Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT] is for pyre checks to pass. In practice,
+# if `metadata_wrapper` is passed to `map_paths`, `operation` should only be of type _MapPathsOperationWithMetadataT
+_MapPathsWorkerArgsWithMetadataT = Tuple[
+    Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
+    Path,
+    _MapPathsOperationConfigT,
+    Optional[MetadataWrapper],
+]
 
 
 def find_files(paths: Iterable[Path]) -> Iterator[Path]:
@@ -58,17 +79,20 @@ def find_files(paths: Iterable[Path]) -> Iterator[Path]:
 
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.
-def _map_paths_worker(args: _MapPathsWorkerArgsT) -> _MapPathsOperationResultT:
-    operation, path, config = args
-    return operation(path, config)
+def _map_paths_worker(
+    args: Union[_MapPathsWorkerArgsT, _MapPathsWorkerArgsWithMetadataT]
+) -> _MapPathsOperationResultT:
+    operation, path, *op_args = args
+    return operation(path, *op_args)
 
 
 def map_paths(
-    operation: _MapPathsOperationT,
+    operation: Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
     paths: Iterable[Path],
     config: _MapPathsOperationConfigT,
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
+    metadata_wrappers: Optional[Mapping[Path, MetadataWrapper]] = None,
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
@@ -79,9 +103,16 @@ def map_paths(
 
     `operation` must be a top-level function (not a method or inner function), since it
     needs to be imported by pickle and used across process boundaries.
+    NOTE: this function does not verify the signature of `operation`. If `metadata_wrappers`
+    is passed in, it is up to the caller to make sure that `operation` is equipped to handle
+    a `MetadataWrapper` argument.
 
     `paths` should only contain file paths (not directories). Use `find_files` if you
     have directory paths and need to expand them.
+
+    `metadata_wrappers` is an optional argument for those callers expecting to use type metadata
+    for linting. If passed, it should be a mapping of Path to a LibCST MetadataWrapper to be used
+    for the linting of the corresponding file.
 
     Results are yielded as soon as they're available, so they may appear out-of-order.
     """
@@ -89,9 +120,19 @@ def map_paths(
     if workers is LintWorkers.CPU_COUNT:
         workers = multiprocessing.cpu_count()
 
-    tasks: Collection[_MapPathsWorkerArgsT] = tuple(
-        zip(itertools.repeat(operation), paths, itertools.repeat(config))
-    )
+    if metadata_wrappers is not None:
+        tasks: Collection[_MapPathsWorkerArgsWithMetadataT] = tuple(
+            zip(
+                itertools.repeat(operation),
+                paths,
+                itertools.repeat(config),
+                map(metadata_wrappers.get, paths),
+            )
+        )
+    else:
+        tasks: Collection[_MapPathsWorkerArgsT] = tuple(
+            zip(itertools.repeat(operation), paths, itertools.repeat(config))
+        )
     if not tasks:
         # this would result in 0 workers, which will cause multiprocessing.Pool to die
         return

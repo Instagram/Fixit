@@ -10,7 +10,8 @@ from typing import Any, Mapping, Pattern, Union
 
 
 REPO_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent.parent
-DISTILLERY_ROOT: Path = REPO_ROOT / "distillery"
+FIXIT_ROOT: Path = Path(__file__).resolve().parent.parent
+PYRE_TIMEOUT_SECONDS: int = 1
 
 # Any file with these raw bytes should be ignored
 BYTE_MARKER_IGNORE_ALL_REGEXP: Pattern[bytes] = re.compile(rb"@(generated|nolint)")

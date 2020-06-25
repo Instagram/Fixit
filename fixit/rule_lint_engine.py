@@ -112,6 +112,7 @@ def lint_file(
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
+    cst_wrapper: Optional[MetadataWrapper] = None,
 ) -> Collection[BaseLintRuleReport]:
     """
     May raise a SyntaxError, which should be handled by the
@@ -143,14 +144,13 @@ def lint_file(
         r for r in rules if not ignore_info or ignore_info.should_evaluate_rule(r)
     ]
     # Categorize lint rules.
-    cst_rules = cast(
-        Collection[Type[CstLintRule]],
-        [r for r in evaluated_rules if issubclass(r, CstLintRule)],
-    )
-    pseudo_rules = cast(
-        Collection[Type[PseudoLintRule]],
-        [r for r in evaluated_rules if issubclass(r, PseudoLintRule)],
-    )
+    cst_rules: List[Type[CstLintRule]] = []
+    pseudo_rules: List[Type[PseudoLintRule]] = []
+    for r in evaluated_rules:
+        if issubclass(r, CstLintRule):
+            cst_rules.append(cast(Type[CstLintRule], r))
+        elif issubclass(r, PseudoLintRule):
+            pseudo_rules.append(cast(Type[PseudoLintRule], r))
 
     # `self.context.report()` accumulates reports into the context object, we'll copy
     # those into our local `reports` list.
@@ -158,7 +158,10 @@ def lint_file(
     cst_wrapper = None
     reports = []
     if cst_rules:
-        cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
+        if cst_wrapper is None:
+            cst_wrapper = MetadataWrapper(
+                cst.parse_module(source), unsafe_skip_copy=True
+            )
         cst_context = CstContext(cst_wrapper, source, file_path, config)
         _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
         reports.extend(cst_context.reports)
