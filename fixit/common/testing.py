@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import inspect
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
@@ -148,6 +149,20 @@ def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecur
     return cases
 
 
+def _check_custom_method(
+    test_case_type: Type[unittest.TestCase], method_name: str
+) -> bool:
+    method_params = inspect.signature(getattr(test_case_type, method_name)).parameters
+    try:
+        fourth_arg_name: str = list(method_params.keys())[3]
+        annotation = method_params[fourth_arg_name].annotation
+        if annotation == Optional[MetadataWrapper] or MetadataWrapper:
+            return True
+    except IndexError:
+        return False
+    return False
+
+
 def add_lint_rule_tests_to_module(
     module_attrs: Dict[str, Any],
     rules: LintRuleCollectionT = [],
@@ -171,6 +186,10 @@ def add_lint_rule_tests_to_module(
     CstLintRule's `ValidTestCase` and `InvalidTestCase` test cases. The method will be dynamically renamed to `test_<VALID/INVALID>_<test case index>` for discovery
     by unittest. If argument is omitted, `add_lint_rule_tests_to_module` will look for a test method named `_test_method` member of `test_case_type`.
     """
+    # For backwards compatibility, we want to check whether the passed custom test method is equipped to accept an additional `metadata_wrapper` argument.
+    pass_metadata_wrapper: bool = _check_custom_method(
+        test_case_type, custom_test_method_name
+    )
     for test_case in _gen_all_test_methods(rules):
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
@@ -184,14 +203,16 @@ def add_lint_rule_tests_to_module(
                 metadata_wrapper = test_method_data.type_inference_wrapper
 
             def test_method(
-                self: Type[LintRuleTestCase],
+                self: Type[unittest.TestCase],
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
                 metadata_wrapper: Optional[MetadataWrapper] = metadata_wrapper,
             ) -> None:
-                return getattr(self, custom_test_method_name)(
-                    data, rule, metadata_wrapper
-                )
+                if pass_metadata_wrapper:
+                    return getattr(self, custom_test_method_name)(
+                        data, rule, metadata_wrapper
+                    )
+                return getattr(self, custom_test_method_name)(data, rule)
 
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method

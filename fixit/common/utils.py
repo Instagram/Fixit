@@ -56,16 +56,20 @@ class InvalidTypeDependentTestCase(InvalidTestCase):
     type_inference_wrapper: MetadataWrapper = MetadataWrapper(cst.Module([]))
 
 
-def valid_type_dependent_test_case_helper(
-    code: str, pyre_json_data_path: Path
-) -> ValidTypeDependentTestCase:
+def gen_type_inference_wrapper(code: str, pyre_json_data_path: Path) -> MetadataWrapper:
     module = cst.parse_module(_dedent(code))
     pyre_json_data: PyreData = json.loads(pyre_json_data_path.read_text())
     provider_type = TypeInferenceProvider
-    type_inference_wrapper = MetadataWrapper(
+    return MetadataWrapper(
         module=module,
         cache={cast(Type[BaseMetadataProvider[object]], provider_type): pyre_json_data},
     )
+
+
+def valid_type_dependent_test_case_helper(
+    code: str, pyre_json_data_path: Path
+) -> ValidTypeDependentTestCase:
+    type_inference_wrapper = gen_type_inference_wrapper(code, pyre_json_data_path)
     return ValidTypeDependentTestCase(
         code=code, type_inference_wrapper=type_inference_wrapper
     )
@@ -79,13 +83,7 @@ def invalid_type_dependent_test_case_helper(
     column: Optional[int] = None,
     expected_replacement: Optional[str] = None,
 ) -> InvalidTypeDependentTestCase:
-    module = cst.parse_module(_dedent(code))
-    pyre_json_data: PyreData = json.loads(pyre_json_data_path.read_text())
-    provider_type = TypeInferenceProvider
-    type_inference_wrapper = MetadataWrapper(
-        module=module,
-        cache={cast(Type[BaseMetadataProvider[object]], provider_type): pyre_json_data},
-    )
+    type_inference_wrapper = gen_type_inference_wrapper(code, pyre_json_data_path)
     return InvalidTypeDependentTestCase(
         code=code,
         kind=kind,

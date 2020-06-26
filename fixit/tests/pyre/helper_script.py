@@ -24,18 +24,18 @@ def generate_types(source_path: str, output_path: Path) -> None:
     if return_code != 0:
         print(stdout)
         print(stderr)
-
-    cmd = f'''pyre query "types(path='{source_path}')"'''
-    stdout, stderr, return_code = run_command(cmd)
-    if return_code != 0:
-        print(stdout)
-        print(stderr)
     else:
-        data = json.loads(stdout)
-        data = data["response"][0]
-        data: PyreData = _process_pyre_data(data)
-        print(f"Writing output to {output_path}")
-        output_path.write_text(json.dumps({"types": data["types"]}, indent=2))
+        cmd = f'''pyre query "types(path='{source_path}')"'''
+        stdout, stderr, return_code = run_command(cmd)
+        if return_code != 0:
+            print(stdout)
+            print(stderr)
+        else:
+            data = json.loads(stdout)
+            data = data["response"][0]
+            data: PyreData = _process_pyre_data(data)
+            print(f"Writing output to {output_path}")
+            output_path.write_text(json.dumps({"types": data["types"]}, indent=2))
 
 
 if __name__ == "__main__":
