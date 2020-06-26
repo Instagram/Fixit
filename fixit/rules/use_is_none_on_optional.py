@@ -84,6 +84,36 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             """,
             pyre_json_data_path=JSON_TYPES_FOLDER / "INVALID_1.json",
         ),
+        invalid_type_dependent_test_case_helper(
+            code="""
+            from typing import Optional
+            a: Optional[str] = None
+            x: bool = not a
+            """,
+            kind="IG999",
+            expected_replacement="""
+            from typing import Optional
+            a: Optional[str] = None
+            x: bool = a is None
+            """,
+            pyre_json_data_path=JSON_TYPES_FOLDER / "INVALID_2.json",
+        ),
+        invalid_type_dependent_test_case_helper(
+            code="""
+            from typing import Optional
+            a: Optional[str]
+            x: bool
+            if x or a: pass
+            """,
+            kind="IG999",
+            expected_replacement="""
+            from typing import Optional
+            a: Optional[str]
+            x: bool
+            if x or a is not None: pass
+            """,
+            pyre_json_data_path=JSON_TYPES_FOLDER / "INVALID_3.json",
+        ),
     ]
 
     def visit_If(self, node: cst.If) -> None:
@@ -114,7 +144,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
                     node, replacement=node.with_changes(left=replacement_comparison)
                 )
         if isinstance(right_expression, cst.Name):
-            name_node_type = self.get_metadata(TypeInferenceProvider, node.right)
+            name_node_type = self.get_metadata(TypeInferenceProvider, right_expression)
             if self.is_optional_type(name_node_type):
                 replacement_comparison = self.gen_comparison_to_none(
                     variable_name=right_expression.value, operator=cst.IsNot()
@@ -130,12 +160,12 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             name_node_type = self.get_metadata(TypeInferenceProvider, expression)
             if self.is_optional_type(name_node_type):
                 replacement_comparison = self.gen_comparison_to_none(
-                    variable_name=expression.value, operator=cst.IsNot()
+                    variable_name=expression.value, operator=cst.Is()
                 )
                 self.report(node, replacement=replacement_comparison)
 
     def is_optional_type(self, reported_type: str) -> bool:
-        if reported_type.startswith("typing.Optional["):
+        if reported_type.startswith("typing.Optional"):
             return True
         return False
 
