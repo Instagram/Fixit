@@ -155,7 +155,6 @@ def lint_file(
     # `self.context.report()` accumulates reports into the context object, we'll copy
     # those into our local `reports` list.
     ast_tree = None
-    cst_wrapper = None
     reports = []
     if cst_rules:
         if cst_wrapper is None:

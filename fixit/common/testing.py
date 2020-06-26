@@ -3,26 +3,26 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import re
-import textwrap
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Mapping, Sequence, Type, Union, cast
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
 
+from libcst.metadata import MetadataWrapper
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
 )
 
 from fixit.common.base import CstLintRule
 from fixit.common.report import BaseLintRuleReport
-from fixit.common.utils import InvalidTestCase, ValidTestCase
+from fixit.common.utils import (
+    InvalidTestCase,
+    InvalidTypeDependentTestCase,
+    ValidTestCase,
+    ValidTypeDependentTestCase,
+    _dedent,
+)
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
-
-
-def _dedent(src: str) -> str:
-    src = re.sub(r"\A\n", "", src)
-    return textwrap.dedent(src)
 
 
 def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> None:
@@ -54,18 +54,24 @@ def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> No
 @dataclass(frozen=True)
 class TestCasePrecursor:
     rule: Type[CstLintRule]
-    test_methods: Mapping[str, Union[ValidTestCase, InvalidTestCase]]
+    test_methods: Mapping[
+        str, Union[ValidTestCase, InvalidTestCase],
+    ]
 
 
 class LintRuleTestCase(unittest.TestCase):
     def _test_method(
-        self, test_case: Union[ValidTestCase, InvalidTestCase], rule: Type[CstLintRule],
+        self,
+        test_case: Union[ValidTestCase, InvalidTestCase],
+        rule: Type[CstLintRule],
+        metadata_wrapper: Optional[MetadataWrapper] = None,
     ) -> None:
         reports = lint_file(
             Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],
+            cst_wrapper=metadata_wrapper,
         )
         if isinstance(test_case, ValidTestCase):
             self.assertEqual(
@@ -170,13 +176,22 @@ def add_lint_rule_tests_to_module(
         test_methods_to_add: Dict[str, Callable] = dict()
 
         for test_method_name, test_method_data in test_case.test_methods.items():
+            metadata_wrapper = None
+            if isinstance(
+                test_method_data,
+                (InvalidTypeDependentTestCase, ValidTypeDependentTestCase),
+            ):
+                metadata_wrapper = test_method_data.type_inference_wrapper
 
             def test_method(
                 self: Type[LintRuleTestCase],
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
+                metadata_wrapper: Optional[MetadataWrapper] = metadata_wrapper,
             ) -> None:
-                return getattr(self, custom_test_method_name)(data, rule)
+                return getattr(self, custom_test_method_name)(
+                    data, rule, metadata_wrapper
+                )
 
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method
