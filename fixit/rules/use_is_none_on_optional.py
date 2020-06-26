@@ -18,7 +18,7 @@ from fixit.common.utils import (
 )
 
 
-JSON_TYPES_FOLDER: Path = Path(
+TYPES_DIRECTORY: Path = Path(
     __file__
 ).parent.parent / "tests" / "pyre" / "use_is_none_on_optional"
 
@@ -38,7 +38,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a is not None:
                 pass
             """,
-            pyre_json_data_path=JSON_TYPES_FOLDER / "VALID_0.json",
+            pyre_json_data_path=TYPES_DIRECTORY / "VALID_0.json",
         ),
         valid_type_dependent_test_case_helper(
             """
@@ -46,7 +46,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a:
                 pass
             """,
-            pyre_json_data_path=JSON_TYPES_FOLDER / "VALID_1.json",
+            pyre_json_data_path=TYPES_DIRECTORY / "VALID_1.json",
         ),
     ]
 
@@ -67,7 +67,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a is not None:
                 pass
             """,
-            pyre_json_data_path=JSON_TYPES_FOLDER / "INVALID_0.json",
+            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_0.json",
         ),
         invalid_type_dependent_test_case_helper(
             code="""
@@ -85,7 +85,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if x and a is not None:
                 ...
             """,
-            pyre_json_data_path=JSON_TYPES_FOLDER / "INVALID_1.json",
+            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_1.json",
         ),
         invalid_type_dependent_test_case_helper(
             code="""
@@ -99,7 +99,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             a: Optional[str] = None
             x: bool = a is None
             """,
-            pyre_json_data_path=JSON_TYPES_FOLDER / "INVALID_2.json",
+            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_2.json",
         ),
         invalid_type_dependent_test_case_helper(
             code="""
@@ -115,7 +115,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             x: bool
             if x or a is not None: pass
             """,
-            pyre_json_data_path=JSON_TYPES_FOLDER / "INVALID_3.json",
+            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_3.json",
         ),
     ]
 
