@@ -25,7 +25,10 @@ JSON_TYPES_FOLDER: Path = Path(
 
 class UseIsNoneOnOptionalRule(CstLintRule):
     METADATA_DEPENDENCIES = (TypeInferenceProvider,)
-    MESSAGE: str = ("IG999 Message")
+    MESSAGE: str = (
+        "IG999 When checking if an Optional has a value, avoid using it as a boolean since this calls the object's `__bool__` method. "
+        + "Instead, use `is None` or `is not None`."
+    )
 
     VALID: List[Valid] = [
         valid_type_dependent_test_case_helper(
