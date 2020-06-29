@@ -142,7 +142,7 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
                     )
         if hasattr(rule, "INVALID"):
             for idx, test_case in enumerate(getattr(rule, "INVALID")):
-                name = f"test_VALID_{idx}"
+                name = f"test_INVALID_{idx}"
                 invalid_tcs[name] = test_case
                 if requires_fixtures:
                     fixture_paths[name] = (
