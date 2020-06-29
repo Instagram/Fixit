@@ -1,0 +1,121 @@
+{
+  "types": [
+    {
+      "location": {
+        "start": {
+          "line": 1,
+          "column": 6
+        },
+        "stop": {
+          "line": 1,
+          "column": 9
+        }
+      },
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp208ir4kj.Foo]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 2,
+          "column": 14
+        },
+        "stop": {
+          "line": 2,
+          "column": 17
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp208ir4kj.Foo.bar)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 6
+        },
+        "stop": {
+          "line": 3,
+          "column": 14
+        }
+      },
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp208ir4kj.NodeUser]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 14
+        },
+        "stop": {
+          "line": 4,
+          "column": 17
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp208ir4kj.NodeUser.get)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 6,
+          "column": 15
+        },
+        "stop": {
+          "line": 6,
+          "column": 18
+        }
+      },
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp208ir4kj.Foo]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 6,
+          "column": 15
+        },
+        "stop": {
+          "line": 6,
+          "column": 20
+        }
+      },
+      "annotation": "fixit.tests.fixtures.await_async_call.tmp208ir4kj.Foo"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 8,
+          "column": 4
+        },
+        "stop": {
+          "line": 8,
+          "column": 12
+        }
+      },
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp208ir4kj.NodeUser]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 8,
+          "column": 4
+        },
+        "stop": {
+          "line": 8,
+          "column": 16
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp208ir4kj.NodeUser.get)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 8,
+          "column": 4
+        },
+        "stop": {
+          "line": 8,
+          "column": 18
+        }
+      },
+      "annotation": "typing.Coroutine[typing.Any, typing.Any, unknown]"
+    }
+  ]
+}

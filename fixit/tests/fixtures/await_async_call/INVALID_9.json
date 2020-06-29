@@ -1,0 +1,69 @@
+{
+  "types": [
+    {
+      "location": {
+        "start": {
+          "line": 1,
+          "column": 10
+        },
+        "stop": {
+          "line": 1,
+          "column": 13
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp13u_9m_6.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 1,
+          "column": 19
+        },
+        "stop": {
+          "line": 1,
+          "column": 23
+        }
+      },
+      "annotation": "typing.Type[bool]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 2,
+          "column": 3
+        },
+        "stop": {
+          "line": 2,
+          "column": 12
+        }
+      },
+      "annotation": "bool"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 2,
+          "column": 7
+        },
+        "stop": {
+          "line": 2,
+          "column": 10
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp13u_9m_6.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 2,
+          "column": 7
+        },
+        "stop": {
+          "line": 2,
+          "column": 12
+        }
+      },
+      "annotation": "typing.Coroutine[typing.Any, typing.Any, bool]"
+    }
+  ]
+}

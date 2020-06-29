@@ -47,7 +47,7 @@ def gen_types_for_test_case(source_code: str, dest_path: Path) -> None:
 
         cmd = f'''pyre query "types(path='{temp.name}')"'''
         stdout, stderr, return_code = run_command(cmd)
-        if return_code != 0:
+        if return_code != 0 or "error" in stdout:
             print(stdout)
             print(stderr)
         else:

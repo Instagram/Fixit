@@ -1,0 +1,17 @@
+{
+  "types": [
+    {
+      "location": {
+        "start": {
+          "line": 1,
+          "column": 10
+        },
+        "stop": {
+          "line": 1,
+          "column": 20
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpdct3bv80.async_func)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    }
+  ]
+}
