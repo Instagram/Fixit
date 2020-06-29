@@ -3,25 +3,24 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import inspect
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
 
-from libcst.metadata import MetadataWrapper
+from libcst.metadata import MetadataWrapper, TypeInferenceProvider
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
 )
 
 from fixit.common.base import CstLintRule
+from fixit.common.config import FIXTURE_DIRECTORY
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
     InvalidTestCase,
-    InvalidTypeDependentTestCase,
     ValidTestCase,
-    ValidTypeDependentTestCase,
     _dedent,
+    gen_type_inference_wrapper,
 )
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
 
@@ -58,6 +57,7 @@ class TestCasePrecursor:
     test_methods: Mapping[
         str, Union[ValidTestCase, InvalidTestCase],
     ]
+    fixture_paths: Mapping[str, Path]
 
 
 class LintRuleTestCase(unittest.TestCase):
@@ -65,14 +65,18 @@ class LintRuleTestCase(unittest.TestCase):
         self,
         test_case: Union[ValidTestCase, InvalidTestCase],
         rule: Type[CstLintRule],
-        metadata_wrapper: Optional[MetadataWrapper] = None,
+        fixture_file: Optional[Path] = None,
     ) -> None:
+        cst_wrapper: Optional[MetadataWrapper] = None
+        if fixture_file is not None:
+            fixture_path: Path = FIXTURE_DIRECTORY / fixture_file
+            cst_wrapper = gen_type_inference_wrapper(test_case.code, fixture_path)
         reports = lint_file(
             Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],
-            cst_wrapper=metadata_wrapper,
+            cst_wrapper=cst_wrapper,
         )
         if isinstance(test_case, ValidTestCase):
             self.assertEqual(
@@ -122,17 +126,35 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
     """
     valid_tcs = dict()
     invalid_tcs = dict()
+    requires_fixtures = False
+    fixture_paths: Dict[str, Path] = dict()
     if issubclass(rule, CstLintRule):
 
+        if TypeInferenceProvider in rule.get_inherited_dependencies():
+            requires_fixtures = True
         if hasattr(rule, "VALID"):
             # pyre-ignore[16]: `CstLintRule` has no attribute `VALID`.
             for idx, test_case in enumerate(rule.VALID):
-                valid_tcs[f"test_VALID_{idx}"] = test_case
+                name = f"test_VALID_{idx}"
+                valid_tcs[name] = test_case
+                if requires_fixtures:
+                    fixture_paths[name] = (
+                        Path(rule.__module__.rpartition(".")[2]) / f"VALID_{idx}.json"
+                    )
         if hasattr(rule, "INVALID"):
             # pyre-ignore[16]: `CstLintRule` has no attribute `INVALID`.
             for idx, test_case in enumerate(rule.INVALID):
-                invalid_tcs[f"test_INVALID_{idx}"] = test_case
-    return TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs})
+                name = f"test_VALID_{idx}"
+                invalid_tcs[name] = test_case
+                if requires_fixtures:
+                    fixture_paths[name] = (
+                        Path(rule.__module__.rpartition(".")[2]) / f"INVALID_{idx}.json"
+                    )
+    return TestCasePrecursor(
+        rule=rule,
+        test_methods={**valid_tcs, **invalid_tcs},
+        fixture_paths=fixture_paths,
+    )
 
 
 def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecursor]:
@@ -147,20 +169,6 @@ def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecur
         test_cases_for_rule = _gen_test_methods_for_rule(cast(Type[CstLintRule], rule))
         cases.append(test_cases_for_rule)
     return cases
-
-
-def _check_custom_method(
-    test_case_type: Type[unittest.TestCase], method_name: str
-) -> bool:
-    method_params = inspect.signature(getattr(test_case_type, method_name)).parameters
-    try:
-        fourth_arg_name: str = list(method_params.keys())[3]
-        annotation = method_params[fourth_arg_name].annotation
-        if annotation == Optional[MetadataWrapper] or MetadataWrapper:
-            return True
-    except IndexError:
-        return False
-    return False
 
 
 def add_lint_rule_tests_to_module(
@@ -186,33 +194,20 @@ def add_lint_rule_tests_to_module(
     CstLintRule's `ValidTestCase` and `InvalidTestCase` test cases. The method will be dynamically renamed to `test_<VALID/INVALID>_<test case index>` for discovery
     by unittest. If argument is omitted, `add_lint_rule_tests_to_module` will look for a test method named `_test_method` member of `test_case_type`.
     """
-    # For backwards compatibility, we want to check whether the passed custom test method is equipped to accept an additional `metadata_wrapper` argument.
-    pass_metadata_wrapper: bool = _check_custom_method(
-        test_case_type, custom_test_method_name
-    )
     for test_case in _gen_all_test_methods(rules):
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
 
         for test_method_name, test_method_data in test_case.test_methods.items():
-            metadata_wrapper = None
-            if isinstance(
-                test_method_data,
-                (InvalidTypeDependentTestCase, ValidTypeDependentTestCase),
-            ):
-                metadata_wrapper = test_method_data.type_inference_wrapper
+            fixture_file = test_case.fixture_paths.get(test_method_name)
 
             def test_method(
                 self: Type[unittest.TestCase],
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
-                metadata_wrapper: Optional[MetadataWrapper] = metadata_wrapper,
+                fixture_file: Optional[str] = fixture_file,
             ) -> None:
-                if pass_metadata_wrapper:
-                    return getattr(self, custom_test_method_name)(
-                        data, rule, metadata_wrapper
-                    )
-                return getattr(self, custom_test_method_name)(data, rule)
+                return getattr(self, custom_test_method_name)(data, rule, fixture_file)
 
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method

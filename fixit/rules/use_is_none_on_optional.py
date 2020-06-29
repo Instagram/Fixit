@@ -3,24 +3,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from pathlib import Path
 from typing import List, Union
 
 import libcst as cst
 from libcst.metadata import TypeInferenceProvider
 
 from fixit.common.base import CstLintRule
-from fixit.common.utils import (
-    InvalidTypeDependentTestCase as Invalid,
-    ValidTypeDependentTestCase as Valid,
-    invalid_type_dependent_test_case_helper,
-    valid_type_dependent_test_case_helper,
-)
-
-
-TYPES_DIRECTORY: Path = Path(
-    __file__
-).parent.parent / "tests" / "pyre" / "use_is_none_on_optional"
+from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class UseIsNoneOnOptionalRule(CstLintRule):
@@ -31,27 +20,25 @@ class UseIsNoneOnOptionalRule(CstLintRule):
     )
 
     VALID: List[Valid] = [
-        valid_type_dependent_test_case_helper(
+        Valid(
             """
             from typing import Optional
             a: Optional[str]
             if a is not None:
                 pass
             """,
-            pyre_json_data_path=TYPES_DIRECTORY / "VALID_0.json",
         ),
-        valid_type_dependent_test_case_helper(
+        Valid(
             """
             a: bool
             if a:
                 pass
             """,
-            pyre_json_data_path=TYPES_DIRECTORY / "VALID_1.json",
         ),
     ]
 
     INVALID: List[Invalid] = [
-        invalid_type_dependent_test_case_helper(
+        Invalid(
             code="""
             from typing import Optional
 
@@ -67,9 +54,8 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a is not None:
                 pass
             """,
-            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_0.json",
         ),
-        invalid_type_dependent_test_case_helper(
+        Invalid(
             code="""
             from typing import Optional
             a: Optional[str] = None
@@ -85,9 +71,8 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if x and a is not None:
                 ...
             """,
-            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_1.json",
         ),
-        invalid_type_dependent_test_case_helper(
+        Invalid(
             code="""
             from typing import Optional
             a: Optional[str] = None
@@ -99,9 +84,8 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             a: Optional[str] = None
             x: bool = a is None
             """,
-            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_2.json",
         ),
-        invalid_type_dependent_test_case_helper(
+        Invalid(
             code="""
             from typing import Optional
             a: Optional[str]
@@ -115,7 +99,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             x: bool
             if x or a is not None: pass
             """,
-            pyre_json_data_path=TYPES_DIRECTORY / "INVALID_3.json",
         ),
     ]
 

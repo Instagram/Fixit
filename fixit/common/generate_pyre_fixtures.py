@@ -1,0 +1,104 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+import argparse
+import json
+import tempfile
+from pathlib import Path
+from typing import cast
+
+from libcst.metadata import TypeInferenceProvider
+from libcst.metadata.type_inference_provider import (
+    PyreData,
+    _process_pyre_data,
+    run_command,
+)
+
+from fixit.common.base import CstLintRule, LintRuleT
+from fixit.common.cli.args import (
+    _get_fixture_dir,
+    get_pyre_fixture_dir_parser,
+    get_rule_parser,
+)
+from fixit.common.config import FIXTURE_DIRECTORY
+from fixit.common.utils import _dedent
+
+
+class RuleNotTypeDependentError(Exception):
+    pass
+
+
+class RuleTypeError(Exception):
+    pass
+
+
+def gen_types_for_test_case(source_code: str, dest_path: Path) -> None:
+    rule_fixture_subdir: Path = dest_path.parent
+    if not rule_fixture_subdir.exists():
+        rule_fixture_subdir.mkdir()
+    with tempfile.NamedTemporaryFile(
+        "w", dir=rule_fixture_subdir, suffix=".py"
+    ) as temp:
+        temp.write(_dedent(source_code))
+        temp.seek(0)
+
+        cmd = f'''pyre query "types(path='{temp.name}')"'''
+        stdout, stderr, return_code = run_command(cmd)
+        if return_code != 0:
+            print(stdout)
+            print(stderr)
+        else:
+            data = json.loads(stdout)
+            data = data["response"][0]
+            data: PyreData = _process_pyre_data(data)
+            print(f"Writing output to {dest_path}")
+            dest_path.write_text(json.dumps({"types": data["types"]}, indent=2))
+
+
+def gen_types(rule: CstLintRule, rule_fixture_dir: Path) -> None:
+    if TypeInferenceProvider not in rule.get_inherited_dependencies():
+        raise RuleNotTypeDependentError(
+            "Rule does not list TypeInferenceProvider in its `METADATA_DEPENDENCIES`."
+        )
+    if hasattr(rule, "VALID") or hasattr(rule, "INVALID"):
+        print("Starting pyre server")
+
+        stdout, stderr, return_code = run_command("pyre start")
+        if return_code != 0:
+            print(stdout)
+            print(stderr)
+        else:
+
+            if hasattr(rule, "VALID"):
+                for idx, valid_tc in enumerate(getattr(rule, "VALID")):
+                    path: Path = rule_fixture_dir / f"VALID_{idx}.json"
+                    gen_types_for_test_case(source_code=valid_tc.code, dest_path=path)
+            if hasattr(rule, "INVALID"):
+                for idx, invalid_tc in enumerate(getattr(rule, "INVALID")):
+                    path: Path = rule_fixture_dir / f"INVALID_{idx}.json"
+                    gen_types_for_test_case(source_code=invalid_tc.code, dest_path=path)
+            run_command("pyre stop")
+
+
+if __name__ == "__main__":
+    """
+    Run this script directly to generate pyre data for a lint rule that requires TypeInferenceProvider metadata.
+    """
+    parser = argparse.ArgumentParser(
+        description="Generate fixture files required to run unit tests on `TypeInference`-dependent lint rules.",
+        parents=[get_rule_parser(), get_pyre_fixture_dir_parser()],
+    )
+    args: argparse.Namespace = parser.parse_args()
+    rule: LintRuleT = args.rule
+    fixture_dir: Path = (
+        Path(args.fixture_dir)
+        if args.fixture_dir is not None
+        else _get_fixture_dir(FIXTURE_DIRECTORY)
+    )
+    fixture_subdir = Path(rule.__module__.rsplit(".", 1)[-1])
+    fixture_path: Path = fixture_dir / fixture_subdir
+    if not issubclass(rule, CstLintRule):
+        raise RuleTypeError("Rule must inherit from CstLintRule.")
+    gen_types(cast(CstLintRule, rule), fixture_path)

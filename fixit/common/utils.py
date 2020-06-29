@@ -24,6 +24,10 @@ def _str_or_any(value: Optional[int]) -> str:
     return "<any>" if value is None else str(value)
 
 
+class FixtureFileNotFoundError(Exception):
+    pass
+
+
 @dataclass(frozen=True)
 class ValidTestCase:
     code: str
@@ -46,49 +50,18 @@ class InvalidTestCase:
         return f"{_str_or_any(self.line)}:{_str_or_any(self.column)}: {self.kind} ..."
 
 
-@dataclass(frozen=True)
-class ValidTypeDependentTestCase(ValidTestCase):
-    type_inference_wrapper: MetadataWrapper = MetadataWrapper(cst.Module([]))
-
-
-@dataclass(frozen=True)
-class InvalidTypeDependentTestCase(InvalidTestCase):
-    type_inference_wrapper: MetadataWrapper = MetadataWrapper(cst.Module([]))
-
-
-def gen_type_inference_wrapper(code: str, pyre_json_data_path: Path) -> MetadataWrapper:
+def gen_type_inference_wrapper(code: str, pyre_fixture_path: Path) -> MetadataWrapper:
+    # Given test case source code and a path to a pyre fixture file, generate a MetadataWrapper for a lint rule test case.
     module = cst.parse_module(_dedent(code))
-    pyre_json_data: PyreData = json.loads(pyre_json_data_path.read_text())
     provider_type = TypeInferenceProvider
+    try:
+        pyre_json_data: PyreData = json.loads(pyre_fixture_path.read_text())
+    except FileNotFoundError as e:
+        raise FixtureFileNotFoundError(
+            f"Fixture file not found at {e.filename}. "
+            + "Did you remember to generate fixture files for this lint rule?"
+        )
     return MetadataWrapper(
         module=module,
         cache={cast(Type[BaseMetadataProvider[object]], provider_type): pyre_json_data},
-    )
-
-
-def valid_type_dependent_test_case_helper(
-    code: str, pyre_json_data_path: Path
-) -> ValidTypeDependentTestCase:
-    type_inference_wrapper = gen_type_inference_wrapper(code, pyre_json_data_path)
-    return ValidTypeDependentTestCase(
-        code=code, type_inference_wrapper=type_inference_wrapper
-    )
-
-
-def invalid_type_dependent_test_case_helper(
-    code: str,
-    kind: str,
-    pyre_json_data_path: Path,
-    line: Optional[int] = None,
-    column: Optional[int] = None,
-    expected_replacement: Optional[str] = None,
-) -> InvalidTypeDependentTestCase:
-    type_inference_wrapper = gen_type_inference_wrapper(code, pyre_json_data_path)
-    return InvalidTypeDependentTestCase(
-        code=code,
-        kind=kind,
-        line=line,
-        column=column,
-        expected_replacement=expected_replacement,
-        type_inference_wrapper=type_inference_wrapper,
     )

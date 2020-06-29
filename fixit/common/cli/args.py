@@ -7,15 +7,37 @@ import argparse
 import importlib
 from enum import Enum
 from pathlib import Path
+from typing import Union
 
 from fixit.common.base import LintRuleT
 from fixit.common.config import REPO_ROOT
+
+
+class FixtureDirNotFoundError(Exception):
+    pass
 
 
 def _import_rule(path_to_rule_class: str) -> LintRuleT:
     rule_module_path, rule_class_name = path_to_rule_class.rsplit(".", 1)
     rule_class = getattr(importlib.import_module(rule_module_path), rule_class_name,)
     return rule_class
+
+
+def _get_fixture_dir(fixture_dir: Union[Path, str]) -> Path:
+    path_to_fixture_dir = Path(fixture_dir)
+    if not path_to_fixture_dir.is_dir():
+        raise FixtureDirNotFoundError(f"Directory not found at {path_to_fixture_dir}.")
+    return path_to_fixture_dir
+
+
+def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--fixture_dir",
+        type=_get_fixture_dir,
+        help=("Main fixture file directory for Pyre integration testing."),
+    )
+    return parser
 
 
 def get_rule_parser() -> argparse.ArgumentParser:
