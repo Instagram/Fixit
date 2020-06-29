@@ -108,10 +108,9 @@ class UseIsNoneOnOptionalRule(CstLintRule):
         if m.matches(test_expression, m.Name()):
             # We are inside a simple check such as "if x".
             test_expression = cast(cst.Name, test_expression)
-            name_node_type = self.get_metadata(TypeInferenceProvider, test_expression)
-            if self.is_optional_type(name_node_type):
+            if self._is_optional_type(test_expression):
                 # We want to replace "if x" with "if x is not None".
-                replacement_comparison: cst.Comparison = self.gen_comparison_to_none(
+                replacement_comparison: cst.Comparison = self._gen_comparison_to_none(
                     variable_name=test_expression.value, operator=cst.IsNot()
                 )
                 self.report(
@@ -124,9 +123,8 @@ class UseIsNoneOnOptionalRule(CstLintRule):
         if m.matches(node.left, m.Name()):
             # Eg: "x and y".
             left_expression = cast(cst.Name, left_expression)
-            name_node_type = self.get_metadata(TypeInferenceProvider, left_expression)
-            if self.is_optional_type(name_node_type):
-                replacement_comparison = self.gen_comparison_to_none(
+            if self._is_optional_type(left_expression):
+                replacement_comparison = self._gen_comparison_to_none(
                     variable_name=left_expression.value, operator=cst.IsNot()
                 )
                 self.report(
@@ -135,9 +133,8 @@ class UseIsNoneOnOptionalRule(CstLintRule):
         if m.matches(right_expression, m.Name()):
             # Eg: "x and y".
             right_expression = cast(cst.Name, right_expression)
-            name_node_type = self.get_metadata(TypeInferenceProvider, right_expression)
-            if self.is_optional_type(name_node_type):
-                replacement_comparison = self.gen_comparison_to_none(
+            if self._is_optional_type(right_expression):
+                replacement_comparison = self._gen_comparison_to_none(
                     variable_name=right_expression.value, operator=cst.IsNot()
                 )
                 self.report(
@@ -148,19 +145,19 @@ class UseIsNoneOnOptionalRule(CstLintRule):
         if m.matches(node, m.UnaryOperation(operator=m.Not(), expression=m.Name())):
             # Eg: "not x".
             expression: cst.Name = cast(cst.Name, node.expression)
-            name_node_type = self.get_metadata(TypeInferenceProvider, expression)
-            if self.is_optional_type(name_node_type):
-                replacement_comparison = self.gen_comparison_to_none(
+            if self._is_optional_type(expression):
+                replacement_comparison = self._gen_comparison_to_none(
                     variable_name=expression.value, operator=cst.Is()
                 )
                 self.report(node, replacement=replacement_comparison)
 
-    def is_optional_type(self, reported_type: str) -> bool:
-        if reported_type.startswith("typing.Optional"):
+    def _is_optional_type(self, node: cst.Name) -> bool:
+        reported_type = self.get_metadata(TypeInferenceProvider, node, None)
+        if reported_type is not None and reported_type.startswith("typing.Optional"):
             return True
         return False
 
-    def gen_comparison_to_none(
+    def _gen_comparison_to_none(
         self, variable_name: str, operator: Union[cst.Is, cst.IsNot]
     ) -> cst.Comparison:
         return cst.Comparison(
