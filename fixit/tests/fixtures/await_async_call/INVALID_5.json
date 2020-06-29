@@ -11,7 +11,7 @@
           "column": 9
         }
       },
-      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo]"
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo]"
     },
     {
       "location": {
@@ -24,7 +24,7 @@
           "column": 19
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo._attr)[[Named(self, unknown)], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo._attr)[[Named(self, unknown)], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     },
     {
       "location": {
@@ -37,7 +37,7 @@
           "column": 24
         }
       },
-      "annotation": "fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo"
+      "annotation": "fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo"
     },
     {
       "location": {
@@ -50,7 +50,7 @@
           "column": 3
         }
       },
-      "annotation": "fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo"
+      "annotation": "fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo"
     },
     {
       "location": {
@@ -63,7 +63,7 @@
           "column": 9
         }
       },
-      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo]"
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo]"
     },
     {
       "location": {
@@ -76,7 +76,7 @@
           "column": 11
         }
       },
-      "annotation": "fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo"
+      "annotation": "fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo"
     },
     {
       "location": {
@@ -89,7 +89,7 @@
           "column": 9
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo._attr)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo._attr)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     },
     {
       "location": {
@@ -102,7 +102,7 @@
           "column": 15
         }
       },
-      "annotation": "fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo"
+      "annotation": "fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo"
     },
     {
       "location": {
@@ -115,7 +115,7 @@
           "column": 21
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp06s97d48.Foo._attr)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpfoygw47l.Foo._attr)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     }
   ]
 }

@@ -38,80 +38,126 @@ class AwaitAsyncCallRule(CstLintRule):
         Valid(
             """
             async def foo(): pass
-            await foo()
+            async def bar():
+                await foo()
             """
         ),
         Valid(
             """
             async def foo(): pass
-            x = await foo()
+            async def bar():
+                x = await foo()
             """
         ),
         Valid(
             """
             async def foo() -> bool: pass
-            while not await foo(): pass
+            async def bar():
+                while not await foo(): pass
+            """
+        ),
+        Valid(
+            """
+            import asyncio
+            async def foo(): pass
+            asyncio.run(foo())
             """
         ),
     ]
     INVALID = [
         Invalid(
             """
-        async def foo(): pass
-        foo()
-        """,
+            async def foo(): pass
+            async def bar():
+                foo()
+            """,
             kind="IG31",
+            expected_replacement="""
+            async def foo(): pass
+            async def bar():
+                await foo()
+            """,
         ),
         Invalid(
             """
-        class Foo:
-            async def _attr(self): pass
-        obj = Foo()
-        obj._attr
-        """,
+            class Foo:
+                async def _attr(self): pass
+            obj = Foo()
+            obj._attr
+            """,
             kind="IG31",
+            expected_replacement="""
+            class Foo:
+                async def _attr(self): pass
+            obj = Foo()
+            await obj._attr
+            """,
         ),
         Invalid(
             """
-        class Foo:
-            async def _method(self): pass
-        obj = Foo()
-        obj._method()
-        """,
+            class Foo:
+                async def _method(self): pass
+            obj = Foo()
+            obj._method()
+            """,
             kind="IG31",
+            expected_replacement="""
+            class Foo:
+                async def _method(self): pass
+            obj = Foo()
+            await obj._method()
+            """,
         ),
         Invalid(
             """
-        class Foo:
-            async def _method(self): pass
-        obj = Foo()
-        result = obj._method()
-        """,
+            class Foo:
+                async def _method(self): pass
+            obj = Foo()
+            result = obj._method()
+            """,
             kind="IG31",
+            expected_replacement="""
+            class Foo:
+                async def _method(self): pass
+            obj = Foo()
+            result = await obj._method()
+            """,
         ),
         Invalid(
             """
-        class Foo:
-            async def bar(): pass
-        class NodeUser:
-            async def get():
-                do_stuff()
-                return Foo()
-        user = (
-            NodeUser.get()
-            .bar()
-        )
-        """,
+            class Foo:
+                async def bar(): pass
+            class NodeUser:
+                async def get():
+                    do_stuff()
+                    return Foo()
+            user = NodeUser.get().bar()
+            """,
             kind="IG31",
+            expected_replacement="""
+            class Foo:
+                async def bar(): pass
+            class NodeUser:
+                async def get():
+                    do_stuff()
+                    return Foo()
+            user = await NodeUser.get().bar()
+            """,
         ),
         Invalid(
             """
-        class Foo:
-            async def _attr(self): pass
-        obj = Foo()
-        attribute = obj._attr
-        """,
+            class Foo:
+                async def _attr(self): pass
+            obj = Foo()
+            attribute = obj._attr
+            """,
             kind="IG31",
+            expected_replacement="""
+            class Foo:
+                async def _attr(self): pass
+            obj = Foo()
+            attribute = await obj._attr
+            """,
         ),
         Invalid(
             code="""
@@ -120,6 +166,11 @@ class AwaitAsyncCallRule(CstLintRule):
             if x and foo(): pass
             """,
             kind="IG31",
+            expected_replacement="""
+            async def foo() -> bool: pass
+            x = True
+            if x and await foo(): pass
+            """,
         ),
         Invalid(
             code="""
@@ -128,6 +179,11 @@ class AwaitAsyncCallRule(CstLintRule):
             are_both_true = x and foo()
             """,
             kind="IG31",
+            expected_replacement="""
+            async def foo() -> bool: pass
+            x = True
+            are_both_true = x and await foo()
+            """,
         ),
         Invalid(
             """
@@ -136,6 +192,11 @@ class AwaitAsyncCallRule(CstLintRule):
                 do_stuff()
             """,
             "IG31",
+            expected_replacement="""
+            async def foo() -> bool: pass
+            if await foo():
+                do_stuff()
+            """,
         ),
         Invalid(
             """
@@ -144,6 +205,11 @@ class AwaitAsyncCallRule(CstLintRule):
                 do_stuff()
             """,
             "IG31",
+            expected_replacement="""
+            async def foo() -> bool: pass
+            if not await foo():
+                do_stuff()
+            """,
         ),
         Invalid(
             """
@@ -153,6 +219,12 @@ class AwaitAsyncCallRule(CstLintRule):
                     if self._attr: pass
             """,
             "IG31",
+            expected_replacement="""
+            class Foo:
+                async def _attr(self): pass
+                def bar(self):
+                    if await self._attr: pass
+            """,
         ),
         Invalid(
             """
@@ -162,32 +234,12 @@ class AwaitAsyncCallRule(CstLintRule):
                     if not self._attr: pass
             """,
             "IG31",
-        ),
-        Invalid(
-            """
-            async def foo(): pass
-            while foo():
-                do_stuff()
-            """,
-            "IG31",
-        ),
-        Invalid(
-            """
-            async def foo(): pass
-            while not foo():
-                do_stuff()
-            """,
-            "IG31",
-        ),
-        Invalid(
-            """
+            expected_replacement="""
             class Foo:
                 async def _attr(self): pass
                 def bar(self):
-                    while self._attr:
-                        do_stuff()
+                    if not await self._attr: pass
             """,
-            "IG31",
         ),
     ]
 
@@ -208,63 +260,80 @@ class AwaitAsyncCallRule(CstLintRule):
     def _is_callable(annotation: str) -> bool:
         return annotation.startswith("typing.Callable")
 
-    def _is_awaitable(self, node: cst.CSTNode) -> bool:
+    def _get_awaitable_replacement(self, node: cst.CSTNode) -> Optional[cst.CSTNode]:
         annotation = self._get_type_metadata(node)
         if annotation is not None and self._is_callable(annotation):
             return_type = self._get_callable_return_type(annotation)
             annotation = return_type
-        return annotation is not None and (
-            annotation.startswith("typing.Coroutine")
-            or annotation.startswith("typing.Awaitable")
-        )
+        if annotation is not None and annotation.startswith("typing.Coroutine"):
+            if isinstance(node, cst.BaseExpression):
+                return cst.Await(expression=node)
+        return None
 
-    def _is_async_attr(self, node: cst.Attribute) -> bool:
+    def _get_async_attr_replacement(self, node: cst.Attribute) -> Optional[cst.CSTNode]:
         value = node.value
         if m.matches(value, m.Call()):
             value = cast(cst.Call, value)
-            return self._is_async_call(value)
-        return self._is_awaitable(node)
+            value_replacement = self._get_async_call_replacement(value)
+            if value_replacement is not None:
+                return node.with_changes(value=value_replacement)
+        return self._get_awaitable_replacement(node)
 
-    def _is_async_call(self, node: cst.Call) -> bool:
+    def _get_async_call_replacement(self, node: cst.Call) -> Optional[cst.CSTNode]:
         func = node.func
         if m.matches(func, m.Attribute()):
             func = cast(cst.Attribute, func)
-            return self._is_async_attr(func)
-        return self._is_awaitable(node)
+            attr_func_replacement = self._get_async_attr_replacement(func)
+            if attr_func_replacement is not None:
+                return node.with_changes(func=attr_func_replacement)
+        return self._get_awaitable_replacement(node)
 
-    def _is_async_name(self, node: cst.Name) -> bool:
-        return self._is_awaitable(node)
+    def _get_async_name_replacement(self, node: cst.Name) -> Optional[cst.CSTNode]:
+        return self._get_awaitable_replacement(node)
 
-    def _is_async_expr(self, node: cst.CSTNode) -> bool:
+    def _get_async_expr_replacement(self, node: cst.CSTNode) -> Optional[cst.CSTNode]:
         if m.matches(node, m.Call()):
             node = cast(cst.Call, node)
-            return self._is_async_call(node)
+            return self._get_async_call_replacement(node)
         elif m.matches(node, m.Attribute()):
             node = cast(cst.Attribute, node)
-            return self._is_async_attr(node)
+            return self._get_async_attr_replacement(node)
         elif m.matches(node, m.UnaryOperation(operator=m.Not())):
             node = cast(cst.UnaryOperation, node)
-            return self._is_async_expr(node.expression)
+            replacement_expression = self._get_async_expr_replacement(node.expression)
+            if replacement_expression is not None:
+                return node.with_changes(expression=replacement_expression)
         elif m.matches(node, m.BooleanOperation()):
             node = cast(cst.BooleanOperation, node)
-            return self._is_async_expr(node.left) or self._is_async_expr(node.right)
-        return False
+            left_replacement = self._get_async_expr_replacement(node.left)
+            if left_replacement is not None:
+                return node.with_changes(left=left_replacement)
+            right_replacement = self._get_async_expr_replacement(node.right)
+            if right_replacement is not None:
+                return node.with_changes(right=right_replacement)
+        return None
 
-    def _is_async_assign(self, node: cst.Assign) -> bool:
-        return self._is_async_expr(node.value)
+    def _get_async_assign_replacement(self, node: cst.Assign) -> Optional[cst.CSTNode]:
+        return self._get_async_expr_replacement(node.value)
 
     def visit_If(self, node: cst.If) -> None:
-        if self._is_async_expr(node.test):
-            self.report(node)
+        replacement_test = self._get_async_expr_replacement(node.test)
+        if replacement_test is not None:
+            replacement = node.with_changes(test=replacement_test)
+            self.report(node, replacement=replacement)
 
     def visit_While(self, node: cst.While) -> None:
-        if self._is_async_expr(node.test):
+        if self._get_async_expr_replacement(node.test):
             self.report(node)
 
     def visit_Assign(self, node: cst.Assign) -> None:
-        if self._is_async_assign(node):
-            self.report(node)
+        replacement_value = self._get_async_assign_replacement(node)
+        if replacement_value is not None:
+            replacement = node.with_changes(value=replacement_value)
+            self.report(node, replacement=replacement)
 
     def visit_Expr(self, node: cst.Expr) -> None:
-        if self._is_async_expr(node.value):
-            self.report(node)
+        replacement_value = self._get_async_expr_replacement(node.value)
+        if replacement_value is not None:
+            replacement = node.with_changes(value=replacement_value)
+            self.report(node, replacement=replacement)

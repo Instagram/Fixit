@@ -11,7 +11,7 @@
           "column": 7
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpdz9l_xwq.foo)[[], unknown]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpcjte6nr5.foo)[[], unknown]"
     },
     {
       "location": {
@@ -24,7 +24,7 @@
           "column": 3
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpdz9l_xwq.foo)[[], unknown]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpcjte6nr5.foo)[[], unknown]"
     }
   ]
 }

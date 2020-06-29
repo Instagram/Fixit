@@ -11,7 +11,7 @@
           "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpkb51jai2.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpjy8aakun.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
     },
     {
       "location": {
@@ -30,24 +30,24 @@
       "location": {
         "start": {
           "line": 2,
-          "column": 6
-        },
-        "stop": {
-          "line": 2,
-          "column": 21
-        }
-      },
-      "annotation": "bool"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 2,
           "column": 10
         },
         "stop": {
           "line": 2,
-          "column": 21
+          "column": 13
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpjy8aakun.bar)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 10
+        },
+        "stop": {
+          "line": 3,
+          "column": 25
         }
       },
       "annotation": "bool"
@@ -55,25 +55,38 @@
     {
       "location": {
         "start": {
-          "line": 2,
-          "column": 16
+          "line": 3,
+          "column": 14
         },
         "stop": {
-          "line": 2,
-          "column": 19
+          "line": 3,
+          "column": 25
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpkb51jai2.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+      "annotation": "bool"
     },
     {
       "location": {
         "start": {
-          "line": 2,
-          "column": 16
+          "line": 3,
+          "column": 20
         },
         "stop": {
-          "line": 2,
-          "column": 21
+          "line": 3,
+          "column": 23
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpjy8aakun.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 20
+        },
+        "stop": {
+          "line": 3,
+          "column": 25
         }
       },
       "annotation": "typing.Coroutine[typing.Any, typing.Any, bool]"
