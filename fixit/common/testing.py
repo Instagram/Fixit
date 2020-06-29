@@ -133,8 +133,7 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
         if TypeInferenceProvider in rule.get_inherited_dependencies():
             requires_fixtures = True
         if hasattr(rule, "VALID"):
-            # pyre-ignore[16]: `CstLintRule` has no attribute `VALID`.
-            for idx, test_case in enumerate(rule.VALID):
+            for idx, test_case in enumerate(getattr(rule, "VALID")):
                 name = f"test_VALID_{idx}"
                 valid_tcs[name] = test_case
                 if requires_fixtures:
@@ -142,8 +141,7 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
                         Path(rule.__module__.rpartition(".")[2]) / f"VALID_{idx}.json"
                     )
         if hasattr(rule, "INVALID"):
-            # pyre-ignore[16]: `CstLintRule` has no attribute `INVALID`.
-            for idx, test_case in enumerate(rule.INVALID):
+            for idx, test_case in enumerate(getattr(rule, "INVALID")):
                 name = f"test_VALID_{idx}"
                 invalid_tcs[name] = test_case
                 if requires_fixtures:

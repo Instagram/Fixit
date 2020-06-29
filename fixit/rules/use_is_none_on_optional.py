@@ -3,9 +3,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import List, Union
+from typing import List, Union, cast
 
 import libcst as cst
+import libcst.matchers as m
 from libcst.metadata import TypeInferenceProvider
 
 from fixit.common.base import CstLintRule
@@ -104,8 +105,9 @@ class UseIsNoneOnOptionalRule(CstLintRule):
 
     def visit_If(self, node: cst.If) -> None:
         test_expression: cst.BaseExpression = node.test
-        if isinstance(test_expression, cst.Name):
+        if m.matches(test_expression, m.Name()):
             # We are inside a simple check such as "if x".
+            test_expression = cast(cst.Name, test_expression)
             name_node_type = self.get_metadata(TypeInferenceProvider, test_expression)
             if self.is_optional_type(name_node_type):
                 # We want to replace "if x" with "if x is not None".
@@ -117,10 +119,11 @@ class UseIsNoneOnOptionalRule(CstLintRule):
                 )
 
     def visit_BooleanOperation(self, node: cst.BooleanOperation) -> None:
-        # Eg: "x and y".
         left_expression: cst.BaseExpression = node.left
         right_expression: cst.BaseExpression = node.right
-        if isinstance(left_expression, cst.Name):
+        if m.matches(node.left, m.Name()):
+            # Eg: "x and y".
+            left_expression = cast(cst.Name, left_expression)
             name_node_type = self.get_metadata(TypeInferenceProvider, left_expression)
             if self.is_optional_type(name_node_type):
                 replacement_comparison = self.gen_comparison_to_none(
@@ -129,7 +132,9 @@ class UseIsNoneOnOptionalRule(CstLintRule):
                 self.report(
                     node, replacement=node.with_changes(left=replacement_comparison)
                 )
-        if isinstance(right_expression, cst.Name):
+        if m.matches(right_expression, m.Name()):
+            # Eg: "x and y".
+            right_expression = cast(cst.Name, right_expression)
             name_node_type = self.get_metadata(TypeInferenceProvider, right_expression)
             if self.is_optional_type(name_node_type):
                 replacement_comparison = self.gen_comparison_to_none(
@@ -140,9 +145,9 @@ class UseIsNoneOnOptionalRule(CstLintRule):
                 )
 
     def visit_UnaryOperation(self, node: cst.UnaryOperation) -> None:
-        # Eg: "not x".
-        expression: cst.BaseExpression = node.expression
-        if isinstance(expression, cst.Name) and isinstance(node.operator, cst.Not):
+        if m.matches(node, m.UnaryOperation(operator=m.Not(), expression=m.Name())):
+            # Eg: "not x".
+            expression: cst.Name = cast(cst.Name, node.expression)
             name_node_type = self.get_metadata(TypeInferenceProvider, expression)
             if self.is_optional_type(name_node_type):
                 replacement_comparison = self.gen_comparison_to_none(
