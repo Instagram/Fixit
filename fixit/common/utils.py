@@ -59,7 +59,7 @@ def gen_type_inference_wrapper(code: str, pyre_fixture_path: Path) -> MetadataWr
     except FileNotFoundError as e:
         raise FixtureFileNotFoundError(
             f"Fixture file not found at {e.filename}. "
-            + "Did you remember to generate fixture files for this lint rule?"
+            + "Please run `python -m fixit.common.generate_pyre_fixtures <rule>` to generate fixtures."
         )
     return MetadataWrapper(
         module=module,

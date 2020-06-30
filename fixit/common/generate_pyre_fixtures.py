@@ -21,6 +21,7 @@ from fixit.common.cli.args import (
     _get_fixture_dir,
     get_pyre_fixture_dir_parser,
     get_rule_parser,
+    get_rules_package_parser,
 )
 from fixit.common.config import FIXTURE_DIRECTORY
 from fixit.common.utils import _dedent
@@ -37,7 +38,7 @@ class RuleTypeError(Exception):
 def gen_types_for_test_case(source_code: str, dest_path: Path) -> None:
     rule_fixture_subdir: Path = dest_path.parent
     if not rule_fixture_subdir.exists():
-        rule_fixture_subdir.mkdir()
+        rule_fixture_subdir.mkdir(parents=True)
     with tempfile.NamedTemporaryFile(
         "w", dir=rule_fixture_subdir, suffix=".py"
     ) as temp:
@@ -82,13 +83,25 @@ def gen_types(rule: CstLintRule, rule_fixture_dir: Path) -> None:
             run_command("pyre stop")
 
 
+def get_fixture_path(
+    fixture_top_dir: Path, rule_module: str, rules_package: str
+) -> Path:
+    subpackage: str = rule_module.split(f"{rules_package}.", 1)[-1]
+    fixture_subdir = Path(subpackage.replace(".", "/"))
+    return fixture_top_dir / fixture_subdir
+
+
 if __name__ == "__main__":
     """
     Run this script directly to generate pyre data for a lint rule that requires TypeInferenceProvider metadata.
     """
     parser = argparse.ArgumentParser(
         description="Generate fixture files required to run unit tests on `TypeInference`-dependent lint rules.",
-        parents=[get_rule_parser(), get_pyre_fixture_dir_parser()],
+        parents=[
+            get_rule_parser(),
+            get_pyre_fixture_dir_parser(),
+            get_rules_package_parser(),
+        ],
     )
     args: argparse.Namespace = parser.parse_args()
     rule: LintRuleT = args.rule
@@ -97,8 +110,9 @@ if __name__ == "__main__":
         if args.fixture_dir is not None
         else _get_fixture_dir(FIXTURE_DIRECTORY)
     )
-    fixture_subdir = Path(rule.__module__.rsplit(".", 1)[-1])
-    fixture_path: Path = fixture_dir / fixture_subdir
+    fixture_path: Path = get_fixture_path(
+        fixture_dir, rule.__module__, args.rules_package
+    )
     if not issubclass(rule, CstLintRule):
         raise RuleTypeError("Rule must inherit from CstLintRule.")
     gen_types(cast(CstLintRule, rule), fixture_path)

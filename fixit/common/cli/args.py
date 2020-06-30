@@ -40,6 +40,14 @@ def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def get_rules_package_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--rules_package", help=("Main package for lint rules."), default="fixit.rules",
+    )
+    return parser
+
+
 def get_rule_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
