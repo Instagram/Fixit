@@ -11,7 +11,7 @@
           "column": 9
         }
       },
-      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp_22tyu8b.Foo]"
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmphh4f615v.Foo]"
     },
     {
       "location": {
@@ -24,7 +24,7 @@
           "column": 19
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp_22tyu8b.Foo._attr)[[Named(self, unknown)], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmphh4f615v.Foo._attr)[[Named(self, unknown)], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     },
     {
       "location": {
@@ -37,7 +37,7 @@
           "column": 24
         }
       },
-      "annotation": "fixit.tests.fixtures.await_async_call.tmp_22tyu8b.Foo"
+      "annotation": "fixit.tests.fixtures.await_async_call.tmphh4f615v.Foo"
     },
     {
       "location": {
@@ -50,7 +50,7 @@
           "column": 11
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp_22tyu8b.Foo.bar)[[Named(self, unknown)], unknown]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmphh4f615v.Foo.bar)[[Named(self, unknown)], unknown]"
     },
     {
       "location": {
@@ -63,7 +63,7 @@
           "column": 16
         }
       },
-      "annotation": "fixit.tests.fixtures.await_async_call.tmp_22tyu8b.Foo"
+      "annotation": "fixit.tests.fixtures.await_async_call.tmphh4f615v.Foo"
     },
     {
       "location": {
@@ -76,7 +76,7 @@
           "column": 15
         }
       },
-      "annotation": "fixit.tests.fixtures.await_async_call.tmp_22tyu8b.Foo"
+      "annotation": "fixit.tests.fixtures.await_async_call.tmphh4f615v.Foo"
     },
     {
       "location": {
@@ -89,7 +89,7 @@
           "column": 21
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp_22tyu8b.Foo._attr)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmphh4f615v.Foo._attr)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     }
   ]
 }

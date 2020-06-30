@@ -11,7 +11,7 @@
           "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp68hnexes.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpfgagogdp.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
     },
     {
       "location": {
@@ -89,7 +89,7 @@
           "column": 12
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp68hnexes.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpfgagogdp.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
     },
     {
       "location": {

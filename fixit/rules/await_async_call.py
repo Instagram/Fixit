@@ -3,11 +3,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import re
-from typing import Match, Optional, cast
+from typing import Optional, cast
 
 import libcst as cst
 import libcst.matchers as m
+from libcst.helpers import get_full_name_for_node
 from libcst.metadata import TypeInferenceProvider
 
 from fixit.common.base import CstLintRule
@@ -241,6 +241,66 @@ class AwaitAsyncCallRule(CstLintRule):
                     if not await self._attr: pass
             """,
         ),
+        # Case where only cst.Attribute node's `attr` returns awaitable
+        Invalid(
+            """
+            class Foo:
+                async def _attr(self): pass
+            def bar() -> Foo:
+                return Foo()
+            attribute = bar()._attr
+            """,
+            "IG31",
+            expected_replacement="""
+            class Foo:
+                async def _attr(self): pass
+            def bar() -> Foo:
+                return Foo()
+            attribute = await bar()._attr
+            """,
+        ),
+        # Case where only cst.Attribute node's `value` returns awaitable
+        Invalid(
+            """
+            class Foo:
+                def _attr(self): pass
+            async def bar():
+                await do_stuff()
+                return Foo()
+            attribute = bar()._attr
+            """,
+            "IG31",
+            expected_replacement="""
+            class Foo:
+                def _attr(self): pass
+            async def bar():
+                await do_stuff()
+                return Foo()
+            attribute = await bar()._attr
+            """,
+        ),
+        Invalid(
+            """
+            async def bar() -> bool: pass
+            while bar(): pass
+            """,
+            "IG31",
+            expected_replacement="""
+            async def bar() -> bool: pass
+            while await bar(): pass
+            """,
+        ),
+        Invalid(
+            """
+            async def bar() -> bool: pass
+            while not bar(): pass
+            """,
+            "IG31",
+            expected_replacement="""
+            async def bar() -> bool: pass
+            while not await bar(): pass
+            """,
+        ),
     ]
 
     def _get_type_metadata(self, node: cst.CSTNode) -> Optional[str]:
@@ -248,13 +308,31 @@ class AwaitAsyncCallRule(CstLintRule):
 
     @staticmethod
     def _get_callable_return_type(annotation: str) -> Optional[str]:
-        callable_pattern = re.compile(
-            "typing\\.Callable\\(.*\\)\\[\\[.*\\], (.*)\\[.*\\]\\]"
-        )
-        match: Optional[Match[str]] = callable_pattern.match(annotation)
-        if match is not None:
-            return match.group(1)
-        return None
+        # If passed annotation does not match the expected annotation structure for a `typing.Callable`,
+        # this will return `None`.
+        parsed_ann = cst.parse_module(annotation)
+        try:
+            return_type_subscript_element = cst.ensure_type(
+                cst.ensure_type(
+                    cst.ensure_type(
+                        cst.ensure_type(
+                            parsed_ann.body[0], cst.SimpleStatementLine
+                        ).body[0],
+                        cst.Expr,
+                    ).value,
+                    cst.Subscript,
+                ).slice[1],
+                cst.SubscriptElement,
+            )
+            return_type_node = cst.ensure_type(
+                cst.ensure_type(return_type_subscript_element.slice, cst.Index).value,
+                cst.Subscript,
+            ).value
+            return get_full_name_for_node(return_type_node)
+        except Exception:
+            # cst.ensure_type will raise a generic Exception on type mismatch. We should technically never get here if the type annotation
+            # is for a typing.Callable type.
+            return None
 
     @staticmethod
     def _is_callable(annotation: str) -> bool:
@@ -305,12 +383,14 @@ class AwaitAsyncCallRule(CstLintRule):
                 return node.with_changes(expression=replacement_expression)
         elif m.matches(node, m.BooleanOperation()):
             node = cast(cst.BooleanOperation, node)
-            left_replacement = self._get_async_expr_replacement(node.left)
-            if left_replacement is not None:
-                return node.with_changes(left=left_replacement)
-            right_replacement = self._get_async_expr_replacement(node.right)
-            if right_replacement is not None:
-                return node.with_changes(right=right_replacement)
+            maybe_left = self._get_async_expr_replacement(node.left)
+            maybe_right = self._get_async_expr_replacement(node.right)
+            if maybe_left is not None or maybe_right is not None:
+                left_replacement = maybe_left if maybe_left is not None else node.left
+                right_replacement = (
+                    maybe_right if maybe_right is not None else node.right
+                )
+                return node.with_changes(left=left_replacement, right=right_replacement)
         return None
 
     def _get_async_assign_replacement(self, node: cst.Assign) -> Optional[cst.CSTNode]:
@@ -323,8 +403,10 @@ class AwaitAsyncCallRule(CstLintRule):
             self.report(node, replacement=replacement)
 
     def visit_While(self, node: cst.While) -> None:
-        if self._get_async_expr_replacement(node.test):
-            self.report(node)
+        replacement_test = self._get_async_expr_replacement(node.test)
+        if replacement_test is not None:
+            replacement = node.with_changes(test=replacement_test)
+            self.report(node, replacement=replacement)
 
     def visit_Assign(self, node: cst.Assign) -> None:
         replacement_value = self._get_async_assign_replacement(node)

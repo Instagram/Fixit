@@ -11,7 +11,7 @@
           "column": 20
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpehdt1gi5.async_func)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp2m5dqofe.async_func)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     }
   ]
 }
