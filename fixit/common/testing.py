@@ -3,26 +3,26 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import re
-import textwrap
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Mapping, Sequence, Type, Union, cast
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
 
+from libcst.metadata import MetadataWrapper, TypeInferenceProvider
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
 )
 
 from fixit.common.base import CstLintRule
+from fixit.common.config import FIXTURE_DIRECTORY
 from fixit.common.report import BaseLintRuleReport
-from fixit.common.utils import InvalidTestCase, ValidTestCase
+from fixit.common.utils import (
+    InvalidTestCase,
+    ValidTestCase,
+    _dedent,
+    gen_type_inference_wrapper,
+)
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
-
-
-def _dedent(src: str) -> str:
-    src = re.sub(r"\A\n", "", src)
-    return textwrap.dedent(src)
 
 
 def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> None:
@@ -54,18 +54,29 @@ def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> No
 @dataclass(frozen=True)
 class TestCasePrecursor:
     rule: Type[CstLintRule]
-    test_methods: Mapping[str, Union[ValidTestCase, InvalidTestCase]]
+    test_methods: Mapping[
+        str, Union[ValidTestCase, InvalidTestCase],
+    ]
+    fixture_paths: Mapping[str, Path]
 
 
 class LintRuleTestCase(unittest.TestCase):
     def _test_method(
-        self, test_case: Union[ValidTestCase, InvalidTestCase], rule: Type[CstLintRule],
+        self,
+        test_case: Union[ValidTestCase, InvalidTestCase],
+        rule: Type[CstLintRule],
+        fixture_file: Optional[Path] = None,
     ) -> None:
+        cst_wrapper: Optional[MetadataWrapper] = None
+        if fixture_file is not None:
+            fixture_path: Path = FIXTURE_DIRECTORY / fixture_file
+            cst_wrapper = gen_type_inference_wrapper(test_case.code, fixture_path)
         reports = lint_file(
             Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
             config=test_case.config,
             rules=[rule],
+            cst_wrapper=cst_wrapper,
         )
         if isinstance(test_case, ValidTestCase):
             self.assertEqual(
@@ -115,17 +126,35 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
     """
     valid_tcs = dict()
     invalid_tcs = dict()
+    requires_fixtures = False
+    fixture_paths: Dict[str, Path] = dict()
     if issubclass(rule, CstLintRule):
 
+        if TypeInferenceProvider in rule.get_inherited_dependencies():
+            requires_fixtures = True
         if hasattr(rule, "VALID"):
-            # pyre-ignore[16]: `CstLintRule` has no attribute `VALID`.
-            for idx, test_case in enumerate(rule.VALID):
-                valid_tcs[f"test_VALID_{idx}"] = test_case
+            for idx, test_case in enumerate(getattr(rule, "VALID")):
+                name = f"test_VALID_{idx}"
+                valid_tcs[name] = test_case
+                if requires_fixtures:
+                    fixture_paths[name] = (
+                        Path(rule.__module__.rpartition(".")[2])
+                        / f"{rule.__name__}_VALID_{idx}.json"
+                    )
         if hasattr(rule, "INVALID"):
-            # pyre-ignore[16]: `CstLintRule` has no attribute `INVALID`.
-            for idx, test_case in enumerate(rule.INVALID):
-                invalid_tcs[f"test_INVALID_{idx}"] = test_case
-    return TestCasePrecursor(rule=rule, test_methods={**valid_tcs, **invalid_tcs})
+            for idx, test_case in enumerate(getattr(rule, "INVALID")):
+                name = f"test_INVALID_{idx}"
+                invalid_tcs[name] = test_case
+                if requires_fixtures:
+                    fixture_paths[name] = (
+                        Path(rule.__module__.rpartition(".")[2])
+                        / f"{rule.__name__}_INVALID_{idx}.json"
+                    )
+    return TestCasePrecursor(
+        rule=rule,
+        test_methods={**valid_tcs, **invalid_tcs},
+        fixture_paths=fixture_paths,
+    )
 
 
 def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecursor]:
@@ -170,13 +199,15 @@ def add_lint_rule_tests_to_module(
         test_methods_to_add: Dict[str, Callable] = dict()
 
         for test_method_name, test_method_data in test_case.test_methods.items():
+            fixture_file = test_case.fixture_paths.get(test_method_name)
 
             def test_method(
-                self: Type[LintRuleTestCase],
+                self: Type[unittest.TestCase],
                 data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
                 rule: Type[CstLintRule] = test_case.rule,
+                fixture_file: Optional[str] = fixture_file,
             ) -> None:
-                return getattr(self, custom_test_method_name)(data, rule)
+                return getattr(self, custom_test_method_name)(data, rule, fixture_file)
 
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method

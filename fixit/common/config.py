@@ -11,6 +11,7 @@ from typing import Any, Mapping, Pattern, Union
 
 REPO_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent.parent
 FIXIT_ROOT: Path = Path(__file__).resolve().parent.parent
+FIXTURE_DIRECTORY: Path = FIXIT_ROOT / "tests" / "fixtures"
 PYRE_TIMEOUT_SECONDS: int = 1
 
 # Any file with these raw bytes should be ignored

@@ -57,23 +57,29 @@ def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleT
     return results
 
 
-def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
-    rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = {Flake8PseudoLintRule}
-    for package in ["fixit.rules"] + extra_packages:
-        for _module_name, module in import_submodules(package).items():
-            for name in dir(module):
-                try:
-                    obj = getattr(module, name)
-                    if obj is CstLintRule or not issubclass(obj, CstLintRule):
-                        continue
-
-                    if inspect.isabstract(obj):
-                        # skip if a CstLintRule subclass has metaclass=ABCMeta
-                        continue
-                    rules.add(obj)
-                except TypeError:
+def get_rules_from_package(package: str) -> LintRuleCollectionT:
+    rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
+    for _module_name, module in import_submodules(package).items():
+        for name in dir(module):
+            try:
+                obj = getattr(module, name)
+                if obj is CstLintRule or not issubclass(obj, CstLintRule):
                     continue
+
+                if inspect.isabstract(obj):
+                    # skip if a CstLintRule subclass has metaclass=ABCMeta
+                    continue
+                rules.add(obj)
+            except TypeError:
+                continue
     return list(rules)
+
+
+def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
+    rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = [Flake8PseudoLintRule]
+    for package in ["fixit.rules"] + extra_packages:
+        rules += get_rules_from_package(package)
+    return rules
 
 
 def _detect_encoding(source: bytes) -> str:
@@ -155,7 +161,6 @@ def lint_file(
     # `self.context.report()` accumulates reports into the context object, we'll copy
     # those into our local `reports` list.
     ast_tree = None
-    cst_wrapper = None
     reports = []
     if cst_rules:
         if cst_wrapper is None:
