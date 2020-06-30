@@ -89,20 +89,59 @@
           "column": 15
         }
       },
+      "annotation": "typing_extensions.Literal[False]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 3
+        },
+        "stop": {
+          "line": 4,
+          "column": 4
+        }
+      },
+      "annotation": "typing.Optional[str]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 3
+        },
+        "stop": {
+          "line": 4,
+          "column": 10
+        }
+      },
+      "annotation": "typing.Optional[typing_extensions.Literal[False]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 9
+        },
+        "stop": {
+          "line": 4,
+          "column": 10
+        }
+      },
       "annotation": "bool"
     },
     {
       "location": {
         "start": {
-          "line": 3,
-          "column": 14
+          "line": 5,
+          "column": 4
         },
         "stop": {
-          "line": 3,
-          "column": 15
+          "line": 5,
+          "column": 7
         }
       },
-      "annotation": "typing.Optional[str]"
+      "annotation": "typing.Any"
     }
   ]
 }

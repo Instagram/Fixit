@@ -43,14 +43,14 @@
       "location": {
         "start": {
           "line": 2,
-          "column": 16
+          "column": 19
         },
         "stop": {
           "line": 2,
-          "column": 16
+          "column": 23
         }
       },
-      "annotation": "typing.Any"
+      "annotation": "None"
     },
     {
       "location": {
@@ -82,24 +82,11 @@
       "location": {
         "start": {
           "line": 3,
-          "column": 7
+          "column": 10
         },
         "stop": {
           "line": 3,
-          "column": 7
-        }
-      },
-      "annotation": "typing.Any"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 4,
-          "column": 3
-        },
-        "stop": {
-          "line": 4,
-          "column": 4
+          "column": 15
         }
       },
       "annotation": "bool"
@@ -107,25 +94,12 @@
     {
       "location": {
         "start": {
-          "line": 4,
-          "column": 3
+          "line": 3,
+          "column": 14
         },
         "stop": {
-          "line": 4,
-          "column": 9
-        }
-      },
-      "annotation": "typing.Optional[typing.Union[bool, str]]"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 4,
-          "column": 8
-        },
-        "stop": {
-          "line": 4,
-          "column": 9
+          "line": 3,
+          "column": 15
         }
       },
       "annotation": "typing.Optional[str]"

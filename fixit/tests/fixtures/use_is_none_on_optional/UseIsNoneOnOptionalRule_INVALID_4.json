@@ -107,12 +107,25 @@
     {
       "location": {
         "start": {
-          "line": 5,
-          "column": 5
+          "line": 4,
+          "column": 3
         },
         "stop": {
-          "line": 5,
-          "column": 6
+          "line": 4,
+          "column": 9
+        }
+      },
+      "annotation": "typing.Optional[typing.Union[bool, str]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 8
+        },
+        "stop": {
+          "line": 4,
+          "column": 9
         }
       },
       "annotation": "typing.Optional[str]"

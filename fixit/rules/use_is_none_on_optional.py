@@ -78,6 +78,23 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             code="""
             from typing import Optional
             a: Optional[str] = None
+            x: bool = False
+            if a and x:
+                ...
+            """,
+            kind="IG999",
+            expected_replacement="""
+            from typing import Optional
+            a: Optional[str] = None
+            x: bool = False
+            if a is not None and x:
+                ...
+            """,
+        ),
+        Invalid(
+            code="""
+            from typing import Optional
+            a: Optional[str] = None
             x: bool = not a
             """,
             kind="IG999",
