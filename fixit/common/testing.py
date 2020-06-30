@@ -138,7 +138,8 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
                 valid_tcs[name] = test_case
                 if requires_fixtures:
                     fixture_paths[name] = (
-                        Path(rule.__module__.rpartition(".")[2]) / f"VALID_{idx}.json"
+                        Path(rule.__module__.rpartition(".")[2])
+                        / f"{rule.__name__}_VALID_{idx}.json"
                     )
         if hasattr(rule, "INVALID"):
             for idx, test_case in enumerate(getattr(rule, "INVALID")):
@@ -146,7 +147,8 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
                 invalid_tcs[name] = test_case
                 if requires_fixtures:
                     fixture_paths[name] = (
-                        Path(rule.__module__.rpartition(".")[2]) / f"INVALID_{idx}.json"
+                        Path(rule.__module__.rpartition(".")[2])
+                        / f"{rule.__name__}_INVALID_{idx}.json"
                     )
     return TestCasePrecursor(
         rule=rule,

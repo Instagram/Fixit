@@ -70,14 +70,14 @@ def gen_types(rule: CstLintRule, rule_fixture_dir: Path) -> None:
             print(stdout)
             print(stderr)
         else:
-
+            class_name = getattr(rule, "__name__")
             if hasattr(rule, "VALID"):
                 for idx, valid_tc in enumerate(getattr(rule, "VALID")):
-                    path: Path = rule_fixture_dir / f"VALID_{idx}.json"
+                    path: Path = rule_fixture_dir / f"{class_name}_VALID_{idx}.json"
                     gen_types_for_test_case(source_code=valid_tc.code, dest_path=path)
             if hasattr(rule, "INVALID"):
                 for idx, invalid_tc in enumerate(getattr(rule, "INVALID")):
-                    path: Path = rule_fixture_dir / f"INVALID_{idx}.json"
+                    path: Path = rule_fixture_dir / f"{class_name}_INVALID_{idx}.json"
                     gen_types_for_test_case(source_code=invalid_tc.code, dest_path=path)
             run_command("pyre stop")
 
