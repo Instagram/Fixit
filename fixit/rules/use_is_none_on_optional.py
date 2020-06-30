@@ -17,8 +17,8 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 class UseIsNoneOnOptionalRule(CstLintRule):
     METADATA_DEPENDENCIES = (TypeInferenceProvider,)
     MESSAGE: str = (
-        "IG999 When checking if an Optional has a value, avoid using it as a boolean since this calls the object's `__bool__` method. "
-        + "Instead, use `is None` or `is not None`."
+        "IG999 When checking if an `Optional` has a value, avoid using it as a boolean since it implicitly checks the object's `__bool__()`, `__len__()` is not `0`, or the value is not `None`. "
+        + "Instead, use `is None` or `is not None` to be explicit."
     )
 
     VALID: List[Valid] = [
