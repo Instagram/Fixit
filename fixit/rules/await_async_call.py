@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Optional, cast
+from typing import Dict, Optional, Sequence, Union, cast
 
 import libcst as cst
 import libcst.matchers as m
@@ -304,39 +304,62 @@ class AwaitAsyncCallRule(CstLintRule):
     ]
 
     @staticmethod
-    def _get_callable_return_type(annotation: str) -> Optional[str]:
-        # If passed annotation does not match the expected annotation structure for a `typing.Callable`,
-        # this will return `None`.
+    def _is_awaitable_callable(annotation: str) -> bool:
+        if not annotation.startswith("typing.Callable"):
+            # Exit early if this is not even a `typing.Callable` annotation.
+            return False
         parsed_ann = cst.parse_module(annotation)
-        try:
-            return_type_subscript_element = cst.ensure_type(
-                cst.ensure_type(
-                    cst.ensure_type(
-                        cst.ensure_type(
-                            parsed_ann.body[0], cst.SimpleStatementLine
-                        ).body[0],
-                        cst.Expr,
-                    ).value,
-                    cst.Subscript,
-                ).slice[1],
-                cst.SubscriptElement,
+        # If passed annotation does not match the expected annotation structure for a `typing.Callable` with
+        # typing.Coroutine as the return type, matched_called_ann will be None.
+        # The expected structure of an awaitable callable annotation from Pyre is: typing.Callable()[[...], typing.Coroutine[...]]
+        matched_callable_ann: Optional[
+            Dict[str, Union[Sequence[cst.CSTNode], cst.CSTNode]]
+        ] = m.extract(
+            parsed_ann,
+            m.Module(
+                body=[
+                    m.SimpleStatementLine(
+                        body=[
+                            m.Expr(
+                                value=m.Subscript(
+                                    slice=[
+                                        m.SubscriptElement(),
+                                        m.SubscriptElement(
+                                            slice=m.Index(
+                                                value=m.Subscript(
+                                                    value=m.SaveMatchedNode(
+                                                        m.Attribute(),
+                                                        "base_return_type",
+                                                    )
+                                                )
+                                            )
+                                        ),
+                                    ],
+                                )
+                            )
+                        ]
+                    ),
+                ]
+            ),
+        )
+        if (
+            matched_callable_ann is not None
+            and "base_return_type" in matched_callable_ann
+        ):
+            base_return_type = get_full_name_for_node(
+                cst.ensure_type(matched_callable_ann["base_return_type"], cst.CSTNode)
             )
-            return_type_node = cst.ensure_type(
-                cst.ensure_type(return_type_subscript_element.slice, cst.Index).value,
-                cst.Subscript,
-            ).value
-            return get_full_name_for_node(return_type_node)
-        except Exception:
-            # cst.ensure_type will raise a generic Exception on type mismatch. We should technically never get here if the type annotation
-            # is for a typing.Callable type.
-            return None
+            return (
+                base_return_type is not None and base_return_type == "typing.Coroutine"
+            )
+        return False
 
     def _get_awaitable_replacement(self, node: cst.CSTNode) -> Optional[cst.CSTNode]:
         annotation = self.get_metadata(TypeInferenceProvider, node, None)
-        if annotation is not None and annotation.startswith("typing.Callable"):
-            return_type = self._get_callable_return_type(annotation)
-            annotation = return_type
-        if annotation is not None and annotation.startswith("typing.Coroutine"):
+        if annotation is not None and (
+            annotation.startswith("typing.Coroutine")
+            or self._is_awaitable_callable(annotation)
+        ):
             if isinstance(node, cst.BaseExpression):
                 return cst.Await(expression=node)
         return None
