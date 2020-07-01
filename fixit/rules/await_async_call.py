@@ -310,7 +310,7 @@ class AwaitAsyncCallRule(CstLintRule):
             return False
         parsed_ann = cst.parse_module(annotation)
         # If passed annotation does not match the expected annotation structure for a `typing.Callable` with
-        # typing.Coroutine as the return type, matched_called_ann will be None.
+        # typing.Coroutine as the return type, matched_callable_ann will simply be `None`.
         # The expected structure of an awaitable callable annotation from Pyre is: typing.Callable()[[...], typing.Coroutine[...]]
         matched_callable_ann: Optional[
             Dict[str, Union[Sequence[cst.CSTNode], cst.CSTNode]]
