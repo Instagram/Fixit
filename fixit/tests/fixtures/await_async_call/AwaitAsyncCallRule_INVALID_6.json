@@ -4,14 +4,27 @@
       "location": {
         "start": {
           "line": 1,
+          "column": 10
+        },
+        "stop": {
+          "line": 1,
+          "column": 13
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpujja92f_.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 1,
           "column": 19
         },
         "stop": {
           "line": 1,
-          "column": 27
+          "column": 23
         }
       },
-      "annotation": "typing.Type[typing.Optional]"
+      "annotation": "typing.Type[bool]"
     },
     {
       "location": {
@@ -21,45 +34,6 @@
         },
         "stop": {
           "line": 2,
-          "column": 1
-        }
-      },
-      "annotation": "typing.Optional[str]"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 2,
-          "column": 3
-        },
-        "stop": {
-          "line": 2,
-          "column": 16
-        }
-      },
-      "annotation": "typing.Type[typing.Optional[str]]"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 2,
-          "column": 16
-        },
-        "stop": {
-          "line": 2,
-          "column": 16
-        }
-      },
-      "annotation": "typing.Any"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 3,
-          "column": 0
-        },
-        "stop": {
-          "line": 3,
           "column": 1
         }
       },
@@ -68,37 +42,24 @@
     {
       "location": {
         "start": {
-          "line": 3,
-          "column": 3
+          "line": 2,
+          "column": 4
         },
         "stop": {
-          "line": 3,
-          "column": 7
+          "line": 2,
+          "column": 8
         }
       },
-      "annotation": "typing.Type[bool]"
+      "annotation": "typing_extensions.Literal[True]"
     },
     {
       "location": {
         "start": {
           "line": 3,
-          "column": 7
-        },
-        "stop": {
-          "line": 3,
-          "column": 7
-        }
-      },
-      "annotation": "typing.Any"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 4,
           "column": 3
         },
         "stop": {
-          "line": 4,
+          "line": 3,
           "column": 4
         }
       },
@@ -107,15 +68,41 @@
     {
       "location": {
         "start": {
-          "line": 5,
-          "column": 5
+          "line": 3,
+          "column": 3
         },
         "stop": {
-          "line": 5,
-          "column": 6
+          "line": 3,
+          "column": 14
         }
       },
-      "annotation": "typing.Optional[str]"
+      "annotation": "typing.Union[typing.Coroutine[typing.Any, typing.Any, bool], bool]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 9
+        },
+        "stop": {
+          "line": 3,
+          "column": 12
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpujja92f_.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 9
+        },
+        "stop": {
+          "line": 3,
+          "column": 14
+        }
+      },
+      "annotation": "typing.Coroutine[typing.Any, typing.Any, bool]"
     }
   ]
 }

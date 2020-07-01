@@ -11,7 +11,7 @@
           "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp5y5lw3l4.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmplcexnye3.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
     },
     {
       "location": {
@@ -30,24 +30,50 @@
       "location": {
         "start": {
           "line": 2,
-          "column": 10
+          "column": 0
         },
         "stop": {
           "line": 2,
+          "column": 1
+        }
+      },
+      "annotation": "bool"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 2,
+          "column": 4
+        },
+        "stop": {
+          "line": 2,
+          "column": 8
+        }
+      },
+      "annotation": "typing_extensions.Literal[True]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 0
+        },
+        "stop": {
+          "line": 3,
           "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp5y5lw3l4.bar)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Union[typing.Coroutine[typing.Any, typing.Any, bool], bool]"
     },
     {
       "location": {
         "start": {
           "line": 3,
-          "column": 10
+          "column": 16
         },
         "stop": {
           "line": 3,
-          "column": 25
+          "column": 17
         }
       },
       "annotation": "bool"
@@ -56,37 +82,37 @@
       "location": {
         "start": {
           "line": 3,
-          "column": 14
+          "column": 16
+        },
+        "stop": {
+          "line": 3,
+          "column": 27
+        }
+      },
+      "annotation": "typing.Union[typing.Coroutine[typing.Any, typing.Any, bool], bool]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 22
         },
         "stop": {
           "line": 3,
           "column": 25
         }
       },
-      "annotation": "bool"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmplcexnye3.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
     },
     {
       "location": {
         "start": {
           "line": 3,
-          "column": 20
+          "column": 22
         },
         "stop": {
           "line": 3,
-          "column": 23
-        }
-      },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp5y5lw3l4.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 3,
-          "column": 20
-        },
-        "stop": {
-          "line": 3,
-          "column": 25
+          "column": 27
         }
       },
       "annotation": "typing.Coroutine[typing.Any, typing.Any, bool]"

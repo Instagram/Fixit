@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Optional, cast
+from typing import Optional, Union, cast
 
 import libcst as cst
 import libcst.matchers as m
@@ -393,29 +393,26 @@ class AwaitAsyncCallRule(CstLintRule):
                 return node.with_changes(left=left_replacement, right=right_replacement)
         return None
 
-    def _get_async_assign_replacement(self, node: cst.Assign) -> Optional[cst.CSTNode]:
-        return self._get_async_expr_replacement(node.value)
-
-    def visit_If(self, node: cst.If) -> None:
+    def _maybe_autofix_node_test(self, node: Union[cst.If, cst.While]) -> None:
         replacement_test = self._get_async_expr_replacement(node.test)
         if replacement_test is not None:
             replacement = node.with_changes(test=replacement_test)
             self.report(node, replacement=replacement)
 
-    def visit_While(self, node: cst.While) -> None:
-        replacement_test = self._get_async_expr_replacement(node.test)
-        if replacement_test is not None:
-            replacement = node.with_changes(test=replacement_test)
-            self.report(node, replacement=replacement)
-
-    def visit_Assign(self, node: cst.Assign) -> None:
-        replacement_value = self._get_async_assign_replacement(node)
-        if replacement_value is not None:
-            replacement = node.with_changes(value=replacement_value)
-            self.report(node, replacement=replacement)
-
-    def visit_Expr(self, node: cst.Expr) -> None:
+    def _maybe_autofix_node_value(self, node: Union[cst.Assign, cst.Expr]) -> None:
         replacement_value = self._get_async_expr_replacement(node.value)
         if replacement_value is not None:
             replacement = node.with_changes(value=replacement_value)
             self.report(node, replacement=replacement)
+
+    def visit_If(self, node: cst.If) -> None:
+        self._maybe_autofix_node_test(node)
+
+    def visit_While(self, node: cst.While) -> None:
+        self._maybe_autofix_node_test(node)
+
+    def visit_Assign(self, node: cst.Assign) -> None:
+        self._maybe_autofix_node_value(node)
+
+    def visit_Expr(self, node: cst.Expr) -> None:
+        self._maybe_autofix_node_value(node)

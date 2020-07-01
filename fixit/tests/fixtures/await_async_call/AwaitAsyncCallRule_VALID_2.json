@@ -11,7 +11,7 @@
           "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpg39d4p9r.foo)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpyg1374ak.foo)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     },
     {
       "location": {
@@ -24,30 +24,30 @@
           "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpg39d4p9r.bar)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpyg1374ak.bar)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     },
     {
       "location": {
         "start": {
           "line": 3,
-          "column": 14
+          "column": 10
         },
         "stop": {
           "line": 3,
-          "column": 17
+          "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpg39d4p9r.foo)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpyg1374ak.foo)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
     },
     {
       "location": {
         "start": {
           "line": 3,
-          "column": 14
+          "column": 10
         },
         "stop": {
           "line": 3,
-          "column": 19
+          "column": 15
         }
       },
       "annotation": "typing.Coroutine[typing.Any, typing.Any, unknown]"

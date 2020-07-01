@@ -11,7 +11,7 @@
           "column": 13
         }
       },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpdbqcygav.bar)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp22ie2bsy.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
     },
     {
       "location": {
@@ -30,37 +30,24 @@
       "location": {
         "start": {
           "line": 2,
+          "column": 3
+        },
+        "stop": {
+          "line": 2,
           "column": 6
-        },
-        "stop": {
-          "line": 2,
-          "column": 15
         }
       },
-      "annotation": "bool"
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp22ie2bsy.foo)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
     },
     {
       "location": {
         "start": {
           "line": 2,
-          "column": 10
+          "column": 3
         },
         "stop": {
           "line": 2,
-          "column": 13
-        }
-      },
-      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpdbqcygav.bar)[[], typing.Coroutine[typing.Any, typing.Any, bool]]"
-    },
-    {
-      "location": {
-        "start": {
-          "line": 2,
-          "column": 10
-        },
-        "stop": {
-          "line": 2,
-          "column": 15
+          "column": 8
         }
       },
       "annotation": "typing.Coroutine[typing.Any, typing.Any, bool]"
