@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Optional, Union, cast
+from typing import Optional, cast
 
 import libcst as cst
 import libcst.matchers as m
@@ -303,9 +303,6 @@ class AwaitAsyncCallRule(CstLintRule):
         ),
     ]
 
-    def _get_type_metadata(self, node: cst.CSTNode) -> Optional[str]:
-        return self.get_metadata(TypeInferenceProvider, node, None)
-
     @staticmethod
     def _get_callable_return_type(annotation: str) -> Optional[str]:
         # If passed annotation does not match the expected annotation structure for a `typing.Callable`,
@@ -334,13 +331,9 @@ class AwaitAsyncCallRule(CstLintRule):
             # is for a typing.Callable type.
             return None
 
-    @staticmethod
-    def _is_callable(annotation: str) -> bool:
-        return annotation.startswith("typing.Callable")
-
     def _get_awaitable_replacement(self, node: cst.CSTNode) -> Optional[cst.CSTNode]:
-        annotation = self._get_type_metadata(node)
-        if annotation is not None and self._is_callable(annotation):
+        annotation = self.get_metadata(TypeInferenceProvider, node, None)
+        if annotation is not None and annotation.startswith("typing.Callable"):
             return_type = self._get_callable_return_type(annotation)
             annotation = return_type
         if annotation is not None and annotation.startswith("typing.Coroutine"):
@@ -364,9 +357,6 @@ class AwaitAsyncCallRule(CstLintRule):
             attr_func_replacement = self._get_async_attr_replacement(func)
             if attr_func_replacement is not None:
                 return node.with_changes(func=attr_func_replacement)
-        return self._get_awaitable_replacement(node)
-
-    def _get_async_name_replacement(self, node: cst.Name) -> Optional[cst.CSTNode]:
         return self._get_awaitable_replacement(node)
 
     def _get_async_expr_replacement(self, node: cst.CSTNode) -> Optional[cst.CSTNode]:
@@ -393,26 +383,22 @@ class AwaitAsyncCallRule(CstLintRule):
                 return node.with_changes(left=left_replacement, right=right_replacement)
         return None
 
-    def _maybe_autofix_node_test(self, node: Union[cst.If, cst.While]) -> None:
-        replacement_test = self._get_async_expr_replacement(node.test)
-        if replacement_test is not None:
-            replacement = node.with_changes(test=replacement_test)
-            self.report(node, replacement=replacement)
-
-    def _maybe_autofix_node_value(self, node: Union[cst.Assign, cst.Expr]) -> None:
-        replacement_value = self._get_async_expr_replacement(node.value)
+    def _maybe_autofix_node(self, node: cst.CSTNode, attribute_name: str) -> None:
+        replacement_value = self._get_async_expr_replacement(
+            getattr(node, attribute_name)
+        )
         if replacement_value is not None:
-            replacement = node.with_changes(value=replacement_value)
+            replacement = node.with_changes(**{attribute_name: replacement_value})
             self.report(node, replacement=replacement)
 
     def visit_If(self, node: cst.If) -> None:
-        self._maybe_autofix_node_test(node)
+        self._maybe_autofix_node(node, "test")
 
     def visit_While(self, node: cst.While) -> None:
-        self._maybe_autofix_node_test(node)
+        self._maybe_autofix_node(node, "test")
 
     def visit_Assign(self, node: cst.Assign) -> None:
-        self._maybe_autofix_node_value(node)
+        self._maybe_autofix_node(node, "value")
 
     def visit_Expr(self, node: cst.Expr) -> None:
-        self._maybe_autofix_node_value(node)
+        self._maybe_autofix_node(node, "value")
