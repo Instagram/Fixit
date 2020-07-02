@@ -4,38 +4,27 @@
 # LICENSE file in the root directory of this source tree.
 
 import subprocess
-from pathlib import Path
-from typing import Collection, Dict, Iterable, List, Tuple
+from typing import Collection, Mapping
 
-from libcst.metadata import FullRepoManager, MetadataWrapper, TypeInferenceProvider
-from libcst.metadata.base_provider import ProviderT
+from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
-from fixit.common.config import FIXIT_ROOT, PYRE_TIMEOUT_SECONDS
+from fixit.common.config import FIXIT_ROOT
 
 
-_RepoTypeMetadata = Tuple[Dict[Path, "MetadataWrapper"], List[Path]]
-
-
-def get_type_metadata(
-    paths: Iterable[Path],
-    timeout: int = PYRE_TIMEOUT_SECONDS,
-    providers: Collection["ProviderT"] = {TypeInferenceProvider},
-    repo_root_dir: str = str(FIXIT_ROOT),
-) -> _RepoTypeMetadata:
+def get_type_caches(
+    paths: Collection[str], timeout: int, repo_root_dir: str = str(FIXIT_ROOT),
+) -> Mapping[str, object]:
     frm = FullRepoManager(
         repo_root_dir=repo_root_dir,
-        paths=[str(path) for path in paths],
-        providers=providers,
+        paths=paths,
+        providers={TypeInferenceProvider},
         timeout=timeout,
     )
-
-    failed_paths: List[Path] = []
-    repo_type_metadata: Dict[Path, "MetadataWrapper"] = {}
-
-    for path in paths:
-        try:
-            repo_type_metadata[path] = frm.get_metadata_wrapper_for_path(path=str(path))
-        except subprocess.TimeoutExpired:
-            failed_paths.append(path)
-
-    return (repo_type_metadata, failed_paths)
+    try:
+        frm.resolve_cache()
+        return frm._cache[TypeInferenceProvider]
+    except subprocess.TimeoutExpired:
+        # Swallow the timeout exception here. The expectation is that any rules that rely on Pyre data
+        # throw an exception while they are running and each individual failure will be handled by the
+        # lint rule engine further down the line.
+        return {}
