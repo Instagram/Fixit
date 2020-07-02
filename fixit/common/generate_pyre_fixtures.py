@@ -35,6 +35,14 @@ class RuleTypeError(Exception):
     pass
 
 
+class PyreQueryError(Exception):
+    def __init__(self, command: str, message: str) -> None:
+        super().__init__(
+            "Unable to infer types from temporary file. "
+            + f"Command `{command}` returned with the following message: {message}."
+        )
+
+
 def gen_types_for_test_case(source_code: str, dest_path: Path) -> None:
     rule_fixture_subdir: Path = dest_path.parent
     if not rule_fixture_subdir.exists():
@@ -48,14 +56,15 @@ def gen_types_for_test_case(source_code: str, dest_path: Path) -> None:
         cmd = f'''pyre query "types(path='{temp.name}')"'''
         stdout, stderr, return_code = run_command(cmd)
         if return_code != 0:
-            print(stdout)
-            print(stderr)
-        else:
-            data = json.loads(stdout)
-            data = data["response"][0]
-            data: PyreData = _process_pyre_data(data)
-            print(f"Writing output to {dest_path}")
-            dest_path.write_text(json.dumps({"types": data["types"]}, indent=2))
+            raise PyreQueryError(cmd, f"{stdout}\n{stderr}")
+        data = json.loads(stdout)
+        # Check if error is a key in `data` since pyre may report errors this way.
+        if "error" in data:
+            raise PyreQueryError(cmd, data["error"])
+        data = data["response"][0]
+        data: PyreData = _process_pyre_data(data)
+        print(f"Writing output to {dest_path}")
+        dest_path.write_text(json.dumps({"types": data["types"]}, indent=2))
 
 
 def gen_types(rule: CstLintRule, rule_fixture_dir: Path) -> None:

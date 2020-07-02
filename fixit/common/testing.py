@@ -15,6 +15,7 @@ from libcst.testing.utils import (  # noqa IG69: this module is only used by tes
 
 from fixit.common.base import CstLintRule
 from fixit.common.config import FIXTURE_DIRECTORY
+from fixit.common.generate_pyre_fixtures import get_fixture_path
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
     InvalidTestCase,
@@ -119,7 +120,9 @@ class LintRuleTestCase(unittest.TestCase):
             validate_patch(report, test_case)
 
 
-def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
+def _gen_test_methods_for_rule(
+    rule: Type[CstLintRule], fixture_dir: Path, rules_package: str
+) -> TestCasePrecursor:
     """ Aggregates all of the cases inside a single CstLintRule's VALID and INVALID attributes
     and maps them to altered names with a `test_` prefix so that 'unittest' can discover them
     later on and an index postfix so that individual tests can be selected from the command line.
@@ -128,6 +131,7 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
     invalid_tcs = dict()
     requires_fixtures = False
     fixture_paths: Dict[str, Path] = dict()
+    fixture_subdir: Path = get_fixture_path(fixture_dir, rule.__module__, rules_package)
     if issubclass(rule, CstLintRule):
 
         if TypeInferenceProvider in rule.get_inherited_dependencies():
@@ -138,8 +142,7 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
                 valid_tcs[name] = test_case
                 if requires_fixtures:
                     fixture_paths[name] = (
-                        Path(rule.__module__.rpartition(".")[2])
-                        / f"{rule.__name__}_VALID_{idx}.json"
+                        fixture_subdir / f"{rule.__name__}_VALID_{idx}.json"
                     )
         if hasattr(rule, "INVALID"):
             for idx, test_case in enumerate(getattr(rule, "INVALID")):
@@ -147,8 +150,7 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
                 invalid_tcs[name] = test_case
                 if requires_fixtures:
                     fixture_paths[name] = (
-                        Path(rule.__module__.rpartition(".")[2])
-                        / f"{rule.__name__}_INVALID_{idx}.json"
+                        fixture_subdir / f"{rule.__name__}_INVALID_{idx}.json"
                     )
     return TestCasePrecursor(
         rule=rule,
@@ -157,7 +159,9 @@ def _gen_test_methods_for_rule(rule: Type[CstLintRule]) -> TestCasePrecursor:
     )
 
 
-def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecursor]:
+def _gen_all_test_methods(
+    rules: LintRuleCollectionT, fixture_dir: Path, rules_package: str
+) -> Sequence[TestCasePrecursor]:
     """
     Converts all passed-in lint rules to type `TestCasePrecursor` to ease further TestCase
     creation later on.
@@ -166,7 +170,9 @@ def _gen_all_test_methods(rules: LintRuleCollectionT) -> Sequence[TestCasePrecur
     for rule in rules:
         if not issubclass(rule, CstLintRule):
             continue
-        test_cases_for_rule = _gen_test_methods_for_rule(cast(Type[CstLintRule], rule))
+        test_cases_for_rule = _gen_test_methods_for_rule(
+            cast(Type[CstLintRule], rule), fixture_dir, rules_package
+        )
         cases.append(test_cases_for_rule)
     return cases
 
@@ -176,6 +182,8 @@ def add_lint_rule_tests_to_module(
     rules: LintRuleCollectionT = [],
     test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
     custom_test_method_name: str = "_test_method",
+    fixture_dir: Path = FIXTURE_DIRECTORY,
+    rules_package: str = "fixit.rules",
 ) -> None:
     """
     Generates classes inheriting from `unittest.TestCase` from the data available in `rules` and adds these to module_attrs.
@@ -193,8 +201,14 @@ def add_lint_rule_tests_to_module(
     custom_test_method_name: A member method of the class passed into `test_case_type` parameter that contains the logic around asserting success or failure of
     CstLintRule's `ValidTestCase` and `InvalidTestCase` test cases. The method will be dynamically renamed to `test_<VALID/INVALID>_<test case index>` for discovery
     by unittest. If argument is omitted, `add_lint_rule_tests_to_module` will look for a test method named `_test_method` member of `test_case_type`.
+
+    fixture_dir: The directory in which fixture files for the passed rules live. Necessary only if any lint rules require fixture data for testing.
+
+    rules_package: The name of the rules package. This will be used during the search for fixture files and provides insight into the structure of the fixture directory.
+    The structure of the fixture directory is automatically assumed to mirror the structure of the rules package, eg: `<rules_package>.submodule.module.rule_class` should
+    have fixture files in `<fixture_dir>/submodule/module/rule_class/`.
     """
-    for test_case in _gen_all_test_methods(rules):
+    for test_case in _gen_all_test_methods(rules, fixture_dir, rules_package):
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
 

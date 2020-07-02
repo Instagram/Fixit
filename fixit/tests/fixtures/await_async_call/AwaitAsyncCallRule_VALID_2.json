@@ -1,0 +1,56 @@
+{
+  "types": [
+    {
+      "location": {
+        "start": {
+          "line": 1,
+          "column": 10
+        },
+        "stop": {
+          "line": 1,
+          "column": 13
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpyg1374ak.foo)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 2,
+          "column": 10
+        },
+        "stop": {
+          "line": 2,
+          "column": 13
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpyg1374ak.bar)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 10
+        },
+        "stop": {
+          "line": 3,
+          "column": 13
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmpyg1374ak.foo)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 10
+        },
+        "stop": {
+          "line": 3,
+          "column": 15
+        }
+      },
+      "annotation": "typing.Coroutine[typing.Any, typing.Any, unknown]"
+    }
+  ]
+}
