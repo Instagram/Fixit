@@ -201,6 +201,12 @@ def add_lint_rule_tests_to_module(
     custom_test_method_name: A member method of the class passed into `test_case_type` parameter that contains the logic around asserting success or failure of
     CstLintRule's `ValidTestCase` and `InvalidTestCase` test cases. The method will be dynamically renamed to `test_<VALID/INVALID>_<test case index>` for discovery
     by unittest. If argument is omitted, `add_lint_rule_tests_to_module` will look for a test method named `_test_method` member of `test_case_type`.
+
+    fixture_dir: The directory in which fixture files for the passed rules live. Necessary only if any lint rules require fixture data for testing.
+
+    rules_package: The name of the rules package. This will be used during the search for fixture files and provides insight into the structure of the fixture directory.
+    The structure of the fixture directory is automatically assumed to mirror the structure of the rules package, eg: `<rules_package>.submodule.module.rule_class` should
+    have fixture files in `<fixture_dir>/submodule/module/rule_class/`.
     """
     for test_case in _gen_all_test_methods(rules, fixture_dir, rules_package):
         rule_name = test_case.rule.__name__
