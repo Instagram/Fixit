@@ -6,14 +6,15 @@
 import subprocess
 from pathlib import Path
 from typing import Collection, List, Mapping, Optional, Type, Union, cast
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import libcst as cst
 from libcst.metadata import BaseMetadataProvider, MetadataWrapper, TypeInferenceProvider
 from libcst.testing.utils import UnitTest
 
-from fixit.common.base import CstContext, CstLintRule, LintRuleT
+from fixit.common.base import CstLintRule, LintRuleT
 from fixit.common.cli import LintWorkers, map_paths
+from fixit.common.config import FIXIT_ROOT
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.typing.helpers import get_type_caches
 from fixit.rule_lint_engine import lint_file
@@ -22,19 +23,17 @@ from fixit.rule_lint_engine import lint_file
 SOURCE_CODE = b"class Foo: pass"
 
 
-class DummyTypingRule(CstLintRule):
+class DummyTypeDependentRule(CstLintRule):
     METADATA_DEPENDENCIES = (TypeInferenceProvider,)
-
-    def __init__(self, context: CstContext) -> None:
-        super().__init__(context)
 
     def visit_Module(self, node: cst.Module) -> None:
         self.report(node, "IG00 dummy message")
 
 
-def _lint_file_caller_func(
+def map_paths_operation(
     path: Path, config: List[LintRuleT], type_cache: Optional[object],
 ) -> Union[str, Collection[BaseLintRuleReport]]:
+    # A top-level function to be accessible by `map_paths` from `fixit.common.cli`.
     cst_wrapper = None
     try:
         if type_cache is not None:
@@ -55,71 +54,91 @@ def _lint_file_caller_func(
 
 
 class TypeInferenceTest(UnitTest):
-    DUMMY_PATH: Path = Path(__file__)
+    DUMMY_PATH: Path = Path("fake/path.py")
+    DUMMY_PATH_2: Path = Path("fake/path_2.py")
 
-    @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
-    def test_basic_type_inference(self, mock_gen_cache: MagicMock) -> None:
-        # We want to intercept any calls that will require the pyre engine to be running
-        fake_cache = {
-            str(self.DUMMY_PATH): {
-                "types": [
-                    {
-                        "location": {
-                            "start": {"line": 0, "column": 0},
-                            "stop": {"line": 0, "column": 0},
-                        },
-                        "annotation": "typing.Any",
+    def setUp(self) -> None:
+        self.mock_operation: MagicMock = MagicMock(side_effect=map_paths_operation)
+        self.fake_pyre_data: object = {
+            "types": [
+                {
+                    "location": {
+                        "start": {"line": 0, "column": 0},
+                        "stop": {"line": 0, "column": 0},
                     },
-                ],
-            }
+                    "annotation": "typing.Any",
+                },
+            ],
         }
 
-        mock_gen_cache.return_value = fake_cache
-
-        type_caches: Mapping[str, object] = get_type_caches([str(self.DUMMY_PATH)], 1)
-
-        mock_operation: MagicMock = MagicMock(side_effect=_lint_file_caller_func)
+    @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
+    def test_basic_type_inference(self, gen_cache: MagicMock) -> None:
+        # We want to intercept any calls that will require the pyre engine to be running.
+        gen_cache.return_value = {str(self.DUMMY_PATH): self.fake_pyre_data}
+        paths = [str(self.DUMMY_PATH)]
+        type_caches: Mapping[str, object] = get_type_caches(paths, 1, str(FIXIT_ROOT))
 
         reports = next(
             map_paths(
-                operation=mock_operation,
-                paths=[str(self.DUMMY_PATH)],
-                config=[DummyTypingRule],
+                operation=self.mock_operation,
+                paths=paths,
+                config=[DummyTypeDependentRule],
                 workers=LintWorkers.USE_CURRENT_THREAD,
                 type_caches=type_caches,
             )
         )
 
-        mock_operation.assert_called_with(
-            self.DUMMY_PATH, [DummyTypingRule], type_caches[str(self.DUMMY_PATH)]
+        self.mock_operation.assert_called_with(
+            self.DUMMY_PATH, [DummyTypeDependentRule], type_caches[str(self.DUMMY_PATH)]
         )
 
         self.assertEqual(len(reports), 1)
+        self.assertEqual(reports[0].file_path, self.DUMMY_PATH)
 
-    @patch("builtins.open", new_callable=mock_open, read_data=SOURCE_CODE)
     @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
-    def test_type_inference_with_timeout(self, mock_gen_cache: MagicMock, _) -> None:
+    def test_basic_type_inference_multiple_paths(self, gen_cache: MagicMock) -> None:
+        paths: List[str] = [str(self.DUMMY_PATH), str(self.DUMMY_PATH_2)]
+        gen_cache.return_value = {path: self.fake_pyre_data for path in paths}
+
+        type_caches: Mapping[str, object] = get_type_caches(paths, 1, str(FIXIT_ROOT))
+
+        all_reports = map_paths(
+            operation=self.mock_operation,
+            paths=paths,
+            config=[DummyTypeDependentRule],
+            workers=LintWorkers.USE_CURRENT_THREAD,
+            type_caches=type_caches,
+        )
+
+        # Reports should be returned in order since we specified `LintWorkers.USE_CURRENT_THREAD`.
+        for i, reports in enumerate(all_reports):
+            self.assertEqual(len(reports), 1)
+            self.assertEqual(reports[0].file_path, Path(paths[i]))
+
+    @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
+    def test_type_inference_with_timeout(self, gen_cache: MagicMock) -> None:
         timeout = 1
         timeout_error = subprocess.TimeoutExpired(cmd="pyre query ...", timeout=timeout)
-        mock_gen_cache.side_effect = timeout_error
-
-        type_caches = get_type_caches(paths=[str(self.DUMMY_PATH)], timeout=timeout)
-        mock_operation: MagicMock = MagicMock(side_effect=_lint_file_caller_func)
+        gen_cache.side_effect = timeout_error
 
         # We're expecting this type-dependent lint rule to raise an Exception since it does not
-        # have access to a cache of inferred types.
+        # have access to a cache of inferred types. This exception should be handled in `mock_operation`.
         expected_error_message: str = "Cache is required for initializing TypeInferenceProvider."
+        paths: List[str] = [str(self.DUMMY_PATH)]
+        type_caches = get_type_caches(paths, timeout, str(FIXIT_ROOT))
 
         report = next(
             map_paths(
-                operation=mock_operation,
-                paths=[str(self.DUMMY_PATH)],
-                config=[DummyTypingRule],
+                operation=self.mock_operation,
+                paths=paths,
+                config=[DummyTypeDependentRule],
                 workers=LintWorkers.USE_CURRENT_THREAD,
                 type_caches=type_caches,
             )
         )
 
-        mock_operation.assert_called_with(self.DUMMY_PATH, [DummyTypingRule], None)
+        self.mock_operation.assert_called_with(
+            self.DUMMY_PATH, [DummyTypeDependentRule], None
+        )
 
         self.assertEqual(report, expected_error_message)

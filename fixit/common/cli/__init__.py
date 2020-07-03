@@ -36,7 +36,7 @@ import libcst as cst
 from libcst.metadata import BaseMetadataProvider, MetadataWrapper, TypeInferenceProvider
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
-from fixit.common.config import PYRE_TIMEOUT_SECONDS, REPO_ROOT
+from fixit.common.config import FIXIT_ROOT, PYRE_TIMEOUT_SECONDS, REPO_ROOT
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.common.typing.helpers import get_type_caches
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -167,6 +167,7 @@ class LintOpts:
     failure_report: Type[LintFailureReportBase]
     require_type_metadata: bool = False
     timeout_seconds: int = PYRE_TIMEOUT_SECONDS
+    repo_root: str = str(FIXIT_ROOT)
 
 
 def get_file_lint_result_json(
@@ -226,11 +227,15 @@ def ipc_main(opts: LintOpts) -> None:
     else:
         # The paths variable must be kept as a list of strings at this stage as this is the required format
         # in `get_type_caches()`.
-        paths: List[str] = args.paths if args.paths else sys.stdin
+        paths: List[str] = args.paths if args.paths else [
+            p.rstrip("\r\n") for p in sys.stdin
+        ]
 
     type_caches: Optional[Mapping[str, object]] = None
     if opts.require_type_metadata:
-        type_caches = get_type_caches(paths, timeout=opts.timeout_seconds)
+        type_caches = get_type_caches(
+            paths, timeout=opts.timeout_seconds, repo_root_dir=opts.repo_root
+        )
 
     results_iter: Iterator[Sequence[str]] = map_paths(
         get_file_lint_result_json,

@@ -8,11 +8,9 @@ from typing import Collection, Mapping
 
 from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
-from fixit.common.config import FIXIT_ROOT
-
 
 def get_type_caches(
-    paths: Collection[str], timeout: int, repo_root_dir: str = str(FIXIT_ROOT),
+    paths: Collection[str], timeout: int, repo_root_dir: str,
 ) -> Mapping[str, object]:
     frm = FullRepoManager(
         repo_root_dir=repo_root_dir,
@@ -21,6 +19,8 @@ def get_type_caches(
         timeout=timeout,
     )
     try:
+        # TODO: Once LibCST TypeInferenceProvider API is updated, replace this access of a private
+        # variable with new API method.
         frm.resolve_cache()
         return frm._cache[TypeInferenceProvider]
     except subprocess.TimeoutExpired:
