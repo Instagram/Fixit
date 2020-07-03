@@ -19,9 +19,9 @@ from pathlib import Path
 from typing import (
     Callable,
     Collection,
+    Generator,
     Iterable,
     Iterator,
-    List,
     Mapping,
     Optional,
     Sequence,
@@ -102,7 +102,6 @@ def map_paths(
 
     Results are yielded as soon as they're available, so they may appear out-of-order.
     """
-
     if workers is LintWorkers.CPU_COUNT:
         workers = multiprocessing.cpu_count()
 
@@ -110,9 +109,9 @@ def map_paths(
         tasks: Collection[_MapPathsWorkerArgsT] = tuple(
             zip(
                 itertools.repeat(operation),
-                paths,
+                type_caches.keys(),
                 itertools.repeat(config),
-                map(type_caches.get, paths),
+                type_caches.values(),
             )
         )
     else:
@@ -214,22 +213,17 @@ def ipc_main(opts: LintOpts) -> None:
     parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
-    if args.prefix:
-        prefix_path: Path = Path(args.prefix)
-
-        def process_path(p: str) -> str:
-            return str(prefix_path / p)
-
-        if args.paths:
-            paths: List[str] = [process_path(p) for p in args.paths]
-        else:
-            paths: List[str] = [process_path(p.rstrip("\r\n")) for p in sys.stdin]
+    if args.paths:
+        paths: Generator[str, None, None] = (
+            args.prefix + os.path.sep + p if args.prefix else p for p in args.paths
+        )
     else:
-        # The paths variable must be kept as a list of strings at this stage as this is the required format
-        # in `get_type_caches()`.
-        paths: List[str] = args.paths if args.paths else [
-            p.rstrip("\r\n") for p in sys.stdin
-        ]
+        paths: Generator[str, None, None] = (
+            args.prefix + os.path.sep + p.rstrip("\r\n")
+            if args.prefix
+            else p.rstrip("\r\n")
+            for p in sys.stdin
+        )
 
     type_caches: Optional[Mapping[str, object]] = None
     if opts.require_type_metadata:

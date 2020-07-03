@@ -75,13 +75,14 @@ class TypeInferenceTest(UnitTest):
     def test_basic_type_inference(self, gen_cache: MagicMock) -> None:
         # We want to intercept any calls that will require the pyre engine to be running.
         gen_cache.return_value = {str(self.DUMMY_PATH): self.fake_pyre_data}
-        paths = [str(self.DUMMY_PATH)]
+        paths = (str(path) for path in [self.DUMMY_PATH])
         type_caches: Mapping[str, object] = get_type_caches(paths, 1, str(FIXIT_ROOT))
+        paths = (path for path in type_caches.keys())
 
         reports = next(
             map_paths(
                 operation=self.mock_operation,
-                paths=paths,
+                paths=(path for path in type_caches.keys()),
                 config=[DummyTypeDependentRule],
                 workers=LintWorkers.USE_CURRENT_THREAD,
                 type_caches=type_caches,
@@ -97,7 +98,7 @@ class TypeInferenceTest(UnitTest):
 
     @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
     def test_basic_type_inference_multiple_paths(self, gen_cache: MagicMock) -> None:
-        paths: List[str] = [str(self.DUMMY_PATH), str(self.DUMMY_PATH_2)]
+        paths = (str(self.DUMMY_PATH), str(self.DUMMY_PATH_2))
         gen_cache.return_value = {path: self.fake_pyre_data for path in paths}
 
         type_caches: Mapping[str, object] = get_type_caches(paths, 1, str(FIXIT_ROOT))
@@ -124,7 +125,7 @@ class TypeInferenceTest(UnitTest):
         # We're expecting this type-dependent lint rule to raise an Exception since it does not
         # have access to a cache of inferred types. This exception should be handled in `mock_operation`.
         expected_error_message: str = "Cache is required for initializing TypeInferenceProvider."
-        paths: List[str] = [str(self.DUMMY_PATH)]
+        paths = (str(self.DUMMY_PATH),)
         type_caches = get_type_caches(paths, timeout, str(FIXIT_ROOT))
 
         report = next(
