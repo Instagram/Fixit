@@ -3,24 +3,43 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from itertools import chain, islice
-from typing import Iterable, Mapping
+from typing import Iterable, Mapping, Optional
 
 from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
 
-BATCH_SIZE: int = 1000
+ARG_MAX: int = 200000
 
 
 def get_type_caches(
-    paths: Iterable[str], timeout: int, repo_root_dir: str, batch_size: int = BATCH_SIZE
+    paths: Iterable[str], timeout: int, repo_root_dir: str, arg_size: int = ARG_MAX
 ) -> Mapping[str, object]:
+    """
+    Generate type metadata by instantiating a :class:`~libcst.metadata.FullRepoManager` with
+    :class:`~libcst.metadata.FullRepoManager` passed to ```providers``` parameter.
+
+    :param paths: An iterable of paths to files to pass to :class:`~libcst.metadata.FullRepoManager` constructor's
+    ```paths``` argument. These will be split in batches where the combined length of each path in the batch is <=
+    ```arg_size```.
+
+    :param timeout: The number of seconds at which to cap the pyre query which is run as a subprocess during cache resolving.
+
+    :param repo_root_dir: Root directory of paths in ```paths```.
+
+    :param arg_size: The length at which to cap the string argument that will be passed to the ```args``` parameter of the
+    :class:`~subprocess.Popen` constructor. The maximum size for a single string argument passed to the shell is system-
+    dependent.
+    """
     caches = {}
-    paths_iterator = iter(paths)
-    for first in paths_iterator:
-        # We want to pass paths to `FullRepoManager` in batches otherwise we run the risk of `TypeInferenceProvider`
-        # being unable to handle too many files.
-        paths_batch = tuple(chain([first], islice(paths_iterator, batch_size - 1)))
+    paths_iter = iter(paths)
+    head: Optional[str] = next(paths_iter, None)
+    while head is not None:
+        paths_batch = []
+        remaining = arg_size
+        while head is not None and remaining - len(head) >= 0:
+            remaining -= len(head)
+            paths_batch.append(head)
+            head = next(paths_iter, None)
         frm = FullRepoManager(
             repo_root_dir=repo_root_dir,
             paths=paths_batch,
@@ -28,8 +47,7 @@ def get_type_caches(
             timeout=timeout,
         )
         try:
-            # TODO: Once LibCST TypeInferenceProvider API is updated, replace this access of a private
-            # variable with new API method.
+            # TODO: replace access of private variable when updated libcst.metadata.FullRepoManager API is available.
             frm.resolve_cache()
             caches.update(frm._cache[TypeInferenceProvider])
         except Exception:
