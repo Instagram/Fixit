@@ -308,7 +308,12 @@ class AwaitAsyncCallRule(CstLintRule):
         if not annotation.startswith("typing.Callable"):
             # Exit early if this is not even a `typing.Callable` annotation.
             return False
-        parsed_ann = cst.parse_module(annotation)
+        try:
+            # Wrap this in a try-except since the type annotation may not be parse-able as a module.
+            # If it is not parse-able, we know it's not what we are looking for anyway, so return `False`.
+            parsed_ann = cst.parse_module(annotation)
+        except Exception:
+            return False
         # If passed annotation does not match the expected annotation structure for a `typing.Callable` with
         # typing.Coroutine as the return type, matched_callable_ann will simply be `None`.
         # The expected structure of an awaitable callable annotation from Pyre is: typing.Callable()[[...], typing.Coroutine[...]]
