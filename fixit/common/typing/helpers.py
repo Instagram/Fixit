@@ -8,11 +8,11 @@ from typing import Iterable, Mapping, Optional
 from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
 
-ARG_MAX: int = 200000
+ARG_MAX: int = 100000
 
 
 def get_type_caches(
-    paths: Iterable[str], timeout: int, repo_root_dir: str, arg_size: int = ARG_MAX
+    paths: Iterable[str], timeout: int, repo_root_dir: str = "", arg_size: int = ARG_MAX
 ) -> Mapping[str, object]:
     """
     Generate type metadata by instantiating a :class:`~libcst.metadata.FullRepoManager` with
@@ -27,8 +27,8 @@ def get_type_caches(
     :param repo_root_dir: Root directory of paths in ```paths```.
 
     :param arg_size: The length at which to cap the string argument that will be passed to the ```args``` parameter of the
-    :class:`~subprocess.Popen` constructor. The maximum size for a single string argument passed to the shell is system-
-    dependent.
+    :class:`~subprocess.Popen` constructor. To avoid shell error due to argument exceeding max allowable length. The maximum
+    size for a single string argument passed to the shell is system-dependent.
     """
     caches = {}
     paths_iter = iter(paths)
