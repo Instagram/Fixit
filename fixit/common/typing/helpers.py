@@ -11,6 +11,10 @@ from libcst.metadata import FullRepoManager, TypeInferenceProvider
 ARG_MAX: int = 100000
 
 
+class FilePathTooLongError(Exception):
+    pass
+
+
 def get_type_caches(
     paths: Iterable[str], timeout: int, repo_root_dir: str = "", arg_size: int = ARG_MAX
 ) -> Mapping[str, object]:
@@ -36,6 +40,10 @@ def get_type_caches(
     while head is not None:
         paths_batch = []
         remaining = arg_size
+        if len(head) > remaining:
+            raise FilePathTooLongError(
+                f"The file path name `{head}` is longer than the maximum name length: {arg_size}."
+            )
         while head is not None and remaining - len(head) >= 0:
             remaining -= len(head)
             paths_batch.append(head)
