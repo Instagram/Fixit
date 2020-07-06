@@ -122,13 +122,10 @@ class TypeInferenceTest(UnitTest):
         timeout_error = subprocess.TimeoutExpired(cmd="pyre query ...", timeout=timeout)
         gen_cache.side_effect = timeout_error
 
-        # We're expecting this type-dependent lint rule to raise an Exception since it does not
-        # have access to a cache of inferred types. This exception should be handled in `mock_operation`.
-        expected_error_message: str = "Cache is required for initializing TypeInferenceProvider."
         paths = (str(self.DUMMY_PATH),)
         type_caches = get_type_caches(paths, timeout, str(FIXIT_ROOT))
 
-        report = next(
+        reports = next(
             map_paths(
                 operation=self.mock_operation,
                 paths=paths,
@@ -138,8 +135,9 @@ class TypeInferenceTest(UnitTest):
             )
         )
 
+        # Expecting a placeholder cache to have been plugged in instead.
         self.mock_operation.assert_called_with(
-            self.DUMMY_PATH, [DummyTypeDependentRule], None
+            self.DUMMY_PATH, [DummyTypeDependentRule], {"types": []}
         )
 
-        self.assertEqual(report, expected_error_message)
+        self.assertEqual(len(reports), 1)

@@ -59,9 +59,10 @@ def get_type_caches(
             frm.resolve_cache()
             caches.update(frm._cache[TypeInferenceProvider])
         except Exception:
-            # Swallow any exceptions here. The expectation is that any rules that rely on Pyre data will
-            # raise an exception during the lint and each failure will be handled by the lint engine.
+            # Swallow any exceptions here. Since pyre is intrinsically unreliable, we don't want pyre-dependent rules
+            # to break the linting process. When pyre fails, we put a placeholder cache, and the TypeInferenceProvider-
+            # dependent lint rules will have reduced functionality / will not catch violations.
             # TODO: May want to extend `fixit.common.cli.ipc_main` functionality in the future to handle failures
             # that occur prior to the actual call to `lint_file`.
-            caches.update(dict.fromkeys(paths_batch, None))
+            caches.update(dict.fromkeys(paths_batch, {"types": []}))
     return caches
