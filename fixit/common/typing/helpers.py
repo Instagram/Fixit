@@ -8,7 +8,7 @@ from typing import Iterable, Mapping, Optional
 from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
 
-ARG_MAX: int = 100000
+ARG_MAX: int = 10000
 
 
 class FilePathTooLongError(Exception):
