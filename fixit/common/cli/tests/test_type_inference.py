@@ -5,18 +5,19 @@
 
 import subprocess
 from pathlib import Path
-from typing import Collection, List, Mapping, Optional, Type, Union, cast
+from typing import Collection, Dict, List, Mapping, Optional, Union
 from unittest.mock import MagicMock, patch
 
 import libcst as cst
-from libcst.metadata import BaseMetadataProvider, MetadataWrapper, TypeInferenceProvider
+from libcst.metadata import MetadataWrapper, TypeInferenceProvider
+from libcst.metadata.base_provider import ProviderT
 from libcst.testing.utils import UnitTest
 
 from fixit.common.base import CstLintRule, LintRuleT
 from fixit.common.cli import LintWorkers, map_paths
 from fixit.common.config import FIXIT_ROOT
+from fixit.common.full_repo_metadata import get_repo_caches
 from fixit.common.report import BaseLintRuleReport
-from fixit.common.typing.helpers import get_type_caches
 from fixit.rule_lint_engine import lint_file
 
 
@@ -31,20 +32,16 @@ class DummyTypeDependentRule(CstLintRule):
 
 
 def map_paths_operation(
-    path: Path, config: List[LintRuleT], type_cache: Optional[object],
+    path: Path,
+    config: List[LintRuleT],
+    type_cache: Optional[Mapping[ProviderT, object]],
 ) -> Union[str, Collection[BaseLintRuleReport]]:
     # A top-level function to be accessible by `map_paths` from `fixit.common.cli`.
     cst_wrapper = None
     try:
         if type_cache is not None:
             cst_wrapper = MetadataWrapper(
-                cst.parse_module(SOURCE_CODE),
-                True,
-                {
-                    cast(
-                        Type[BaseMetadataProvider[object]], TypeInferenceProvider
-                    ): type_cache
-                },
+                cst.parse_module(SOURCE_CODE), True, type_cache,
             )
         return lint_file(
             file_path=path, source=SOURCE_CODE, rules=config, cst_wrapper=cst_wrapper,
@@ -76,7 +73,9 @@ class TypeInferenceTest(UnitTest):
         # We want to intercept any calls that will require the pyre engine to be running.
         gen_cache.return_value = {str(self.DUMMY_PATH): self.fake_pyre_data}
         paths = (str(path) for path in [self.DUMMY_PATH])
-        type_caches: Mapping[str, object] = get_type_caches(paths, 1, str(FIXIT_ROOT))
+        type_caches: Mapping[str, Dict[ProviderT, object]] = get_repo_caches(
+            paths, {TypeInferenceProvider}, 1, str(FIXIT_ROOT)
+        )
         paths = (path for path in type_caches.keys())
 
         reports = next(
@@ -85,7 +84,7 @@ class TypeInferenceTest(UnitTest):
                 paths=(path for path in type_caches.keys()),
                 config=[DummyTypeDependentRule],
                 workers=LintWorkers.USE_CURRENT_THREAD,
-                type_caches=type_caches,
+                metadata_caches=type_caches,
             )
         )
 
@@ -101,14 +100,16 @@ class TypeInferenceTest(UnitTest):
         paths = (str(self.DUMMY_PATH), str(self.DUMMY_PATH_2))
         gen_cache.return_value = {path: self.fake_pyre_data for path in paths}
 
-        type_caches: Mapping[str, object] = get_type_caches(paths, 1, str(FIXIT_ROOT))
+        type_caches: Mapping[str, Dict[ProviderT, object]] = get_repo_caches(
+            paths, {TypeInferenceProvider}, 1, str(FIXIT_ROOT)
+        )
 
         all_reports = map_paths(
             operation=self.mock_operation,
             paths=paths,
             config=[DummyTypeDependentRule],
             workers=LintWorkers.USE_CURRENT_THREAD,
-            type_caches=type_caches,
+            metadata_caches=type_caches,
         )
 
         # Reports should be returned in order since we specified `LintWorkers.USE_CURRENT_THREAD`.
@@ -123,7 +124,9 @@ class TypeInferenceTest(UnitTest):
         gen_cache.side_effect = timeout_error
 
         paths = (str(self.DUMMY_PATH),)
-        type_caches = get_type_caches(paths, timeout, str(FIXIT_ROOT))
+        type_caches = get_repo_caches(
+            paths, {TypeInferenceProvider}, timeout, str(FIXIT_ROOT)
+        )
 
         reports = next(
             map_paths(
@@ -131,13 +134,15 @@ class TypeInferenceTest(UnitTest):
                 paths=paths,
                 config=[DummyTypeDependentRule],
                 workers=LintWorkers.USE_CURRENT_THREAD,
-                type_caches=type_caches,
+                metadata_caches=type_caches,
             )
         )
 
         # Expecting a placeholder cache to have been plugged in instead.
         self.mock_operation.assert_called_with(
-            self.DUMMY_PATH, [DummyTypeDependentRule], {"types": []}
+            self.DUMMY_PATH,
+            [DummyTypeDependentRule],
+            {TypeInferenceProvider: {"types": []}},
         )
 
         self.assertEqual(len(reports), 1)

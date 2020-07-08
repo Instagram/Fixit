@@ -17,6 +17,7 @@ import traceback
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Callable,
     Collection,
     Generator,
@@ -25,30 +26,38 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Type,
     TypeVar,
     Union,
-    cast,
 )
 
 import libcst as cst
-from libcst.metadata import BaseMetadataProvider, MetadataWrapper, TypeInferenceProvider
+from libcst.metadata import MetadataWrapper
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from fixit.common.config import PYRE_TIMEOUT_SECONDS, REPO_ROOT
+from fixit.common.full_repo_metadata import BATCH_SIZE, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
-from fixit.common.typing.helpers import ARG_MAX, get_type_caches
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
+
+
+if TYPE_CHECKING:
+    from libcst.metadata.base_provider import ProviderT
 
 
 _MapPathsOperationConfigT = TypeVar("_MapPathsOperationConfigT")
 _MapPathsOperationResultT = TypeVar("_MapPathsOperationResultT")
 _MapPathsOperationT = Callable[
-    [Path, _MapPathsOperationConfigT, Optional[object]], _MapPathsOperationResultT
+    [Path, _MapPathsOperationConfigT, Optional[Mapping["ProviderT", object]]],
+    _MapPathsOperationResultT,
 ]
 _MapPathsWorkerArgsT = Tuple[
-    _MapPathsOperationT, str, _MapPathsOperationConfigT, Optional[object]
+    _MapPathsOperationT,
+    str,
+    _MapPathsOperationConfigT,
+    Optional[Mapping["ProviderT", object]],
 ]
 
 
@@ -68,8 +77,8 @@ def find_files(paths: Iterable[Path]) -> Iterator[Path]:
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.
 def _map_paths_worker(args: _MapPathsWorkerArgsT) -> _MapPathsOperationResultT:
-    operation, path, config, type_caches = args
-    return operation(Path(path), config, type_caches)
+    operation, path, config, metadata_caches = args
+    return operation(Path(path), config, metadata_caches)
 
 
 def map_paths(
@@ -78,7 +87,7 @@ def map_paths(
     config: _MapPathsOperationConfigT,
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
-    type_caches: Optional[Mapping[str, object]] = None,
+    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None,
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
@@ -105,13 +114,13 @@ def map_paths(
     if workers is LintWorkers.CPU_COUNT:
         workers = multiprocessing.cpu_count()
 
-    if type_caches is not None:
+    if metadata_caches is not None:
         tasks: Collection[_MapPathsWorkerArgsT] = tuple(
             zip(
                 itertools.repeat(operation),
-                type_caches.keys(),
+                metadata_caches.keys(),
                 itertools.repeat(config),
-                type_caches.values(),
+                metadata_caches.values(),
             )
         )
     else:
@@ -164,27 +173,23 @@ class LintOpts:
     rules: LintRuleCollectionT
     success_report: Type[LintSuccessReportBase]
     failure_report: Type[LintFailureReportBase]
-    require_type_metadata: bool = False
+    metadata_providers: Optional[Set["ProviderT"]] = None
     timeout_seconds: int = PYRE_TIMEOUT_SECONDS
-    arg_size: int = ARG_MAX
+    batch_size: int = BATCH_SIZE
 
 
 def get_file_lint_result_json(
-    path: Path, opts: LintOpts, type_cache: Optional[object] = None
+    path: Path,
+    opts: LintOpts,
+    metadata_cache: Optional[Mapping["ProviderT", object]] = None,
 ) -> Sequence[str]:
     try:
         with open(path, "rb") as f:
             source = f.read()
         cst_wrapper = None
-        if type_cache is not None:
+        if metadata_cache is not None:
             cst_wrapper = MetadataWrapper(
-                cst.parse_module(source),
-                True,
-                {
-                    cast(
-                        Type[BaseMetadataProvider[object]], TypeInferenceProvider
-                    ): type_cache
-                },
+                cst.parse_module(source), True, metadata_cache,
             )
         results = opts.success_report.create_reports(
             path, lint_file(path, source, rules=opts.rules, cst_wrapper=cst_wrapper)
@@ -225,10 +230,14 @@ def ipc_main(opts: LintOpts) -> None:
             for p in sys.stdin
         )
 
-    type_caches: Optional[Mapping[str, object]] = None
-    if opts.require_type_metadata:
-        type_caches = get_type_caches(
-            paths, timeout=opts.timeout_seconds, arg_size=opts.arg_size,
+    required_providers = opts.metadata_providers
+    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
+    if required_providers is not None:
+        metadata_caches = get_repo_caches(
+            paths,
+            providers=required_providers,
+            timeout=opts.timeout_seconds,
+            batch_size=opts.batch_size,
         )
 
     results_iter: Iterator[Sequence[str]] = map_paths(
@@ -236,7 +245,7 @@ def ipc_main(opts: LintOpts) -> None:
         paths,
         opts,
         workers=args.workers,
-        type_caches=type_caches,
+        metadata_caches=metadata_caches,
     )
     for results in results_iter:
         # Use print outside of the executor to avoid multiple processes trying to write

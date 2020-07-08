@@ -3,21 +3,30 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Iterable, Mapping, Optional
+from collections import defaultdict
+from itertools import chain, islice
+from typing import TYPE_CHECKING, Dict, Iterable, Mapping, Optional, Set
 
 from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
 
-ARG_MAX: int = 10000
+if TYPE_CHECKING:
+    from libcst.metadata.base_provider import ProviderT
 
 
-class FilePathTooLongError(Exception):
-    pass
+BATCH_SIZE: int = 100
 
 
-def get_type_caches(
-    paths: Iterable[str], timeout: int, repo_root_dir: str = "", arg_size: int = ARG_MAX
-) -> Mapping[str, object]:
+PLACEHOLDER_CACHES: Dict["ProviderT", object] = {TypeInferenceProvider: {"types": []}}
+
+
+def get_repo_caches(
+    paths: Iterable[str],
+    providers: Set["ProviderT"],
+    timeout: int,
+    repo_root_dir: str = "",
+    batch_size: int = BATCH_SIZE,
+) -> Mapping[str, Dict["ProviderT", object]]:
     """
     Generate type metadata by instantiating a :class:`~libcst.metadata.FullRepoManager` with
     :class:`~libcst.metadata.FullRepoManager` passed to ```providers``` parameter.
@@ -30,39 +39,33 @@ def get_type_caches(
 
     :param repo_root_dir: Root directory of paths in ```paths```.
 
-    :param arg_size: The length at which to cap the string argument that will be passed to the ```args``` parameter of the
-    :class:`~subprocess.Popen` constructor. To avoid shell error due to argument exceeding max allowable length. The maximum
-    size for a single string argument passed to the shell is system-dependent.
+    :param batch_size: The size of the batch of paths to pass in each call to the :class:`~libcst.metadata.FullRepoManager` constructor.
     """
     caches = {}
     paths_iter = iter(paths)
     head: Optional[str] = next(paths_iter, None)
     while head is not None:
-        paths_batch = []
-        remaining = arg_size
-        if len(head) > remaining:
-            raise FilePathTooLongError(
-                f"The file path name `{head}` is longer than the maximum name length: {arg_size}."
-            )
-        while head is not None and remaining - len(head) >= 0:
-            remaining -= len(head)
-            paths_batch.append(head)
-            head = next(paths_iter, None)
+        paths_batch = tuple(chain([head], islice(paths_iter, batch_size - 1)))
+        head = next(paths_iter, None)
         frm = FullRepoManager(
             repo_root_dir=repo_root_dir,
             paths=paths_batch,
-            providers={TypeInferenceProvider},
+            providers=providers,
             timeout=timeout,
         )
         try:
-            # TODO: replace access of private variable when updated libcst.metadata.FullRepoManager API is available.
+            # TODO: remove access of private variable when public `cache` property is available in libcst.metadata.FullRepoManager API.
             frm.resolve_cache()
-            caches.update(frm._cache[TypeInferenceProvider])
+            batch_caches = defaultdict(dict)
+            for provider, files in frm._cache.items():
+                for _path, cache in files.items():
+                    batch_caches[_path][provider] = cache
+            caches.update(batch_caches)
         except Exception:
             # Swallow any exceptions here. Since pyre is intrinsically unreliable, we don't want pyre-dependent rules
             # to break the linting process. When pyre fails, we put a placeholder cache, and the TypeInferenceProvider-
             # dependent lint rules will have reduced functionality / will not catch violations.
             # TODO: May want to extend `fixit.common.cli.ipc_main` functionality in the future to handle failures
             # that occur prior to the actual call to `lint_file`.
-            caches.update(dict.fromkeys(paths_batch, {"types": []}))
+            caches.update(dict.fromkeys(paths_batch, PLACEHOLDER_CACHES))
     return caches
