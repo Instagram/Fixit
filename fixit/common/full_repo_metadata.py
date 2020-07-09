@@ -61,13 +61,7 @@ def get_repo_caches(
             timeout=config.timeout_seconds,
         )
         try:
-            # TODO: remove access of private variable when public `cache` property is available in libcst.metadata.FullRepoManager API.
             frm.resolve_cache()
-            batch_caches = defaultdict(dict)
-            for provider, files in frm._cache.items():
-                for _path, cache in files.items():
-                    batch_caches[_path][provider] = cache
-            caches.update(batch_caches)
         except Exception:
             # We want to fail silently since some metadata providers can be flaky. If a logger is provided by the caller, we'll add a log here.
             logger = config.logger
@@ -80,4 +74,11 @@ def get_repo_caches(
             # Populate with placeholder caches to avoid failures down the line. This will however result in reduced functionality in cache-dependent lint rules.
             # TODO: May want to extend `fixit.common.cli.ipc_main` functionality in the future to handle failures that occur prior to the actual call to `lint_file`.
             caches.update(dict.fromkeys(paths_batch, PLACEHOLDER_CACHES))
+        else:
+            # TODO: remove access of private variable when public `cache` property is available in libcst.metadata.FullRepoManager API.
+            batch_caches = defaultdict(dict)
+            for provider, files in frm._cache.items():
+                for _path, cache in files.items():
+                    batch_caches[_path][provider] = cache
+            caches.update(batch_caches)
     return caches
