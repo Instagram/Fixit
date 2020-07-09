@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from collections import defaultdict
+from dataclasses import dataclass
 from itertools import chain, islice
 from typing import TYPE_CHECKING, Dict, Iterable, Mapping, Optional, Set
 
@@ -11,6 +12,7 @@ from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
 
 if TYPE_CHECKING:
+    from logging import Logger
     from libcst.metadata.base_provider import ProviderT
 
 
@@ -20,12 +22,17 @@ BATCH_SIZE: int = 100
 PLACEHOLDER_CACHES: Dict["ProviderT", object] = {TypeInferenceProvider: {"types": []}}
 
 
+@dataclass(frozen=True)
+class FullRepoMetadataConfig:
+    providers: Set["ProviderT"]
+    timeout_seconds: int
+    repo_root_dir: str = ""
+    batch_size: int = BATCH_SIZE
+    logger: Optional["Logger"] = None
+
+
 def get_repo_caches(
-    paths: Iterable[str],
-    providers: Set["ProviderT"],
-    timeout: int,
-    repo_root_dir: str = "",
-    batch_size: int = BATCH_SIZE,
+    paths: Iterable[str], config: FullRepoMetadataConfig,
 ) -> Mapping[str, Dict["ProviderT", object]]:
     """
     Generate type metadata by instantiating a :class:`~libcst.metadata.FullRepoManager` with
@@ -45,13 +52,13 @@ def get_repo_caches(
     paths_iter = iter(paths)
     head: Optional[str] = next(paths_iter, None)
     while head is not None:
-        paths_batch = tuple(chain([head], islice(paths_iter, batch_size - 1)))
+        paths_batch = tuple(chain([head], islice(paths_iter, config.batch_size - 1)))
         head = next(paths_iter, None)
         frm = FullRepoManager(
-            repo_root_dir=repo_root_dir,
+            repo_root_dir=config.repo_root_dir,
             paths=paths_batch,
-            providers=providers,
-            timeout=timeout,
+            providers=config.providers,
+            timeout=config.timeout_seconds,
         )
         try:
             # TODO: remove access of private variable when public `cache` property is available in libcst.metadata.FullRepoManager API.
@@ -62,10 +69,15 @@ def get_repo_caches(
                     batch_caches[_path][provider] = cache
             caches.update(batch_caches)
         except Exception:
-            # Swallow any exceptions here. Since pyre is intrinsically unreliable, we don't want pyre-dependent rules
-            # to break the linting process. When pyre fails, we put a placeholder cache, and the TypeInferenceProvider-
-            # dependent lint rules will have reduced functionality / will not catch violations.
-            # TODO: May want to extend `fixit.common.cli.ipc_main` functionality in the future to handle failures
-            # that occur prior to the actual call to `lint_file`.
+            # We want to fail silently since some metadata providers can be flaky. If a logger is provided by the caller, we'll add a log here.
+            logger = config.logger
+            if logger is not None:
+                logger.warning(
+                    "Failed to retrieve metadata cache.",
+                    exc_info=True,
+                    extra={"paths": paths_batch},
+                )
+            # Populate with placeholder caches to avoid failures down the line. This will however result in reduced functionality in cache-dependent lint rules.
+            # TODO: May want to extend `fixit.common.cli.ipc_main` functionality in the future to handle failures that occur prior to the actual call to `lint_file`.
             caches.update(dict.fromkeys(paths_batch, PLACEHOLDER_CACHES))
     return caches

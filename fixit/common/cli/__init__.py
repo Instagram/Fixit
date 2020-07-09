@@ -26,7 +26,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Type,
     TypeVar,
@@ -37,8 +36,8 @@ import libcst as cst
 from libcst.metadata import MetadataWrapper
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
-from fixit.common.config import PYRE_TIMEOUT_SECONDS, REPO_ROOT
-from fixit.common.full_repo_metadata import BATCH_SIZE, get_repo_caches
+from fixit.common.config import REPO_ROOT
+from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
 
@@ -173,9 +172,7 @@ class LintOpts:
     rules: LintRuleCollectionT
     success_report: Type[LintSuccessReportBase]
     failure_report: Type[LintFailureReportBase]
-    metadata_providers: Optional[Set["ProviderT"]] = None
-    timeout_seconds: int = PYRE_TIMEOUT_SECONDS
-    batch_size: int = BATCH_SIZE
+    full_repo_metadata_config: Optional[FullRepoMetadataConfig] = None
 
 
 def get_file_lint_result_json(
@@ -220,25 +217,20 @@ def ipc_main(opts: LintOpts) -> None:
     args: argparse.Namespace = parser.parse_args()
     if args.paths:
         paths: Generator[str, None, None] = (
-            args.prefix + os.path.sep + p if args.prefix else p for p in args.paths
+            os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
         )
     else:
         paths: Generator[str, None, None] = (
-            args.prefix + os.path.sep + p.rstrip("\r\n")
+            os.path.join(args.prefix, p.rstrip("\r\n"))
             if args.prefix
             else p.rstrip("\r\n")
             for p in sys.stdin
         )
 
-    required_providers = opts.metadata_providers
+    full_repo_metadata_config = opts.full_repo_metadata_config
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
-    if required_providers is not None:
-        metadata_caches = get_repo_caches(
-            paths,
-            providers=required_providers,
-            timeout=opts.timeout_seconds,
-            batch_size=opts.batch_size,
-        )
+    if full_repo_metadata_config is not None:
+        metadata_caches = get_repo_caches(paths, full_repo_metadata_config)
 
     results_iter: Iterator[Sequence[str]] = map_paths(
         get_file_lint_result_json,

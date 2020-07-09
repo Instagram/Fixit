@@ -15,8 +15,7 @@ from libcst.testing.utils import UnitTest
 
 from fixit.common.base import CstLintRule, LintRuleT
 from fixit.common.cli import LintWorkers, map_paths
-from fixit.common.config import FIXIT_ROOT
-from fixit.common.full_repo_metadata import get_repo_caches
+from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file
 
@@ -74,7 +73,7 @@ class TypeInferenceTest(UnitTest):
         gen_cache.return_value = {str(self.DUMMY_PATH): self.fake_pyre_data}
         paths = (str(path) for path in [self.DUMMY_PATH])
         type_caches: Mapping[str, Dict[ProviderT, object]] = get_repo_caches(
-            paths, {TypeInferenceProvider}, 1, str(FIXIT_ROOT)
+            paths, FullRepoMetadataConfig({TypeInferenceProvider}, 1)
         )
         paths = (path for path in type_caches.keys())
 
@@ -101,7 +100,7 @@ class TypeInferenceTest(UnitTest):
         gen_cache.return_value = {path: self.fake_pyre_data for path in paths}
 
         type_caches: Mapping[str, Dict[ProviderT, object]] = get_repo_caches(
-            paths, {TypeInferenceProvider}, 1, str(FIXIT_ROOT)
+            paths, FullRepoMetadataConfig({TypeInferenceProvider}, 1)
         )
 
         all_reports = map_paths(
@@ -125,7 +124,7 @@ class TypeInferenceTest(UnitTest):
 
         paths = (str(self.DUMMY_PATH),)
         type_caches = get_repo_caches(
-            paths, {TypeInferenceProvider}, timeout, str(FIXIT_ROOT)
+            paths, FullRepoMetadataConfig({TypeInferenceProvider}, timeout)
         )
 
         reports = next(
