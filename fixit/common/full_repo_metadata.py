@@ -72,8 +72,15 @@ def get_repo_caches(
                     extra={"paths": paths_batch},
                 )
             # Populate with placeholder caches to avoid failures down the line. This will however result in reduced functionality in cache-dependent lint rules.
-            # TODO: May want to extend `fixit.common.cli.ipc_main` functionality in the future to handle failures that occur prior to the actual call to `lint_file`.
-            caches.update(dict.fromkeys(paths_batch, PLACEHOLDER_CACHES))
+            caches.update(
+                dict.fromkeys(
+                    paths_batch,
+                    {
+                        provider: PLACEHOLDER_CACHES[provider]
+                        for provider in config.providers
+                    },
+                )
+            )
         else:
             # TODO: remove access of private variable when public `cache` property is available in libcst.metadata.FullRepoManager API.
             batch_caches = defaultdict(dict)
