@@ -17,6 +17,7 @@ import traceback
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Callable,
     Collection,
     Generator,
@@ -31,36 +32,31 @@ from typing import (
     Union,
 )
 
-from libcst.metadata.wrapper import MetadataWrapper
+import libcst as cst
+from libcst.metadata import MetadataWrapper
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from fixit.common.config import REPO_ROOT
+from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
+
+
+if TYPE_CHECKING:
+    from libcst.metadata.base_provider import ProviderT
 
 
 _MapPathsOperationConfigT = TypeVar("_MapPathsOperationConfigT")
 _MapPathsOperationResultT = TypeVar("_MapPathsOperationResultT")
 _MapPathsOperationT = Callable[
-    [Path, _MapPathsOperationConfigT], _MapPathsOperationResultT
-]
-_MapPathsOperationWithMetadataT = Callable[
-    [Path, _MapPathsOperationConfigT, Optional[MetadataWrapper]],
+    [Path, _MapPathsOperationConfigT, Optional[Mapping["ProviderT", object]]],
     _MapPathsOperationResultT,
 ]
 _MapPathsWorkerArgsT = Tuple[
-    Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
-    Path,
+    _MapPathsOperationT,
+    str,
     _MapPathsOperationConfigT,
-]
-
-# The Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT] is for pyre checks to pass. In practice,
-# if `metadata_wrapper` is passed to `map_paths`, `operation` should only be of type _MapPathsOperationWithMetadataT
-_MapPathsWorkerArgsWithMetadataT = Tuple[
-    Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
-    Path,
-    _MapPathsOperationConfigT,
-    Optional[MetadataWrapper],
+    Optional[Mapping["ProviderT", object]],
 ]
 
 
@@ -79,20 +75,18 @@ def find_files(paths: Iterable[Path]) -> Iterator[Path]:
 
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.
-def _map_paths_worker(
-    args: Union[_MapPathsWorkerArgsT, _MapPathsWorkerArgsWithMetadataT]
-) -> _MapPathsOperationResultT:
-    operation, path, *op_args = args
-    return operation(path, *op_args)
+def _map_paths_worker(args: _MapPathsWorkerArgsT) -> _MapPathsOperationResultT:
+    operation, path, config, metadata_caches = args
+    return operation(Path(path), config, metadata_caches)
 
 
 def map_paths(
-    operation: Union[_MapPathsOperationT, _MapPathsOperationWithMetadataT],
-    paths: Iterable[Path],
+    operation: _MapPathsOperationT,
+    paths: Iterable[str],
     config: _MapPathsOperationConfigT,
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
-    metadata_wrappers: Optional[Mapping[Path, MetadataWrapper]] = None,
+    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None,
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
@@ -116,22 +110,26 @@ def map_paths(
 
     Results are yielded as soon as they're available, so they may appear out-of-order.
     """
-
     if workers is LintWorkers.CPU_COUNT:
         workers = multiprocessing.cpu_count()
 
-    if metadata_wrappers is not None:
-        tasks: Collection[_MapPathsWorkerArgsWithMetadataT] = tuple(
+    if metadata_caches is not None:
+        tasks: Collection[_MapPathsWorkerArgsT] = tuple(
             zip(
                 itertools.repeat(operation),
-                paths,
+                metadata_caches.keys(),
                 itertools.repeat(config),
-                map(metadata_wrappers.get, paths),
+                metadata_caches.values(),
             )
         )
     else:
         tasks: Collection[_MapPathsWorkerArgsT] = tuple(
-            zip(itertools.repeat(operation), paths, itertools.repeat(config))
+            zip(
+                itertools.repeat(operation),
+                paths,
+                itertools.repeat(config),
+                itertools.repeat(None),
+            )
         )
     if not tasks:
         # this would result in 0 workers, which will cause multiprocessing.Pool to die
@@ -174,14 +172,24 @@ class LintOpts:
     rules: LintRuleCollectionT
     success_report: Type[LintSuccessReportBase]
     failure_report: Type[LintFailureReportBase]
+    full_repo_metadata_config: Optional[FullRepoMetadataConfig] = None
 
 
-def get_file_lint_result_json(path: Path, opts: LintOpts) -> Sequence[str]:
+def get_file_lint_result_json(
+    path: Path,
+    opts: LintOpts,
+    metadata_cache: Optional[Mapping["ProviderT", object]] = None,
+) -> Sequence[str]:
     try:
         with open(path, "rb") as f:
             source = f.read()
+        cst_wrapper = None
+        if metadata_cache is not None:
+            cst_wrapper = MetadataWrapper(
+                cst.parse_module(source), True, metadata_cache,
+            )
         results = opts.success_report.create_reports(
-            path, lint_file(path, source, rules=opts.rules)
+            path, lint_file(path, source, rules=opts.rules, cst_wrapper=cst_wrapper)
         )
     except Exception:
         tb_str = traceback.format_exc()
@@ -207,26 +215,29 @@ def ipc_main(opts: LintOpts) -> None:
     parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
-    if args.prefix:
-        prefix_path = Path(args.prefix)
-
-        def process_path(p: str) -> Path:
-            return prefix_path / p
-
-    else:
-
-        def process_path(p: str) -> Path:
-            return Path(p)
-
     if args.paths:
-        paths: Generator[Path, None, None] = (process_path(p) for p in args.paths)
+        paths: Generator[str, None, None] = (
+            os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
+        )
     else:
-        paths: Generator[Path, None, None] = (
-            process_path(p.rstrip("\r\n")) for p in sys.stdin
+        paths: Generator[str, None, None] = (
+            os.path.join(args.prefix, p.rstrip("\r\n"))
+            if args.prefix
+            else p.rstrip("\r\n")
+            for p in sys.stdin
         )
 
+    full_repo_metadata_config = opts.full_repo_metadata_config
+    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
+    if full_repo_metadata_config is not None:
+        metadata_caches = get_repo_caches(paths, full_repo_metadata_config)
+
     results_iter: Iterator[Sequence[str]] = map_paths(
-        get_file_lint_result_json, paths, opts, workers=args.workers
+        get_file_lint_result_json,
+        paths,
+        opts,
+        workers=args.workers,
+        metadata_caches=metadata_caches,
     )
     for results in results_iter:
         # Use print outside of the executor to avoid multiple processes trying to write

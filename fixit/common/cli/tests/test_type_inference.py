@@ -5,95 +5,143 @@
 
 import subprocess
 from pathlib import Path
-from typing import List, Optional
+from typing import Collection, Dict, List, Mapping, Optional, Union
 from unittest.mock import MagicMock, patch
 
 import libcst as cst
 from libcst.metadata import MetadataWrapper, TypeInferenceProvider
+from libcst.metadata.base_provider import ProviderT
 from libcst.testing.utils import UnitTest
 
 from fixit.common.base import CstLintRule, LintRuleT
 from fixit.common.cli import LintWorkers, map_paths
-from fixit.common.typing.helpers import get_type_metadata
+from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
+from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file
 
 
 SOURCE_CODE = b"class Foo: pass"
 
 
-class DummyTypingRule(CstLintRule):
-    pass
+class DummyTypeDependentRule(CstLintRule):
+    METADATA_DEPENDENCIES = (TypeInferenceProvider,)
+
+    def visit_Module(self, node: cst.Module) -> None:
+        self.report(node, "IG00 dummy message")
 
 
-def _lint_file_caller_func(
+def map_paths_operation(
     path: Path,
     config: List[LintRuleT],
-    metadata_wrapper_for_path: Optional[MetadataWrapper],
-) -> None:
-    lint_file(
-        file_path=path,
-        source=SOURCE_CODE,
-        rules=config,
-        cst_wrapper=metadata_wrapper_for_path,
-    )
+    type_cache: Optional[Mapping[ProviderT, object]],
+) -> Union[str, Collection[BaseLintRuleReport]]:
+    # A top-level function to be accessible by `map_paths` from `fixit.common.cli`.
+    cst_wrapper = None
+    try:
+        if type_cache is not None:
+            cst_wrapper = MetadataWrapper(
+                cst.parse_module(SOURCE_CODE), True, type_cache,
+            )
+        return lint_file(
+            file_path=path, source=SOURCE_CODE, rules=config, cst_wrapper=cst_wrapper,
+        )
+    except Exception as e:
+        return str(e)
 
 
 class TypeInferenceTest(UnitTest):
-    DUMMY_PATH: Path = Path(__file__)
+    DUMMY_PATH: Path = Path("fake/path.py")
+    DUMMY_PATH_2: Path = Path("fake/path_2.py")
 
-    @patch("libcst.metadata.FullRepoManager.get_metadata_wrapper_for_path")
-    def test_basic_type_inference(self, mock_get_metadata: MagicMock) -> None:
-        # We want to intercept any calls that will require the pyre engine to be running
-        fake_metadata_wrapper = MetadataWrapper(
-            module=cst.parse_module(SOURCE_CODE),
-            unsafe_skip_copy=True,
-            # pyre-ignore[6]: Expected `typing.Mapping[typing.Type[cst.metadata.base_provider.BaseMetadataProvider[object]], object]`
-            # for 2nd parameter `cache` to call `cst.metadata.wrapper.MetadataWrapper.__init__` but got
-            # `typing.Dict[typing.Type[cst.metadata.type_inference_provider.TypeInferenceProvider], TypedDict `PyreData`]`.
-            cache={
-                TypeInferenceProvider: {
-                    "types": [
-                        {
-                            "location": {
-                                "start": {"line": 0, "column": 0},
-                                "stop": {"line": 0, "column": 0},
-                            },
-                            "annotation": "typing.Any",
-                        },
-                    ]
-                }
-            },
+    def setUp(self) -> None:
+        self.mock_operation: MagicMock = MagicMock(side_effect=map_paths_operation)
+        self.fake_pyre_data: object = {
+            "types": [
+                {
+                    "location": {
+                        "start": {"line": 0, "column": 0},
+                        "stop": {"line": 0, "column": 0},
+                    },
+                    "annotation": "typing.Any",
+                },
+            ],
+        }
+
+    @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
+    def test_basic_type_inference(self, gen_cache: MagicMock) -> None:
+        # We want to intercept any calls that will require the pyre engine to be running.
+        gen_cache.return_value = {str(self.DUMMY_PATH): self.fake_pyre_data}
+        paths = (str(path) for path in [self.DUMMY_PATH])
+        type_caches: Mapping[str, Dict[ProviderT, object]] = get_repo_caches(
+            paths, FullRepoMetadataConfig({TypeInferenceProvider}, 1)
         )
+        paths = (path for path in type_caches.keys())
 
-        mock_get_metadata.return_value = fake_metadata_wrapper
-
-        type_metadata, failed_paths = get_type_metadata([self.DUMMY_PATH])
-
-        mock_operation: MagicMock = MagicMock(side_effect=_lint_file_caller_func)
-
-        next(
+        reports = next(
             map_paths(
-                operation=mock_operation,
-                paths=[self.DUMMY_PATH],
-                config=[DummyTypingRule],
+                operation=self.mock_operation,
+                paths=(path for path in type_caches.keys()),
+                config=[DummyTypeDependentRule],
                 workers=LintWorkers.USE_CURRENT_THREAD,
-                metadata_wrappers=type_metadata,
+                metadata_caches=type_caches,
             )
         )
 
-        mock_operation.assert_called_with(
-            self.DUMMY_PATH, [DummyTypingRule], type_metadata[self.DUMMY_PATH]
+        self.mock_operation.assert_called_with(
+            self.DUMMY_PATH, [DummyTypeDependentRule], type_caches[str(self.DUMMY_PATH)]
         )
 
-    @patch("libcst.metadata.FullRepoManager.get_metadata_wrapper_for_path")
-    def test_type_inference_with_timeout(self, mock_get_metadata: MagicMock) -> None:
+        self.assertEqual(len(reports), 1)
+        self.assertEqual(reports[0].file_path, self.DUMMY_PATH)
+
+    @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
+    def test_basic_type_inference_multiple_paths(self, gen_cache: MagicMock) -> None:
+        paths = (str(self.DUMMY_PATH), str(self.DUMMY_PATH_2))
+        gen_cache.return_value = {path: self.fake_pyre_data for path in paths}
+
+        type_caches: Mapping[str, Dict[ProviderT, object]] = get_repo_caches(
+            paths, FullRepoMetadataConfig({TypeInferenceProvider}, 1)
+        )
+
+        all_reports = map_paths(
+            operation=self.mock_operation,
+            paths=paths,
+            config=[DummyTypeDependentRule],
+            workers=LintWorkers.USE_CURRENT_THREAD,
+            metadata_caches=type_caches,
+        )
+
+        # Reports should be returned in order since we specified `LintWorkers.USE_CURRENT_THREAD`.
+        for i, reports in enumerate(all_reports):
+            self.assertEqual(len(reports), 1)
+            self.assertEqual(reports[0].file_path, Path(paths[i]))
+
+    @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
+    def test_type_inference_with_timeout(self, gen_cache: MagicMock) -> None:
         timeout = 1
         timeout_error = subprocess.TimeoutExpired(cmd="pyre query ...", timeout=timeout)
-        mock_get_metadata.side_effect = timeout_error
+        gen_cache.side_effect = timeout_error
 
-        type_metadata, failed_paths = get_type_metadata(
-            paths=[self.DUMMY_PATH], timeout=timeout
+        paths = (str(self.DUMMY_PATH),)
+        type_caches = get_repo_caches(
+            paths, FullRepoMetadataConfig({TypeInferenceProvider}, timeout)
         )
 
-        self.assertEqual(failed_paths, [self.DUMMY_PATH])
-        self.assertEqual(type_metadata, {})
+        reports = next(
+            map_paths(
+                operation=self.mock_operation,
+                paths=paths,
+                config=[DummyTypeDependentRule],
+                workers=LintWorkers.USE_CURRENT_THREAD,
+                metadata_caches=type_caches,
+            )
+        )
+
+        # Expecting a placeholder cache to have been plugged in instead.
+        self.mock_operation.assert_called_with(
+            self.DUMMY_PATH,
+            [DummyTypeDependentRule],
+            {TypeInferenceProvider: {"types": []}},
+        )
+
+        self.assertEqual(len(reports), 1)
