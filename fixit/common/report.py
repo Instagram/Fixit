@@ -120,7 +120,7 @@ class LintFailureReportBase(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def create_reports(
-        path: Path, exception_traceback: str
+        path: Path, exception_traceback: str, **kwargs: object
     ) -> Sequence["LintFailureReportBase"]:
         ...
 
@@ -131,6 +131,6 @@ class LintSuccessReportBase(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def create_reports(
-        path: Path, reports: Collection[BaseLintRuleReport]
+        path: Path, reports: Collection[BaseLintRuleReport], **kwargs: object
     ) -> Sequence["LintSuccessReportBase"]:
         ...

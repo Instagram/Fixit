@@ -14,12 +14,13 @@ import os
 import subprocess
 import sys
 import traceback
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Callable,
     Collection,
+    Dict,
     Generator,
     Iterable,
     Iterator,
@@ -173,6 +174,7 @@ class LintOpts:
     success_report: Type[LintSuccessReportBase]
     failure_report: Type[LintFailureReportBase]
     full_repo_metadata_config: Optional[FullRepoMetadataConfig] = None
+    extra: Dict[str, object] = field(default_factory=dict)
 
 
 def get_file_lint_result_json(
@@ -189,11 +191,13 @@ def get_file_lint_result_json(
                 cst.parse_module(source), True, metadata_cache,
             )
         results = opts.success_report.create_reports(
-            path, lint_file(path, source, rules=opts.rules, cst_wrapper=cst_wrapper)
+            path,
+            lint_file(path, source, rules=opts.rules, cst_wrapper=cst_wrapper),
+            **opts.extra,
         )
     except Exception:
         tb_str = traceback.format_exc()
-        results = opts.failure_report.create_reports(path, tb_str)
+        results = opts.failure_report.create_reports(path, tb_str, **opts.extra)
     return [json.dumps(asdict(r)) for r in results]
 
 
