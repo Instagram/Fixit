@@ -83,10 +83,12 @@ class LintConfig:
 def _eval_python_config(source: str) -> Mapping[str, Any]:
     """
     Given the contents of a __lint__.py file, calls `ast.literal_eval`.
+
     We're using a python file because we want "json with comments". We should probably
     switch to yaml or toml at some point, but we don't have a way for the linter to pull
     in third-party dependencies yet. Python's ini support isn't flexible enough for our
     potential use-cases.
+
     We don't allow imports or arbitrary code because it's dangerous, could slow down the
     linter, and it'll make it harder to adjust the format of this file later and the
     execution environment.
