@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Union
 
 from fixit.common.base import LintRuleT
-from fixit.common.config import REPO_ROOT
+from fixit.common.config import get_lint_config
 
 
 class FixtureDirNotFoundError(Exception):
@@ -68,11 +68,11 @@ def get_paths_parser() -> argparse.ArgumentParser:
         "paths",
         nargs="*",
         type=(lambda p: Path(p).resolve(strict=True)),
-        default=(REPO_ROOT / "distillery",),
+        default=(Path(get_lint_config().repo_root),),
         help=(
             "The name of a directory (e.g. media) or file (e.g. media/views.py) on "
             + "which to run the lint rule. "
-            + "If not specified the lint rule is run on all of distillery."
+            + "If not specified the lint rule is run on the `repo_root` in `.lint.config.yaml`."
         ),
     )
     return parser

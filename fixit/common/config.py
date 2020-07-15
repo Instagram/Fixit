@@ -13,10 +13,8 @@ from typing import Any, List, Mapping, Optional, Pattern, Union
 import yaml
 
 
-REPO_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent.parent
 FIXIT_ROOT: Path = Path(__file__).resolve().parent.parent
 FIXTURE_DIRECTORY: Path = FIXIT_ROOT / "tests" / "fixtures"
-PYRE_TIMEOUT_SECONDS: int = 1
 
 LINT_CONFIG_FILE_NAME: Path = Path(".lint.config.yaml")
 
@@ -76,7 +74,7 @@ PATH_SETTINGS = ["repo_root"]
 @dataclass(frozen=False)
 class LintConfig:
     generated_code_marker: str = f"@gen{''}erated"
-    formatter: List[str] = field(default_factory=lambda: ["black"])
+    formatter: List[str] = field(default_factory=lambda: ["black", "-"])
     blacklist_patterns: List[str] = field(default_factory=list)
     blacklist_rules: List[str] = field(default_factory=list)
     packages: List[str] = field(default_factory=lambda: ["fixit.rules"])

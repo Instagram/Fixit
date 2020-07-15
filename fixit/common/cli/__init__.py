@@ -37,7 +37,7 @@ import libcst as cst
 from libcst.metadata import MetadataWrapper
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
-from fixit.common.config import REPO_ROOT
+from fixit.common.config import LintConfig, get_lint_config
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -151,7 +151,7 @@ def map_paths(
                 yield result
 
 
-def pyfmt(path: Union[str, Path]) -> None:
+def pyfmt(path: Union[str, Path], config: LintConfig = get_lint_config()) -> None:
     """
     Given a path, run isort-black on the code and write the updated file back to disk.
 
@@ -161,8 +161,8 @@ def pyfmt(path: Union[str, Path]) -> None:
     # TODO: We should use pyfmtd once it's available in IGSRV. If we can call it's IPC
     # directly (without a fork) that would be even better.
 
-    black = REPO_ROOT / "bin" / "isort-black"
-    args = (str(black), str(path), "--no-diff")
+    formatter_command = config.formatter
+    args = (" ".join(formatter_command), str(path))
     formatted = subprocess.check_output(args, env={})
     with open(path, "wb") as f:
         f.write(formatted)
