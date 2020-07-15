@@ -30,7 +30,7 @@ from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, get_config
+from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, get_context_config
 from fixit.common.flake8_compat import Flake8PseudoLintRule
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
@@ -128,7 +128,7 @@ def lint_file(
         return []
 
     # pre-process these arguments
-    config = config if config is not None else get_config(file_path)
+    config = config if config is not None else get_context_config(file_path)
 
     tokens = None
     if use_ignore_comments:
@@ -214,7 +214,7 @@ def lint_file_and_apply_patches(
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
-    config = config if config is not None else get_config(file_path)
+    config = config if config is not None else get_context_config(file_path)
 
     reports = []
     fixed_reports = []

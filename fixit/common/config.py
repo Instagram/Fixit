@@ -4,15 +4,21 @@
 # LICENSE file in the root directory of this source tree.
 
 import ast
+import os
 import re
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import Any, Mapping, Pattern, Union
+from typing import Any, List, Mapping, Optional, Pattern, Union
+
+import yaml
 
 
 REPO_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent.parent
 FIXIT_ROOT: Path = Path(__file__).resolve().parent.parent
 FIXTURE_DIRECTORY: Path = FIXIT_ROOT / "tests" / "fixtures"
 PYRE_TIMEOUT_SECONDS: int = 1
+
+LINT_CONFIG_FILE_NAME = ".lint.config.yaml"
 
 # Any file with these raw bytes should be ignored
 BYTE_MARKER_IGNORE_ALL_REGEXP: Pattern[bytes] = re.compile(rb"@(generated|nolint)")
@@ -62,6 +68,16 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 )
 
 
+@dataclass(frozen=False)
+class LintConfig:
+    generated_code_marker: str = f"@gen{''}erated"
+    formatter: List[str] = field(default_factory=lambda: ["black"])
+    blacklist_patterns: List[str] = field(default_factory=list)
+    blacklist_rules: List[str] = field(default_factory=list)
+    packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
+    repo_root: str = "."
+
+
 def _eval_python_config(source: str) -> Mapping[str, Any]:
     """
     Given the contents of a __lint__.py file, calls `ast.literal_eval`.
@@ -91,22 +107,47 @@ def _eval_python_config(source: str) -> Mapping[str, Any]:
     return result
 
 
-def get_config(filename: Union[str, Path]) -> Mapping[str, Any]:
+def get_context_config(filename: Union[str, Path]) -> Mapping[str, Any]:
     """
     Given the filename of a file being linted, searches for the closest __lint__.py
     file, and evaluates it.
     """
-    # track previous_directory to avoid cases where we could end up with an infinite
-    # loop due to a bad filename.
-    previous_directory = None
-    directory = (REPO_ROOT / filename).parent.resolve()
-    while directory != REPO_ROOT and directory != previous_directory:
-
-        possible_config = directory / "__lint__.py"
+    current_dir = Path(filename).resolve().parent
+    previous_dir: Optional[Path] = None
+    while current_dir != previous_dir:
+        # Check for config file.
+        possible_config = current_dir / "__lint__.py"
         if possible_config.is_file():
             with open(possible_config, "r") as f:
                 return _eval_python_config(f.read())
 
-        previous_directory = directory
-        directory = directory.parent
+        # Try to go up a directory.
+        previous_dir = current_dir
+        current_dir = current_dir.parent
     return {}
+
+
+def get_lint_config() -> LintConfig:
+    config = LintConfig()
+    current_dir = Path(os.getcwd())
+    previous_dir: Optional[Path] = None
+    while current_dir != previous_dir:
+        # Check for config file.
+        possible_config = current_dir / LINT_CONFIG_FILE_NAME
+        if possible_config.is_file():
+            with open(possible_config, "r") as f:
+                file_content = yaml.safe_load(f.read())
+
+            if isinstance(file_content, dict):
+                for _field in fields(config):
+                    field_name, field_type = _field.name, _field.type
+                    if field_name in file_content and isinstance(
+                        file_content[field_name], field_type
+                    ):
+                        setattr(config, field_name, file_content[field_name])
+                return config
+
+        # Try to go up a directory.
+        previous_dir = current_dir
+        current_dir = current_dir.parent
+    return config
