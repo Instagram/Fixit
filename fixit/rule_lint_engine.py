@@ -223,16 +223,12 @@ def lint_file_and_apply_patches(
     """
     Runs `lint_file` in a loop, patching the one auto-fixable report on each iteration
     of the loop.
-
     This is different from how 'arc lint' works. When using 'arc lint', we compute
     minimal-size patches, and hope that they don't overlap. If multiple autofixers
     require overlapping changes, 'arc lint' won't apply them.
-
     It's also possible for multiple autofixers to combine in a way that results in
     invalid code under `arc lint`. Applying a single fix at a time prevents that.
-
     There is some risk that the autofixer gets stuck in a loop.
-
     TODO: Prevent infinite loops by adding a limit to the number of iterations used.
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it

@@ -4,11 +4,13 @@
 # LICENSE file in the root directory of this source tree.
 
 import ast
+import distutils.spawn
 import os
 import re
 from dataclasses import asdict, dataclass, field
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Pattern, Union
+from typing import Any, Dict, List, Mapping, Optional, Pattern, Union
 
 import yaml
 
@@ -63,16 +65,14 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 )
 
 
-STRING_SETTINGS = ["generated_code_marker"]
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root"]
+DEFAULT_FORMATTER = ["black", "-"]
 
 
-@dataclass(frozen=False)
+@dataclass(frozen=True)
 class LintConfig:
-    # TODO: add generated_code_marker logic to lint rule autofix.
-    generated_code_marker: str = f"@gen{''}erated"
-    formatter: List[str] = field(default_factory=lambda: ["black"])
+    formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
     # TODO: add block_list_patterns logic to lint rule engine/ipc.
     block_list_patterns: List[str] = field(default_factory=list)
     block_list_rules: List[str] = field(default_factory=list)
@@ -83,12 +83,10 @@ class LintConfig:
 def _eval_python_config(source: str) -> Mapping[str, Any]:
     """
     Given the contents of a __lint__.py file, calls `ast.literal_eval`.
-
     We're using a python file because we want "json with comments". We should probably
     switch to yaml or toml at some point, but we don't have a way for the linter to pull
     in third-party dependencies yet. Python's ini support isn't flexible enough for our
     potential use-cases.
-
     We don't allow imports or arbitrary code because it's dangerous, could slow down the
     linter, and it'll make it harder to adjust the format of this file later and the
     execution environment.
@@ -129,9 +127,37 @@ def get_context_config(filename: Union[str, Path]) -> Mapping[str, Any]:
     return {}
 
 
+def get_validated_settings(
+    file_content: Dict[str, Any], current_dir: Path
+) -> Dict[str, Any]:
+    settings = {}
+    for list_setting in LIST_SETTINGS:
+        if list_setting in file_content:
+            if not (
+                isinstance(file_content[list_setting], list)
+                and all(isinstance(s, str) for s in file_content[list_setting])
+            ):
+                raise TypeError(
+                    f"Expected list of strings for `{list_setting}` setting."
+                )
+            settings[list_setting] = file_content[list_setting]
+    for path_setting in PATH_SETTINGS:
+        if path_setting in file_content:
+            setting_value = file_content[path_setting]
+            if not isinstance(setting_value, str):
+                raise TypeError(f"Expected string for `{path_setting}` setting.")
+            abspath: Path = (current_dir / setting_value).resolve()
+        else:
+            abspath: Path = current_dir
+        # Set path setting to absolute path.
+        settings[path_setting] = str(abspath)
+    return settings
+
+
+@lru_cache()
 def get_lint_config() -> LintConfig:
-    config = LintConfig()
-    current_dir = Path(os.getcwd())
+    config = {}
+    current_dir = Path.cwd()
     previous_dir: Optional[Path] = None
     while current_dir != previous_dir:
         # Check for config file.
@@ -141,41 +167,20 @@ def get_lint_config() -> LintConfig:
                 file_content = yaml.safe_load(f.read())
 
             if isinstance(file_content, dict):
-                for string_setting in STRING_SETTINGS:
-                    if string_setting in file_content and isinstance(
-                        file_content[string_setting], str
-                    ):
-                        setattr(config, string_setting, file_content[string_setting])
-                for list_setting in LIST_SETTINGS:
-                    if (
-                        list_setting in file_content
-                        and isinstance(file_content[list_setting], list)
-                        and all(isinstance(s, str) for s in file_content[list_setting])
-                    ):
-                        setattr(config, list_setting, file_content[list_setting])
-                for path_setting in PATH_SETTINGS:
-                    if path_setting in file_content and isinstance(
-                        file_content[path_setting], str
-                    ):
-                        abspath: Path = (
-                            current_dir / file_content[path_setting]
-                        ).resolve()
-                    else:
-                        abspath: Path = (
-                            current_dir / getattr(config, path_setting)
-                        ).resolve()
-                    # Set to absolute path.
-                    setattr(
-                        config, path_setting, str(abspath),
-                    )
+                config = get_validated_settings(file_content, current_dir)
                 break
 
         # Try to go up a directory.
         previous_dir = current_dir
         current_dir = current_dir.parent
 
-    # If no config file has been found, a config with defaults will be returned.
-    return config
+    # Find formatter executable if there is one.
+    formatter_args = config.get("formatter", DEFAULT_FORMATTER)
+    exe = distutils.spawn.find_executable(formatter_args[0]) or formatter_args[0]
+    config["formatter"][0] = os.path.abspath(exe)
+
+    # Missing settings will be populated with defaults.
+    return LintConfig(**config)
 
 
 def gen_config_file() -> None:
