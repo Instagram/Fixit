@@ -6,7 +6,7 @@
 import ast
 import os
 import re
-from dataclasses import dataclass, field, fields
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Pattern, Union
 
@@ -18,7 +18,7 @@ FIXIT_ROOT: Path = Path(__file__).resolve().parent.parent
 FIXTURE_DIRECTORY: Path = FIXIT_ROOT / "tests" / "fixtures"
 PYRE_TIMEOUT_SECONDS: int = 1
 
-LINT_CONFIG_FILE_NAME = ".lint.config.yaml"
+LINT_CONFIG_FILE_NAME: Path = Path(".lint.config.yaml")
 
 # Any file with these raw bytes should be ignored
 BYTE_MARKER_IGNORE_ALL_REGEXP: Pattern[bytes] = re.compile(rb"@(generated|nolint)")
@@ -66,6 +66,11 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
     + r"(?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+): "
     + r"(?P<reason>.+)"
 )
+
+
+STRING_SETTINGS = ["generated_code_marker"]
+LIST_SETTINGS = ["formatter", "blacklist_patterns", "blacklist_rules", "packages"]
+PATH_SETTINGS = ["repo_root"]
 
 
 @dataclass(frozen=False)
@@ -139,15 +144,40 @@ def get_lint_config() -> LintConfig:
                 file_content = yaml.safe_load(f.read())
 
             if isinstance(file_content, dict):
-                for _field in fields(config):
-                    field_name, field_type = _field.name, _field.type
-                    if field_name in file_content and isinstance(
-                        file_content[field_name], field_type
+                for string_setting in STRING_SETTINGS:
+                    if string_setting in file_content and isinstance(
+                        file_content[string_setting], str
                     ):
-                        setattr(config, field_name, file_content[field_name])
+                        setattr(config, string_setting, file_content[string_setting])
+                for list_setting in LIST_SETTINGS:
+                    if (
+                        list_setting in file_content
+                        and isinstance(file_content[list_setting], list)
+                        and all(isinstance(s, str) for s in file_content[list_setting])
+                    ):
+                        setattr(config, list_setting, file_content[list_setting])
+                for path_setting in PATH_SETTINGS:
+                    if path_setting in file_content and isinstance(
+                        file_content[path_setting], str
+                    ):
+                        # Resolve any relative paths to be absolute
+                        setattr(
+                            config,
+                            path_setting,
+                            str(Path(file_content[path_setting]).resolve()),
+                        )
                 return config
 
         # Try to go up a directory.
         previous_dir = current_dir
         current_dir = current_dir.parent
+    # If not config file has been found, return the config with defaults.
     return config
+
+
+def gen_config_file() -> None:
+    # Generates a `.lint.config.yaml` file with defaults in the current working dir.
+    config_file = LINT_CONFIG_FILE_NAME.resolve()
+    default_config_dict = asdict(LintConfig())
+    with open(config_file, "w") as cf:
+        yaml.dump(default_config_dict, cf)

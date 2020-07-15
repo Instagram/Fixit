@@ -1,5 +1,0 @@
-# Fixit config file
-
-# list of packages contains lint rule modules
-packages:
-  - "fixit.rules"
