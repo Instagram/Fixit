@@ -3,28 +3,23 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import json
 from dataclasses import dataclass
 from multiprocessing import Manager
 from pathlib import Path
-from typing import Collection, List, Sequence
-from unittest.mock import mock_open, patch
+from typing import Collection, List, Sequence, cast
 
 from libcst import Module
 from libcst.testing.utils import UnitTest
 
 from fixit.common.base import CstLintRule
-from fixit.common.cli import LintOpts, get_file_lint_result_json
+from fixit.common.cli import LintOpts, map_paths
+from fixit.common.cli.args import LintWorkers
 from fixit.common.report import (
     BaseLintRuleReport,
     LintFailureReportBase,
     LintSuccessReportBase,
 )
-
-
-class FakeRule(CstLintRule):
-    def visit_Module(self, node: Module) -> None:
-        self.report(node, "IG00 dummy message")
+from fixit.rule_lint_engine import lint_file
 
 
 @dataclass(frozen=True)
@@ -36,14 +31,27 @@ class FakeLintSuccessReport(LintSuccessReportBase):
     @staticmethod
     def create_reports(
         path: Path, reports: Collection[BaseLintRuleReport], global_list: List[str],
-    ) -> Sequence[LintSuccessReportBase]:
+    ) -> Sequence["FakeLintSuccessReport"]:
         global_list.append(str(path))
         return [FakeLintSuccessReport(str(path), "success", ["fake picklable report"])]
 
 
+class FakeRule(CstLintRule):
+    def visit_Module(self, node: Module) -> None:
+        self.report(node, "IG00 dummy message")
+
+
+def mock_operation(
+    path: Path, opts: LintOpts, _=None,
+) -> Sequence[FakeLintSuccessReport]:
+    results = opts.success_report.create_reports(
+        path, lint_file(path, b"test", rules=opts.rules), **opts.extra,
+    )
+    return cast(Sequence[FakeLintSuccessReport], results)
+
+
 class LintOptsTest(UnitTest):
-    @patch("builtins.open", mock_open(read_data=b"test"))
-    def test_opts_with_extra(self) -> None:
+    def test_extra_opts(self) -> None:
         global_list = []
         opts = LintOpts(
             [FakeRule],
@@ -51,18 +59,20 @@ class LintOptsTest(UnitTest):
             LintFailureReportBase,
             extra={"global_list": global_list},
         )
-        path = Path("fake/path.py")
-        json_results = get_file_lint_result_json(path, opts)
+        path = "path.py"
+        results = next(
+            map_paths(
+                mock_operation, [path], opts, workers=LintWorkers.USE_CURRENT_THREAD
+            )
+        )
 
-        # Assert global list has been modified
-        self.assertEqual(list(global_list), [str(path)])
+        # Assert global list has been modified as expected.
+        self.assertEqual(list(global_list), [path])
 
         # Assert the rest of the reporting functionality is as expected
-        self.assertEqual(len(json_results), 1)
-        json_for_file = json.loads(json_results[0])
-        self.assertEqual(json_for_file["reports"][0], "fake picklable report")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].reports, ["fake picklable report"])
 
-    @patch("builtins.open", mock_open(read_data=b"test"))
     def test_extra_opts_with_manager(self) -> None:
         with Manager() as man:
             global_list = man.list()
@@ -72,18 +82,19 @@ class LintOptsTest(UnitTest):
                 LintFailureReportBase,
                 extra={"global_list": global_list},
             )
-            paths = [Path("fake/path1.py"), Path("fake/path2.py")]
-            json_results_path1 = get_file_lint_result_json(paths[0], opts)
-            json_results_path2 = get_file_lint_result_json(paths[1], opts)
+            paths = ["path1.py", "path2.py"]
+            results_iter = map_paths(mock_operation, paths, opts, workers=2)
+            results_count = 0
+            paths_reported = []
+            for results in results_iter:
+                for result in results:
+                    results_count += 1
+                    paths_reported.append(result.path)
+                    self.assertEqual(len(result.reports), 1)
+                    self.assertEqual(result.reports, ["fake picklable report"])
 
-            # Assert global list has been modified as expected
-            self.assertEqual(list(global_list), [str(p) for p in paths])
+            # Assert global list has been modified as expected.
+            self.assertCountEqual(list(global_list), paths)
 
-            # Assert the rest of the reporting functionality is as expected
-            self.assertEqual(len(json_results_path1), 1)
-            json_for_file_1 = json.loads(json_results_path1[0])
-            self.assertEqual(json_for_file_1["reports"][0], "fake picklable report")
-
-            self.assertEqual(len(json_results_path2), 1)
-            json_for_file_2 = json.loads(json_results_path2[0])
-            self.assertEqual(json_for_file_2["reports"][0], "fake picklable report")
+            # Assert all passed in paths have been visited as expected
+            self.assertCountEqual(paths_reported, paths)
