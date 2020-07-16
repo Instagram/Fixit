@@ -6,4 +6,3 @@ generated_code_marker: '@generated'
 packages:
 - fixit.rules
 repo_root: .
-fixture_dir: ./fixit/tests/fixtures

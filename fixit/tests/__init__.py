@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from pathlib import Path
+
 from fixit.common.config import LintConfig, get_lint_config
 from fixit.common.testing import add_lint_rule_tests_to_module
 from fixit.rule_lint_engine import get_rules_from_config
@@ -13,6 +15,6 @@ CONFIG: LintConfig = get_lint_config()
 add_lint_rule_tests_to_module(
     globals(),
     get_rules_from_config(CONFIG),
-    fixture_dir=CONFIG.fixture_dir,
+    fixture_dir=Path(CONFIG.repo_root) / "fixit/tests/fixtures",
     rules_package="fixit.rules",
 )

@@ -180,7 +180,7 @@ def add_lint_rule_tests_to_module(
     rules: LintRuleCollectionT = [],
     test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
     custom_test_method_name: str = "_test_method",
-    fixture_dir: str = "",
+    fixture_dir: Path = Path(""),
     rules_package: str = "",
 ) -> None:
     """
@@ -206,7 +206,7 @@ def add_lint_rule_tests_to_module(
     The structure of the fixture directory is automatically assumed to mirror the structure of the rules package, eg: `<rules_package>.submodule.module.rule_class` should
     have fixture files in `<fixture_dir>/submodule/module/rule_class/`.
     """
-    for test_case in _gen_all_test_methods(rules, Path(fixture_dir), rules_package):
+    for test_case in _gen_all_test_methods(rules, fixture_dir, rules_package):
         rule_name = test_case.rule.__name__
         test_methods_to_add: Dict[str, Callable] = dict()
 

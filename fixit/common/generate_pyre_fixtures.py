@@ -117,7 +117,9 @@ if __name__ == "__main__":
     fixture_dir: Path = (
         Path(args.fixture_dir)
         if args.fixture_dir is not None
-        else _get_fixture_dir(get_lint_config().fixture_dir)
+        else _get_fixture_dir(
+            Path(get_lint_config().repo_root) / "fixit/tests/fixtures"
+        )
     )
     fixture_path: Path = get_fixture_path(
         fixture_dir, rule.__module__, args.rules_package
