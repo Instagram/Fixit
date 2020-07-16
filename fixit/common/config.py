@@ -173,7 +173,7 @@ def get_lint_config() -> LintConfig:
         previous_dir = current_dir
         current_dir = current_dir.parent
 
-    # If no config file has been found, return the config with defaults.
+    # If no config file has been found, a config with defaults will be returned.
     return config
 
 

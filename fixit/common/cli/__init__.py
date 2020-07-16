@@ -162,8 +162,8 @@ def pyfmt(path: Union[str, Path], config: LintConfig = get_lint_config()) -> Non
     process = subprocess.Popen(
         " ".join(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
     )
-    stdout, stderr = process.communicate()
-    if stdout:
+    stdout, _ = process.communicate()
+    if process.returncode == 0 and stdout:
         with open(path, "wb") as f:
             f.write(stdout)
 
