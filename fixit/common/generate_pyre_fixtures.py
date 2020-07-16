@@ -23,7 +23,7 @@ from fixit.common.cli.args import (
     get_rule_parser,
     get_rules_package_parser,
 )
-from fixit.common.config import FIXTURE_DIRECTORY
+from fixit.common.config import get_lint_config
 from fixit.common.utils import _dedent
 
 
@@ -96,7 +96,7 @@ def get_fixture_path(
     fixture_top_dir: Path, rule_module: str, rules_package: str
 ) -> Path:
     subpackage: str = rule_module.split(f"{rules_package}.", 1)[-1]
-    fixture_subdir = Path(subpackage.replace(".", "/"))
+    fixture_subdir = subpackage.replace(".", "/")
     return fixture_top_dir / fixture_subdir
 
 
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     fixture_dir: Path = (
         Path(args.fixture_dir)
         if args.fixture_dir is not None
-        else _get_fixture_dir(FIXTURE_DIRECTORY)
+        else _get_fixture_dir(get_lint_config().fixture_dir)
     )
     fixture_path: Path = get_fixture_path(
         fixture_dir, rule.__module__, args.rules_package

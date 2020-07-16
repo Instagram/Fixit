@@ -13,9 +13,6 @@ from typing import Any, List, Mapping, Optional, Pattern, Union
 import yaml
 
 
-FIXIT_ROOT: Path = Path(__file__).resolve().parent.parent
-FIXTURE_DIRECTORY: Path = FIXIT_ROOT / "tests" / "fixtures"
-
 LINT_CONFIG_FILE_NAME: Path = Path(".lint.config.yaml")
 
 # Any file with these raw bytes should be ignored
@@ -68,17 +65,18 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 
 STRING_SETTINGS = ["generated_code_marker"]
 LIST_SETTINGS = ["formatter", "blacklist_patterns", "blacklist_rules", "packages"]
-PATH_SETTINGS = ["repo_root"]
+PATH_SETTINGS = ["repo_root", "fixture_dir"]
 
 
 @dataclass(frozen=False)
 class LintConfig:
     generated_code_marker: str = f"@gen{''}erated"
-    formatter: List[str] = field(default_factory=lambda: ["black", "-"])
+    formatter: List[str] = field(default_factory=lambda: ["black"])
     blacklist_patterns: List[str] = field(default_factory=list)
     blacklist_rules: List[str] = field(default_factory=list)
     packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
     repo_root: str = "."
+    fixture_dir: str = "./tests/fixtures"
 
 
 def _eval_python_config(source: str) -> Mapping[str, Any]:
@@ -158,18 +156,24 @@ def get_lint_config() -> LintConfig:
                     if path_setting in file_content and isinstance(
                         file_content[path_setting], str
                     ):
-                        # Resolve any relative paths to be absolute
-                        setattr(
-                            config,
-                            path_setting,
-                            str(Path(file_content[path_setting]).resolve()),
-                        )
-                return config
+                        abspath: Path = (
+                            current_dir / file_content[path_setting]
+                        ).resolve()
+                    else:
+                        abspath: Path = (
+                            current_dir / getattr(config, path_setting)
+                        ).resolve()
+                    # Set to absolute path.
+                    setattr(
+                        config, path_setting, str(abspath),
+                    )
+                break
 
         # Try to go up a directory.
         previous_dir = current_dir
         current_dir = current_dir.parent
-    # If not config file has been found, return the config with defaults.
+
+    # If no config file has been found, return the config with defaults.
     return config
 
 

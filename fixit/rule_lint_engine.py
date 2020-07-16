@@ -30,8 +30,12 @@ from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, get_context_config
-from fixit.common.flake8_compat import Flake8PseudoLintRule
+from fixit.common.config import (
+    BYTE_MARKER_IGNORE_ALL_REGEXP,
+    LintConfig,
+    get_context_config,
+    get_lint_config,
+)
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
@@ -57,13 +61,22 @@ def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleT
     return results
 
 
-def get_rules_from_package(package: str) -> LintRuleCollectionT:
+def get_rules_from_package(
+    package: str, blacklist_rules: List[str] = []
+) -> LintRuleCollectionT:
+    # Get rules from the specified package, omitting rules that appear in the blacklist.
     rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
     for _module_name, module in import_submodules(package).items():
         for name in dir(module):
             try:
                 obj = getattr(module, name)
-                if obj is CstLintRule or not issubclass(obj, CstLintRule):
+                if (
+                    obj is CstLintRule
+                    or not (
+                        issubclass(obj, CstLintRule) or issubclass(obj, PseudoLintRule)
+                    )
+                    or ".".join((_module_name, name)) in blacklist_rules
+                ):
                     continue
 
                 if inspect.isabstract(obj):
@@ -75,10 +88,11 @@ def get_rules_from_package(package: str) -> LintRuleCollectionT:
     return list(rules)
 
 
-def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
-    rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = [Flake8PseudoLintRule]
-    for package in ["fixit.rules"] + extra_packages:
-        rules += get_rules_from_package(package)
+def get_rules(lint_config: LintConfig = get_lint_config()) -> LintRuleCollectionT:
+    # Get rules from the packages specified in the lint config file, omitting blacklisted rules.
+    rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = []
+    for package in lint_config.packages:
+        rules += get_rules_from_package(package, lint_config.blacklist_rules)
     return rules
 
 

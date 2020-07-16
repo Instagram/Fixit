@@ -153,19 +153,19 @@ def map_paths(
 
 def pyfmt(path: Union[str, Path], config: LintConfig = get_lint_config()) -> None:
     """
-    Given a path, run isort-black on the code and write the updated file back to disk.
-
-    CAUTION: This function has a large overhead (multiple forks, tons of disk IO).
+    Given a path, run the specified formatter on the file. If formatter writes to stdout,
+    assume stdout is formatted code and write it to file on disk.
     """
 
-    # TODO: We should use pyfmtd once it's available in IGSRV. If we can call it's IPC
-    # directly (without a fork) that would be even better.
-
     formatter_command = config.formatter
-    args = (" ".join(formatter_command), str(path))
-    formatted = subprocess.check_output(args, env={})
-    with open(path, "wb") as f:
-        f.write(formatted)
+    args = (formatter_command[0], str(path), *formatter_command[1:])
+    process = subprocess.Popen(
+        " ".join(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    )
+    stdout, stderr = process.communicate()
+    if stdout:
+        with open(path, "wb") as f:
+            f.write(stdout)
 
 
 @dataclass(frozen=True)
