@@ -88,11 +88,20 @@ def get_rules_from_package(
     return list(rules)
 
 
-def get_rules(lint_config: LintConfig = get_lint_config()) -> LintRuleCollectionT:
+def get_rules_from_config(
+    lint_config: LintConfig = get_lint_config(),
+) -> LintRuleCollectionT:
     # Get rules from the packages specified in the lint config file, omitting blacklisted rules.
     rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = []
     for package in lint_config.packages:
         rules += get_rules_from_package(package, lint_config.blacklist_rules)
+    return rules
+
+
+def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
+    rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = []
+    for package in ["fixit.rules"] + extra_packages:
+        rules += get_rules_from_package(package)
     return rules
 
 
