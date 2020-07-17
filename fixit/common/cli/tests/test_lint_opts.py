@@ -83,7 +83,9 @@ class LintOptsTest(UnitTest):
                 extra={"global_list": global_list},
             )
             paths = ["path1.py", "path2.py"]
-            results_iter = map_paths(mock_operation, paths, opts, workers=2)
+            results_iter = map_paths(
+                mock_operation, paths, opts, workers=LintWorkers.USE_CURRENT_THREAD
+            )
             results_count = 0
             paths_reported = []
             for results in results_iter:
