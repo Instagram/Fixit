@@ -1,5 +1,5 @@
-blacklist_patterns: []
-blacklist_rules: []
+block_list_patterns: []
+block_list_rules: []
 formatter:
 - black
 generated_code_marker: '@generated'

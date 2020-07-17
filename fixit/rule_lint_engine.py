@@ -62,9 +62,9 @@ def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleT
 
 
 def get_rules_from_package(
-    package: str, blacklist_rules: List[str] = []
+    package: str, block_list_rules: List[str] = []
 ) -> LintRuleCollectionT:
-    # Get rules from the specified package, omitting rules that appear in the blacklist.
+    # Get rules from the specified package, omitting rules that appear in the block list.
     rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
     for _module_name, module in import_submodules(package).items():
         for name in dir(module):
@@ -75,7 +75,7 @@ def get_rules_from_package(
                     or not (
                         issubclass(obj, CstLintRule) or issubclass(obj, PseudoLintRule)
                     )
-                    or ".".join((_module_name, name)) in blacklist_rules
+                    or ".".join((_module_name, name)) in block_list_rules
                 ):
                     continue
 
@@ -91,10 +91,10 @@ def get_rules_from_package(
 def get_rules_from_config(
     lint_config: LintConfig = get_lint_config(),
 ) -> LintRuleCollectionT:
-    # Get rules from the packages specified in the lint config file, omitting blacklisted rules.
+    # Get rules from the packages specified in the lint config file, omitting block-listed rules.
     rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = []
     for package in lint_config.packages:
-        rules += get_rules_from_package(package, lint_config.blacklist_rules)
+        rules += get_rules_from_package(package, lint_config.block_list_rules)
     return rules
 
 

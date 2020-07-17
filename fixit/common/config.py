@@ -13,7 +13,7 @@ from typing import Any, List, Mapping, Optional, Pattern, Union
 import yaml
 
 
-LINT_CONFIG_FILE_NAME: Path = Path(".lint.config.yaml")
+LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
 
 # Any file with these raw bytes should be ignored
 BYTE_MARKER_IGNORE_ALL_REGEXP: Pattern[bytes] = re.compile(rb"@(generated|nolint)")
@@ -64,7 +64,7 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 
 
 STRING_SETTINGS = ["generated_code_marker"]
-LIST_SETTINGS = ["formatter", "blacklist_patterns", "blacklist_rules", "packages"]
+LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root"]
 
 
@@ -73,9 +73,9 @@ class LintConfig:
     # TODO: add generated_code_marker logic to lint rule autofix.
     generated_code_marker: str = f"@gen{''}erated"
     formatter: List[str] = field(default_factory=lambda: ["black"])
-    # TODO: add blacklist_patterns logic to lint rule engine/ipc.
-    blacklist_patterns: List[str] = field(default_factory=list)
-    blacklist_rules: List[str] = field(default_factory=list)
+    # TODO: add block_list_patterns logic to lint rule engine/ipc.
+    block_list_patterns: List[str] = field(default_factory=list)
+    block_list_rules: List[str] = field(default_factory=list)
     packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
     repo_root: str = "."
 
@@ -179,7 +179,7 @@ def get_lint_config() -> LintConfig:
 
 
 def gen_config_file() -> None:
-    # Generates a `.lint.config.yaml` file with defaults in the current working dir.
+    # Generates a `.fixit.config.yaml` file with defaults in the current working dir.
     config_file = LINT_CONFIG_FILE_NAME.resolve()
     default_config_dict = asdict(LintConfig())
     with open(config_file, "w") as cf:
