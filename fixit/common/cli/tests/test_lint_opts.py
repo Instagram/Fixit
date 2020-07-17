@@ -4,7 +4,6 @@
 # LICENSE file in the root directory of this source tree.
 
 from dataclasses import dataclass
-from multiprocessing import Manager
 from pathlib import Path
 from typing import Collection, List, Sequence, cast
 
@@ -51,52 +50,49 @@ def mock_operation(
 
 
 class LintOptsTest(UnitTest):
-    def test_extra_opts(self) -> None:
-        global_list = []
-        opts = LintOpts(
+    def setUp(self) -> None:
+        self.global_list = []
+        self.opts = LintOpts(
             [FakeRule],
             FakeLintSuccessReport,
             LintFailureReportBase,
-            extra={"global_list": global_list},
+            extra={"global_list": self.global_list},
         )
+
+    def test_extra_opts(self) -> None:
         path = "path.py"
         results = next(
             map_paths(
-                mock_operation, [path], opts, workers=LintWorkers.USE_CURRENT_THREAD
+                mock_operation,
+                [path],
+                self.opts,
+                workers=LintWorkers.USE_CURRENT_THREAD,
             )
         )
 
         # Assert global list has been modified as expected.
-        self.assertEqual(list(global_list), [path])
+        self.assertEqual(list(self.global_list), [path])
 
         # Assert the rest of the reporting functionality is as expected
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].reports, ["fake picklable report"])
 
-    def test_extra_opts_with_manager(self) -> None:
-        with Manager() as man:
-            global_list = man.list()
-            opts = LintOpts(
-                [FakeRule],
-                FakeLintSuccessReport,
-                LintFailureReportBase,
-                extra={"global_list": global_list},
-            )
-            paths = ["path1.py", "path2.py"]
-            results_iter = map_paths(
-                mock_operation, paths, opts, workers=LintWorkers.USE_CURRENT_THREAD
-            )
-            results_count = 0
-            paths_reported = []
-            for results in results_iter:
-                for result in results:
-                    results_count += 1
-                    paths_reported.append(result.path)
-                    self.assertEqual(len(result.reports), 1)
-                    self.assertEqual(result.reports, ["fake picklable report"])
+    def test_extra_opts_multiple_paths(self) -> None:
+        paths = ["path1.py", "path2.py"]
+        results_iter = map_paths(
+            mock_operation, paths, self.opts, workers=LintWorkers.USE_CURRENT_THREAD
+        )
+        results_count = 0
+        paths_reported = []
+        for results in results_iter:
+            for result in results:
+                results_count += 1
+                paths_reported.append(result.path)
+                self.assertEqual(len(result.reports), 1)
+                self.assertEqual(result.reports, ["fake picklable report"])
 
-            # Assert global list has been modified as expected.
-            self.assertCountEqual(list(global_list), paths)
+        # Assert global list has been modified as expected.
+        self.assertCountEqual(list(self.global_list), paths)
 
-            # Assert all passed in paths have been visited as expected
-            self.assertCountEqual(paths_reported, paths)
+        # Assert all passed in paths have been visited as expected
+        self.assertCountEqual(paths_reported, paths)
