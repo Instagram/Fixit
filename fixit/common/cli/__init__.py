@@ -159,9 +159,7 @@ def pyfmt(path: Union[str, Path], config: LintConfig = get_lint_config()) -> Non
 
     formatter_command = config.formatter
     args = (formatter_command[0], str(path), *formatter_command[1:])
-    process = subprocess.Popen(
-        " ".join(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-    )
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, _ = process.communicate()
     if process.returncode == 0 and stdout:
         with open(path, "wb") as f:
