@@ -72,7 +72,7 @@ def get_paths_parser() -> argparse.ArgumentParser:
         help=(
             "The name of a directory (e.g. media) or file (e.g. media/views.py) on "
             + "which to run the lint rule. "
-            + "If not specified the lint rule is run on the `repo_root` specified in `.fixit.config.yaml`."
+            + "If not specified the lint rule is run on the `repo_root` specified in Fixit's config file."
         ),
     )
     return parser
