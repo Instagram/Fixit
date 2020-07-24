@@ -9,7 +9,6 @@ import tempfile
 from pathlib import Path
 from typing import cast
 
-from libcst.metadata import TypeInferenceProvider
 from libcst.metadata.type_inference_provider import (
     PyreData,
     _process_pyre_data,
@@ -66,9 +65,9 @@ def gen_types_for_test_case(source_code: str, dest_path: Path) -> None:
 
 
 def gen_types(rule: CstLintRule, rule_fixture_dir: Path) -> None:
-    if TypeInferenceProvider not in rule.get_inherited_dependencies():
+    if not rule.requires_metadata_caches():
         raise RuleNotTypeDependentError(
-            "Rule does not list TypeInferenceProvider in its `METADATA_DEPENDENCIES`."
+            "Rule does not list any cache-dependent providers in its `METADATA_DEPENDENCIES`."
         )
     if hasattr(rule, "VALID") or hasattr(rule, "INVALID"):
         print("Starting pyre server")

@@ -61,18 +61,18 @@ _MapPathsWorkerArgsT = Tuple[
 ]
 
 
-def find_files(paths: Iterable[Path]) -> Iterator[Path]:
+def find_files(paths: Iterable[Path]) -> Iterator[str]:
     """
     Given an iterable of paths, yields any files and walks over any directories.
     """
     for path in paths:
         if path.is_file():
-            yield path
+            yield str(path)
         else:
             for root, _dirs, files in os.walk(path):
                 for f in files:
                     if f.endswith(".py") and not os.path.islink(f):
-                        yield Path(root) / f
+                        yield os.path.join(root, f)
 
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.

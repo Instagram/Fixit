@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
 
-from libcst.metadata import MetadataWrapper, TypeInferenceProvider
+from libcst.metadata import MetadataWrapper
 from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
     UnitTest,
 )
@@ -132,7 +132,7 @@ def _gen_test_methods_for_rule(
     fixture_subdir: Path = get_fixture_path(fixture_dir, rule.__module__, rules_package)
     if issubclass(rule, CstLintRule):
 
-        if TypeInferenceProvider in rule.get_inherited_dependencies():
+        if rule.requires_metadata_caches():
             requires_fixtures = True
         if hasattr(rule, "VALID"):
             for idx, test_case in enumerate(getattr(rule, "VALID")):

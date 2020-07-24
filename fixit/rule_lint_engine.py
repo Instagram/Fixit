@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 from typing import (
+    TYPE_CHECKING,
     Any,
     Collection,
     Dict,
@@ -27,7 +28,9 @@ from typing import (
 )
 
 import libcst as cst
+from libcst import parse_module
 from libcst.metadata import MetadataWrapper
+from libcst.metadata.type_inference_provider import _sort_by_position
 
 from fixit.common.base import CstContext, CstLintRule, LintRuleT
 from fixit.common.comments import CommentInfo
@@ -37,6 +40,9 @@ from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
 
+
+if TYPE_CHECKING:
+    from libcst.metadata.base_provider import ProviderT
 
 LintRuleCollectionT = List[Union[Type[CstLintRule], Type[PseudoLintRule]]]
 
@@ -257,6 +263,27 @@ class LintRuleReportsWithAppliedPatches:
     patched_source: str
 
 
+def remove_from_metadata_cache(
+    metadata_cache: Mapping["ProviderT", object], line: int
+) -> Mapping["ProviderT", object]:
+    new_metadata_cache = {}
+    for provider, cache in metadata_cache.items():
+        if isinstance(cache, dict) and "types" in cache:
+            updated_types = []
+            for annotation in cache["types"]:
+                if annotation["location"]["stop"]["line"] < line:
+                    updated_types.append(annotation)
+            # Assign even if updated_types is empty, so we don't get a missing cache error later.
+            new_metadata_cache[provider] = {
+                "types": sorted(updated_types, key=_sort_by_position)
+            }
+        else:
+            # We currently only expect Pyre type data in our metadata cache as of libcst version 0.3.6.
+            # TODO: Once other types of cache become available, we will need to deal with them separately.
+            new_metadata_cache[provider] = cache
+    return new_metadata_cache
+
+
 def lint_file_and_apply_patches(
     file_path: Path,
     source: bytes,
@@ -265,17 +292,14 @@ def lint_file_and_apply_patches(
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
+    metadata_cache: Optional[Mapping["ProviderT", object]] = None,
+    max_iter: int = 60,
 ) -> LintRuleReportsWithAppliedPatches:
     """
-    Runs `lint_file` in a loop, patching the one auto-fixable report on each iteration
-    of the loop.
-    This is different from how 'arc lint' works. When using 'arc lint', we compute
-    minimal-size patches, and hope that they don't overlap. If multiple autofixers
-    require overlapping changes, 'arc lint' won't apply them.
-    It's also possible for multiple autofixers to combine in a way that results in
-    invalid code under `arc lint`. Applying a single fix at a time prevents that.
-    There is some risk that the autofixer gets stuck in a loop.
-    TODO: Prevent infinite loops by adding a limit to the number of iterations used.
+    Runs `lint_file` in a loop, patching one auto-fixable report on each iteration.
+
+    Applying a single fix at a time prevents the scenario where multiple autofixes
+    to combine in a way that results in invalid code.
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
@@ -283,7 +307,12 @@ def lint_file_and_apply_patches(
 
     reports = []
     fixed_reports = []
-    while True:
+    # Avoid getting stuck in an infinite loop, cap the number of iterations at `max_iter`.
+    for i in range(max_iter):
+        cst_wrapper = None
+        if metadata_cache is not None:
+            # Re-compute the cst wrapper on each iteration with the new `source`.
+            cst_wrapper = MetadataWrapper(parse_module(source), True, metadata_cache)
         reports = lint_file(
             file_path,
             source,
@@ -291,17 +320,20 @@ def lint_file_and_apply_patches(
             use_ignore_comments=use_ignore_comments,
             config=config,
             rules=rules,
+            cst_wrapper=cst_wrapper,
         )
 
         try:
-            first_fixable_report = next(r for r in reports if r.patch is not None)
+            # Sort reports by decreasing line number so we can keep as much of the metadata cache as possible for subsequent reports.
+            sorted_reports = sorted(reports, key=lambda r: r.line, reverse=True)
+            last_fixable_report = next(r for r in sorted_reports if r.patch is not None)
         except StopIteration:
-            # we found no autofixable reports
+            # No reports with autofix were found.
             break
         else:
             # We found a fixable report. Patch and re-run the linter on this file.
-            patch = first_fixable_report.patch
-            assert patch is not None  # noqa: IG01
+            patch = last_fixable_report.patch
+            assert patch is not None
             # TODO: This is really inefficient because we're forced to decode/reencode
             # the source representation, just so that lint_file can decode the file
             # again.
@@ -309,7 +341,13 @@ def lint_file_and_apply_patches(
             # We probably need to rethink how we're representing the source code.
             encoding = _detect_encoding(source)
             source = patch.apply(source.decode(encoding)).encode(encoding)
-            fixed_reports.append(first_fixable_report)
+            fixed_reports.append(last_fixable_report)
+
+            # All metadata cache data for lines at or below the reported line is now potentially invalid. Remove it to avoid cache-dependent
+            # lint rules generating invalid reports. In the worst case, we are too cautious in discrediting all subsequent lines and the
+            # metadata cache needs to be regenerated a few times to fully lint a file, but this is a minor setback compared to the alternative.
+            if metadata_cache is not None:
+                remove_from_metadata_cache(metadata_cache, last_fixable_report.line)
 
     # `reports` shouldn't contain any fixable reports at this point, so there should be
     # no overlap between `fixed_reports` and `reports`.
