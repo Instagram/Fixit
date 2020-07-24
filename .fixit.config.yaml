@@ -2,7 +2,6 @@ block_list_patterns: []
 block_list_rules: []
 formatter:
 - black
-generated_code_marker: '@generated'
 packages:
 - fixit.rules
 repo_root: .
