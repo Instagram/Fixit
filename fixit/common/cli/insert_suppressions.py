@@ -8,19 +8,18 @@
 #   $ python -m fixit.common.cli.insert_suppressions --help
 #   $ python -m fixit.common.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
 #   $ python -m fixit.common.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
-
-from __future__ import annotations
-
 import argparse
 import itertools
 import shutil
+import sys
 import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence, Union
 
-from libcst import ParserSyntaxError
+from libcst import ParserSyntaxError, parse_module
+from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import LintRuleT
 from fixit.common.cli import find_files, map_paths, pyfmt
@@ -76,7 +75,12 @@ def get_formatted_reports_for_path(
         source = f.read()
 
     try:
-        raw_reports = lint_file(path, source, rules=[opts.rule])
+        cst_wrapper = None
+        if metadata_cache is not None:
+            cst_wrapper = MetadataWrapper(parse_module(source), True, metadata_cache,)
+        raw_reports = lint_file(
+            path, source, rules=[opts.rule], cst_wrapper=cst_wrapper
+        )
     except (SyntaxError, ParserSyntaxError):
         # TODO: bubble this information up somehow
         return []
@@ -181,6 +185,7 @@ def main(raw_args: Sequence[str]) -> None:
     else:
         message = MessageKind.USE_LINT_REPORT
 
+    print("here?!")
     metadata_caches = get_metadata_caches(args.rule, args.cache_timeout, file_paths)
 
     # opts is a more type-safe version of args that we pass around
@@ -217,3 +222,7 @@ def main(raw_args: Sequence[str]) -> None:
             f"Found {len(formatted_reports)} reports in {len(file_paths)} files in "
             + f"{time.time() - start_time :.2f} seconds."
         )
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

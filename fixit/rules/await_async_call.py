@@ -16,7 +16,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 class AwaitAsyncCallRule(CstLintRule):
     MESSAGE: str = (
-        "IG31 Async function call will only be executed with `await` statement. Do you forget to add `await`? "
+        "IG31 Async function call will only be executed with `await` statement. Did you forget to add `await`? "
         + "If you intend to not await, please add comment to disable this warning: # lint-fixme: IG31 "
     )
 

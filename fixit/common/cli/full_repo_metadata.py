@@ -41,6 +41,7 @@ class MetadataCacheErrorHandler(Handler):
 def get_metadata_caches(
     rule: LintRuleT, cache_timeout: int, file_paths: Iterable[str]
 ) -> Optional[Mapping[str, Mapping["ProviderT", object]]]:
+    # Returns `None` if metadata cache is not required for this lint rule.
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
 
     if issubclass(rule, CstLintRule):

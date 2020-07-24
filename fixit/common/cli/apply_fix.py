@@ -8,9 +8,6 @@
 #   $ python -m fixit.common.cli.apply_fix --help
 #   $ python -m fixit.common.cli.apply_fix fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
 #   $ python -m fixit.common.cli.apply_fix fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
-
-from __future__ import annotations
-
 import argparse
 import itertools
 import shutil
