@@ -22,8 +22,7 @@ from fixit.common.report import BaseLintRuleReport, CstLintRuleReport
 
 
 if TYPE_CHECKING:
-    # lint-ignore: F401: Used by quoted type
-    from fixit.common.pseudo_rule import PseudoLintRule  # noqa: F401
+    from fixit.common.pseudo_rule import PseudoLintRule
     from libcst.metadata.base_provider import ProviderT
 
 

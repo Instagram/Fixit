@@ -37,7 +37,6 @@ import libcst as cst
 from libcst.metadata import MetadataWrapper
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
-from fixit.common.config import LintConfig, get_lint_config
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -149,21 +148,6 @@ def map_paths(
             # pyre-fixme[6]: function call. I was unable to debug it.
             for result in pool.imap_unordered(_map_paths_worker, tasks):
                 yield result
-
-
-def pyfmt(path: Union[str, Path], config: LintConfig = get_lint_config()) -> None:
-    """
-    Given a path, run the specified formatter on the file. If formatter writes to stdout,
-    assume stdout is formatted code and write it to file on disk.
-    """
-
-    formatter_command = config.formatter
-    args = (formatter_command[0], str(path), *formatter_command[1:])
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, _ = process.communicate()
-    if process.returncode == 0 and stdout:
-        with open(path, "wb") as f:
-            f.write(stdout)
 
 
 @dataclass(frozen=True)

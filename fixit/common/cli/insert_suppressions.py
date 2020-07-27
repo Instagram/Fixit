@@ -19,10 +19,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence, Union
 
 from libcst import ParserSyntaxError, parse_module
+from libcst.codemod._cli import invoke_formatter
 from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import LintRuleT
-from fixit.common.cli import find_files, map_paths, pyfmt
+from fixit.common.cli import find_files, map_paths
 from fixit.common.cli.args import (
     get_compact_parser,
     get_metadata_cache_parser,
@@ -33,6 +34,7 @@ from fixit.common.cli.args import (
 )
 from fixit.common.cli.formatter import LintRuleReportFormatter, format_warning
 from fixit.common.cli.full_repo_metadata import get_metadata_caches
+from fixit.common.config import get_lint_config
 from fixit.common.insert_suppressions import (
     SuppressionComment,
     SuppressionCommentKind,
@@ -105,10 +107,13 @@ def get_formatted_reports_for_path(
     ), "Failed to insert some comments. This should not be possible."
 
     if updated_source != source:
+        if not opts.skip_autoformatter:
+            # Format the code using the config file's formatter.
+            updated_source = invoke_formatter(
+                get_lint_config().formatter, updated_source
+            )
         with open(path, "wb") as f:
             f.write(updated_source)
-        if not opts.skip_autoformatter:
-            pyfmt(path)
 
     # linter completed successfully
     return [opts.formatter.format(rr) for rr in raw_reports]
@@ -185,7 +190,6 @@ def main(raw_args: Sequence[str]) -> None:
     else:
         message = MessageKind.USE_LINT_REPORT
 
-    print("here?!")
     metadata_caches = get_metadata_caches(args.rule, args.cache_timeout, file_paths)
 
     # opts is a more type-safe version of args that we pass around
