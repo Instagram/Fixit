@@ -30,12 +30,7 @@ from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import (
-    BYTE_MARKER_IGNORE_ALL_REGEXP,
-    LintConfig,
-    get_context_config,
-    get_lint_config,
-)
+from fixit.common.config import LintConfig, get_context_config, get_lint_config
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
@@ -147,7 +142,9 @@ def lint_file(
     May raise a SyntaxError, which should be handled by the
     caller.
     """
-    if use_ignore_byte_markers and BYTE_MARKER_IGNORE_ALL_REGEXP.search(source):
+    if use_ignore_byte_markers and any(
+        pattern.encode() in source for pattern in get_lint_config().block_list_patterns
+    ):
         return []
 
     # pre-process these arguments

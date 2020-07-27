@@ -15,6 +15,6 @@ CONFIG: LintConfig = get_lint_config()
 add_lint_rule_tests_to_module(
     globals(),
     get_rules_from_config(CONFIG),
-    fixture_dir=Path(CONFIG.repo_root) / "fixit/tests/fixtures",
+    fixture_dir=Path(CONFIG.fixture_dir),
     rules_package="fixit.rules",
 )

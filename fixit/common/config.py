@@ -17,9 +17,6 @@ import yaml
 
 LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
 
-# Any file with these raw bytes should be ignored
-BYTE_MARKER_IGNORE_ALL_REGEXP: Pattern[bytes] = re.compile(rb"@(generated|nolint)")
-
 # https://gitlab.com/pycqa/flake8/blob/9631dac52aa6ed8a3de9d0983c/src/flake8/defaults.py
 NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
     # We're looking for items that look like this:
@@ -66,18 +63,19 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 
 
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
-PATH_SETTINGS = ["repo_root"]
+PATH_SETTINGS = ["repo_root", "fixture_dir"]
 DEFAULT_FORMATTER = ["black", "-"]
+DEFAULT_PATTERNS = ["@generated", "@nolint"]
 
 
 @dataclass(frozen=True)
 class LintConfig:
     formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
-    # TODO: add block_list_patterns logic to lint rule engine/ipc.
-    block_list_patterns: List[str] = field(default_factory=list)
+    block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
     block_list_rules: List[str] = field(default_factory=list)
     packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
     repo_root: str = "."
+    fixture_dir: str = "./fixtures"
 
 
 def _eval_python_config(source: str) -> Mapping[str, Any]:

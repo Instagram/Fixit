@@ -18,12 +18,10 @@ from libcst.metadata.type_inference_provider import (
 
 from fixit.common.base import CstLintRule, LintRuleT
 from fixit.common.cli.args import (
-    _get_fixture_dir,
     get_pyre_fixture_dir_parser,
     get_rule_parser,
     get_rules_package_parser,
 )
-from fixit.common.config import get_lint_config
 from fixit.common.utils import _dedent
 
 
@@ -114,13 +112,7 @@ if __name__ == "__main__":
     )
     args: argparse.Namespace = parser.parse_args()
     rule: LintRuleT = args.rule
-    fixture_dir: Path = (
-        Path(args.fixture_dir)
-        if args.fixture_dir is not None
-        else _get_fixture_dir(
-            Path(get_lint_config().repo_root) / "fixit/tests/fixtures"
-        )
-    )
+    fixture_dir: Path = args.fixture_dir
     fixture_path: Path = get_fixture_path(
         fixture_dir, rule.__module__, args.rules_package
     )

@@ -7,7 +7,6 @@ import argparse
 import importlib
 from enum import Enum
 from pathlib import Path
-from typing import Union
 
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
@@ -23,19 +22,13 @@ def _import_rule(path_to_rule_class: str) -> LintRuleT:
     return rule_class
 
 
-def _get_fixture_dir(fixture_dir: Union[Path, str]) -> Path:
-    path_to_fixture_dir = Path(fixture_dir)
-    if not path_to_fixture_dir.is_dir():
-        raise FixtureDirNotFoundError(f"Directory not found at {path_to_fixture_dir}.")
-    return path_to_fixture_dir
-
-
 def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
         "--fixture_dir",
-        type=_get_fixture_dir,
+        type=(lambda p: Path(p).resolve(strict=True)),
         help=("Main fixture file directory for Pyre integration testing."),
+        default=get_lint_config().fixture_dir,
     )
     return parser
 
@@ -68,7 +61,7 @@ def get_paths_parser() -> argparse.ArgumentParser:
         "paths",
         nargs="*",
         type=(lambda p: Path(p).resolve(strict=True)),
-        default=(Path(get_lint_config().repo_root),),
+        default=(get_lint_config().repo_root,),
         help=(
             "The name of a directory (e.g. media) or file (e.g. media/views.py) on "
             + "which to run the lint rule. "
