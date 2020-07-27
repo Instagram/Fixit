@@ -10,16 +10,38 @@ from pathlib import Path
 
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
+from fixit.rule_lint_engine import import_rule_from_package
 
 
 class FixtureDirNotFoundError(Exception):
     pass
 
 
+class LintRuleNotFoundError(Exception):
+    pass
+
+
 def _import_rule(path_to_rule_class: str) -> LintRuleT:
-    rule_module_path, rule_class_name = path_to_rule_class.rsplit(".", 1)
-    rule_class = getattr(importlib.import_module(rule_module_path), rule_class_name,)
-    return rule_class
+    rule_module_path, _, rule_class_name = path_to_rule_class.rpartition(".")
+    if rule_module_path:
+        # If user provided a dotted path, we assume it's valid and import the rule directly.
+        imported_rule = getattr(
+            importlib.import_module(rule_module_path), rule_class_name,
+        )
+        return imported_rule
+
+    # Otherwise, only a class name was provided, so try to find the rule by searching each package specified in the config.
+    packages = get_lint_config().packages
+    for package in packages:
+        imported_rule = import_rule_from_package(package, rule_class_name)
+        if imported_rule is not None:
+            return imported_rule
+
+    # If we get here, the rule was not found.
+    raise LintRuleNotFoundError(
+        f"Could not find lint rule {path_to_rule_class}. "
+        + "\nIs it a member of one of the packages specified in the Fixit config file?"
+    )
 
 
 def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
@@ -27,7 +49,7 @@ def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--fixture_dir",
         type=(lambda p: Path(p).resolve(strict=True)),
-        help=("Main fixture file directory for Pyre integration testing."),
+        help=("Main fixture file directory for integration testing."),
         default=get_lint_config().fixture_dir,
     )
     return parser
@@ -47,9 +69,8 @@ def get_rule_parser() -> argparse.ArgumentParser:
         "rule",
         type=_import_rule,
         help=(
-            "The full name of the module and class joined with "
-            + "a '.' that defines your lint rule. "
-            + "(e.g. fixit.rules.no_assert_equals.NoAssertEqualsRule)"
+            "The name of your lint rule class or the full dotted path to your lint rule class."
+            + "(e.g. `NoAssertEqualsRule` or `fixit.rules.no_assert_equals.NoAssertEqualsRule`)"
         ),
     )
     return parser

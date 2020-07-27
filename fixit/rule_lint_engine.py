@@ -28,7 +28,7 @@ from typing import (
 import libcst as cst
 from libcst.metadata import MetadataWrapper
 
-from fixit.common.base import CstContext, CstLintRule
+from fixit.common.base import CstContext, CstLintRule, LintRuleT
 from fixit.common.comments import CommentInfo
 from fixit.common.config import LintConfig, get_context_config, get_lint_config
 from fixit.common.ignores import IgnoreInfo
@@ -38,6 +38,31 @@ from fixit.common.report import BaseLintRuleReport
 
 
 LintRuleCollectionT = List[Union[Type[CstLintRule], Type[PseudoLintRule]]]
+
+
+def import_rule_from_package(
+    package_name: str, rule_class_name: str
+) -> Optional[LintRuleT]:
+    rule: Optional[LintRuleT] = None
+    package = importlib.import_module(package_name)
+    for _loader, name, is_pkg in pkgutil.walk_packages(
+        getattr(package, "__path__", None)
+    ):
+        full_package_or_module_name = package.__name__ + "." + name
+        try:
+            module = importlib.import_module(full_package_or_module_name)
+            rule = getattr(module, rule_class_name, None)
+        except ModuleNotFoundError:
+            pass
+        if is_pkg:
+            rule = import_rule_from_package(
+                full_package_or_module_name, rule_class_name
+            )
+
+        if rule is not None:
+            # Stop early if we have found the rule.
+            return rule
+    return rule
 
 
 def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
