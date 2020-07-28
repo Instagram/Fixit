@@ -337,15 +337,13 @@ def lint_file_and_apply_patches(
         )
 
         try:
-            # Sort reports by decreasing line number so we can keep as much of the metadata cache as possible for subsequent reports.
-            sorted_reports = sorted(reports, key=lambda r: r.line, reverse=True)
-            last_fixable_report = next(r for r in sorted_reports if r.patch is not None)
+            first_fixable_report = next(r for r in reports if r.patch is not None)
         except StopIteration:
             # No reports with autofix were found.
             break
         else:
             # We found a fixable report. Patch and re-run the linter on this file.
-            patch = last_fixable_report.patch
+            patch = first_fixable_report.patch
             assert patch is not None
             # TODO: This is really inefficient because we're forced to decode/reencode
             # the source representation, just so that lint_file can decode the file
@@ -354,13 +352,7 @@ def lint_file_and_apply_patches(
             # We probably need to rethink how we're representing the source code.
             encoding = _detect_encoding(source)
             source = patch.apply(source.decode(encoding)).encode(encoding)
-            fixed_reports.append(last_fixable_report)
-
-            # All metadata cache data for lines at or below the reported line is now potentially invalid. Remove it to avoid cache-dependent
-            # lint rules generating invalid reports. In the worst case, we are too cautious in discrediting all subsequent lines and the
-            # metadata cache needs to be regenerated a few times to fully lint a file, but this is a minor setback compared to the alternative.
-            if metadata_cache is not None:
-                remove_from_metadata_cache(metadata_cache, last_fixable_report.line)
+            fixed_reports.append(first_fixable_report)
 
     # `reports` shouldn't contain any fixable reports at this point, so there should be
     # no overlap between `fixed_reports` and `reports`.

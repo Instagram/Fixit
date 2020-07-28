@@ -33,7 +33,6 @@ from fixit.common.cli.args import (
     get_skip_ignore_comments_parser,
 )
 from fixit.common.cli.formatter import LintRuleReportFormatter, format_warning
-from fixit.common.cli.full_repo_metadata import get_metadata_caches
 from fixit.common.config import get_lint_config
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file_and_apply_patches
@@ -136,11 +135,19 @@ def main(raw_args: Sequence[str]) -> None:
         print()
     start_time = time.time()
 
-    metadata_caches = get_metadata_caches(args.rule, args.cache_timeout, file_paths)
+    rule = args.rule
+    # TODO `lint_file_and_apply_patches` cannot handle metadata_caches just yet, so we skip
+    # rules that require these caches for now.
+    if (
+        hasattr(rule, "requires_metadata_caches")
+        and getattr(rule, "requires_metadata_caches")()
+    ):
+        print("Cannot run `apply_fix` with a rule that requires metadata cache.")
+        return
 
     # opts is a more type-safe version of args that we pass around
     opts = LintOpts(
-        rule=args.rule,
+        rule=rule,
         use_ignore_byte_markers=args.use_ignore_byte_markers,
         use_ignore_comments=args.use_ignore_comments,
         skip_autoformatter=args.skip_autoformatter,
@@ -149,11 +156,7 @@ def main(raw_args: Sequence[str]) -> None:
 
     formatted_reports_iter = itertools.chain.from_iterable(
         map_paths(
-            get_formatted_reports_for_path,
-            file_paths,
-            opts,
-            workers=args.workers,
-            metadata_caches=metadata_caches,
+            get_formatted_reports_for_path, file_paths, opts, workers=args.workers,
         )
     )
 
