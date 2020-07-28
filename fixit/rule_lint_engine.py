@@ -21,7 +21,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
     Type,
     Union,
     cast,
@@ -93,13 +92,17 @@ def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleT
     return results
 
 
-def get_rules_from_package(
-    package: str, block_list_rules: List[str] = []
-) -> Tuple[Set[Union[Type[CstLintRule], Type[PseudoLintRule]]], Set[str]]:
+def get_distinct_rules_from_package(
+    package: str,
+    block_list_rules: List[str] = [],
+    seen_names: Optional[Set[str]] = None,
+) -> Set[Union[Type[CstLintRule], Type[PseudoLintRule]]]:
     # Get rules from the specified package, omitting rules that appear in the block list.
-    # Returns imported lint rule classes and all encountered lint rule names.
+    # Raises error on repeated rule names.
+    # Optional parameter `seen_names` accepts set of names that should not occur in this package.
     rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
-    all_names: Set[str] = set()
+    if seen_names is None:
+        seen_names: Set[str] = set()
     for _module_name, module in import_submodules(package).items():
         for name in dir(module):
             try:
@@ -111,17 +114,35 @@ def get_rules_from_package(
                     )
                     and not inspect.isabstract(obj)
                 ):
-                    if name in all_names:
+                    if name in seen_names:
                         raise DuplicateLintRuleNames(
-                            f"Lint rule with name {name} already exists in this package."
+                            f"Lint rule name {name} is duplicated."
                         )
                     # Add all names (even block-listed ones) to the `names` set for duplicate checking.
-                    all_names.add(name)
+                    seen_names.add(name)
                     if name not in block_list_rules:
                         rules.add(obj)
             except TypeError:
                 continue
-    return rules, all_names
+    return rules
+
+
+def get_rules_from_package(package: str) -> LintRuleCollectionT:
+    rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
+    for _module_name, module in import_submodules(package).items():
+        for name in dir(module):
+            try:
+                obj = getattr(module, name)
+                if obj is CstLintRule or not issubclass(obj, CstLintRule):
+                    continue
+
+                if inspect.isabstract(obj):
+                    # skip if a CstLintRule subclass has metaclass=ABCMeta
+                    continue
+                rules.add(obj)
+            except TypeError:
+                continue
+    return list(rules)
 
 
 def get_rules_from_config(
@@ -131,17 +152,9 @@ def get_rules_from_config(
     rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
     all_names: Set[str] = set()
     for package in lint_config.packages:
-        rules_from_pkg, names_from_pkg = get_rules_from_package(
-            package, lint_config.block_list_rules
+        rules_from_pkg = get_distinct_rules_from_package(
+            package, lint_config.block_list_rules, all_names
         )
-        duplicates = all_names.intersection(names_from_pkg)
-        if duplicates:
-            raise DuplicateLintRuleNames(
-                "Lint rule name(s) '"
-                + "', '".join(duplicates)
-                + "' duplicated across rule packages."
-            )
-        all_names.update(names_from_pkg)
         rules.update(rules_from_pkg)
     return list(rules)
 
@@ -150,7 +163,7 @@ def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
     # Deprecated. Use get_rules_from_config instead.
     rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = []
     for package in ["fixit.rules"] + extra_packages:
-        rules_from_pkg, _ = get_rules_from_package(package)
+        rules_from_pkg = get_rules_from_package(package)
         rules += list(rules_from_pkg)
     return rules
 
