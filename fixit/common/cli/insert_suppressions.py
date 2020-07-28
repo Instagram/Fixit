@@ -168,7 +168,7 @@ def main(raw_args: Sequence[str]) -> None:
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
     # expand path if it's a directory
-    file_paths = tuple(find_files(args.paths))
+    file_paths = tuple(find_files((str(p) for p in args.paths)))
 
     if not args.compact:
         print(f"Scanning {len(file_paths)} files")
