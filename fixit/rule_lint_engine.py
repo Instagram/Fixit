@@ -293,7 +293,7 @@ def lint_file_and_apply_patches(
     config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
     metadata_cache: Optional[Mapping["ProviderT", object]] = None,
-    max_iter: int = 60,
+    max_iter: int = 100,
 ) -> LintRuleReportsWithAppliedPatches:
     """
     Runs `lint_file` in a loop, patching one auto-fixable report on each iteration.
