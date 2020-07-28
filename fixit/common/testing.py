@@ -14,7 +14,6 @@ from libcst.testing.utils import (  # noqa IG69: this module is only used by tes
 )
 
 from fixit.common.base import CstLintRule
-from fixit.common.config import FIXTURE_DIRECTORY
 from fixit.common.generate_pyre_fixtures import get_fixture_path
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
@@ -70,8 +69,7 @@ class LintRuleTestCase(unittest.TestCase):
     ) -> None:
         cst_wrapper: Optional[MetadataWrapper] = None
         if fixture_file is not None:
-            fixture_path: Path = FIXTURE_DIRECTORY / fixture_file
-            cst_wrapper = gen_type_inference_wrapper(test_case.code, fixture_path)
+            cst_wrapper = gen_type_inference_wrapper(test_case.code, fixture_file)
         reports = lint_file(
             Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
@@ -182,8 +180,8 @@ def add_lint_rule_tests_to_module(
     rules: LintRuleCollectionT = [],
     test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
     custom_test_method_name: str = "_test_method",
-    fixture_dir: Path = FIXTURE_DIRECTORY,
-    rules_package: str = "fixit.rules",
+    fixture_dir: Path = Path(""),
+    rules_package: str = "",
 ) -> None:
     """
     Generates classes inheriting from `unittest.TestCase` from the data available in `rules` and adds these to module_attrs.

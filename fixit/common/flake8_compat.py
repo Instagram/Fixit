@@ -10,7 +10,7 @@ import ast
 import io
 import tokenize
 from functools import lru_cache
-from typing import Any, Iterable, List, Optional, Type
+from typing import Any, List, Optional, Type
 
 from flake8.checker import (
     FileChecker as Flake8FileChecker,
@@ -21,11 +21,11 @@ from flake8.main.application import Application as Flake8BaseApplication
 from flake8.processor import FileProcessor as Flake8FileProcessor
 from flake8.style_guide import Violation as Flake8Violation
 
-from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
+from fixit.common.pseudo_rule import PseudoContext
 from fixit.common.report import BaseLintRuleReport
 
 
-__all__ = ["Flake8LintRuleReport", "Flake8PseudoLintRule"]
+__all__ = ["Flake8LintRuleReport"]
 
 
 class Flake8CompatAccumulatingFormatter(Flake8BaseFormatter):
@@ -169,33 +169,3 @@ def get_cached_application_instance() -> Flake8CompatApplication:
     # disable noqa because we have our own ignore system
     application.initialize(["--disable-noqa"])
     return application
-
-
-class Flake8PseudoLintRule(PseudoLintRule):
-    """
-    Executes all of flake8 under our lint engine as if it was a typical lint rule. This
-    uses a bunch of internal flake8 APIs, so it's fragile and could break between
-    releases of flake8.
-    """
-
-    def lint_file(self) -> Iterable[Flake8LintRuleReport]:
-        app = get_cached_application_instance()
-        app.reset(self.context)
-        # TODO: use self.context.source, self.context.tokens, and self.context.ast
-        app.run_checks([str(self.context.file_path)])
-        # when we call report, it'll store the results to app.accumulator
-        app.report()
-
-        result = []
-        for violation in app.accumulator:
-            result.append(
-                Flake8LintRuleReport(
-                    file_path=self.context.file_path,
-                    code=violation.code,
-                    message=violation.text,
-                    line=violation.line_number,
-                    column=violation.column_number,
-                )
-            )
-
-        return result

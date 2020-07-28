@@ -1,0 +1,11 @@
+block_list_patterns:
+- '@generated'
+- '@nolint'
+block_list_rules: []
+fixture_dir: ./fixit/tests/fixtures
+formatter:
+- black
+- '-'
+packages:
+- fixit.rules
+repo_root: .

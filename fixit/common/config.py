@@ -4,18 +4,18 @@
 # LICENSE file in the root directory of this source tree.
 
 import ast
+import distutils.spawn
+import os
 import re
+from dataclasses import asdict, dataclass, field
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, Pattern, Union
+from typing import Any, Dict, List, Mapping, Optional, Pattern, Union
+
+import yaml
 
 
-REPO_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent.parent
-FIXIT_ROOT: Path = Path(__file__).resolve().parent.parent
-FIXTURE_DIRECTORY: Path = FIXIT_ROOT / "tests" / "fixtures"
-PYRE_TIMEOUT_SECONDS: int = 1
-
-# Any file with these raw bytes should be ignored
-BYTE_MARKER_IGNORE_ALL_REGEXP: Pattern[bytes] = re.compile(rb"@(generated|nolint)")
+LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
 
 # https://gitlab.com/pycqa/flake8/blob/9631dac52aa6ed8a3de9d0983c/src/flake8/defaults.py
 NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
@@ -62,6 +62,22 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 )
 
 
+LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
+PATH_SETTINGS = ["repo_root", "fixture_dir"]
+DEFAULT_FORMATTER = ["black", "-"]
+DEFAULT_PATTERNS = ["@generated", "@nolint"]
+
+
+@dataclass(frozen=True)
+class LintConfig:
+    formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
+    block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
+    block_list_rules: List[str] = field(default_factory=list)
+    packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
+    repo_root: str = "."
+    fixture_dir: str = "./fixtures"
+
+
 def _eval_python_config(source: str) -> Mapping[str, Any]:
     """
     Given the contents of a __lint__.py file, calls `ast.literal_eval`.
@@ -91,22 +107,85 @@ def _eval_python_config(source: str) -> Mapping[str, Any]:
     return result
 
 
-def get_config(filename: Union[str, Path]) -> Mapping[str, Any]:
+def get_context_config(filename: Union[str, Path]) -> Mapping[str, Any]:
     """
     Given the filename of a file being linted, searches for the closest __lint__.py
     file, and evaluates it.
     """
-    # track previous_directory to avoid cases where we could end up with an infinite
-    # loop due to a bad filename.
-    previous_directory = None
-    directory = (REPO_ROOT / filename).parent.resolve()
-    while directory != REPO_ROOT and directory != previous_directory:
-
-        possible_config = directory / "__lint__.py"
+    current_dir = Path(filename).resolve().parent
+    previous_dir: Optional[Path] = None
+    while current_dir != previous_dir:
+        # Check for config file.
+        possible_config = current_dir / "__lint__.py"
         if possible_config.is_file():
             with open(possible_config, "r") as f:
                 return _eval_python_config(f.read())
 
-        previous_directory = directory
-        directory = directory.parent
+        # Try to go up a directory.
+        previous_dir = current_dir
+        current_dir = current_dir.parent
     return {}
+
+
+def get_validated_settings(
+    file_content: Dict[str, Any], current_dir: Path
+) -> Dict[str, Any]:
+    settings = {}
+    for list_setting in LIST_SETTINGS:
+        if list_setting in file_content:
+            if not (
+                isinstance(file_content[list_setting], list)
+                and all(isinstance(s, str) for s in file_content[list_setting])
+            ):
+                raise TypeError(
+                    f"Expected list of strings for `{list_setting}` setting."
+                )
+            settings[list_setting] = file_content[list_setting]
+    for path_setting in PATH_SETTINGS:
+        if path_setting in file_content:
+            setting_value = file_content[path_setting]
+            if not isinstance(setting_value, str):
+                raise TypeError(f"Expected string for `{path_setting}` setting.")
+            abspath: Path = (current_dir / setting_value).resolve()
+        else:
+            abspath: Path = current_dir
+        # Set path setting to absolute path.
+        settings[path_setting] = str(abspath)
+    return settings
+
+
+@lru_cache()
+def get_lint_config() -> LintConfig:
+    config = {}
+    current_dir = Path.cwd()
+    previous_dir: Optional[Path] = None
+    while current_dir != previous_dir:
+        # Check for config file.
+        possible_config = current_dir / LINT_CONFIG_FILE_NAME
+        if possible_config.is_file():
+            with open(possible_config, "r") as f:
+                file_content = yaml.safe_load(f.read())
+
+            if isinstance(file_content, dict):
+                config = get_validated_settings(file_content, current_dir)
+                break
+
+        # Try to go up a directory.
+        previous_dir = current_dir
+        current_dir = current_dir.parent
+
+    # Find formatter executable if there is one.
+    formatter_args = config.get("formatter", DEFAULT_FORMATTER)
+    exe = distutils.spawn.find_executable(formatter_args[0]) or formatter_args[0]
+    config["formatter"][0] = os.path.abspath(exe)
+
+    # Missing settings will be populated with defaults.
+    return LintConfig(**config)
+
+
+def gen_config_file() -> None:
+    # Generates a `.fixit.config.yaml` file with defaults in the current working dir.
+    config_file = LINT_CONFIG_FILE_NAME.resolve()
+    default_config_dict = asdict(LintConfig())
+    with open(config_file, "w") as cf:
+        yaml.dump(default_config_dict, cf)

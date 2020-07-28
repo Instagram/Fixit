@@ -7,9 +7,9 @@ from pathlib import Path
 
 from libcst.testing.utils import UnitTest
 
-from fixit.common.flake8_compat import Flake8PseudoLintRule
 from fixit.common.pseudo_rule import PseudoContext
 from fixit.rule_lint_engine import lint_file
+from fixit.rules.flake8_compat import Flake8PseudoLintRule
 
 
 class Flake8PseudoLintRuleTest(UnitTest):

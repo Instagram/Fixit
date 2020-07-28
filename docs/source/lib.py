@@ -9,7 +9,7 @@ from textwrap import dedent, indent
 from typing import IO
 
 from fixit.common.base import LintRuleT
-from fixit.rule_lint_engine import get_rules
+from fixit.rule_lint_engine import get_rules_from_config
 
 
 def _add_code_indent(code: str) -> str:
@@ -77,7 +77,7 @@ def create_rule_doc() -> None:
     directory = Path(__file__).parent / "rules"
     directory.mkdir(exist_ok=True)
 
-    for rule in get_rules():
+    for rule in get_rules_from_config():
         rule_name = _get_dashed_rule_name_from_camel_case(rule.__name__)
         rule_name_len = len(rule_name)
         with (directory / f"{rule_name}.rst").open("w") as fp:

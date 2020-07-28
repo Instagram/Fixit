@@ -1,1 +1,1 @@
-include README.rst LICENSE CODE_OF_CONDUCT.md CONTRIBUTING.md requirements.txt fixit/.lint.config.yaml fixit/py.typed
+include README.rst LICENSE CODE_OF_CONDUCT.md CONTRIBUTING.md requirements.txt fixit/py.typed

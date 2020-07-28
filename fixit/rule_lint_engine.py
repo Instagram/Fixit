@@ -20,6 +20,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     Type,
     Union,
     cast,
@@ -28,10 +29,9 @@ from typing import (
 import libcst as cst
 from libcst.metadata import MetadataWrapper
 
-from fixit.common.base import CstContext, CstLintRule
+from fixit.common.base import CstContext, CstLintRule, LintRuleT
 from fixit.common.comments import CommentInfo
-from fixit.common.config import BYTE_MARKER_IGNORE_ALL_REGEXP, get_config
-from fixit.common.flake8_compat import Flake8PseudoLintRule
+from fixit.common.config import LintConfig, get_context_config, get_lint_config
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
@@ -39,6 +39,36 @@ from fixit.common.report import BaseLintRuleReport
 
 
 LintRuleCollectionT = List[Union[Type[CstLintRule], Type[PseudoLintRule]]]
+
+
+class DuplicateLintRuleNames(Exception):
+    pass
+
+
+def import_rule_from_package(
+    package_name: str, rule_class_name: str
+) -> Optional[LintRuleT]:
+    # Imports the first rule with matching class name found in specified package.
+    rule: Optional[LintRuleT] = None
+    package = importlib.import_module(package_name)
+    for _loader, name, is_pkg in pkgutil.walk_packages(
+        getattr(package, "__path__", None)
+    ):
+        full_package_or_module_name = package.__name__ + "." + name
+        try:
+            module = importlib.import_module(full_package_or_module_name)
+            rule = getattr(module, rule_class_name, None)
+        except ModuleNotFoundError:
+            pass
+        if is_pkg:
+            rule = import_rule_from_package(
+                full_package_or_module_name, rule_class_name
+            )
+
+        if rule is not None:
+            # Stop early if we have found the rule.
+            return rule
+    return rule
 
 
 def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
@@ -57,28 +87,65 @@ def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleT
     return results
 
 
-def get_rules_from_package(package: str) -> LintRuleCollectionT:
+def get_rules_from_package(
+    package: str, block_list_rules: List[str] = []
+) -> Tuple[Set[Union[Type[CstLintRule], Type[PseudoLintRule]]], Set[str]]:
+    # Get rules from the specified package, omitting rules that appear in the block list.
+    # Returns imported lint rule classes and all encountered lint rule names.
     rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
+    all_names: Set[str] = set()
     for _module_name, module in import_submodules(package).items():
         for name in dir(module):
             try:
                 obj = getattr(module, name)
-                if obj is CstLintRule or not issubclass(obj, CstLintRule):
-                    continue
-
-                if inspect.isabstract(obj):
-                    # skip if a CstLintRule subclass has metaclass=ABCMeta
-                    continue
-                rules.add(obj)
+                if (
+                    obj is not CstLintRule
+                    and (
+                        issubclass(obj, CstLintRule) or issubclass(obj, PseudoLintRule)
+                    )
+                    and not inspect.isabstract(obj)
+                ):
+                    if name in all_names:
+                        raise DuplicateLintRuleNames(
+                            f"Lint rule with name {name} already exists in this package."
+                        )
+                    # Add all names (even block-listed ones) to the `names` set for duplicate checking.
+                    all_names.add(name)
+                    if name not in block_list_rules:
+                        rules.add(obj)
             except TypeError:
                 continue
+    return rules, all_names
+
+
+def get_rules_from_config(
+    lint_config: LintConfig = get_lint_config(),
+) -> LintRuleCollectionT:
+    # Get rules from the packages specified in the lint config file, omitting block-listed rules.
+    rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
+    all_names: Set[str] = set()
+    for package in lint_config.packages:
+        rules_from_pkg, names_from_pkg = get_rules_from_package(
+            package, lint_config.block_list_rules
+        )
+        duplicates = all_names.intersection(names_from_pkg)
+        if duplicates:
+            raise DuplicateLintRuleNames(
+                "Lint rule name(s) '"
+                + "', '".join(duplicates)
+                + "' duplicated across rule packages."
+            )
+        all_names.update(names_from_pkg)
+        rules.update(rules_from_pkg)
     return list(rules)
 
 
 def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
-    rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = [Flake8PseudoLintRule]
+    # Deprecated. Use get_rules_from_config instead.
+    rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = []
     for package in ["fixit.rules"] + extra_packages:
-        rules += get_rules_from_package(package)
+        rules_from_pkg, _ = get_rules_from_package(package)
+        rules += list(rules_from_pkg)
     return rules
 
 
@@ -124,11 +191,13 @@ def lint_file(
     May raise a SyntaxError, which should be handled by the
     caller.
     """
-    if use_ignore_byte_markers and BYTE_MARKER_IGNORE_ALL_REGEXP.search(source):
+    if use_ignore_byte_markers and any(
+        pattern.encode() in source for pattern in get_lint_config().block_list_patterns
+    ):
         return []
 
     # pre-process these arguments
-    config = config if config is not None else get_config(file_path)
+    config = config if config is not None else get_context_config(file_path)
 
     tokens = None
     if use_ignore_comments:
@@ -200,21 +269,17 @@ def lint_file_and_apply_patches(
     """
     Runs `lint_file` in a loop, patching the one auto-fixable report on each iteration
     of the loop.
-
     This is different from how 'arc lint' works. When using 'arc lint', we compute
     minimal-size patches, and hope that they don't overlap. If multiple autofixers
     require overlapping changes, 'arc lint' won't apply them.
-
     It's also possible for multiple autofixers to combine in a way that results in
     invalid code under `arc lint`. Applying a single fix at a time prevents that.
-
     There is some risk that the autofixer gets stuck in a loop.
-
     TODO: Prevent infinite loops by adding a limit to the number of iterations used.
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
-    config = config if config is not None else get_config(file_path)
+    config = config if config is not None else get_context_config(file_path)
 
     reports = []
     fixed_reports = []
