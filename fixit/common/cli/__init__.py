@@ -221,6 +221,9 @@ def ipc_main(opts: LintOpts) -> None:
         paths: Generator[str, None, None] = (
             os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
         )
+        if "num_paths" in opts.extra:
+            # The caller wants us to record the total number of paths.
+            opts.extra["num_paths"] = len(args.paths)
     else:
         paths: Generator[str, None, None] = (
             os.path.join(args.prefix, p.rstrip("\r\n"))
