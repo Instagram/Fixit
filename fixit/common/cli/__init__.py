@@ -12,7 +12,6 @@ import json
 import multiprocessing
 import os
 import subprocess
-import sys
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -24,6 +23,7 @@ from typing import (
     Generator,
     Iterable,
     Iterator,
+    List,
     Mapping,
     Optional,
     Sequence,
@@ -199,15 +199,20 @@ def get_file_lint_result_json(
     return [json.dumps(asdict(r)) for r in results]
 
 
-def ipc_main(opts: LintOpts) -> None:
+@dataclass(frozen=True)
+class IPCResult:
+    paths: List[str]
+
+
+def ipc_main(opts: LintOpts) -> IPCResult:
     """
     Given a LintOpts config with lint rules and lint success/failure report formatter,
-    this IPC helper took paths of source file paths from either stdin (newline-delimited
-    UTF-8 values), list of paths in a path file (with @paths arg) or a list of paths as
-    args. Results are formed as JSON and delimited by
-    newlines. It uses a multi process pool and the results are streamed to stdout as soon
-    as they're available. For stdin paths, they are evaluated as soon as they're read from
-    the pipe.
+    this IPC helper took paths of source files from either a path file (with @paths arg)
+    or a list of paths as args. Results are formed as JSON and delimited by newlines.
+    It uses a multiprocess pool and the results are streamed to stdout as soon
+    as they're available.
+
+    Returns an IPCResult object.
     """
     parser = argparse.ArgumentParser(
         description="Runs Fixit lint rules and print results as console output.",
@@ -217,17 +222,9 @@ def ipc_main(opts: LintOpts) -> None:
     parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
-    if args.paths:
-        paths: Generator[str, None, None] = (
-            os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
-        )
-    else:
-        paths: Generator[str, None, None] = (
-            os.path.join(args.prefix, p.rstrip("\r\n"))
-            if args.prefix
-            else p.rstrip("\r\n")
-            for p in sys.stdin
-        )
+    paths: Generator[str, None, None] = (
+        os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
+    )
 
     full_repo_metadata_config = opts.full_repo_metadata_config
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
@@ -246,3 +243,5 @@ def ipc_main(opts: LintOpts) -> None:
         # to stdout in parallel, which could cause a corrupted output.
         for result in results:
             print(result)
+
+    return IPCResult(args.paths)
