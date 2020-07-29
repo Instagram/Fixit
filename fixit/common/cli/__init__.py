@@ -12,7 +12,6 @@ import json
 import multiprocessing
 import os
 import subprocess
-import sys
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -214,23 +213,14 @@ def ipc_main(opts: LintOpts) -> None:
         fromfile_prefix_chars="@",
         parents=[get_multiprocessing_parser()],
     )
-    parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
+    parser.add_argument(
+        "paths", nargs="*", help="List of paths to run lint rules on.", required=True
+    )
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
-    if args.paths:
-        paths: Generator[str, None, None] = (
-            os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
-        )
-        if "num_paths" in opts.extra:
-            # The caller wants us to record the total number of paths.
-            opts.extra["num_paths"] = len(args.paths)
-    else:
-        paths: Generator[str, None, None] = (
-            os.path.join(args.prefix, p.rstrip("\r\n"))
-            if args.prefix
-            else p.rstrip("\r\n")
-            for p in sys.stdin
-        )
+    paths: Generator[str, None, None] = (
+        os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
+    )
 
     full_repo_metadata_config = opts.full_repo_metadata_config
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
@@ -249,3 +239,5 @@ def ipc_main(opts: LintOpts) -> None:
         # to stdout in parallel, which could cause a corrupted output.
         for result in results:
             print(result)
+
+    return args.paths
