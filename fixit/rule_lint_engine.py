@@ -33,7 +33,7 @@ from libcst.metadata.type_inference_provider import _sort_by_position
 
 from fixit.common.base import CstContext, CstLintRule, LintRuleT
 from fixit.common.comments import CommentInfo
-from fixit.common.config import LintConfig, get_context_config, get_lint_config
+from fixit.common.config import get_context_config, get_lint_config
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
@@ -145,10 +145,9 @@ def get_rules_from_package(package: str) -> LintRuleCollectionT:
     return list(rules)
 
 
-def get_rules_from_config(
-    lint_config: LintConfig = get_lint_config(),
-) -> LintRuleCollectionT:
+def get_rules_from_config() -> LintRuleCollectionT:
     # Get rules from the packages specified in the lint config file, omitting block-listed rules.
+    lint_config = get_lint_config()
     rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
     all_names: Set[str] = set()
     for package in lint_config.packages:
