@@ -23,6 +23,7 @@ from typing import (
     Generator,
     Iterable,
     Iterator,
+    List,
     Mapping,
     Optional,
     Sequence,
@@ -198,7 +199,7 @@ def get_file_lint_result_json(
     return [json.dumps(asdict(r)) for r in results]
 
 
-def ipc_main(opts: LintOpts) -> None:
+def ipc_main(opts: LintOpts) -> List[str]:
     """
     Given a LintOpts config with lint rules and lint success/failure report formatter,
     this IPC helper took paths of source file paths from either stdin (newline-delimited
@@ -207,15 +208,15 @@ def ipc_main(opts: LintOpts) -> None:
     newlines. It uses a multi process pool and the results are streamed to stdout as soon
     as they're available. For stdin paths, they are evaluated as soon as they're read from
     the pipe.
+
+    Returns a list of all the paths that were processed.
     """
     parser = argparse.ArgumentParser(
         description="Runs Fixit lint rules and print results as console output.",
         fromfile_prefix_chars="@",
         parents=[get_multiprocessing_parser()],
     )
-    parser.add_argument(
-        "paths", nargs="*", help="List of paths to run lint rules on.", required=True
-    )
+    parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
     paths: Generator[str, None, None] = (
