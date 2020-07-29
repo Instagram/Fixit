@@ -199,17 +199,20 @@ def get_file_lint_result_json(
     return [json.dumps(asdict(r)) for r in results]
 
 
-def ipc_main(opts: LintOpts) -> List[str]:
+@dataclass(frozen=True)
+class IPCResult:
+    paths: List[str]
+
+
+def ipc_main(opts: LintOpts) -> IPCResult:
     """
     Given a LintOpts config with lint rules and lint success/failure report formatter,
-    this IPC helper took paths of source file paths from either stdin (newline-delimited
-    UTF-8 values), list of paths in a path file (with @paths arg) or a list of paths as
-    args. Results are formed as JSON and delimited by
-    newlines. It uses a multi process pool and the results are streamed to stdout as soon
-    as they're available. For stdin paths, they are evaluated as soon as they're read from
-    the pipe.
+    this IPC helper took paths of source files from either a path file (with @paths arg)
+    or a list of paths as args. Results are formed as JSON and delimited by newlines.
+    It uses a multiprocess pool and the results are streamed to stdout as soon
+    as they're available.
 
-    Returns a list of all the paths that were processed.
+    Returns an IPCResult object.
     """
     parser = argparse.ArgumentParser(
         description="Runs Fixit lint rules and print results as console output.",
@@ -241,4 +244,4 @@ def ipc_main(opts: LintOpts) -> List[str]:
         for result in results:
             print(result)
 
-    return args.paths
+    return IPCResult(args.paths)
