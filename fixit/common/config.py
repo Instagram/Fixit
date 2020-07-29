@@ -14,6 +14,8 @@ from typing import Any, Dict, List, Mapping, Optional, Pattern, Union
 
 import yaml
 
+from fixit.common.base import CstLintRule
+
 
 LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
 
@@ -68,6 +70,10 @@ DEFAULT_FORMATTER = ["black", "-"]
 DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
 
 
+class RuleConfigSetting:
+    pass
+
+
 @dataclass(frozen=True)
 class LintConfig:
     formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
@@ -76,6 +82,9 @@ class LintConfig:
     packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
     repo_root: str = "."
     fixture_dir: str = "./fixtures"
+    rule_settings: List[Dict[CstLintRule, RuleConfigSetting]] = field(
+        default_factory=list
+    )
 
 
 def _eval_python_config(source: str) -> Mapping[str, Any]:
