@@ -11,7 +11,6 @@ import itertools
 import json
 import multiprocessing
 import os
-import subprocess
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -37,7 +36,6 @@ import libcst as cst
 from libcst.metadata import MetadataWrapper
 
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
-from fixit.common.config import LintConfig, get_lint_config
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
@@ -61,18 +59,18 @@ _MapPathsWorkerArgsT = Tuple[
 ]
 
 
-def find_files(paths: Iterable[Path]) -> Iterator[Path]:
+def find_files(paths: Iterable[str]) -> Iterator[str]:
     """
     Given an iterable of paths, yields any files and walks over any directories.
     """
     for path in paths:
-        if path.is_file():
+        if os.path.isfile(path):
             yield path
         else:
             for root, _dirs, files in os.walk(path):
                 for f in files:
                     if f.endswith(".py") and not os.path.islink(f):
-                        yield Path(root) / f
+                        yield os.path.join(root, f)
 
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.
@@ -149,21 +147,6 @@ def map_paths(
             # pyre-fixme[6]: function call. I was unable to debug it.
             for result in pool.imap_unordered(_map_paths_worker, tasks):
                 yield result
-
-
-def pyfmt(path: Union[str, Path], config: LintConfig = get_lint_config()) -> None:
-    """
-    Given a path, run the specified formatter on the file. If formatter writes to stdout,
-    assume stdout is formatted code and write it to file on disk.
-    """
-
-    formatter_command = config.formatter
-    args = (formatter_command[0], str(path), *formatter_command[1:])
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, _ = process.communicate()
-    if process.returncode == 0 and stdout:
-        with open(path, "wb") as f:
-            f.write(stdout)
 
 
 @dataclass(frozen=True)

@@ -65,7 +65,7 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
 DEFAULT_FORMATTER = ["black", "-"]
-DEFAULT_PATTERNS = ["@generated", "@nolint"]
+DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
 
 
 @dataclass(frozen=True)
@@ -177,7 +177,8 @@ def get_lint_config() -> LintConfig:
     # Find formatter executable if there is one.
     formatter_args = config.get("formatter", DEFAULT_FORMATTER)
     exe = distutils.spawn.find_executable(formatter_args[0]) or formatter_args[0]
-    config["formatter"][0] = os.path.abspath(exe)
+    formatter_args[0] = os.path.abspath(exe)
+    config["formatter"] = formatter_args
 
     # Missing settings will be populated with defaults.
     return LintConfig(**config)

@@ -124,6 +124,17 @@ def get_skip_ignore_byte_marker_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def get_metadata_cache_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--cache-timeout",
+        type=int,
+        help="Timeout (seconds) for metadata cache fetching. Default is 2 seconds.",
+        default=2,
+    )
+    return parser
+
+
 def get_compact_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(

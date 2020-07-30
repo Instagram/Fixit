@@ -14,7 +14,7 @@ from fixit.rule_lint_engine import get_rules_from_config
 CONFIG: LintConfig = get_lint_config()
 add_lint_rule_tests_to_module(
     globals(),
-    get_rules_from_config(CONFIG),
+    get_rules_from_config(),
     fixture_dir=Path(CONFIG.fixture_dir),
     rules_package="fixit.rules",
 )

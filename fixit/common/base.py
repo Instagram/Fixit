@@ -15,17 +15,20 @@ from libcst.metadata import (
     CodePosition,
     MetadataWrapper,
     PositionProvider,
+    TypeInferenceProvider,
 )
 
 from fixit.common.report import BaseLintRuleReport, CstLintRuleReport
 
 
 if TYPE_CHECKING:
-    # lint-ignore: F401: Used by quoted type
-    from fixit.common.pseudo_rule import PseudoLintRule  # noqa: F401
+    from fixit.common.pseudo_rule import PseudoLintRule
+    from libcst.metadata.base_provider import ProviderT
 
 
 LintRuleT = Union[Type["CstLintRule"], Type["PseudoLintRule"]]
+
+CACHE_DEPENDENT_PROVIDERS: Tuple["ProviderT"] = (TypeInferenceProvider,)
 
 
 def _get_code(message: str) -> str:
@@ -126,3 +129,9 @@ class CstLintRule(BatchableCSTVisitor, metaclass=ABCMeta):
             replacement_node=replacement,
         )
         self.context.reports.append(report)
+
+    @classmethod
+    def requires_metadata_caches(cls) -> bool:
+        return any(
+            p in CACHE_DEPENDENT_PROVIDERS for p in cls.get_inherited_dependencies()
+        )
