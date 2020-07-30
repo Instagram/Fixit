@@ -32,8 +32,9 @@ from fixit.common.cli.args import (
     get_rule_parser,
     get_skip_autoformatter_parser,
 )
-from fixit.common.cli.formatter import LintRuleReportFormatter, format_warning
+from fixit.common.cli.formatter import LintRuleReportFormatter
 from fixit.common.cli.full_repo_metadata import get_metadata_caches
+from fixit.common.cli.utils import print_red
 from fixit.common.config import get_lint_config
 from fixit.common.insert_suppressions import (
     SuppressionComment,
@@ -83,8 +84,11 @@ def get_formatted_reports_for_path(
         raw_reports = lint_file(
             path, source, rules=[opts.rule], cst_wrapper=cst_wrapper
         )
-    except (SyntaxError, ParserSyntaxError):
-        # TODO: bubble this information up somehow
+    except (SyntaxError, ParserSyntaxError) as e:
+        print_red(
+            f"Encountered the following error while parsing source code in file {path}:"
+        )
+        print(e)
         return []
 
     opts_message = opts.message
@@ -119,7 +123,7 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def main(raw_args: Sequence[str]) -> None:
+def main(raw_args: Sequence[str]) -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Inserts `# lint-fixme` comments into a file where lint violations are "
@@ -167,19 +171,11 @@ def main(raw_args: Sequence[str]) -> None:
     args = parser.parse_args(raw_args)
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
-    # expand path if it's a directory
+    # Find files if directory was provided.
     file_paths = tuple(find_files((str(p) for p in args.paths)))
 
     if not args.compact:
         print(f"Scanning {len(file_paths)} files")
-        if not args.skip_autoformatter:
-            print(
-                format_warning(
-                    "Running the autoformatter over the modified files. Use "
-                    + "--skip-autoformatter to disable this behavior.",
-                    width,
-                )
-            )
         print()
     start_time = time.time()
 
@@ -226,6 +222,7 @@ def main(raw_args: Sequence[str]) -> None:
             f"Found {len(formatted_reports)} reports in {len(file_paths)} files in "
             + f"{time.time() - start_time :.2f} seconds."
         )
+    return 0
 
 
 if __name__ == "__main__":

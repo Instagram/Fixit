@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 from typing import (
-    TYPE_CHECKING,
     Any,
     Collection,
     Dict,
@@ -27,9 +26,7 @@ from typing import (
 )
 
 import libcst as cst
-from libcst import parse_module
 from libcst.metadata import MetadataWrapper
-from libcst.metadata.type_inference_provider import _sort_by_position
 
 from fixit.common.base import CstContext, CstLintRule, LintRuleT
 from fixit.common.comments import CommentInfo
@@ -39,9 +36,6 @@ from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
 
-
-if TYPE_CHECKING:
-    from libcst.metadata.base_provider import ProviderT
 
 LintRuleCollectionT = List[Union[Type[CstLintRule], Type[PseudoLintRule]]]
 
@@ -275,27 +269,6 @@ class LintRuleReportsWithAppliedPatches:
     patched_source: str
 
 
-def remove_from_metadata_cache(
-    metadata_cache: Mapping["ProviderT", object], line: int
-) -> Mapping["ProviderT", object]:
-    new_metadata_cache = {}
-    for provider, cache in metadata_cache.items():
-        if isinstance(cache, dict) and "types" in cache:
-            updated_types = []
-            for annotation in cache["types"]:
-                if annotation["location"]["stop"]["line"] < line:
-                    updated_types.append(annotation)
-            # Assign even if updated_types is empty, so we don't get a missing cache error later.
-            new_metadata_cache[provider] = {
-                "types": sorted(updated_types, key=_sort_by_position)
-            }
-        else:
-            # We currently only expect Pyre type data in our metadata cache as of libcst version 0.3.6.
-            # TODO: Once other types of cache become available, we will need to deal with them separately.
-            new_metadata_cache[provider] = cache
-    return new_metadata_cache
-
-
 def lint_file_and_apply_patches(
     file_path: Path,
     source: bytes,
@@ -304,7 +277,6 @@ def lint_file_and_apply_patches(
     use_ignore_comments: bool = True,
     config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
-    metadata_cache: Optional[Mapping["ProviderT", object]] = None,
     max_iter: int = 100,
 ) -> LintRuleReportsWithAppliedPatches:
     """
@@ -321,10 +293,6 @@ def lint_file_and_apply_patches(
     fixed_reports = []
     # Avoid getting stuck in an infinite loop, cap the number of iterations at `max_iter`.
     for i in range(max_iter):
-        cst_wrapper = None
-        if metadata_cache is not None:
-            # Re-compute the cst wrapper on each iteration with the new `source`.
-            cst_wrapper = MetadataWrapper(parse_module(source), True, metadata_cache)
         reports = lint_file(
             file_path,
             source,
@@ -332,7 +300,6 @@ def lint_file_and_apply_patches(
             use_ignore_comments=use_ignore_comments,
             config=config,
             rules=rules,
-            cst_wrapper=cst_wrapper,
         )
 
         try:

@@ -12,8 +12,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 class GatherSequentialAwaitRule(CstLintRule):
     MESSAGE: str = (
         "IG02 Using await in a loop will run async function sequentially. Use "
-        + "asyncio.gather() to run async functions concurrently. See more "
-        + "examples here: https://fburl.com/ez1lnkzy"
+        + "asyncio.gather() to run async functions concurrently."
     )
     VALID = [
         Valid(

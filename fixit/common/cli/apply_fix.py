@@ -15,7 +15,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence
+from typing import Iterable, Sequence
 
 from libcst import ParserSyntaxError
 from libcst.codemod._cli import invoke_formatter
@@ -24,7 +24,6 @@ from fixit.common.base import LintRuleT
 from fixit.common.cli import find_files, map_paths
 from fixit.common.cli.args import (
     get_compact_parser,
-    get_metadata_cache_parser,
     get_multiprocessing_parser,
     get_paths_parser,
     get_rule_parser,
@@ -32,14 +31,11 @@ from fixit.common.cli.args import (
     get_skip_ignore_byte_marker_parser,
     get_skip_ignore_comments_parser,
 )
-from fixit.common.cli.formatter import LintRuleReportFormatter, format_warning
+from fixit.common.cli.formatter import LintRuleReportFormatter
+from fixit.common.cli.utils import print_red
 from fixit.common.config import get_lint_config
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file_and_apply_patches
-
-
-if TYPE_CHECKING:
-    from libcst.metadata.base_provider import ProviderT
 
 
 @dataclass(frozen=True)
@@ -58,9 +54,7 @@ class AutofixingLintRuleReportFormatter(LintRuleReportFormatter):
 
 
 def get_formatted_reports_for_path(
-    path: Path,
-    opts: LintOpts,
-    metadata_cache: Optional[Mapping["ProviderT", object]] = None,
+    path: Path, opts: LintOpts, _=None,
 ) -> Iterable[str]:
     with open(path, "rb") as f:
         source = f.read()
@@ -72,12 +66,14 @@ def get_formatted_reports_for_path(
             rules=[opts.rule],
             use_ignore_byte_markers=opts.use_ignore_byte_markers,
             use_ignore_comments=opts.use_ignore_comments,
-            metadata_cache=metadata_cache,
         )
         raw_reports = lint_result.reports
         updated_source = lint_result.patched_source
-    except (SyntaxError, ParserSyntaxError):
-        # TODO: bubble this information up somehow
+    except (SyntaxError, ParserSyntaxError) as e:
+        print_red(
+            f"Encountered the following error while parsing source code in file {path}:"
+        )
+        print(e)
         return []
 
     if updated_source != source:
@@ -93,15 +89,15 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def main(raw_args: Sequence[str]) -> None:
+def main(raw_args: Sequence[str]) -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Runs a lint rule's autofixer over all of over a set of "
             + "files or directories.\n"
             + "\n"
-            + "This is similar to the functionality provided by codemods "
-            + "(https://fburl.com/ig-codemod), but limited to the small subset of APIs "
-            + "provided by the lint framework."
+            + "This is similar to the functionality provided by LibCST codemods "
+            + "(https://libcst.readthedocs.io/en/latest/codemods_tutorial.html), "
+            + "but limited to the small subset of APIs provided by Fixit."
         ),
         parents=[
             get_rule_parser(),
@@ -110,30 +106,12 @@ def main(raw_args: Sequence[str]) -> None:
             get_skip_ignore_byte_marker_parser(),
             get_skip_autoformatter_parser(),
             get_compact_parser(),
-            get_metadata_cache_parser(),
             get_multiprocessing_parser(),
         ],
     )
 
     args = parser.parse_args(raw_args)
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
-
-    # expand path if it's a directory
-    file_paths = tuple(find_files((str(p) for p in args.paths)))
-
-    if not args.compact:
-        print(f"Scanning {len(file_paths)} files")
-        print(file_paths)
-        if not args.skip_autoformatter:
-            print(
-                format_warning(
-                    "Running the autoformatter over the modified files. Use "
-                    + "--skip-autoformatter to disable this behavior.",
-                    width,
-                )
-            )
-        print()
-    start_time = time.time()
 
     rule = args.rule
     # TODO `lint_file_and_apply_patches` cannot handle metadata_caches just yet, so we skip
@@ -142,8 +120,17 @@ def main(raw_args: Sequence[str]) -> None:
         hasattr(rule, "requires_metadata_caches")
         and getattr(rule, "requires_metadata_caches")()
     ):
-        print("Cannot run `apply_fix` with a rule that requires metadata cache.")
-        return
+        print_red("Cannot run `apply_fix` with a rule that requires metadata cache.")
+        return 1
+
+    # Find files if directory was provided.
+    file_paths = tuple(find_files((str(p) for p in args.paths)))
+
+    if not args.compact:
+        print(f"Scanning {len(file_paths)} files")
+        print("\n".join(file_paths))
+        print()
+    start_time = time.time()
 
     # opts is a more type-safe version of args that we pass around
     opts = LintOpts(
@@ -174,6 +161,8 @@ def main(raw_args: Sequence[str]) -> None:
             f"Found {len(formatted_reports)} reports in {len(file_paths)} files in "
             + f"{time.time() - start_time :.2f} seconds."
         )
+
+    return 0
 
 
 if __name__ == "__main__":
