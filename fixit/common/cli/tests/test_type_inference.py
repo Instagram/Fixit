@@ -5,7 +5,7 @@
 
 import subprocess
 from pathlib import Path
-from typing import Collection, Dict, List, Mapping, Optional, Union
+from typing import Collection, Dict, Mapping, Optional, Set, Union
 from unittest.mock import MagicMock, patch
 
 import libcst as cst
@@ -32,7 +32,7 @@ class DummyTypeDependentRule(CstLintRule):
 
 def map_paths_operation(
     path: Path,
-    config: List[LintRuleT],
+    config: Set[LintRuleT],
     type_cache: Optional[Mapping[ProviderT, object]],
 ) -> Union[str, Collection[BaseLintRuleReport]]:
     # A top-level function to be accessible by `map_paths` from `fixit.common.cli`.
@@ -81,14 +81,14 @@ class TypeInferenceTest(UnitTest):
             map_paths(
                 operation=self.mock_operation,
                 paths=(path for path in type_caches.keys()),
-                config=[DummyTypeDependentRule],
+                config={DummyTypeDependentRule},
                 workers=LintWorkers.USE_CURRENT_THREAD,
                 metadata_caches=type_caches,
             )
         )
 
         self.mock_operation.assert_called_with(
-            self.DUMMY_PATH, [DummyTypeDependentRule], type_caches[str(self.DUMMY_PATH)]
+            self.DUMMY_PATH, {DummyTypeDependentRule}, type_caches[str(self.DUMMY_PATH)]
         )
 
         self.assertEqual(len(reports), 1)
@@ -106,7 +106,7 @@ class TypeInferenceTest(UnitTest):
         all_reports = map_paths(
             operation=self.mock_operation,
             paths=paths,
-            config=[DummyTypeDependentRule],
+            config={DummyTypeDependentRule},
             workers=LintWorkers.USE_CURRENT_THREAD,
             metadata_caches=type_caches,
         )
@@ -131,7 +131,7 @@ class TypeInferenceTest(UnitTest):
             map_paths(
                 operation=self.mock_operation,
                 paths=paths,
-                config=[DummyTypeDependentRule],
+                config={DummyTypeDependentRule},
                 workers=LintWorkers.USE_CURRENT_THREAD,
                 metadata_caches=type_caches,
             )
@@ -140,7 +140,7 @@ class TypeInferenceTest(UnitTest):
         # Expecting a placeholder cache to have been plugged in instead.
         self.mock_operation.assert_called_with(
             self.DUMMY_PATH,
-            [DummyTypeDependentRule],
+            {DummyTypeDependentRule},
             {TypeInferenceProvider: {"types": []}},
         )
 

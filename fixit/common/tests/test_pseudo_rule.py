@@ -64,6 +64,6 @@ class PseudoLintRuleTest(UnitTest):
                 return [dummy_report]
 
         reports = lint_file(
-            DUMMY_FILE_PATH, DUMMY_SOURCE, config={}, rules=[DummyPseudoLintRule]
+            DUMMY_FILE_PATH, DUMMY_SOURCE, config={}, rules={DummyPseudoLintRule}
         )
         self.assertEqual(reports, [dummy_report])

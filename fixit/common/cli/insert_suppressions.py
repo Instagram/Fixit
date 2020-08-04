@@ -82,7 +82,7 @@ def get_formatted_reports_for_path(
         if metadata_cache is not None:
             cst_wrapper = MetadataWrapper(parse_module(source), True, metadata_cache,)
         raw_reports = lint_file(
-            path, source, rules=[opts.rule], cst_wrapper=cst_wrapper
+            path, source, rules={opts.rule}, cst_wrapper=cst_wrapper
         )
     except (SyntaxError, ParserSyntaxError) as e:
         print_red(

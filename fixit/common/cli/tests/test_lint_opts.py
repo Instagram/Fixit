@@ -53,7 +53,7 @@ class LintOptsTest(UnitTest):
     def setUp(self) -> None:
         self.global_list = []
         self.opts = LintOpts(
-            [FakeRule],
+            {FakeRule},
             FakeLintSuccessReport,
             LintFailureReportBase,
             extra={"global_list": self.global_list},

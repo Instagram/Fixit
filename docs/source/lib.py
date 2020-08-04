@@ -9,7 +9,7 @@ from textwrap import dedent, indent
 from typing import IO
 
 from fixit.common.base import LintRuleT
-from fixit.rule_lint_engine import get_rules_from_config
+from fixit.common.config import get_rules_from_config
 
 
 def _add_code_indent(code: str) -> str:

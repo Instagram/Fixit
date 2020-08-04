@@ -10,11 +10,16 @@ import re
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Pattern, Union
+from typing import Any, Dict, List, Mapping, Optional, Pattern, Set, Union
 
 import yaml
 
 from fixit.common.base import CstLintRule
+from fixit.common.utils import (
+    LintRuleCollectionT,
+    find_and_import_rule,
+    import_distinct_rules_from_package,
+)
 
 
 LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
@@ -66,7 +71,9 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
+RULE_SETTING = "per_rule_settings"
 DEFAULT_FORMATTER = ["black", "-"]
+DEFAULT_PACKAGES = ["fixit.rules"]
 DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
 
 
@@ -79,10 +86,10 @@ class LintConfig:
     formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
     block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
     block_list_rules: List[str] = field(default_factory=list)
-    packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
+    packages: List[str] = field(default_factory=lambda: DEFAULT_PACKAGES)
     repo_root: str = "."
     fixture_dir: str = "./fixtures"
-    rule_settings: List[Dict[CstLintRule, RuleConfigSetting]] = field(
+    per_rule_settings: List[Dict[CstLintRule, Dict[str, object]]] = field(
         default_factory=list
     )
 
@@ -160,6 +167,15 @@ def get_validated_settings(
             abspath: Path = current_dir
         # Set path setting to absolute path.
         settings[path_setting] = str(abspath)
+
+    if RULE_SETTING in file_content:
+        rule_settings = {}
+        for rule in file_content[RULE_SETTING]:
+            imported_rule = find_and_import_rule(
+                rule, settings.get("packages", DEFAULT_PACKAGES)
+            )
+            rule_settings[imported_rule] = file_content[RULE_SETTING][rule]
+        settings[RULE_SETTING] = rule_settings
     return settings
 
 
@@ -199,3 +215,16 @@ def gen_config_file() -> None:
     default_config_dict = asdict(LintConfig())
     with open(config_file, "w") as cf:
         yaml.dump(default_config_dict, cf)
+
+
+def get_rules_from_config() -> LintRuleCollectionT:
+    # Get rules from the packages specified in the lint config file, omitting block-listed rules.
+    lint_config = get_lint_config()
+    rules: LintRuleCollectionT = set()
+    all_names: Set[str] = set()
+    for package in lint_config.packages:
+        rules_from_pkg = import_distinct_rules_from_package(
+            package, lint_config.block_list_rules, all_names
+        )
+        rules.update(rules_from_pkg)
+    return rules

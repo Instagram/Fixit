@@ -102,7 +102,7 @@ class RuleLintEngineTest(UnitTest):
             use_ignore_byte_markers=use_ignore_byte_markers,
             use_ignore_comments=use_ignore_comments,
             config={},
-            rules=[BadCallCstLintRule],
+            rules={BadCallCstLintRule},
         )
         self.assertEqual(len(reports), expected_report_count)
 
@@ -114,7 +114,7 @@ class RuleLintEngineTest(UnitTest):
             Path("dummy_filename.py"),
             source,
             config={},
-            rules=[ParenthesizeAttributeLintRule],
+            rules={ParenthesizeAttributeLintRule},
         )
         self.assertEqual(len(result.reports), 2)
         self.assertEqual(result.patched_source, expected_output)
