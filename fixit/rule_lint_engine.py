@@ -14,7 +14,7 @@ from libcst.metadata import MetadataWrapper
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import get_context_config, get_lint_config
+from fixit.common.config import get_lint_config
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
@@ -56,7 +56,7 @@ def lint_file(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    config: Optional[Mapping[str, Any]] = None,
+    rule_config: Optional[Mapping[str, Mapping[str, Any]]] = None,
     rules: LintRuleCollectionT,
     cst_wrapper: Optional[MetadataWrapper] = None,
 ) -> Collection[BaseLintRuleReport]:
@@ -69,8 +69,10 @@ def lint_file(
     ):
         return []
 
-    # pre-process these arguments
-    config = config if config is not None else get_context_config(file_path)
+    # Get any per-rule settings that might be in the nearest config file.
+    rule_config = (
+        rule_config if rule_config is not None else get_lint_config().rule_config
+    )
 
     tokens = None
     if use_ignore_comments:
@@ -109,7 +111,7 @@ def lint_file(
             cst_wrapper = MetadataWrapper(
                 cst.parse_module(source), unsafe_skip_copy=True
             )
-        cst_context = CstContext(cst_wrapper, source, file_path, config)
+        cst_context = CstContext(cst_wrapper, source, file_path, rule_config)
         _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
         reports.extend(cst_context.reports)
     if pseudo_rules:
@@ -136,7 +138,7 @@ def lint_file_and_apply_patches(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    config: Optional[Mapping[str, Any]] = None,
+    rule_config: Optional[Mapping[str, Mapping[str, Any]]] = None,
     rules: LintRuleCollectionT,
     max_iter: int = 100,
 ) -> LintRuleReportsWithAppliedPatches:
@@ -148,7 +150,9 @@ def lint_file_and_apply_patches(
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
-    config = config if config is not None else get_context_config(file_path)
+    rule_config = (
+        rule_config if rule_config is not None else get_lint_config().rule_config
+    )
 
     reports = []
     fixed_reports = []
@@ -159,7 +163,7 @@ def lint_file_and_apply_patches(
             source,
             use_ignore_byte_markers=use_ignore_byte_markers,
             use_ignore_comments=use_ignore_comments,
-            config=config,
+            rule_config=rule_config,
             rules=rules,
         )
 

@@ -31,9 +31,7 @@ class DummyTypeDependentRule(CstLintRule):
 
 
 def map_paths_operation(
-    path: Path,
-    config: Set[LintRuleT],
-    type_cache: Optional[Mapping[ProviderT, object]],
+    path: Path, rules: Set[LintRuleT], type_cache: Optional[Mapping[ProviderT, object]],
 ) -> Union[str, Collection[BaseLintRuleReport]]:
     # A top-level function to be accessible by `map_paths` from `fixit.common.cli`.
     cst_wrapper = None
@@ -43,7 +41,11 @@ def map_paths_operation(
                 cst.parse_module(SOURCE_CODE), True, type_cache,
             )
         return lint_file(
-            file_path=path, source=SOURCE_CODE, rules=config, cst_wrapper=cst_wrapper,
+            file_path=path,
+            source=SOURCE_CODE,
+            rules=rules,
+            cst_wrapper=cst_wrapper,
+            rule_config={},
         )
     except Exception as e:
         return str(e)

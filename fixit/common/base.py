@@ -46,7 +46,7 @@ def _get_code(message: str) -> str:
 
 class BaseContext:
     file_path: Path
-    config: Mapping[str, Any]
+    config: Mapping[str, Mapping[str, Any]]
     reports: List[BaseLintRuleReport]
 
     def __init__(self, file_path: Path, config: Mapping[str, Any]) -> None:
@@ -73,7 +73,7 @@ class CstContext(BaseContext):
         wrapper: MetadataWrapper,
         source: bytes,
         file_path: Path,
-        config: Mapping[str, Any],
+        config: Mapping[str, Mapping[str, Any]],
     ) -> None:
         super().__init__(file_path, config)
         self.wrapper = wrapper

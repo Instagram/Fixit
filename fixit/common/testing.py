@@ -74,7 +74,7 @@ class LintRuleTestCase(unittest.TestCase):
         reports = lint_file(
             Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
-            config=test_case.config,
+            rule_config={rule.__name__: test_case.config},
             rules={rule},
             cst_wrapper=cst_wrapper,
         )
