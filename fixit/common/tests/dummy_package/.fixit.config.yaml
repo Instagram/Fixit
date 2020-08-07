@@ -1,0 +1,3 @@
+packages:
+- fixit.common.tests.dummy_package.dummy_subpackage
+repo_root: .
