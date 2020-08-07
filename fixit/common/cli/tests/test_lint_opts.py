@@ -44,7 +44,7 @@ def mock_operation(
     path: Path, opts: LintOpts, _=None,
 ) -> Sequence[FakeLintSuccessReport]:
     results = opts.success_report.create_reports(
-        path, lint_file(path, b"test", rules=opts.rules), **opts.extra,
+        path, lint_file(path, b"test", rules=opts.rules, rule_config={}), **opts.extra,
     )
     return cast(Sequence[FakeLintSuccessReport], results)
 
@@ -53,7 +53,7 @@ class LintOptsTest(UnitTest):
     def setUp(self) -> None:
         self.global_list = []
         self.opts = LintOpts(
-            [FakeRule],
+            {FakeRule},
             FakeLintSuccessReport,
             LintFailureReportBase,
             extra={"global_list": self.global_list},

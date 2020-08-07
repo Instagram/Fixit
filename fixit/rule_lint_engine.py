@@ -3,162 +3,23 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import importlib
-import inspect
 import io
-import pkgutil
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
-from types import ModuleType
-from typing import (
-    Any,
-    Collection,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Type,
-    Union,
-    cast,
-)
+from typing import Any, Collection, List, Mapping, Optional, Sequence, Type, cast
 
 import libcst as cst
 from libcst.metadata import MetadataWrapper
 
-from fixit.common.base import CstContext, CstLintRule, LintRuleT
+from fixit.common.base import CstContext, CstLintRule
 from fixit.common.comments import CommentInfo
-from fixit.common.config import get_context_config, get_lint_config
+from fixit.common.config import get_lint_config
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
-
-
-LintRuleCollectionT = List[Union[Type[CstLintRule], Type[PseudoLintRule]]]
-
-
-class DuplicateLintRuleNames(Exception):
-    pass
-
-
-def import_rule_from_package(
-    package_name: str, rule_class_name: str
-) -> Optional[LintRuleT]:
-    # Imports the first rule with matching class name found in specified package.
-    rule: Optional[LintRuleT] = None
-    package = importlib.import_module(package_name)
-    for _loader, name, is_pkg in pkgutil.walk_packages(
-        getattr(package, "__path__", None)
-    ):
-        full_package_or_module_name = package.__name__ + "." + name
-        try:
-            module = importlib.import_module(full_package_or_module_name)
-            rule = getattr(module, rule_class_name, None)
-        except ModuleNotFoundError:
-            pass
-        if is_pkg:
-            rule = import_rule_from_package(
-                full_package_or_module_name, rule_class_name
-            )
-
-        if rule is not None:
-            # Stop early if we have found the rule.
-            return rule
-    return rule
-
-
-def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
-    """ Import all submodules of a module, recursively, including subpackages. """
-    package: ModuleType = importlib.import_module(package)
-    results = {}
-    # pyre-fixme[16]: `ModuleType` has no attribute `__path__`.
-    for _loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
-        full_name = package.__name__ + "." + name
-        try:
-            results[full_name] = importlib.import_module(full_name)
-        except ModuleNotFoundError:
-            pass
-        if recursive and is_pkg:
-            results.update(import_submodules(full_name))
-    return results
-
-
-def get_distinct_rules_from_package(
-    package: str,
-    block_list_rules: List[str] = [],
-    seen_names: Optional[Set[str]] = None,
-) -> Set[Union[Type[CstLintRule], Type[PseudoLintRule]]]:
-    # Get rules from the specified package, omitting rules that appear in the block list.
-    # Raises error on repeated rule names.
-    # Optional parameter `seen_names` accepts set of names that should not occur in this package.
-    rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
-    if seen_names is None:
-        seen_names: Set[str] = set()
-    for _module_name, module in import_submodules(package).items():
-        for name in dir(module):
-            try:
-                obj = getattr(module, name)
-                if (
-                    obj is not CstLintRule
-                    and (
-                        issubclass(obj, CstLintRule) or issubclass(obj, PseudoLintRule)
-                    )
-                    and not inspect.isabstract(obj)
-                ):
-                    if name in seen_names:
-                        raise DuplicateLintRuleNames(
-                            f"Lint rule name {name} is duplicated."
-                        )
-                    # Add all names (even block-listed ones) to the `names` set for duplicate checking.
-                    seen_names.add(name)
-                    if name not in block_list_rules:
-                        rules.add(obj)
-            except TypeError:
-                continue
-    return rules
-
-
-def get_rules_from_package(package: str) -> LintRuleCollectionT:
-    rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
-    for _module_name, module in import_submodules(package).items():
-        for name in dir(module):
-            try:
-                obj = getattr(module, name)
-                if obj is CstLintRule or not issubclass(obj, CstLintRule):
-                    continue
-
-                if inspect.isabstract(obj):
-                    # skip if a CstLintRule subclass has metaclass=ABCMeta
-                    continue
-                rules.add(obj)
-            except TypeError:
-                continue
-    return list(rules)
-
-
-def get_rules_from_config() -> LintRuleCollectionT:
-    # Get rules from the packages specified in the lint config file, omitting block-listed rules.
-    lint_config = get_lint_config()
-    rules: Set[Union[Type[CstLintRule], Type[PseudoLintRule]]] = set()
-    all_names: Set[str] = set()
-    for package in lint_config.packages:
-        rules_from_pkg = get_distinct_rules_from_package(
-            package, lint_config.block_list_rules, all_names
-        )
-        rules.update(rules_from_pkg)
-    return list(rules)
-
-
-def get_rules(extra_packages: List[str] = []) -> LintRuleCollectionT:
-    # Deprecated. Use get_rules_from_config instead.
-    rules: List[Union[Type[CstLintRule], Type[PseudoLintRule]]] = []
-    for package in ["fixit.rules"] + extra_packages:
-        rules_from_pkg = get_rules_from_package(package)
-        rules += list(rules_from_pkg)
-    return rules
+from fixit.common.utils import LintRuleCollectionT
 
 
 def _detect_encoding(source: bytes) -> str:
@@ -195,7 +56,7 @@ def lint_file(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    config: Optional[Mapping[str, Any]] = None,
+    rule_config: Optional[Mapping[str, Mapping[str, Any]]] = None,
     rules: LintRuleCollectionT,
     cst_wrapper: Optional[MetadataWrapper] = None,
 ) -> Collection[BaseLintRuleReport]:
@@ -208,8 +69,10 @@ def lint_file(
     ):
         return []
 
-    # pre-process these arguments
-    config = config if config is not None else get_context_config(file_path)
+    # Get any per-rule settings that might be in the nearest config file.
+    rule_config = (
+        rule_config if rule_config is not None else get_lint_config().rule_config
+    )
 
     tokens = None
     if use_ignore_comments:
@@ -248,7 +111,7 @@ def lint_file(
             cst_wrapper = MetadataWrapper(
                 cst.parse_module(source), unsafe_skip_copy=True
             )
-        cst_context = CstContext(cst_wrapper, source, file_path, config)
+        cst_context = CstContext(cst_wrapper, source, file_path, rule_config)
         _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
         reports.extend(cst_context.reports)
     if pseudo_rules:
@@ -275,7 +138,7 @@ def lint_file_and_apply_patches(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    config: Optional[Mapping[str, Any]] = None,
+    rule_config: Optional[Mapping[str, Mapping[str, Any]]] = None,
     rules: LintRuleCollectionT,
     max_iter: int = 100,
 ) -> LintRuleReportsWithAppliedPatches:
@@ -287,7 +150,9 @@ def lint_file_and_apply_patches(
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
-    config = config if config is not None else get_context_config(file_path)
+    rule_config = (
+        rule_config if rule_config is not None else get_lint_config().rule_config
+    )
 
     reports = []
     fixed_reports = []
@@ -298,7 +163,7 @@ def lint_file_and_apply_patches(
             source,
             use_ignore_byte_markers=use_ignore_byte_markers,
             use_ignore_comments=use_ignore_comments,
-            config=config,
+            rule_config=rule_config,
             rules=rules,
         )
 

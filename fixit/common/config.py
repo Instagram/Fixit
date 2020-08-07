@@ -3,16 +3,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import ast
 import distutils.spawn
 import os
 import re
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Pattern, Union
+from typing import Any, Dict, List, Optional, Pattern, Set
 
 import yaml
+
+from fixit.common.utils import LintRuleCollectionT, import_distinct_rules_from_package
 
 
 LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
@@ -64,8 +65,14 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
+NESTED_SETTINGS = ["rule_config"]
 DEFAULT_FORMATTER = ["black", "-"]
+DEFAULT_PACKAGES = ["fixit.rules"]
 DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
+
+
+class RuleConfigSetting:
+    pass
 
 
 @dataclass(frozen=True)
@@ -73,84 +80,53 @@ class LintConfig:
     formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
     block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
     block_list_rules: List[str] = field(default_factory=list)
-    packages: List[str] = field(default_factory=lambda: ["fixit.rules"])
+    packages: List[str] = field(default_factory=lambda: DEFAULT_PACKAGES)
     repo_root: str = "."
     fixture_dir: str = "./fixtures"
-
-
-def _eval_python_config(source: str) -> Mapping[str, Any]:
-    """
-    Given the contents of a __lint__.py file, calls `ast.literal_eval`.
-
-    We're using a python file because we want "json with comments". We should probably
-    switch to yaml or toml at some point, but we don't have a way for the linter to pull
-    in third-party dependencies yet. Python's ini support isn't flexible enough for our
-    potential use-cases.
-
-    We don't allow imports or arbitrary code because it's dangerous, could slow down the
-    linter, and it'll make it harder to adjust the format of this file later and the
-    execution environment.
-    """
-    tree = ast.parse(source)
-    # Try to catch some common ways a user could mess things up, try to generate
-    # better error messages than just a generic SyntaxError
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            raise ValueError("__lint__.py file may not contain imports")
-        if isinstance(node, ast.Call):
-            raise ValueError("__lint__.py file may not contain function calls")
-    if len(tree.body) != 1:
-        raise ValueError("A __lint__.py file should contain a single expression")
-    result = ast.literal_eval(source)
-    if not isinstance(result, Mapping):
-        raise ValueError("A __lint__.py file should contain a dictionary")
-    return result
-
-
-def get_context_config(filename: Union[str, Path]) -> Mapping[str, Any]:
-    """
-    Given the filename of a file being linted, searches for the closest __lint__.py
-    file, and evaluates it.
-    """
-    current_dir = Path(filename).resolve().parent
-    previous_dir: Optional[Path] = None
-    while current_dir != previous_dir:
-        # Check for config file.
-        possible_config = current_dir / "__lint__.py"
-        if possible_config.is_file():
-            with open(possible_config, "r") as f:
-                return _eval_python_config(f.read())
-
-        # Try to go up a directory.
-        previous_dir = current_dir
-        current_dir = current_dir.parent
-    return {}
+    rule_config: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
 
 def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
 ) -> Dict[str, Any]:
     settings = {}
-    for list_setting in LIST_SETTINGS:
-        if list_setting in file_content:
+    for list_setting_name in LIST_SETTINGS:
+        if list_setting_name in file_content:
             if not (
-                isinstance(file_content[list_setting], list)
-                and all(isinstance(s, str) for s in file_content[list_setting])
+                isinstance(file_content[list_setting_name], list)
+                and all(isinstance(s, str) for s in file_content[list_setting_name])
             ):
                 raise TypeError(
-                    f"Expected list of strings for `{list_setting}` setting."
+                    f"Expected list of strings for `{list_setting_name}` setting."
                 )
-            settings[list_setting] = file_content[list_setting]
-    for path_setting in PATH_SETTINGS:
-        if path_setting in file_content:
-            setting_value = file_content[path_setting]
+            settings[list_setting_name] = file_content[list_setting_name]
+    for path_setting_name in PATH_SETTINGS:
+        if path_setting_name in file_content:
+            setting_value = file_content[path_setting_name]
             if not isinstance(setting_value, str):
-                raise TypeError(f"Expected string for `{path_setting}` setting.")
+                raise TypeError(f"Expected string for `{path_setting_name}` setting.")
             abspath: Path = (current_dir / setting_value).resolve()
         else:
             abspath: Path = current_dir
         # Set path setting to absolute path.
-        settings[path_setting] = str(abspath)
+        settings[path_setting_name] = str(abspath)
+
+    for nested_setting_name in NESTED_SETTINGS:
+        if nested_setting_name in file_content:
+            nested_setting = file_content[nested_setting_name]
+            if not isinstance(nested_setting, dict):
+                raise TypeError(
+                    f"Expected key-value pairs for `{nested_setting_name}` setting."
+                )
+            settings[nested_setting_name] = {}
+            # Verify that each setting is also a mapping
+            for k, v in nested_setting.items():
+                if not isinstance(v, dict):
+                    raise TypeError(
+                        f"Expected key-value pairs for `{v}` setting in {nested_setting_name}."
+                    )
+                settings[nested_setting_name].update({k: v})
+
     return settings
 
 
@@ -190,3 +166,16 @@ def gen_config_file() -> None:
     default_config_dict = asdict(LintConfig())
     with open(config_file, "w") as cf:
         yaml.dump(default_config_dict, cf)
+
+
+def get_rules_from_config() -> LintRuleCollectionT:
+    # Get rules from the packages specified in the lint config file, omitting block-listed rules.
+    lint_config = get_lint_config()
+    rules: LintRuleCollectionT = set()
+    all_names: Set[str] = set()
+    for package in lint_config.packages:
+        rules_from_pkg = import_distinct_rules_from_package(
+            package, lint_config.block_list_rules, all_names
+        )
+        rules.update(rules_from_pkg)
+    return rules

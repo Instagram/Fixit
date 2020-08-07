@@ -38,7 +38,8 @@ from libcst.metadata import MetadataWrapper
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
-from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
+from fixit.common.utils import LintRuleCollectionT
+from fixit.rule_lint_engine import lint_file
 
 
 if TYPE_CHECKING:

@@ -36,7 +36,8 @@ class Flake8PseudoLintRuleTest(UnitTest):
             lint_file(
                 file_path=Path("dummy/file/path.py"),
                 source=b"undefined_fn()\n",
-                rules=[Flake8PseudoLintRule],
+                rules={Flake8PseudoLintRule},
+                rule_config={},
             )
         )
         self.assertEqual(len(results), 1)
@@ -47,7 +48,8 @@ class Flake8PseudoLintRuleTest(UnitTest):
             lint_file(
                 file_path=Path("dummy/file/path.py"),
                 source=b"# lint-ignore: F821: testing ignores\nundefined_fn()\n",
-                rules=[Flake8PseudoLintRule],
+                rules={Flake8PseudoLintRule},
+                rule_config={},
             )
         )
         self.assertEqual(results, [])

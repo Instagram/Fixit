@@ -63,7 +63,7 @@ def get_formatted_reports_for_path(
         lint_result = lint_file_and_apply_patches(
             path,
             source,
-            rules=[opts.rule],
+            rules={opts.rule},
             use_ignore_byte_markers=opts.use_ignore_byte_markers,
             use_ignore_comments=opts.use_ignore_comments,
         )

@@ -63,7 +63,7 @@ def get_metadata_caches(
                     "Unable to get metadata cache for the following paths:\n"
                     + "\n".join(handler.timeout_paths)
                     + "\nDid you remember to run `pyre start`?"
-                    + "\nYou can also try increasing the --cache_timeout value or passing fewer files."
+                    + "\nYou can also try increasing the --cache-timeout value or passing fewer files."
                 )
             for k, v in handler.other_exceptions.items():
                 print(

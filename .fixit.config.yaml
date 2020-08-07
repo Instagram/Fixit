@@ -9,3 +9,6 @@ formatter:
 packages:
 - fixit.rules
 repo_root: .
+rule_config:
+  ImportConstraintsRule:
+    rules: [["*", "allow"]]

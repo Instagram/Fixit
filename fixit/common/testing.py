@@ -18,11 +18,12 @@ from fixit.common.generate_pyre_fixtures import get_fixture_path
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
     InvalidTestCase,
+    LintRuleCollectionT,
     ValidTestCase,
     _dedent,
     gen_type_inference_wrapper,
 )
-from fixit.rule_lint_engine import LintRuleCollectionT, lint_file
+from fixit.rule_lint_engine import lint_file
 
 
 def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> None:
@@ -73,8 +74,8 @@ class LintRuleTestCase(unittest.TestCase):
         reports = lint_file(
             Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
-            config=test_case.config,
-            rules=[rule],
+            rule_config={rule.__name__: test_case.config},
+            rules={rule},
             cst_wrapper=cst_wrapper,
         )
         if isinstance(test_case, ValidTestCase):
@@ -177,7 +178,7 @@ def _gen_all_test_methods(
 
 def add_lint_rule_tests_to_module(
     module_attrs: Dict[str, Any],
-    rules: LintRuleCollectionT = [],
+    rules: LintRuleCollectionT,
     test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
     custom_test_method_name: str = "_test_method",
     fixture_dir: Path = Path(""),

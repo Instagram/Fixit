@@ -5,9 +5,8 @@
 
 from pathlib import Path
 
-from fixit.common.config import LintConfig, get_lint_config
+from fixit.common.config import LintConfig, get_lint_config, get_rules_from_config
 from fixit.common.testing import add_lint_rule_tests_to_module
-from fixit.rule_lint_engine import get_rules_from_config
 
 
 # Add all the CstLintRules from `fixit.rules` package to this module as unit tests.

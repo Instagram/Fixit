@@ -10,38 +10,24 @@ from pathlib import Path
 
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
-from fixit.rule_lint_engine import import_rule_from_package
+from fixit.common.utils import find_and_import_rule
 
 
 class FixtureDirNotFoundError(Exception):
     pass
 
 
-class LintRuleNotFoundError(Exception):
-    pass
-
-
-def _import_rule(path_to_rule_class: str) -> LintRuleT:
-    rule_module_path, _, rule_class_name = path_to_rule_class.rpartition(".")
+def import_rule(rule_name: str) -> LintRuleT:
+    # Using the rule_name or full dotted name, attempt to import the rule.
+    rule_module_path, _, rule_class_name = rule_name.rpartition(".")
     if rule_module_path:
         # If user provided a dotted path, we assume it's valid and import the rule directly.
         imported_rule = getattr(
             importlib.import_module(rule_module_path), rule_class_name,
         )
         return imported_rule
-
     # Otherwise, only a class name was provided, so try to find the rule by searching each package specified in the config.
-    packages = get_lint_config().packages
-    for package in packages:
-        imported_rule = import_rule_from_package(package, rule_class_name)
-        if imported_rule is not None:
-            return imported_rule
-
-    # If we get here, the rule was not found.
-    raise LintRuleNotFoundError(
-        f"Could not find lint rule {path_to_rule_class}. "
-        + "\nIs it a member of one of the packages specified in the Fixit config file?"
-    )
+    return find_and_import_rule(rule_class_name, get_lint_config().packages)
 
 
 def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
@@ -58,7 +44,7 @@ def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
 def get_rules_package_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
-        "--rules_package", help=("Main package for lint rules."), default="fixit.rules",
+        "--rules-package", help=("Main package for lint rules."), default="fixit.rules",
     )
     return parser
 
@@ -67,7 +53,7 @@ def get_rule_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
         "rule",
-        type=_import_rule,
+        type=import_rule,
         help=(
             "The name of your lint rule class or the full dotted path to your lint rule class."
             + "(e.g. `NoAssertEqualsRule` or `fixit.rules.no_assert_equals.NoAssertEqualsRule`)"
