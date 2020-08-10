@@ -64,13 +64,6 @@ class ImportConfig:
     ignore_tests: bool
     ignore_types: bool
 
-    @staticmethod
-    def from_config(config: Mapping[str, Any]) -> "ImportConfig":
-        rules = [_ImportRule.from_config(r) for r in config.get("rules", [])]
-        ignore_tests = config.get("ignore_tests", True)
-        ignore_types = config.get("ignore_types", True)
-        return ImportConfig(rules, ignore_tests, ignore_types)._validate()
-
     def _validate(self) -> "ImportConfig":
         if len(self.rules) == 0:
             raise ValueError("Must have at least one rule")
@@ -95,7 +88,6 @@ def _get_local_roots(repo_root: Path) -> Set[str]:
 
 
 class ImportConstraintsRule(CstLintRule):
-    ONCALL_SHORTNAME = "instagram_server_framework"
     _config: Optional[ImportConfig]
     _repo_root: Path
     _type_checking_stack: List[cst.If]
@@ -209,9 +201,24 @@ class ImportConstraintsRule(CstLintRule):
         rule_config = self.context.config.rule_config.get(self.__class__.__name__, None)
         # Check if not None and not an empty dict.
         if rule_config is not None and rule_config:
-            self._config = ImportConfig.from_config(rule_config)
-        else:
-            self._config = None
+            repo_root = get_lint_config().repo_root
+            file_path = context.file_path
+
+            rules_for_file = []
+            for _dir, rules in rule_config.get("rules", {}).items():
+                if (Path(repo_root) / _dir).resolve() in (
+                    repo_root / file_path
+                ).resolve().parents:
+                    rules_for_file += rules
+
+            if rules_for_file:
+                rules = [_ImportRule.from_config(r) for r in rules_for_file]
+
+                ignore_tests = rule_config.get("ignore_tests", True)
+                ignore_types = rule_config.get("ignore_types", True)
+                self._config = ImportConfig(
+                    rules, ignore_tests, ignore_types
+                )._validate()
         self._type_checking_stack = []
 
     def should_skip_file(self) -> bool:
