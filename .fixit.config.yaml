@@ -11,5 +11,5 @@ packages:
 repo_root: .
 rule_config:
   ImportConstraintsRule:
-    rules:
-      fixit: [["*", "allow"]]
+    fixit:
+      rules: [["*", "allow"]]

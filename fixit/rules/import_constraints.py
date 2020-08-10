@@ -88,6 +88,20 @@ class ImportConstraintsRule(CstLintRule):
     _repo_root: Path
     _type_checking_stack: List[cst.If]
 
+    @lru_cache()
+    def _get_config_with_formatted_dirs(
+        self, repo_root: str
+    ) -> Dict[str, Dict[str, Any]]:
+        import_constraints_config = self.context.config.get(
+            self.__class__.__name__, None
+        )
+        updated_config = {}
+        if import_constraints_config is not None and import_constraints_config:
+            for dirname, settings in import_constraints_config.items():
+                formatted_relpath = os.path.relpath(dirname, repo_root)
+                updated_config[formatted_relpath] = settings
+        return updated_config
+
     VALID = [
         # Everything is allowed
         Valid("import common"),
@@ -148,10 +162,8 @@ class ImportConstraintsRule(CstLintRule):
         Valid(
             "from fixit.foo import bar",
             config={
-                "rules": {
-                    "dir_1/dir_2": [["fixit.foo.bar", "allow"], ["*", "deny"]],
-                    "dir_1": [["fixit.foo.bar", "deny"], ["*", "deny"]],
-                }
+                "dir_1/dir_2": {"rules": [["fixit.foo.bar", "allow"], ["*", "deny"]]},
+                "dir_1": {"rules": [["fixit.foo.bar", "deny"], ["*", "deny"]]},
             },
             filename="dir_1/dir_2/file.py",
         ),
@@ -159,10 +171,8 @@ class ImportConstraintsRule(CstLintRule):
         Valid(
             "from fixit.foo import bar",
             config={
-                "rules": {
-                    "dir_1": [["fixit.foo.bar", "deny"], ["*", "deny"]],
-                    "dir_1/dir_2": [["fixit.foo.bar", "allow"], ["*", "deny"]],
-                }
+                "dir_1": {"rules": [["fixit.foo.bar", "deny"], ["*", "deny"]]},
+                "dir_1/dir_2": {"rules": [["fixit.foo.bar", "allow"], ["*", "deny"]]},
             },
             filename="dir_1/dir_2/file.py",
         ),
@@ -216,10 +226,8 @@ class ImportConstraintsRule(CstLintRule):
             "from fixit.foo import bar",
             "IG69",
             config={
-                "rules": {
-                    "dir_1/dir_2": [["fixit.foo.bar", "deny"]],
-                    "dir_1": [["fixit.foo.bar", "allow"], ["*", "deny"]],
-                }
+                "dir_1/dir_2": {"rules": [["fixit.foo.bar", "deny"]]},
+                "dir_1": {"rules": [["fixit.foo.bar", "allow"], ["*", "deny"]],},
             },
             filename="dir_1/dir_2/file.py",
         ),
@@ -239,8 +247,8 @@ class ImportConstraintsRule(CstLintRule):
             # the closest ancestor settings override those from distant ancestors.
             for parent_dir in reversed(file_path.parents):
                 rel_parent_dir = os.path.relpath(parent_dir, repo_root)
-                if rel_parent_dir in rule_config["rules"]:
-                    for rule in rule_config["rules"][rel_parent_dir]:
+                if rel_parent_dir in formatted_config:
+                    for rule in formatted_config[rel_parent_dir]["rules"]:
                         try:
                             module, action = rule
                         except ValueError:
@@ -249,6 +257,12 @@ class ImportConstraintsRule(CstLintRule):
                                 + ' E.g. \'["*", "deny"]\''
                             )
                         rules_for_file[module] = action
+                    ignore_tests = formatted_config[rel_parent_dir].get(
+                        "ignore_tests", ignore_tests
+                    )
+                    ignore_types = formatted_config[rel_parent_dir].get(
+                        "ignore_types", ignore_types
+                    )
 
             if rules_for_file:
                 rules = [
@@ -256,8 +270,6 @@ class ImportConstraintsRule(CstLintRule):
                     for m, action in rules_for_file.items()
                 ]
 
-                ignore_tests = rule_config.get("ignore_tests", True)
-                ignore_types = rule_config.get("ignore_types", True)
                 self._config = ImportConfig(
                     rules, ignore_tests, ignore_types
                 )._validate()
