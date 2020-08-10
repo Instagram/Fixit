@@ -37,14 +37,10 @@ class _ImportRule:
     allow: bool
 
     @staticmethod
-    def from_config(rule: Sequence[str]) -> "_ImportRule":
-        if rule[1] == "allow":
-            allow = True
-        elif rule[1] == "deny":
-            allow = False
-        else:
+    def from_config(module: str, action: str) -> "_ImportRule":
+        if action not in ("allow", "deny"):
             raise ValueError("rule should either allow or deny a pattern")
-        return _ImportRule(rule[0], allow)
+        return _ImportRule(module, action == "allow")
 
     @property
     def is_wildcard(self) -> bool:
@@ -148,6 +144,28 @@ class ImportConstraintsRule(CstLintRule):
             config=_gen_testcase_config({"rules": [["*", "deny"]]}),
             filename="fixit/file.py",
         ),
+        # File belongs to more than one directory setting (should enforce closest parent directory)
+        Valid(
+            "from fixit.foo import bar",
+            config={
+                "rules": {
+                    "dir_1/dir_2": [["fixit.foo.bar", "allow"], ["*", "deny"]],
+                    "dir_1": [["fixit.foo.bar", "deny"], ["*", "deny"]],
+                }
+            },
+            filename="dir_1/dir_2/file.py",
+        ),
+        # File belongs to more than one directory setting, flipped order (should enforce closest parent directory)
+        Valid(
+            "from fixit.foo import bar",
+            config={
+                "rules": {
+                    "dir_1": [["fixit.foo.bar", "deny"], ["*", "deny"]],
+                    "dir_1/dir_2": [["fixit.foo.bar", "allow"], ["*", "deny"]],
+                }
+            },
+            filename="dir_1/dir_2/file.py",
+        ),
     ]
 
     INVALID = [
@@ -193,6 +211,18 @@ class ImportConstraintsRule(CstLintRule):
             config=_gen_testcase_config({"rules": [["*", "deny"]]}),
             filename="common/a.py",
         ),
+        # File belongs to more than one directory setting
+        Invalid(
+            "from fixit.foo import bar",
+            "IG69",
+            config={
+                "rules": {
+                    "dir_1/dir_2": [["fixit.foo.bar", "deny"]],
+                    "dir_1": [["fixit.foo.bar", "allow"], ["*", "deny"]],
+                }
+            },
+            filename="dir_1/dir_2/file.py",
+        ),
     ]
 
     def __init__(self, context: CstContext) -> None:
@@ -200,19 +230,31 @@ class ImportConstraintsRule(CstLintRule):
         self._repo_root = Path(self.context.config.repo_root).resolve()
         rule_config = self.context.config.rule_config.get(self.__class__.__name__, None)
         # Check if not None and not an empty dict.
-        if rule_config is not None and rule_config:
+        if rule_config is not None and rule_config and "rules" in rule_config:
             repo_root = get_lint_config().repo_root
-            file_path = context.file_path
+            file_path = (repo_root / context.file_path).resolve()
+            rules_for_file = {}
 
-            rules_for_file = []
-            for _dir, rules in rule_config.get("rules", {}).items():
-                if (Path(repo_root) / _dir).resolve() in (
-                    repo_root / file_path
-                ).resolve().parents:
-                    rules_for_file += rules
+            # Run through logical ancestors of the filepath in reverse order so that
+            # the closest ancestor settings override those from distant ancestors.
+            for parent_dir in reversed(file_path.parents):
+                rel_parent_dir = os.path.relpath(parent_dir, repo_root)
+                if rel_parent_dir in rule_config["rules"]:
+                    for rule in rule_config["rules"][rel_parent_dir]:
+                        try:
+                            module, action = rule
+                        except ValueError:
+                            raise ValueError(
+                                "Each rule under a directory must specify a module and an action."
+                                + ' E.g. \'["*", "deny"]\''
+                            )
+                        rules_for_file[module] = action
 
             if rules_for_file:
-                rules = [_ImportRule.from_config(r) for r in rules_for_file]
+                rules = [
+                    _ImportRule.from_config(m, action)
+                    for m, action in rules_for_file.items()
+                ]
 
                 ignore_tests = rule_config.get("ignore_tests", True)
                 ignore_types = rule_config.get("ignore_types", True)
