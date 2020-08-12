@@ -292,14 +292,16 @@ class ImportConstraintsRule(CstLintRule):
                     settings_for_dir = import_constraints_config[original_dirname]
                     if not isinstance(settings_for_dir, dict):
                         raise ValueError(
-                            "Each directory must specify key-value pairs of settings."
+                            f"Invalid entry `{settings_for_dir}`.\n"
+                            + "Each directory must specify key-value pairs of settings."
                         )
                     for rule in settings_for_dir.get("rules", []):
                         try:
                             module, action = rule
                         except ValueError:
                             raise ValueError(
-                                "Each rule under a directory must specify a module and an action."
+                                f"Invalid entry `{rule}`.\n"
+                                + "Each rule under a directory must specify a module and an action."
                                 + ' E.g. \'["*", "deny"]\''
                             )
                         rules_for_file[module] = action
