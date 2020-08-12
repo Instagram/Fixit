@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Pattern, Set
 
 import yaml
 
+from fixit.common.base import BaseConfig
 from fixit.common.utils import LintRuleCollectionT, import_distinct_rules_from_package
 
 
@@ -71,19 +72,13 @@ DEFAULT_PACKAGES = ["fixit.rules"]
 DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
 
 
-class RuleConfigSetting:
-    pass
-
-
 @dataclass(frozen=True)
-class LintConfig:
+class LintConfig(BaseConfig):
     formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
     block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
     block_list_rules: List[str] = field(default_factory=list)
     packages: List[str] = field(default_factory=lambda: DEFAULT_PACKAGES)
-    repo_root: str = "."
     fixture_dir: str = "./fixtures"
-    rule_config: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
 
 def get_validated_settings(

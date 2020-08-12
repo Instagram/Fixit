@@ -44,7 +44,7 @@ def mock_operation(
     path: Path, opts: LintOpts, _=None,
 ) -> Sequence[FakeLintSuccessReport]:
     results = opts.success_report.create_reports(
-        path, lint_file(path, b"test", rules=opts.rules, rule_config={}), **opts.extra,
+        path, lint_file(path, b"test", rules=opts.rules, config={}), **opts.extra,
     )
     return cast(Sequence[FakeLintSuccessReport], results)
 

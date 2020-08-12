@@ -5,8 +5,9 @@
 
 import re
 from abc import ABCMeta
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple, Type, Union
 
 import libcst as cst
 from libcst import BatchableCSTVisitor
@@ -44,9 +45,15 @@ def _get_code(message: str) -> str:
     return code_match.group("code")
 
 
+@dataclass(frozen=True)
+class BaseConfig:
+    repo_root: str = "."
+    rule_config: Dict[str, object] = field(default_factory=dict)
+
+
 class BaseContext:
     file_path: Path
-    config: Mapping[str, Mapping[str, Any]]
+    config: Mapping[str, Any]
     reports: List[BaseLintRuleReport]
 
     def __init__(self, file_path: Path, config: Mapping[str, Any]) -> None:
@@ -73,7 +80,7 @@ class CstContext(BaseContext):
         wrapper: MetadataWrapper,
         source: bytes,
         file_path: Path,
-        config: Mapping[str, Mapping[str, Any]],
+        config: Mapping[str, Any],
     ) -> None:
         super().__init__(file_path, config)
         self.wrapper = wrapper

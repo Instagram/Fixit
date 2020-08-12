@@ -5,7 +5,7 @@
 
 import io
 import tokenize
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Collection, List, Mapping, Optional, Sequence, Type, cast
 
@@ -56,7 +56,7 @@ def lint_file(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    rule_config: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    config: Optional[Mapping[str, Any]] = None,
     rules: LintRuleCollectionT,
     cst_wrapper: Optional[MetadataWrapper] = None,
 ) -> Collection[BaseLintRuleReport]:
@@ -69,10 +69,8 @@ def lint_file(
     ):
         return []
 
-    # Get any per-rule settings that might be in the nearest config file.
-    rule_config = (
-        rule_config if rule_config is not None else get_lint_config().rule_config
-    )
+    # Get settings from the nearest `.fixit.config.yaml` file if necessary.
+    config = config if config is not None else asdict(get_lint_config())
 
     tokens = None
     if use_ignore_comments:
@@ -111,7 +109,7 @@ def lint_file(
             cst_wrapper = MetadataWrapper(
                 cst.parse_module(source), unsafe_skip_copy=True
             )
-        cst_context = CstContext(cst_wrapper, source, file_path, rule_config)
+        cst_context = CstContext(cst_wrapper, source, file_path, config)
         _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
         reports.extend(cst_context.reports)
     if pseudo_rules:
@@ -138,7 +136,7 @@ def lint_file_and_apply_patches(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    rule_config: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    config: Optional[Mapping[str, Mapping[str, Any]]] = None,
     rules: LintRuleCollectionT,
     max_iter: int = 100,
 ) -> LintRuleReportsWithAppliedPatches:
@@ -150,9 +148,7 @@ def lint_file_and_apply_patches(
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
-    rule_config = (
-        rule_config if rule_config is not None else get_lint_config().rule_config
-    )
+    config = config if config is not None else asdict(get_lint_config())
 
     reports = []
     fixed_reports = []
@@ -163,7 +159,7 @@ def lint_file_and_apply_patches(
             source,
             use_ignore_byte_markers=use_ignore_byte_markers,
             use_ignore_comments=use_ignore_comments,
-            rule_config=rule_config,
+            config=config,
             rules=rules,
         )
 

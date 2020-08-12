@@ -45,7 +45,7 @@ def map_paths_operation(
             source=SOURCE_CODE,
             rules=rules,
             cst_wrapper=cst_wrapper,
-            rule_config={},
+            config={},
         )
     except Exception as e:
         return str(e)

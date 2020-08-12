@@ -30,8 +30,10 @@ class ParenthesizeAttributeLintRule(CstLintRule):
     """
 
     def visit_Attribute(self, node: cst.Attribute) -> None:
-        if self.__class__.__name__ in self.context.config:
-            if self.context.config[self.__class__.__name__].get("disabled", False):
+        rule_config = self.context.config.get("rule_config", None)
+        if rule_config is not None:
+            parenthesize_attribute_config = rule_config.get(self.__class__.__name__, {})
+            if parenthesize_attribute_config.get("disabled", False):
                 return
         if len(node.lpar) == 0:
             new_node = node.with_changes(
@@ -104,19 +106,19 @@ class RuleLintEngineTest(UnitTest):
             source,
             use_ignore_byte_markers=use_ignore_byte_markers,
             use_ignore_comments=use_ignore_comments,
-            rule_config={},
+            config={},
             rules={BadCallCstLintRule},
         )
         self.assertEqual(len(reports), expected_report_count)
 
     def test_lint_file_with_config(self) -> None:
         source = b"obj.attr.another_attr\n"
-        config = {"ParenthesizeAttributeLintRule": {"disabled": True}}
+        config = {"rule_config": {"ParenthesizeAttributeLintRule": {"disabled": True}}}
 
         reports = rule_lint_engine.lint_file(
             Path("dummy_file.py"),
             source,
-            rule_config=config,
+            config=config,
             rules={ParenthesizeAttributeLintRule},
         )
         # Expect no reports cause disabled set to True
@@ -126,7 +128,7 @@ class RuleLintEngineTest(UnitTest):
         reports = rule_lint_engine.lint_file(
             Path("dummy_file.py"),
             source,
-            rule_config=config,
+            config=config,
             rules={ParenthesizeAttributeLintRule},
         )
         self.assertEqual(len(reports), 2)
@@ -138,7 +140,7 @@ class RuleLintEngineTest(UnitTest):
         result = rule_lint_engine.lint_file_and_apply_patches(
             Path("dummy_filename.py"),
             source,
-            rule_config={},
+            config={},
             rules={ParenthesizeAttributeLintRule},
         )
         self.assertEqual(len(result.reports), 2)

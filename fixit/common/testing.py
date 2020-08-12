@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
 
@@ -74,7 +74,7 @@ class LintRuleTestCase(unittest.TestCase):
         reports = lint_file(
             Path(test_case.filename),
             _dedent(test_case.code).encode("utf-8"),
-            rule_config={rule.__name__: test_case.config},
+            config=asdict(test_case.config),
             rules={rule},
             cst_wrapper=cst_wrapper,
         )
