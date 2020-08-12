@@ -35,7 +35,9 @@ from typing import (
 import libcst as cst
 from libcst.metadata import MetadataWrapper
 
+from fixit.common.base import LintConfig
 from fixit.common.cli.args import LintWorkers, get_multiprocessing_parser
+from fixit.common.config import get_lint_config
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import LintFailureReportBase, LintSuccessReportBase
 from fixit.common.utils import LintRuleCollectionT
@@ -155,6 +157,7 @@ class LintOpts:
     rules: LintRuleCollectionT
     success_report: Type[LintSuccessReportBase]
     failure_report: Type[LintFailureReportBase]
+    config: LintConfig = get_lint_config()
     full_repo_metadata_config: Optional[FullRepoMetadataConfig] = None
     extra: Dict[str, object] = field(default_factory=dict)
 
@@ -174,7 +177,13 @@ def get_file_lint_result_json(
             )
         results = opts.success_report.create_reports(
             path,
-            lint_file(path, source, rules=opts.rules, cst_wrapper=cst_wrapper),
+            lint_file(
+                path,
+                source,
+                rules=opts.rules,
+                config=opts.config,
+                cst_wrapper=cst_wrapper,
+            ),
             **opts.extra,
         )
     except Exception:

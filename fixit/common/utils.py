@@ -9,16 +9,16 @@ import json
 import pkgutil
 import re
 import textwrap
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Dict, List, Mapping, Optional, Set, Type, Union, cast
+from typing import Dict, List, Optional, Set, Type, Union, cast
 
 import libcst as cst
 from libcst.metadata import BaseMetadataProvider, MetadataWrapper, TypeInferenceProvider
 from libcst.metadata.type_inference_provider import PyreData
 
-from fixit.common.base import CstLintRule, LintRuleT
+from fixit.common.base import CstLintRule, LintConfig, LintRuleT
 from fixit.common.pseudo_rule import PseudoLintRule
 
 
@@ -50,7 +50,11 @@ LintRuleCollectionT = Set[Union[Type[CstLintRule], Type[PseudoLintRule]]]
 class ValidTestCase:
     code: str
     filename: str = "not/a/real/file/path.py"
-    config: Mapping[str, Any] = field(default_factory=dict)
+    config: LintConfig = LintConfig(
+        repo_root=str(
+            Path(__file__).parent.parent
+        ),  # Set base config repo_root to `fixit` directory for testing.
+    )
 
 
 @dataclass(frozen=True)
@@ -61,7 +65,11 @@ class InvalidTestCase:
     column: Optional[int] = None
     expected_replacement: Optional[str] = None
     filename: str = "not/a/real/file/path.py"
-    config: Mapping[str, Any] = field(default_factory=dict)
+    config: LintConfig = LintConfig(
+        repo_root=str(
+            Path(__file__).parent.parent
+        ),  # Set base config repo_root to `fixit` directory for testing.
+    )
 
     @property
     def expected_str(self) -> str:

@@ -5,7 +5,8 @@
 
 from pathlib import Path
 
-from fixit.common.config import LintConfig, get_lint_config, get_rules_from_config
+from fixit.common.base import LintConfig
+from fixit.common.config import get_lint_config, get_rules_from_config
 from fixit.common.testing import add_lint_rule_tests_to_module
 
 

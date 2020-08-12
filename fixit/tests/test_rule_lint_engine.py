@@ -9,7 +9,7 @@ import libcst as cst
 from libcst.testing.utils import UnitTest, data_provider
 
 from fixit import rule_lint_engine
-from fixit.common.base import CstLintRule
+from fixit.common.base import CstLintRule, LintConfig
 
 
 class BadCallCstLintRule(CstLintRule):
@@ -30,9 +30,12 @@ class ParenthesizeAttributeLintRule(CstLintRule):
     """
 
     def visit_Attribute(self, node: cst.Attribute) -> None:
-        if self.__class__.__name__ in self.context.config:
-            if self.context.config[self.__class__.__name__].get("disabled", False):
-                return
+        rule_config = self.context.config.rule_config
+        parenthesize_attribute_config = rule_config.get(self.__class__.__name__, {})
+        if isinstance(
+            parenthesize_attribute_config, dict
+        ) and parenthesize_attribute_config.get("disabled", False):
+            return
         if len(node.lpar) == 0:
             new_node = node.with_changes(
                 lpar=[cst.LeftParen()], rpar=[cst.RightParen()]
@@ -104,29 +107,33 @@ class RuleLintEngineTest(UnitTest):
             source,
             use_ignore_byte_markers=use_ignore_byte_markers,
             use_ignore_comments=use_ignore_comments,
-            rule_config={},
+            config=LintConfig(),
             rules={BadCallCstLintRule},
         )
         self.assertEqual(len(reports), expected_report_count)
 
     def test_lint_file_with_config(self) -> None:
         source = b"obj.attr.another_attr\n"
-        config = {"ParenthesizeAttributeLintRule": {"disabled": True}}
+        config = LintConfig(
+            rule_config={"ParenthesizeAttributeLintRule": {"disabled": True}}
+        )
 
         reports = rule_lint_engine.lint_file(
             Path("dummy_file.py"),
             source,
-            rule_config=config,
+            config=config,
             rules={ParenthesizeAttributeLintRule},
         )
         # Expect no reports cause disabled set to True
         self.assertEqual(len(reports), 0)
 
-        config = {"ParenthesizeAttributeLintRule": {"disabled": False}}
+        config = LintConfig(
+            rule_config={"ParenthesizeAttributeLintRule": {"disabled": False}}
+        )
         reports = rule_lint_engine.lint_file(
             Path("dummy_file.py"),
             source,
-            rule_config=config,
+            config=config,
             rules={ParenthesizeAttributeLintRule},
         )
         self.assertEqual(len(reports), 2)
@@ -138,7 +145,7 @@ class RuleLintEngineTest(UnitTest):
         result = rule_lint_engine.lint_file_and_apply_patches(
             Path("dummy_filename.py"),
             source,
-            rule_config={},
+            config=LintConfig(),
             rules={ParenthesizeAttributeLintRule},
         )
         self.assertEqual(len(result.reports), 2)

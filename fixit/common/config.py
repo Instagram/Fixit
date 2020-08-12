@@ -6,13 +6,14 @@
 import distutils.spawn
 import os
 import re
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, Set
+from typing import Any, Dict, Optional, Pattern, Set
 
 import yaml
 
+from fixit.common.base import LintConfig
 from fixit.common.utils import LintRuleCollectionT, import_distinct_rules_from_package
 
 
@@ -67,23 +68,6 @@ LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packag
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
 NESTED_SETTINGS = ["rule_config"]
 DEFAULT_FORMATTER = ["black", "-"]
-DEFAULT_PACKAGES = ["fixit.rules"]
-DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
-
-
-class RuleConfigSetting:
-    pass
-
-
-@dataclass(frozen=True)
-class LintConfig:
-    formatter: List[str] = field(default_factory=lambda: DEFAULT_FORMATTER)
-    block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
-    block_list_rules: List[str] = field(default_factory=list)
-    packages: List[str] = field(default_factory=lambda: DEFAULT_PACKAGES)
-    repo_root: str = "."
-    fixture_dir: str = "./fixtures"
-    rule_config: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
 
 def get_validated_settings(

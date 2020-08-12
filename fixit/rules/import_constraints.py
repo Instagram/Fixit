@@ -7,13 +7,12 @@ import os
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 import libcst as cst
 from libcst.helpers import get_full_name_for_node_or_raise
 
-from fixit.common.base import CstContext, CstLintRule
-from fixit.common.config import get_lint_config
+from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
@@ -21,6 +20,15 @@ IG69_IMPORT_CONSTRAINT_VIOLATION: str = (
     "IG69 According to the .fixit.config.yaml configuration file for this directory, "
     + "{imported} cannot be imported from within {current_file}. "
 )
+
+
+TEST_REPO_ROOT: str = str(Path(__file__).parent.parent)
+
+
+def _gen_testcase_config(dir_rules: Dict[str, object]) -> LintConfig:
+    return LintConfig(
+        repo_root=TEST_REPO_ROOT, rule_config={"ImportConstraintsRule": dir_rules}
+    )
 
 
 @dataclass(frozen=True)
@@ -82,93 +90,123 @@ class ImportConfig:
 
 
 @lru_cache(maxsize=None)
-def _get_local_roots() -> Set[str]:
-    repo_root = get_lint_config().repo_root
+def _get_local_roots(repo_root: Path) -> Set[str]:
     return set(os.listdir(repo_root))
 
 
 class ImportConstraintsRule(CstLintRule):
     ONCALL_SHORTNAME = "instagram_server_framework"
     _config: Optional[ImportConfig]
+    _repo_root: Path
     _type_checking_stack: List[cst.If]
 
     VALID = [
         # Everything is allowed
-        Valid("import fixit"),
-        Valid("import fixit", config={"rules": [["*", "allow"]]}),
+        Valid("import common"),
+        Valid(
+            "import common", config=_gen_testcase_config({"rules": [["*", "allow"]]})
+        ),
         # This import is allowlisted
-        Valid("import fixit", config={"rules": [["fixit", "allow"], ["*", "deny"]]},),
+        Valid(
+            "import common",
+            config=_gen_testcase_config(
+                {"rules": [["common", "allow"], ["*", "deny"]]}
+            ),
+        ),
         # Allow children of a allowlisted module
         Valid(
-            "from fixit.foo import bar",
-            config={"rules": [["fixit", "allow"], ["*", "deny"]]},
+            "from common.foo import bar",
+            config=_gen_testcase_config(
+                {"rules": [["common", "allow"], ["*", "deny"]]}
+            ),
         ),
         # Validate rules are evaluted in order
         Valid(
-            "from fixit.foo import bar",
-            config={
-                "rules": [["fixit.foo.bar", "allow"], ["fixit", "deny"], ["*", "deny"],]
-            },
+            "from common.foo import bar",
+            config=_gen_testcase_config(
+                {
+                    "rules": [
+                        ["common.foo.bar", "allow"],
+                        ["common", "deny"],
+                        ["*", "deny"],
+                    ]
+                }
+            ),
         ),
         # Built-in modules are fine
-        Valid("import ast", config={"rules": [["*", "deny"]]}),
+        Valid("import ast", config=_gen_testcase_config({"rules": [["*", "deny"]]})),
         # Relative imports
         Valid(
             "from . import module",
-            config={"rules": [["fixit.safe", "allow"], ["*", "deny"]]},
+            config=_gen_testcase_config(
+                {"rules": [["common.safe", "allow"], ["*", "deny"]]}
+            ),
             filename="fixit/safe/file.py",
         ),
         Valid(
             "from ..safe import module",
-            config={"rules": [["fixit.safe", "allow"], ["*", "deny"]]},
+            config=_gen_testcase_config(
+                {"rules": [["common.safe", "allow"], ["*", "deny"]]}
+            ),
             filename="fixit/unsafe/file.py",
         ),
         # Ignore some relative module that leaves the repo root
         Valid(
             "from ....................................... import module",
-            config={"rules": [["*", "deny"]]},
+            config=_gen_testcase_config({"rules": [["*", "deny"]]}),
             filename="fixit/file.py",
         ),
     ]
 
     INVALID = [
         # Everything is denied
-        Invalid("import fixit", "IG69", config={"rules": [["*", "deny"]]}),
+        Invalid(
+            "import common",
+            "IG69",
+            config=_gen_testcase_config({"rules": [["*", "deny"]]}),
+        ),
         # Validate rules are evaluated in order
         Invalid(
-            "from fixit.foo import bar",
+            "from common.foo import bar",
             "IG69",
-            config={
-                "rules": [
-                    ["fixit.foo.bar", "deny"],
-                    ["fixit", "allow"],
-                    ["*", "allow"],
-                ]
-            },
+            config=_gen_testcase_config(
+                {
+                    "rules": [
+                        ["common.foo.bar", "deny"],
+                        ["common", "allow"],
+                        ["*", "allow"],
+                    ]
+                }
+            ),
         ),
         # We should match against the real name, not the aliased name
         Invalid(
-            "import fixit as not_fixit",
+            "import common as not_common",
             "IG69",
-            config={"rules": [["fixit", "deny"], ["*", "allow"]]},
+            config=_gen_testcase_config(
+                {"rules": [["common", "deny"], ["*", "allow"]]}
+            ),
         ),
         Invalid(
-            "from fixit import bar as not_bar",
+            "from common import bar as not_bar",
             "IG69",
-            config={"rules": [["fixit.bar", "deny"], ["*", "allow"]]},
+            config=_gen_testcase_config(
+                {"rules": [["common.bar", "deny"], ["*", "allow"]]}
+            ),
         ),
         # Relative imports
         Invalid(
             "from . import b",
             "IG69",
-            config={"rules": [["*", "deny"]]},
-            filename="fixit/a.py",
+            config=_gen_testcase_config({"rules": [["*", "deny"]]}),
+            filename="common/a.py",
         ),
     ]
 
     def __init__(self, context: CstContext) -> None:
         super().__init__(context)
-        rule_config = context.config.get(self.__class__.__name__, None)
+        self._repo_root = Path(self.context.config.repo_root).resolve()
+        rule_config = self.context.config.rule_config.get(self.__class__.__name__, None)
         # Check if not None and not an empty dict.
         if rule_config is not None and rule_config:
             self._config = ImportConfig.from_config(rule_config)
@@ -212,16 +250,18 @@ class ImportConstraintsRule(CstLintRule):
         if level == 0:
             return module
 
-        repo_root = Path(get_lint_config().repo_root)
         # Get the absolute path of the file
-        current_dir = repo_root / self.context.file_path
+        current_dir = self._repo_root / self.context.file_path
         for __ in range(level):
             current_dir = current_dir.parent
 
-        if current_dir != repo_root and repo_root not in current_dir.parents:
+        if (
+            current_dir != self._repo_root
+            and self._repo_root not in current_dir.parents
+        ):
             return None
 
-        prefix = ".".join(current_dir.relative_to(repo_root).parts)
+        prefix = ".".join(current_dir.relative_to(self._repo_root).parts)
         return f"{prefix}.{module}" if module is not None else prefix
 
     def _check_names(self, node: cst.CSTNode, names: Iterable[str]) -> None:
@@ -229,7 +269,7 @@ class ImportConstraintsRule(CstLintRule):
         if config is None or (config.ignore_types and self._type_checking_stack):
             return
         for name in names:
-            if name.split(".", 1)[0] not in _get_local_roots():
+            if name.split(".", 1)[0] not in _get_local_roots(self._repo_root):
                 continue
             rule = config.match(name)
             if not rule.allow:
