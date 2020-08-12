@@ -18,7 +18,7 @@ import libcst as cst
 from libcst.metadata import BaseMetadataProvider, MetadataWrapper, TypeInferenceProvider
 from libcst.metadata.type_inference_provider import PyreData
 
-from fixit.common.base import BaseConfig, CstLintRule, LintRuleT
+from fixit.common.base import CstLintRule, LintConfig, LintRuleT
 from fixit.common.pseudo_rule import PseudoLintRule
 
 
@@ -50,8 +50,8 @@ LintRuleCollectionT = Set[Union[Type[CstLintRule], Type[PseudoLintRule]]]
 class ValidTestCase:
     code: str
     filename: str = "not/a/real/file/path.py"
-    config: BaseConfig = BaseConfig(
-        str(
+    config: LintConfig = LintConfig(
+        repo_root=str(
             Path(__file__).parent.parent
         ),  # Set base config repo_root to `fixit` directory for testing.
     )
@@ -65,8 +65,8 @@ class InvalidTestCase:
     column: Optional[int] = None
     expected_replacement: Optional[str] = None
     filename: str = "not/a/real/file/path.py"
-    config: BaseConfig = BaseConfig(
-        str(
+    config: LintConfig = LintConfig(
+        repo_root=str(
             Path(__file__).parent.parent
         ),  # Set base config repo_root to `fixit` directory for testing.
     )

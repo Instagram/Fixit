@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 import libcst as cst
 from libcst.helpers import get_full_name_for_node_or_raise
 
-from fixit.common.base import BaseConfig, CstContext, CstLintRule
+from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
@@ -25,8 +25,8 @@ IG69_IMPORT_CONSTRAINT_VIOLATION: str = (
 TEST_REPO_ROOT: str = str(Path(__file__).parent.parent)
 
 
-def _gen_testcase_config(dir_rules: Dict[str, List[List[str]]]) -> BaseConfig:
-    return BaseConfig(
+def _gen_testcase_config(dir_rules: Dict[str, object]) -> LintConfig:
+    return LintConfig(
         repo_root=TEST_REPO_ROOT, rule_config={"ImportConstraintsRule": dir_rules}
     )
 
@@ -205,10 +205,8 @@ class ImportConstraintsRule(CstLintRule):
 
     def __init__(self, context: CstContext) -> None:
         super().__init__(context)
-        self._repo_root = Path(self.context.config["repo_root"]).resolve()
-        rule_config = self.context.config.get("rule_config", {}).get(
-            self.__class__.__name__, None
-        )
+        self._repo_root = Path(self.context.config.repo_root).resolve()
+        rule_config = self.context.config.rule_config.get(self.__class__.__name__, None)
         # Check if not None and not an empty dict.
         if rule_config is not None and rule_config:
             self._config = ImportConfig.from_config(rule_config)

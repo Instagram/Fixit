@@ -10,7 +10,7 @@ from typing import Collection, List, Sequence, cast
 from libcst import Module
 from libcst.testing.utils import UnitTest
 
-from fixit.common.base import CstLintRule
+from fixit.common.base import CstLintRule, LintConfig
 from fixit.common.cli import LintOpts, map_paths
 from fixit.common.cli.args import LintWorkers
 from fixit.common.report import (
@@ -44,7 +44,9 @@ def mock_operation(
     path: Path, opts: LintOpts, _=None,
 ) -> Sequence[FakeLintSuccessReport]:
     results = opts.success_report.create_reports(
-        path, lint_file(path, b"test", rules=opts.rules, config={}), **opts.extra,
+        path,
+        lint_file(path, b"test", rules=opts.rules, config=LintConfig()),
+        **opts.extra,
     )
     return cast(Sequence[FakeLintSuccessReport], results)
 

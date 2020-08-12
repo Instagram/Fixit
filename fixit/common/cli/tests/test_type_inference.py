@@ -13,7 +13,7 @@ from libcst.metadata import MetadataWrapper, TypeInferenceProvider
 from libcst.metadata.base_provider import ProviderT
 from libcst.testing.utils import UnitTest
 
-from fixit.common.base import CstLintRule, LintRuleT
+from fixit.common.base import CstLintRule, LintConfig, LintRuleT
 from fixit.common.cli import LintWorkers, map_paths
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import BaseLintRuleReport
@@ -45,7 +45,7 @@ def map_paths_operation(
             source=SOURCE_CODE,
             rules=rules,
             cst_wrapper=cst_wrapper,
-            config={},
+            config=LintConfig(),
         )
     except Exception as e:
         return str(e)

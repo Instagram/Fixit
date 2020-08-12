@@ -7,7 +7,7 @@ import re
 from abc import ABCMeta
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, Union
 
 import libcst as cst
 from libcst import BatchableCSTVisitor
@@ -45,18 +45,27 @@ def _get_code(message: str) -> str:
     return code_match.group("code")
 
 
+DEFAULT_PACKAGES = ["fixit.rules"]
+DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
+
+
 @dataclass(frozen=True)
-class BaseConfig:
+class LintConfig:
+    block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
+    block_list_rules: List[str] = field(default_factory=list)
+    fixture_dir: str = "./fixtures"
+    formatter: List[str] = field(default_factory=list)
+    packages: List[str] = field(default_factory=lambda: DEFAULT_PACKAGES)
     repo_root: str = "."
-    rule_config: Dict[str, object] = field(default_factory=dict)
+    rule_config: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
 
 class BaseContext:
     file_path: Path
-    config: Mapping[str, Any]
+    config: LintConfig
     reports: List[BaseLintRuleReport]
 
-    def __init__(self, file_path: Path, config: Mapping[str, Any]) -> None:
+    def __init__(self, file_path: Path, config: LintConfig) -> None:
         self.file_path = file_path
         self.config = config
         self.reports = []
@@ -80,7 +89,7 @@ class CstContext(BaseContext):
         wrapper: MetadataWrapper,
         source: bytes,
         file_path: Path,
-        config: Mapping[str, Any],
+        config: LintConfig,
     ) -> None:
         super().__init__(file_path, config)
         self.wrapper = wrapper

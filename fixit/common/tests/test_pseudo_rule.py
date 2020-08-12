@@ -11,6 +11,7 @@ from typing import Iterable
 
 from libcst.testing.utils import UnitTest
 
+from fixit.common.base import LintConfig
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file
@@ -64,6 +65,9 @@ class PseudoLintRuleTest(UnitTest):
                 return [dummy_report]
 
         reports = lint_file(
-            DUMMY_FILE_PATH, DUMMY_SOURCE, config={}, rules={DummyPseudoLintRule}
+            DUMMY_FILE_PATH,
+            DUMMY_SOURCE,
+            config=LintConfig(),
+            rules={DummyPseudoLintRule},
         )
         self.assertEqual(reports, [dummy_report])

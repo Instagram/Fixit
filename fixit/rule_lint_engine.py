@@ -5,14 +5,14 @@
 
 import io
 import tokenize
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Collection, List, Mapping, Optional, Sequence, Type, cast
+from typing import Collection, List, Optional, Sequence, Type, cast
 
 import libcst as cst
 from libcst.metadata import MetadataWrapper
 
-from fixit.common.base import CstContext, CstLintRule
+from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.comments import CommentInfo
 from fixit.common.config import get_lint_config
 from fixit.common.ignores import IgnoreInfo
@@ -56,7 +56,7 @@ def lint_file(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    config: Optional[Mapping[str, Any]] = None,
+    config: Optional[LintConfig] = None,
     rules: LintRuleCollectionT,
     cst_wrapper: Optional[MetadataWrapper] = None,
 ) -> Collection[BaseLintRuleReport]:
@@ -64,13 +64,13 @@ def lint_file(
     May raise a SyntaxError, which should be handled by the
     caller.
     """
+    # Get settings from the nearest `.fixit.config.yaml` file if necessary.
+    config: LintConfig = config if config is not None else get_lint_config()
+
     if use_ignore_byte_markers and any(
-        pattern.encode() in source for pattern in get_lint_config().block_list_patterns
+        pattern.encode() in source for pattern in config.block_list_patterns
     ):
         return []
-
-    # Get settings from the nearest `.fixit.config.yaml` file if necessary.
-    config = config if config is not None else asdict(get_lint_config())
 
     tokens = None
     if use_ignore_comments:
@@ -136,7 +136,7 @@ def lint_file_and_apply_patches(
     *,
     use_ignore_byte_markers: bool = True,
     use_ignore_comments: bool = True,
-    config: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    config: Optional[LintConfig] = None,
     rules: LintRuleCollectionT,
     max_iter: int = 100,
 ) -> LintRuleReportsWithAppliedPatches:
@@ -148,7 +148,7 @@ def lint_file_and_apply_patches(
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
-    config = config if config is not None else asdict(get_lint_config())
+    config = config if config is not None else get_lint_config()
 
     reports = []
     fixed_reports = []
