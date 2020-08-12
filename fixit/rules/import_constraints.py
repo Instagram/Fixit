@@ -7,7 +7,7 @@ import os
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import Dict, FrozenSet, Iterable, List, Optional, Sequence, Set
 
 import libcst as cst
 from libcst.helpers import get_full_name_for_node_or_raise
@@ -83,97 +83,121 @@ def _get_local_roots(repo_root: Path) -> Set[str]:
     return set(os.listdir(repo_root))
 
 
+@lru_cache()
+def _get_formatted_dirnames(
+    repo_root: Path, dirnames: FrozenSet[str]
+) -> Dict[str, str]:
+    formatted_dirnames = {}
+    for original_dir in dirnames:
+        # If it's an absolute path, get relative to repo_root (which should be an absolute path).
+        if os.path.isabs(original_dir):
+            # We only want directories that are under repo root.
+            if original_dir.startswith(str(repo_root)):
+                formatted_relpath = os.path.relpath(original_dir, repo_root)
+                formatted_dirnames[formatted_relpath] = original_dir
+        # Otherwise assume all relative paths are relative to repo_root.
+        else:
+            formatted_dirnames[os.path.normpath(original_dir)] = original_dir
+    return formatted_dirnames
+
+
 class ImportConstraintsRule(CstLintRule):
     _config: Optional[ImportConfig]
     _repo_root: Path
     _type_checking_stack: List[cst.If]
-
-    @lru_cache()
-    def _get_config_with_formatted_dirs(
-        self, repo_root: str
-    ) -> Dict[str, Dict[str, Any]]:
-        import_constraints_config = self.context.config.get(
-            self.__class__.__name__, None
-        )
-        updated_config = {}
-        if import_constraints_config is not None and import_constraints_config:
-            for dirname, settings in import_constraints_config.items():
-                formatted_relpath = os.path.relpath(dirname, repo_root)
-                updated_config[formatted_relpath] = settings
-        return updated_config
+    _abs_file_path: Path
 
     VALID = [
         # Everything is allowed
         Valid("import common"),
         Valid(
-            "import common", config=_gen_testcase_config({"rules": [["*", "allow"]]})
+            "import common",
+            config=_gen_testcase_config({"some_dir": {"rules": [["*", "allow"]]}}),
+            filename="some_dir/file.py",
         ),
         # This import is allowlisted
         Valid(
             "import common",
             config=_gen_testcase_config(
-                {"rules": [["common", "allow"], ["*", "deny"]]}
+                {"some_dir": {"rules": [["common", "allow"], ["*", "deny"]]}}
             ),
+            filename="some_dir/file.py",
         ),
         # Allow children of a allowlisted module
         Valid(
             "from common.foo import bar",
             config=_gen_testcase_config(
-                {"rules": [["common", "allow"], ["*", "deny"]]}
+                {"some_dir": {"rules": [["common", "allow"], ["*", "deny"]]}}
             ),
+            filename="some_dir/file.py",
         ),
         # Validate rules are evaluted in order
         Valid(
             "from common.foo import bar",
             config=_gen_testcase_config(
                 {
-                    "rules": [
-                        ["common.foo.bar", "allow"],
-                        ["common", "deny"],
-                        ["*", "deny"],
-                    ]
+                    "some_dir": {
+                        "rules": [
+                            ["common.foo.bar", "allow"],
+                            ["common", "deny"],
+                            ["*", "deny"],
+                        ]
+                    }
                 }
             ),
+            filename="some_dir/file.py",
         ),
         # Built-in modules are fine
-        Valid("import ast", config=_gen_testcase_config({"rules": [["*", "deny"]]})),
+        Valid(
+            "import ast",
+            config=_gen_testcase_config({"some_dir": {"rules": [["*", "deny"]]}}),
+            filename="some_dir/file.py",
+        ),
         # Relative imports
         Valid(
             "from . import module",
             config=_gen_testcase_config(
-                {"rules": [["common.safe", "allow"], ["*", "deny"]]}
+                {".": {"rules": [["common.safe", "allow"], ["*", "deny"]]}}
             ),
-            filename="fixit/safe/file.py",
+            filename="common/safe/file.py",
         ),
         Valid(
             "from ..safe import module",
             config=_gen_testcase_config(
-                {"rules": [["common.safe", "allow"], ["*", "deny"]]}
+                {"common": {"rules": [["common.safe", "allow"], ["*", "deny"]]}}
             ),
-            filename="fixit/unsafe/file.py",
+            filename="common/unsafe/file.py",
         ),
         # Ignore some relative module that leaves the repo root
         Valid(
             "from ....................................... import module",
-            config=_gen_testcase_config({"rules": [["*", "deny"]]}),
-            filename="fixit/file.py",
+            config=_gen_testcase_config({".": {"rules": [["*", "deny"]]}}),
+            filename="file.py",
         ),
         # File belongs to more than one directory setting (should enforce closest parent directory)
         Valid(
-            "from fixit.foo import bar",
-            config={
-                "dir_1/dir_2": {"rules": [["fixit.foo.bar", "allow"], ["*", "deny"]]},
-                "dir_1": {"rules": [["fixit.foo.bar", "deny"], ["*", "deny"]]},
-            },
+            "from common.foo import bar",
+            config=_gen_testcase_config(
+                {
+                    "dir_1/dir_2": {
+                        "rules": [["common.foo.bar", "allow"], ["*", "deny"]]
+                    },
+                    "dir_1": {"rules": [["common.foo.bar", "deny"], ["*", "deny"]]},
+                }
+            ),
             filename="dir_1/dir_2/file.py",
         ),
         # File belongs to more than one directory setting, flipped order (should enforce closest parent directory)
         Valid(
-            "from fixit.foo import bar",
-            config={
-                "dir_1": {"rules": [["fixit.foo.bar", "deny"], ["*", "deny"]]},
-                "dir_1/dir_2": {"rules": [["fixit.foo.bar", "allow"], ["*", "deny"]]},
-            },
+            "from common.foo import bar",
+            config=_gen_testcase_config(
+                {
+                    "dir_1": {"rules": [["common.foo.bar", "deny"], ["*", "deny"]]},
+                    "dir_1/dir_2": {
+                        "rules": [["common.foo.bar", "allow"], ["*", "deny"]]
+                    },
+                }
+            ),
             filename="dir_1/dir_2/file.py",
         ),
     ]
@@ -183,7 +207,8 @@ class ImportConstraintsRule(CstLintRule):
         Invalid(
             "import common",
             "IG69",
-            config=_gen_testcase_config({"rules": [["*", "deny"]]}),
+            config=_gen_testcase_config({"some_dir": {"rules": [["*", "deny"]]}}),
+            filename="some_dir/file.py",
         ),
         # Validate rules are evaluated in order
         Invalid(
@@ -191,44 +216,51 @@ class ImportConstraintsRule(CstLintRule):
             "IG69",
             config=_gen_testcase_config(
                 {
-                    "rules": [
-                        ["common.foo.bar", "deny"],
-                        ["common", "allow"],
-                        ["*", "allow"],
-                    ]
+                    "some_dir": {
+                        "rules": [
+                            ["common.foo.bar", "deny"],
+                            ["common", "allow"],
+                            ["*", "allow"],
+                        ]
+                    }
                 }
             ),
+            filename="some_dir/file.py",
         ),
         # We should match against the real name, not the aliased name
         Invalid(
             "import common as not_common",
             "IG69",
             config=_gen_testcase_config(
-                {"rules": [["common", "deny"], ["*", "allow"]]}
+                {"some_dir": {"rules": [["common", "deny"], ["*", "allow"]]}}
             ),
+            filename="some_dir/file.py",
         ),
         Invalid(
             "from common import bar as not_bar",
             "IG69",
             config=_gen_testcase_config(
-                {"rules": [["common.bar", "deny"], ["*", "allow"]]}
+                {"some_dir": {"rules": [["common.bar", "deny"], ["*", "allow"]]}}
             ),
+            filename="some_dir/file.py",
         ),
         # Relative imports
         Invalid(
             "from . import b",
             "IG69",
-            config=_gen_testcase_config({"rules": [["*", "deny"]]}),
+            config=_gen_testcase_config({"common": {"rules": [["*", "deny"]]}}),
             filename="common/a.py",
         ),
         # File belongs to more than one directory setting
         Invalid(
-            "from fixit.foo import bar",
+            "from common.foo import bar",
             "IG69",
-            config={
-                "dir_1/dir_2": {"rules": [["fixit.foo.bar", "deny"]]},
-                "dir_1": {"rules": [["fixit.foo.bar", "allow"], ["*", "deny"]],},
-            },
+            config=_gen_testcase_config(
+                {
+                    "dir_1/dir_2": {"rules": [["common.foo.bar", "deny"]]},
+                    "dir_1": {"rules": [["common.foo.bar", "allow"], ["*", "deny"]],},
+                }
+            ),
             filename="dir_1/dir_2/file.py",
         ),
     ]
@@ -236,19 +268,33 @@ class ImportConstraintsRule(CstLintRule):
     def __init__(self, context: CstContext) -> None:
         super().__init__(context)
         self._repo_root = Path(self.context.config.repo_root).resolve()
-        rule_config = self.context.config.rule_config.get(self.__class__.__name__, None)
+        self._config = None
+        self._abs_file_path = (self._repo_root / context.file_path).resolve()
+        import_constraints_config = self.context.config.rule_config.get(
+            self.__class__.__name__, None
+        )
         # Check if not None and not an empty dict.
-        if rule_config is not None and rule_config and "rules" in rule_config:
-            repo_root = get_lint_config().repo_root
-            file_path = (repo_root / context.file_path).resolve()
+        if import_constraints_config is not None:
             rules_for_file = {}
+            ignore_tests = True
+            ignore_types = True
+
+            formatted_dirnames = _get_formatted_dirnames(
+                self._repo_root, frozenset(import_constraints_config.keys())
+            )
 
             # Run through logical ancestors of the filepath in reverse order so that
             # the closest ancestor settings override those from distant ancestors.
-            for parent_dir in reversed(file_path.parents):
-                rel_parent_dir = os.path.relpath(parent_dir, repo_root)
-                if rel_parent_dir in formatted_config:
-                    for rule in formatted_config[rel_parent_dir]["rules"]:
+            for parent_dir in reversed(self._abs_file_path.parents):
+                rel_parent_dir = os.path.relpath(parent_dir, self._repo_root)
+                if rel_parent_dir in formatted_dirnames:
+                    original_dirname = formatted_dirnames[rel_parent_dir]
+                    settings_for_dir = import_constraints_config[original_dirname]
+                    if not isinstance(settings_for_dir, dict):
+                        raise ValueError(
+                            "Each directory must specify key-value pairs of settings."
+                        )
+                    for rule in settings_for_dir.get("rules", []):
                         try:
                             module, action = rule
                         except ValueError:
@@ -257,12 +303,8 @@ class ImportConstraintsRule(CstLintRule):
                                 + ' E.g. \'["*", "deny"]\''
                             )
                         rules_for_file[module] = action
-                    ignore_tests = formatted_config[rel_parent_dir].get(
-                        "ignore_tests", ignore_tests
-                    )
-                    ignore_types = formatted_config[rel_parent_dir].get(
-                        "ignore_types", ignore_types
-                    )
+                    ignore_tests = settings_for_dir.get("ignore_tests", ignore_tests)
+                    ignore_types = settings_for_dir.get("ignore_types", ignore_types)
 
             if rules_for_file:
                 rules = [
@@ -312,7 +354,7 @@ class ImportConstraintsRule(CstLintRule):
             return module
 
         # Get the absolute path of the file
-        current_dir = self._repo_root / self.context.file_path
+        current_dir = self._abs_file_path
         for __ in range(level):
             current_dir = current_dir.parent
 
