@@ -7,7 +7,7 @@ import os
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, FrozenSet, Iterable, List, Optional, Sequence, Set
+from typing import Dict, Iterable, List, Optional, Sequence, Set
 
 import libcst as cst
 from libcst.helpers import get_full_name_for_node_or_raise
@@ -37,10 +37,18 @@ class _ImportRule:
     allow: bool
 
     @staticmethod
-    def from_config(module: str, action: str) -> "_ImportRule":
-        if action not in ("allow", "deny"):
-            raise ValueError("rule should either allow or deny a pattern")
-        return _ImportRule(module, action == "allow")
+    def from_config(rule: object) -> "_ImportRule":
+        if not isinstance(rule, list) or not len(rule) == 2:
+            raise ValueError(
+                f"Invalid entry `{rule}`.\n"
+                + "Each rule under a directory must specify a module and an action."
+                + ' E.g. \'["*", "deny"]\''
+            )
+        else:
+            module, action = rule
+            if action not in ("allow", "deny"):
+                raise ValueError("A rule should either allow or deny a pattern")
+            return _ImportRule(module, action == "allow")
 
     @property
     def is_wildcard(self) -> bool:
@@ -55,12 +63,22 @@ class _ImportRule:
 
 
 @dataclass(frozen=True)
-class ImportConfig:
+class _ImportConfig:
     rules: Sequence[_ImportRule]
     ignore_tests: bool
     ignore_types: bool
 
-    def _validate(self) -> "ImportConfig":
+    @staticmethod
+    def from_config(
+        rules: Sequence[_ImportRule], ignore_tests: object, ignore_types: object
+    ) -> "_ImportConfig":
+        if not isinstance(ignore_tests, bool):
+            raise ValueError("Setting `ignore_tests` value must be 'True' or 'False'.")
+        if not isinstance(ignore_types, bool):
+            raise ValueError("Setting `ignore_types` value must be 'True' or 'False'.")
+        return _ImportConfig(rules, ignore_tests, ignore_types)
+
+    def _validate(self) -> "_ImportConfig":
         if len(self.rules) == 0:
             raise ValueError("Must have at least one rule")
         if not self.rules[-1].is_wildcard:
@@ -83,26 +101,8 @@ def _get_local_roots(repo_root: Path) -> Set[str]:
     return set(os.listdir(repo_root))
 
 
-@lru_cache()
-def _get_formatted_dirnames(
-    repo_root: Path, dirnames: FrozenSet[str]
-) -> Dict[str, str]:
-    formatted_dirnames = {}
-    for original_dir in dirnames:
-        # If it's an absolute path, get relative to repo_root (which should be an absolute path).
-        if os.path.isabs(original_dir):
-            # We only want directories that are under repo root.
-            if original_dir.startswith(str(repo_root)):
-                formatted_relpath = os.path.relpath(original_dir, repo_root)
-                formatted_dirnames[formatted_relpath] = original_dir
-        # Otherwise assume all relative paths are relative to repo_root.
-        else:
-            formatted_dirnames[os.path.normpath(original_dir)] = original_dir
-    return formatted_dirnames
-
-
 class ImportConstraintsRule(CstLintRule):
-    _config: Optional[ImportConfig]
+    _config: Optional[_ImportConfig]
     _repo_root: Path
     _type_checking_stack: List[cst.If]
     _abs_file_path: Path
@@ -257,7 +257,9 @@ class ImportConstraintsRule(CstLintRule):
             "IG69",
             config=_gen_testcase_config(
                 {
-                    "dir_1/dir_2": {"rules": [["common.foo.bar", "deny"]]},
+                    "dir_1/dir_2": {
+                        "rules": [["common.foo.bar", "deny"], ["*", "deny"]]
+                    },
                     "dir_1": {"rules": [["common.foo.bar", "allow"], ["*", "deny"]],},
                 }
             ),
@@ -273,51 +275,67 @@ class ImportConstraintsRule(CstLintRule):
         import_constraints_config = self.context.config.rule_config.get(
             self.__class__.__name__, None
         )
-        # Check if not None and not an empty dict.
         if import_constraints_config is not None:
-            rules_for_file = {}
+            rules_for_file = []
             ignore_tests = True
             ignore_types = True
 
-            formatted_dirnames = _get_formatted_dirnames(
-                self._repo_root, frozenset(import_constraints_config.keys())
-            )
+            formatted_config: Dict[
+                Path, Dict[object, object]
+            ] = self._parse_and_format_config(import_constraints_config)
+            # Run through logical ancestors of the filepath stopping early if a parent
+            # directory is found in the config. The closest parent's settings will be used.
+            for parent_dir in self._abs_file_path.parents:
+                if parent_dir in formatted_config:
+                    settings_for_dir = formatted_config[parent_dir]
+                    rule_settings_for_dir = settings_for_dir.get("rules", [])
 
-            # Run through logical ancestors of the filepath in reverse order so that
-            # the closest ancestor settings override those from distant ancestors.
-            for parent_dir in reversed(self._abs_file_path.parents):
-                rel_parent_dir = os.path.relpath(parent_dir, self._repo_root)
-                if rel_parent_dir in formatted_dirnames:
-                    original_dirname = formatted_dirnames[rel_parent_dir]
-                    settings_for_dir = import_constraints_config[original_dirname]
-                    if not isinstance(settings_for_dir, dict):
+                    if not isinstance(rule_settings_for_dir, list):
                         raise ValueError(
-                            f"Invalid entry `{settings_for_dir}`.\n"
-                            + "Each directory must specify key-value pairs of settings."
+                            f"Invalid entry `{rule_settings_for_dir}`.\n"
+                            + "The `rules` setting must be a list of rules."
                         )
-                    for rule in settings_for_dir.get("rules", []):
-                        try:
-                            module, action = rule
-                        except ValueError:
-                            raise ValueError(
-                                f"Invalid entry `{rule}`.\n"
-                                + "Each rule under a directory must specify a module and an action."
-                                + ' E.g. \'["*", "deny"]\''
-                            )
-                        rules_for_file[module] = action
+
+                    for rule in rule_settings_for_dir:
+                        rules_for_file.append(_ImportRule.from_config(rule))
+
                     ignore_tests = settings_for_dir.get("ignore_tests", ignore_tests)
                     ignore_types = settings_for_dir.get("ignore_types", ignore_types)
 
-            if rules_for_file:
-                rules = [
-                    _ImportRule.from_config(m, action)
-                    for m, action in rules_for_file.items()
-                ]
+                    self._config = _ImportConfig.from_config(
+                        rules_for_file, ignore_tests, ignore_types
+                    )._validate()
 
-                self._config = ImportConfig(
-                    rules, ignore_tests, ignore_types
-                )._validate()
+                    break
         self._type_checking_stack = []
+
+    def _parse_and_format_config(
+        self, import_constraints_config: Dict[str, object]
+    ) -> Dict[Path, Dict[object, object]]:
+        # Normalizes paths, and converts all paths to absolute paths using the specified repo_root.
+        formatted_config: Dict[Path, Dict[object, object]] = {}
+        for dirname, dir_settings in import_constraints_config.items():
+            abs_dirpath: Optional[Path] = None
+
+            # If it's an absolute path, make sure it's relative to repo_root (which should be an absolute path).
+            if os.path.isabs(dirname):
+                if dirname.startswith(str(self._repo_root)):
+                    abs_dirpath = Path(dirname)
+            # Otherwise assume all relative paths exist under repo_root, and don't add paths that leave repo_root (eg: '../path')
+            else:
+                abs_dirname = os.path.normpath(os.path.join(self._repo_root, dirname))
+                if abs_dirname.startswith(str(self._repo_root)):
+                    abs_dirpath = Path(abs_dirname)
+
+            if not isinstance(dir_settings, dict):
+                raise ValueError(
+                    f"Invalid entry `{dir_settings}`.\n"
+                    + "You must specify settings in key-value format under a directory."
+                )
+            if abs_dirpath is not None:
+                formatted_config[abs_dirpath] = dir_settings
+
+        return formatted_config
 
     def should_skip_file(self) -> bool:
         config = self._config
