@@ -5,10 +5,10 @@
 
 from libcst.testing.utils import UnitTest
 
-from fixit.rules.import_constraints import ImportConstraintsRule, _ImportConfig
+from fixit.rules.import_constraints import _ImportConfig
 
 
-class ImportConstraintsRuleTest(UnitTest):
+class ImportConstraintsRuleConfigTest(UnitTest):
     def test_at_least_one_rule(self) -> None:
         # Settings must have at least one rule
         with self.assertRaisesRegex(ValueError, "at least one"):
@@ -41,7 +41,17 @@ class ImportConstraintsRuleTest(UnitTest):
                 {"rules": [["module_name", "wut"], ["*", "deny"]]}
             )
 
+    def test_non_boolean(self) -> None:
+        with self.assertRaisesRegex(ValueError, "value must be 'True' or 'False'"):
+            _ImportConfig.from_config({"ignore_tests": "blah"})
+        with self.assertRaisesRegex(ValueError, "value must be 'True' or 'False'"):
+            _ImportConfig.from_config({"ignore_types": "blah"})
+
     def test_valid(self) -> None:
         _ImportConfig.from_config(
-            {"rules": [["a.b.c", "allow"], ["d.e.f", "allow"], ["*", "deny"]]}
+            {
+                "rules": [["a.b.c", "allow"], ["d.e.f", "allow"], ["*", "deny"]],
+                "ignore_tests": True,
+                "ignore_types": False,
+            }
         )
