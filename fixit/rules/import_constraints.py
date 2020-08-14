@@ -2,6 +2,30 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+#
+#
+# Rule to impose import constraints in certain directories to improve runtime performance.
+# The directories specified in the ImportConstraintsRule setting in the `.fixit.config.yaml` file's
+# `rule_config` section can impose import constraints for that directory and its children as follows:
+#
+# rule_config:
+#     ImportConstraintsRule:
+#         dir_under_repo_root:
+#             rules: [
+#                 ["module_under_repo_root", "allow"],
+#                 ["another_module_under_repo_root, "deny"],
+#                 ["*", "deny"]
+#             ]
+#             ignore_tests: True
+#             ignore_types: True
+#
+# Each rule under `rules` is evaluated in order from top to bottom and the last rule for each directory
+# should be a wildcard rule.
+# `ignore_tests` and `ignore_types` should carry boolean values and can be omitted. They are both set to
+# `True` by default.
+# If `ignore_types` is True, this rule will ignore imports inside `if TYPE_CHECKING` blocks since those
+# imports do not have an affect on runtime performance.
+# If `ignore_tests` is True, this rule will not lint any files found in a testing module.
 
 import os
 from dataclasses import dataclass
@@ -17,7 +41,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 IG69_IMPORT_CONSTRAINT_VIOLATION: str = (
-    "IG69 According to the .fixit.config.yaml configuration file for this directory, "
+    "IG69 According to the settings for this directory in the .fixit.config.yaml configuration file, "
     + "{imported} cannot be imported from within {current_file}. "
 )
 
