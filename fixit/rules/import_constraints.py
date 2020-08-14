@@ -38,7 +38,7 @@ class _ImportRule:
 
     @staticmethod
     def from_config(rule: object) -> "_ImportRule":
-        if not isinstance(rule, list) or not len(rule) == 2:
+        if not isinstance(rule, list) or len(rule) != 2:
             raise ValueError(
                 f"Invalid entry `{rule}`.\n"
                 + "Each rule under a directory must specify a module and an action."
