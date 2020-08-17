@@ -69,14 +69,27 @@ class _ImportConfig:
     ignore_types: bool
 
     @staticmethod
-    def from_config(
-        rules: Sequence[_ImportRule], ignore_tests: object, ignore_types: object
-    ) -> "_ImportConfig":
+    def from_config(settings_for_dir: Dict[object, object]) -> "_ImportConfig":
+        rule_settings_for_dir = settings_for_dir.get("rules", [])
+
+        if not isinstance(rule_settings_for_dir, list):
+            raise ValueError(
+                f"Invalid entry `{rule_settings_for_dir}`.\n"
+                + "The `rules` setting must be a list of rules."
+            )
+
+        rules_for_file = []
+        for rule in rule_settings_for_dir:
+            rules_for_file.append(_ImportRule.from_config(rule))
+
+        ignore_tests = settings_for_dir.get("ignore_tests", True)
+        ignore_types = settings_for_dir.get("ignore_types", True)
         if not isinstance(ignore_tests, bool):
             raise ValueError("Setting `ignore_tests` value must be 'True' or 'False'.")
         if not isinstance(ignore_types, bool):
             raise ValueError("Setting `ignore_types` value must be 'True' or 'False'.")
-        return _ImportConfig(rules, ignore_tests, ignore_types)
+
+        return _ImportConfig(rules_for_file, ignore_tests, ignore_types)._validate()
 
     def _validate(self) -> "_ImportConfig":
         if len(self.rules) == 0:
@@ -276,16 +289,26 @@ class ImportConstraintsRule(CstLintRule):
             config=_gen_testcase_config({"common": {"rules": [["*", "deny"]]}}),
             filename="common/a.py",
         ),
-        # File belongs to more than one directory setting
+        # File belongs to more than one directory setting, import from
         Invalid(
             "from common.foo import bar",
             "IG69",
             config=_gen_testcase_config(
                 {
-                    "dir_1/dir_2": {
-                        "rules": [["common.foo.bar", "deny"], ["*", "deny"]]
-                    },
+                    "dir_1/dir_2": {"rules": [["*", "deny"]]},
                     "dir_1": {"rules": [["common.foo.bar", "allow"], ["*", "deny"]],},
+                }
+            ),
+            filename="dir_1/dir_2/file.py",
+        ),
+        # File belongs to more than one directory setting, import
+        Invalid(
+            "import common",
+            "IG69",
+            config=_gen_testcase_config(
+                {
+                    "dir_1/dir_2": {"rules": [["*", "deny"]]},
+                    "dir_1": {"rules": [["common", "allow"], ["*", "deny"]],},
                 }
             ),
             filename="dir_1/dir_2/file.py",
@@ -301,10 +324,6 @@ class ImportConstraintsRule(CstLintRule):
             self.__class__.__name__, None
         )
         if import_constraints_config is not None:
-            rules_for_file = []
-            ignore_tests = True
-            ignore_types = True
-
             formatted_config: Dict[
                 Path, Dict[object, object]
             ] = self._parse_and_format_config(import_constraints_config)
@@ -313,24 +332,7 @@ class ImportConstraintsRule(CstLintRule):
             for parent_dir in self._abs_file_path.parents:
                 if parent_dir in formatted_config:
                     settings_for_dir = formatted_config[parent_dir]
-                    rule_settings_for_dir = settings_for_dir.get("rules", [])
-
-                    if not isinstance(rule_settings_for_dir, list):
-                        raise ValueError(
-                            f"Invalid entry `{rule_settings_for_dir}`.\n"
-                            + "The `rules` setting must be a list of rules."
-                        )
-
-                    for rule in rule_settings_for_dir:
-                        rules_for_file.append(_ImportRule.from_config(rule))
-
-                    ignore_tests = settings_for_dir.get("ignore_tests", ignore_tests)
-                    ignore_types = settings_for_dir.get("ignore_types", ignore_types)
-
-                    self._config = _ImportConfig.from_config(
-                        rules_for_file, ignore_tests, ignore_types
-                    )._validate()
-
+                    self._config = _ImportConfig.from_config(settings_for_dir)
                     break
         self._type_checking_stack = []
 
