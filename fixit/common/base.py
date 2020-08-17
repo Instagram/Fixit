@@ -135,7 +135,7 @@ class CstLintRule(BatchableCSTVisitor, metaclass=ABCMeta):
         report = CstLintRuleReport(
             file_path=self.context.file_path,
             node=node,
-            code=_get_code(message),
+            code=self.__class__.__name__,
             message=message.split(" ", 1)[1],
             line=position.line,
             # libcst columns are 0-indexed but arc is 1-indexed

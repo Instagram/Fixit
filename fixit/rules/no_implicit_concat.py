@@ -13,21 +13,29 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 class UsePlusForStringConcatRule(CstLintRule):
     MESSAGE: str = (
-        "IG131 Implicit string concatenation detected, please add '+' to be explicit. "
+        "Implicit string concatenation detected, please add '+' to be explicit. "
         + 'E.g. a tuple or a call ("a" "b") with a missing comma makes the multiple strings '
         + "been concatenated as one string and causes unexpected result."
     )
     VALID = [Valid("'abc'"), Valid("'abc' + 'def'"), Valid("f'abc'")]
     INVALID = [
-        Invalid("'ab' 'cd'", "IG131", expected_replacement="('ab' + 'cd')"),
+        Invalid(
+            "'ab' 'cd'",
+            "UsePlusForStringConcatRule",
+            expected_replacement="('ab' + 'cd')",
+        ),
         # We can deal with nested concatenated strings
         Invalid(
             "'ab' 'cd' 'ef' 'gh'",
-            "IG131",
+            "UsePlusForStringConcatRule",
             expected_replacement="('ab' + 'cd' + 'ef' + 'gh')",
         ),
         # works for f-strings too
-        Invalid("f'ab' f'cd'", "IG131", expected_replacement="(f'ab' + f'cd')"),
+        Invalid(
+            "f'ab' f'cd'",
+            "UsePlusForStringConcatRule",
+            expected_replacement="(f'ab' + f'cd')",
+        ),
         # arbitrary whitespace between the elements is preserved
         Invalid(
             """
@@ -37,7 +45,7 @@ class UsePlusForStringConcatRule(CstLintRule):
                     'cd'  # trailing comment
                 )
             """,
-            "IG131",
+            "UsePlusForStringConcatRule",
             expected_replacement="""
                 (
                     # comment

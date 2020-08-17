@@ -11,7 +11,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 IG66_UNNECESSARY_LIST_COMPREHENSION: str = (
-    "IG66 Unnecessary list comprehension - {func} can take a generator, and is likely "
+    "Unnecessary list comprehension - {func} can take a generator, and is likely "
     + "to short-circuit, so constructing a list is probably wasteful."
 )
 
@@ -35,12 +35,12 @@ class UnnecessaryListComprehensionRule(CstLintRule):
     INVALID = [
         Invalid(
             "any([val for val in iterable])",
-            "IG66",
+            "UnnecessaryListComprehensionRule",
             expected_replacement="any(val for val in iterable)",
         ),
         Invalid(
             "all([val for val in iterable])",
-            "IG66",
+            "UnnecessaryListComprehensionRule",
             expected_replacement="all(val for val in iterable)",
         ),
     ]

@@ -16,7 +16,7 @@ class BadCallCstLintRule(CstLintRule):
     def visit_Call(self, node: cst.Call) -> None:
         func = node.func
         if isinstance(func, cst.Name) and func.value == "bad_call":
-            self.report(node, "IG00 You made a bad call!")
+            self.report(node, "You made a bad call!")
 
 
 class ParenthesizeAttributeLintRule(CstLintRule):
@@ -41,9 +41,7 @@ class ParenthesizeAttributeLintRule(CstLintRule):
                 lpar=[cst.LeftParen()], rpar=[cst.RightParen()]
             )
             self.report(
-                node,
-                "IG00 All attributes should be parenthesized.",
-                replacement=new_node,
+                node, "All attributes should be parenthesized.", replacement=new_node,
             )
 
 
@@ -87,7 +85,7 @@ class RuleLintEngineTest(UnitTest):
                 "expected_report_count": 1,
             },
             "bad_call_noqa_file": {
-                "source": b"# noqa-file: IG00: Test case\nbad_call()\nbad_call()\n",
+                "source": b"# noqa-file: BadCallCstLintRule: Test case\nbad_call()\nbad_call()\n",
                 "use_ignore_byte_markers": False,
                 "use_ignore_comments": True,
                 "expected_report_count": 0,

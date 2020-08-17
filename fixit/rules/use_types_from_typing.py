@@ -13,7 +13,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 IG117_REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
-    "IG117 You are using builtins.{builtin_type} as a type annotation "
+    "You are using builtins.{builtin_type} as a type annotation "
     + "but the type system doesn't recognize it as a valid type."
     + " You should use typing.{correct_type} instead."
 )
@@ -57,7 +57,7 @@ class UseTypesFromTypingRule(CstLintRule):
             def whatever(list: list[str]) -> None:
                 pass
             """,
-            "IG117",
+            "UseTypesFromTypingRule",
             expected_replacement="""
             from typing import List
             def whatever(list: List[str]) -> None:
@@ -69,21 +69,21 @@ class UseTypesFromTypingRule(CstLintRule):
             def function(list: list[str]) -> None:
                 pass
             """,
-            "IG117",
+            "UseTypesFromTypingRule",
         ),
         Invalid(
             """
             def func() -> None:
                 thing: dict[str, str] = {}
             """,
-            "IG117",
+            "UseTypesFromTypingRule",
         ),
         Invalid(
             """
             def func() -> None:
                 thing: tuple[str]
             """,
-            "IG117",
+            "UseTypesFromTypingRule",
         ),
         Invalid(
             """
@@ -91,7 +91,7 @@ class UseTypesFromTypingRule(CstLintRule):
             def func() -> None:
                 thing: dict[str, str] = {}
             """,
-            "IG117",
+            "UseTypesFromTypingRule",
             expected_replacement="""
             from typing import Dict
             def func() -> None:

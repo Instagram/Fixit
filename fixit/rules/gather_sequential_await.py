@@ -11,7 +11,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 class GatherSequentialAwaitRule(CstLintRule):
     MESSAGE: str = (
-        "IG02 Using await in a loop will run async function sequentially. Use "
+        "Using await in a loop will run async function sequentially. Use "
         + "asyncio.gather() to run async functions concurrently."
     )
     VALID = [
@@ -39,7 +39,7 @@ class GatherSequentialAwaitRule(CstLintRule):
                 for _i in range(0, 2):
                     await async_foo()
             """,
-            "IG02",
+            "GatherSequentialAwaitRule",
             line=3,
         ),
         Invalid(
@@ -48,7 +48,7 @@ class GatherSequentialAwaitRule(CstLintRule):
                 for _i in range(0, 2):
                     x = await async_foo()
             """,
-            "IG02",
+            "GatherSequentialAwaitRule",
             line=3,
         ),
         Invalid(
@@ -56,7 +56,7 @@ class GatherSequentialAwaitRule(CstLintRule):
             async def async_check_list_comprehension():
                 [await async_foo() for _i in range(0, 2)]
             """,
-            "IG02",
+            "GatherSequentialAwaitRule",
             line=2,
         ),
     ]

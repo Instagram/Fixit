@@ -12,7 +12,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 class ReplaceUnionWithOptionalRule(CstLintRule):
     MESSAGE: str = (
-        "IG125 `Optional[T]` is preferred over `Union[T, None]` or `Union[None, T]`. "
+        "`Optional[T]` is preferred over `Union[T, None]` or `Union[None, T]`. "
         + "Learn more: https://docs.python.org/3/library/typing.html#typing.Optional"
     )
     METADATA_DEPENDENCIES = (cst.metadata.ScopeProvider,)
@@ -42,7 +42,7 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[str, None]:
                 pass
             """,
-            "IG125",
+            "ReplaceUnionWithOptionalRule",
         ),
         Invalid(
             """
@@ -50,7 +50,7 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[Dict[str, int], None]:
                 pass
             """,
-            "IG125",
+            "ReplaceUnionWithOptionalRule",
             expected_replacement="""
             from typing import Optional
             def func() -> Optional[Dict[str, int]]:
@@ -63,7 +63,7 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[str, None]:
                 pass
             """,
-            "IG125",
+            "ReplaceUnionWithOptionalRule",
             expected_replacement="""
             from typing import Optional
             def func() -> Optional[str]:
@@ -76,7 +76,7 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[Dict, None]:
                 pass
             """,
-            "IG125",
+            "ReplaceUnionWithOptionalRule",
             expected_replacement="""
             from typing import Optional
             def func() -> Optional[Dict]:

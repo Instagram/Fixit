@@ -17,7 +17,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 IG69_IMPORT_CONSTRAINT_VIOLATION: str = (
-    "IG69 According to the settings for this directory in the .fixit.config.yaml configuration file, "
+    "According to the settings for this directory in the .fixit.config.yaml configuration file, "
     + "{imported} cannot be imported from within {current_file}. "
 )
 
@@ -244,14 +244,14 @@ class ImportConstraintsRule(CstLintRule):
         # Everything is denied
         Invalid(
             "import common",
-            "IG69",
+            "ImportConstraintsRule",
             config=_gen_testcase_config({"some_dir": {"rules": [["*", "deny"]]}}),
             filename="some_dir/file.py",
         ),
         # Validate rules are evaluated in order
         Invalid(
             "from common.foo import bar",
-            "IG69",
+            "ImportConstraintsRule",
             config=_gen_testcase_config(
                 {
                     "some_dir": {
@@ -268,7 +268,7 @@ class ImportConstraintsRule(CstLintRule):
         # We should match against the real name, not the aliased name
         Invalid(
             "import common as not_common",
-            "IG69",
+            "ImportConstraintsRule",
             config=_gen_testcase_config(
                 {"some_dir": {"rules": [["common", "deny"], ["*", "allow"]]}}
             ),
@@ -276,7 +276,7 @@ class ImportConstraintsRule(CstLintRule):
         ),
         Invalid(
             "from common import bar as not_bar",
-            "IG69",
+            "ImportConstraintsRule",
             config=_gen_testcase_config(
                 {"some_dir": {"rules": [["common.bar", "deny"], ["*", "allow"]]}}
             ),
@@ -285,14 +285,14 @@ class ImportConstraintsRule(CstLintRule):
         # Relative imports
         Invalid(
             "from . import b",
-            "IG69",
+            "ImportConstraintsRule",
             config=_gen_testcase_config({"common": {"rules": [["*", "deny"]]}}),
             filename="common/a.py",
         ),
         # File belongs to more than one directory setting, import from
         Invalid(
             "from common.foo import bar",
-            "IG69",
+            "ImportConstraintsRule",
             config=_gen_testcase_config(
                 {
                     "dir_1/dir_2": {"rules": [["*", "deny"]]},
@@ -304,7 +304,7 @@ class ImportConstraintsRule(CstLintRule):
         # File belongs to more than one directory setting, import
         Invalid(
             "import common",
-            "IG69",
+            "ImportConstraintsRule",
             config=_gen_testcase_config(
                 {
                     "dir_1/dir_2": {"rules": [["*", "deny"]]},

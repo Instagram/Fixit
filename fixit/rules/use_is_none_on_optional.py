@@ -9,7 +9,7 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.metadata import TypeInferenceProvider
 
-from fixit.common.base import CstLintRule, _get_code
+from fixit.common.base import CstLintRule
 from fixit.common.report import CstLintRuleReport
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
@@ -17,7 +17,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 class UseIsNoneOnOptionalRule(CstLintRule):
     METADATA_DEPENDENCIES = (TypeInferenceProvider,)
     MESSAGE: str = (
-        "IG999 When checking if an `Optional` has a value, avoid using it as a boolean since it implicitly checks the object's `__bool__()`, `__len__()` is not `0`, or the value is not `None`. "
+        "When checking if an `Optional` has a value, avoid using it as a boolean since it implicitly checks the object's `__bool__()`, `__len__()` is not `0`, or the value is not `None`. "
         + "Instead, use `is None` or `is not None` to be explicit."
     )
 
@@ -48,7 +48,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a:
                 pass
             """,
-            kind="IG999",
+            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
 
@@ -65,7 +65,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if x and a:
                 ...
             """,
-            kind="IG999",
+            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None
@@ -82,7 +82,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a and x:
                 ...
             """,
-            kind="IG999",
+            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None
@@ -97,7 +97,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             a: Optional[str] = None
             x: bool = not a
             """,
-            kind="IG999",
+            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None
@@ -111,7 +111,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             x: bool
             if x or a: pass
             """,
-            kind="IG999",
+            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str]
@@ -127,7 +127,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if x: pass
             elif a: pass
             """,
-            kind="IG999",
+            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str]
@@ -144,7 +144,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a: pass
             elif b: pass
             """,
-            kind="IG999",
+            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None
@@ -179,7 +179,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
                 if isinstance(report, CstLintRuleReport):
                     # Check whether the lint rule code matches this lint rule's code so we don't remove another
                     # lint rule's report.
-                    if report.node is orelse and report.code == _get_code(self.MESSAGE):
+                    if report.node is orelse and report.code == self.__class__.__name__:
                         orelse_report = report
                     else:
                         new_reports.append(report)

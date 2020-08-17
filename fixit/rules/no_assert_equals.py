@@ -12,14 +12,14 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 class NoAssertEqualsRule(CstLintRule):
     MESSAGE: str = (
-        'IG64 "assertEquals" is deprecated, use "assertEqual" instead.\n'
+        '"assertEquals" is deprecated, use "assertEqual" instead.\n'
         + "See https://docs.python.org/2/library/unittest.html#deprecated-aliases and https://bugs.python.org/issue9424."
     )
     VALID = [Valid("self.assertEqual(a, b)")]
     INVALID = [
         Invalid(
             "self.assertEquals(a, b)",
-            "IG64",
+            "NoAssertEqualsRule",
             expected_replacement="self.assertEqual(a, b)",
         )
     ]
