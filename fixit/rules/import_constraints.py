@@ -264,16 +264,26 @@ class ImportConstraintsRule(CstLintRule):
             config=_gen_testcase_config({"common": {"rules": [["*", "deny"]]}}),
             filename="common/a.py",
         ),
-        # File belongs to more than one directory setting
+        # File belongs to more than one directory setting, import from
         Invalid(
             "from common.foo import bar",
             "IG69",
             config=_gen_testcase_config(
                 {
-                    "dir_1/dir_2": {
-                        "rules": [["common.foo.bar", "deny"], ["*", "deny"]]
-                    },
+                    "dir_1/dir_2": {"rules": [["*", "deny"]]},
                     "dir_1": {"rules": [["common.foo.bar", "allow"], ["*", "deny"]],},
+                }
+            ),
+            filename="dir_1/dir_2/file.py",
+        ),
+        # File belongs to more than one directory setting, import
+        Invalid(
+            "import common",
+            "IG69",
+            config=_gen_testcase_config(
+                {
+                    "dir_1/dir_2": {"rules": [["*", "deny"]]},
+                    "dir_1": {"rules": [["common", "allow"], ["*", "deny"]],},
                 }
             ),
             filename="dir_1/dir_2/file.py",
