@@ -60,7 +60,6 @@ class ValidTestCase:
 @dataclass(frozen=True)
 class InvalidTestCase:
     code: str
-    kind: str
     line: Optional[int] = None
     column: Optional[int] = None
     expected_replacement: Optional[str] = None
@@ -70,6 +69,7 @@ class InvalidTestCase:
             Path(__file__).parent.parent
         ),  # Set base config repo_root to `fixit` directory for testing.
     )
+    kind: Optional[str] = None
 
     @property
     def expected_str(self) -> str:

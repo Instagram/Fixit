@@ -10,7 +10,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class ComparePrimitivesByEqualRule(CstLintRule):
-    MESSAGE = "IG85 Don't use `is` or `is not` to compare primitives, as they compare references. Use == or != instead."
+    MESSAGE = "Don't use `is` or `is not` to compare primitives, as they compare references. Use == or != instead."
     VALID = [
         Valid("a == 1"),
         Valid("a == '1'"),
@@ -24,14 +24,14 @@ class ComparePrimitivesByEqualRule(CstLintRule):
         Valid("1 > b is c"),
     ]
     INVALID = [
-        Invalid("a is 1", "IG85", expected_replacement="a == 1"),
-        Invalid("a is '1'", "IG85", expected_replacement="a == '1'"),
-        Invalid("a is f'1{b}'", "IG85", expected_replacement="a == f'1{b}'"),
-        Invalid("a is not f'1{d}'", "IG85", expected_replacement="a != f'1{d}'"),
-        Invalid("1 is a", "IG85", expected_replacement="1 == a"),
-        Invalid("'2' > '1' is a", "IG85", expected_replacement="'2' > '1' == a"),
-        Invalid("3 > a is 2", "IG85", expected_replacement="3 > a == 2"),
-        Invalid("1  is   2", "IG85", expected_replacement="1  ==   2"),
+        Invalid("a is 1", expected_replacement="a == 1"),
+        Invalid("a is '1'", expected_replacement="a == '1'"),
+        Invalid("a is f'1{b}'", expected_replacement="a == f'1{b}'",),
+        Invalid("a is not f'1{d}'", expected_replacement="a != f'1{d}'",),
+        Invalid("1 is a", expected_replacement="1 == a"),
+        Invalid("'2' > '1' is a", expected_replacement="'2' > '1' == a",),
+        Invalid("3 > a is 2", expected_replacement="3 > a == 2",),
+        Invalid("1  is   2", expected_replacement="1  ==   2",),
     ]
     PRIMITIVES = (cst.BaseNumber, cst.BaseString)
 

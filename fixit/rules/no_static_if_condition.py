@@ -14,7 +14,7 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 class NoStaticIfConditionRule(CstLintRule):
     MESSAGE: str = (
-        "IG104 Your if condition appears to evalute to a static value (eg `or True`, `and False`). "
+        "Your if condition appears to evalute to a static value (eg `or True`, `and False`). "
         + "Please double check this logic and if it is actually temporary debug code."
     )
     VALID = [
@@ -53,63 +53,54 @@ class NoStaticIfConditionRule(CstLintRule):
             if True:
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if crazy_expression or True:
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if crazy_expression and False:
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if crazy_expression and not True:
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if crazy_expression or not False:
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if crazy_expression or (something() or True):
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if crazy_expression and (something() and (not True)):
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if crazy_expression and (something() and (other_func() and not True)):
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
             if (crazy_expression and (something() and (not True))) or True:
                 do_something()
             """,
-            "IG104",
         ),
         Invalid(
             """
@@ -117,7 +108,6 @@ class NoStaticIfConditionRule(CstLintRule):
                 if (await expression()) and False:
                     pass
             """,
-            "IG104",
         ),
     ]
 

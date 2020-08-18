@@ -40,7 +40,7 @@ class _RenameTransformer(cst.CSTTransformer):
 
 class ClsInClassmethodRule(CstLintRule):
     METADATA_DEPENDENCIES = (QualifiedNameProvider, ScopeProvider)
-    MESSAGE = "IG132 when using @classmethod, the first argument must be 'cls'."
+    MESSAGE = "when using @classmethod, the first argument must be 'cls'."
     VALID = [
         Valid(
             """
@@ -78,7 +78,6 @@ class ClsInClassmethodRule(CstLintRule):
                 def cm():
                     pass
             """,
-            "IG132",
             expected_replacement="""
             class foo:
                 # No args at all.
@@ -95,7 +94,6 @@ class ClsInClassmethodRule(CstLintRule):
                 def cm(a):
                     return a
             """,
-            "IG132",
             expected_replacement="""
             class foo:
                 # Single arg + reference.
@@ -112,7 +110,6 @@ class ClsInClassmethodRule(CstLintRule):
                 def cm(a):
                     cls = 2
             """,
-            "IG132",
         ),
         Invalid(
             """
@@ -123,7 +120,6 @@ class ClsInClassmethodRule(CstLintRule):
                     b = a
                     b = a.__name__
             """,
-            "IG132",
             expected_replacement="""
             class foo:
                 # Multiple args + references.
@@ -149,7 +145,6 @@ class ClsInClassmethodRule(CstLintRule):
                     def f(a):
                         return a + 1
             """,
-            "IG132",
             expected_replacement="""
             class foo:
                 # Do not replace in nested scopes.
@@ -181,7 +176,6 @@ class ClsInClassmethodRule(CstLintRule):
                 def cm(a):
                     a[1] = foo.cm(a=a)
             """,
-            "IG132",
             expected_replacement="""
             # Do not replace in surrounding scopes.
             a = 1
@@ -209,7 +203,6 @@ class ClsInClassmethodRule(CstLintRule):
                 async def cm(a, b, c):
                     pass
             """,
-            "IG132",
             expected_replacement="""
             def another_decorator(x): pass
 

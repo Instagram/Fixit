@@ -11,11 +11,11 @@ from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 IG142_UNNECESSARY_GENERATOR: str = (
-    "IG142 It's unnecessary to use {func} around a geneartor expression, since "
+    "It's unnecessary to use {func} around a geneartor expression, since "
     + "there are equivalent comprehensions for this type."
 )
 IG143_UNNECESSARY_LIST_COMPREHENSION: str = (
-    "IG143 It's unnecessary to use a list comprehension inside a call to {func} "
+    "It's unnecessary to use a list comprehension inside a call to {func} "
     + "since there are equivalent comprehensions for this type"
 )
 
@@ -42,70 +42,57 @@ class RewriteToComprehension(CstLintRule):
         # IG142
         Invalid(
             "list(val for val in iterable)",
-            "IG142",
             expected_replacement="[val for val in iterable]",
         ),
         # Nested list comprehenstion
         Invalid(
             "list(val for row in matrix for val in row)",
-            "IG142",
             expected_replacement="[val for row in matrix for val in row]",
         ),
         Invalid(
             "set(val for val in iterable)",
-            "IG142",
             expected_replacement="{val for val in iterable}",
         ),
         Invalid(
             "dict((x, f(x)) for val in iterable)",
-            "IG142",
             expected_replacement="{x: f(x) for val in iterable}",
         ),
         Invalid(
             "dict((x, y) for y, x in iterable)",
-            "IG142",
             expected_replacement="{x: y for y, x in iterable}",
         ),
         Invalid(
             "dict([val, val+1] for val in iterable)",
-            "IG142",
             expected_replacement="{val: val+1 for val in iterable}",
         ),
         Invalid(
             'dict((x["name"], json.loads(x["data"])) for x in responses)',
-            "IG142",
             expected_replacement='{x["name"]: json.loads(x["data"]) for x in responses}',
         ),
         # Nested dict comprehension
         Invalid(
             "dict((k, v) for k, v in iter for iter in iters)",
-            "IG142",
             expected_replacement="{k: v for k, v in iter for iter in iters}",
         ),
         # IG143
         Invalid(
             "set([val for val in iterable])",
-            "IG143",
             expected_replacement="{val for val in iterable}",
         ),
         Invalid(
             "dict([[val, val+1] for val in iterable])",
-            "IG143",
             expected_replacement="{val: val+1 for val in iterable}",
         ),
         Invalid(
             "dict([(x, f(x)) for x in foo])",
-            "IG143",
             expected_replacement="{x: f(x) for x in foo}",
         ),
         Invalid(
             "dict([(x, y) for y, x in iterable])",
-            "IG143",
             expected_replacement="{x: y for y, x in iterable}",
         ),
         Invalid(
             "set([val for row in matrix for val in row])",
-            "IG143",
             expected_replacement="{val for row in matrix for val in row}",
         ),
     ]

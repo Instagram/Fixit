@@ -20,7 +20,7 @@ class CompareSingletonPrimitivesByIsRule(CstLintRule):
     """
 
     MESSAGE: str = (
-        "IG149 Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identiy."
+        "Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identiy."
         + " Use `is` or `is not` instead."
     )
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
@@ -40,15 +40,13 @@ class CompareSingletonPrimitivesByIsRule(CstLintRule):
         Valid("2 != x"),
     ]
     INVALID = [
-        Invalid(code="x != True", kind="IG149", expected_replacement="x is not True"),
-        Invalid(code="x != False", kind="IG149", expected_replacement="x is not False"),
-        Invalid(code="x == False", kind="IG149", expected_replacement="x is False"),
-        Invalid(code="x == None", kind="IG149", expected_replacement="x is None"),
-        Invalid(code="x != None", kind="IG149", expected_replacement="x is not None"),
-        Invalid(code="False == x", kind="IG149", expected_replacement="False is x"),
-        Invalid(
-            code="x is True == y", kind="IG149", expected_replacement="x is True is y"
-        ),
+        Invalid(code="x != True", expected_replacement="x is not True",),
+        Invalid(code="x != False", expected_replacement="x is not False",),
+        Invalid(code="x == False", expected_replacement="x is False",),
+        Invalid(code="x == None", expected_replacement="x is None",),
+        Invalid(code="x != None", expected_replacement="x is not None",),
+        Invalid(code="False == x", expected_replacement="False is x",),
+        Invalid(code="x is True == y", expected_replacement="x is True is y",),
     ]
 
     QUALIFIED_SINGLETON_PRIMITIVES: FrozenSet[QualifiedName] = frozenset(
