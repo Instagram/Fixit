@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import re
-from typing import Optional, cast
+from typing import cast
 
 import libcst as cst
 import libcst.matchers as m
@@ -40,8 +40,7 @@ class UseClassNameAsCodeRule(CstLintRule):
         class FakeRule(CstLintRule):
             INVALID = [
                 Invalid(
-                    code="",
-                    kind="FakeRule"
+                    code=""
                 )
             ]
         """
@@ -52,7 +51,6 @@ class UseClassNameAsCodeRule(CstLintRule):
             code="""
             MESSAGE = "IG90000 Message"
             """,
-            kind="UseClassNameAsCodeRule",
             expected_replacement="""
             MESSAGE = "Message"
             """,
@@ -68,15 +66,13 @@ class UseClassNameAsCodeRule(CstLintRule):
                     )
                 ]
             """,
-            kind="UseClassNameAsCodeRule",
             expected_replacement="""
             from fixit.common.base import CstLintRule
             class FakeRule(CstLintRule):
                 INVALID = [
                     Invalid(
                         code="",
-                        kind="FakeRule"
-                    )
+                        )
                 ]
             """,
         ),
@@ -88,25 +84,7 @@ class UseClassNameAsCodeRule(CstLintRule):
 
     def __init__(self, context: CstContext) -> None:
         super().__init__(context)
-        self.lint_rule_classname: Optional[str] = None
         self.inside_invalid_call: bool = False
-
-    def visit_ClassDef(self, node: cst.ClassDef) -> None:
-        # Check if this is a LintRule class definition
-        for base_class in node.bases:
-            if QualifiedNameProvider.has_name(
-                self, base_class.value, self.QUALIFIED_CSTLINTRULE
-            ):
-                self.lint_rule_classname = node.name.value
-                return
-
-    def leave_ClassDef(self, original_node: cst.ClassDef) -> None:
-        for base_class in original_node.bases:
-            if QualifiedNameProvider.has_name(
-                self, base_class.value, self.QUALIFIED_CSTLINTRULE
-            ):
-                self.lint_rule_classname = None
-                return
 
     def visit_SimpleString(self, node: cst.SimpleString) -> None:
         matched = re.match(r"^(\'|\")(?P<igcode>IG\d+ )\S", node.value)
@@ -134,19 +112,14 @@ class UseClassNameAsCodeRule(CstLintRule):
                 self.inside_invalid_call = False
 
     def visit_Arg(self, node: cst.Arg) -> None:
-        # Replace `code` arguments to Invalid test cases
+        # Remove `kind` arguments to Invalid test cases as they are no longer needed
         if self.inside_invalid_call:
             arg_value = node.value
             if m.matches(arg_value, m.SimpleString()):
                 arg_value = cast(cst.SimpleString, arg_value)
                 string_value = arg_value.value
                 matched = re.match(r"^(\'|\")(?P<igcode>IG\d+)(\'|\")\Z", string_value)
-                if matched and self.lint_rule_classname is not None:
-                    new_string_value = cst.SimpleString(
-                        value=f'"{self.lint_rule_classname}"'
-                    )
+                if matched:
                     self.report(
-                        node,
-                        self.MESSAGE,
-                        replacement=node.with_changes(value=new_string_value),
+                        node, self.MESSAGE, replacement=cst.RemovalSentinel.REMOVE,
                     )

@@ -48,7 +48,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a:
                 pass
             """,
-            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
 
@@ -65,7 +64,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if x and a:
                 ...
             """,
-            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None
@@ -82,7 +80,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a and x:
                 ...
             """,
-            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None
@@ -97,7 +94,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             a: Optional[str] = None
             x: bool = not a
             """,
-            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None
@@ -111,7 +107,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             x: bool
             if x or a: pass
             """,
-            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str]
@@ -127,7 +122,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if x: pass
             elif a: pass
             """,
-            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str]
@@ -144,7 +138,6 @@ class UseIsNoneOnOptionalRule(CstLintRule):
             if a: pass
             elif b: pass
             """,
-            kind="UseIsNoneOnOptionalRule",
             expected_replacement="""
             from typing import Optional
             a: Optional[str] = None

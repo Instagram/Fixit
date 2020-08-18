@@ -35,12 +35,10 @@ class UnnecessaryListComprehensionRule(CstLintRule):
     INVALID = [
         Invalid(
             "any([val for val in iterable])",
-            "UnnecessaryListComprehensionRule",
             expected_replacement="any(val for val in iterable)",
         ),
         Invalid(
             "all([val for val in iterable])",
-            "UnnecessaryListComprehensionRule",
             expected_replacement="all(val for val in iterable)",
         ),
     ]

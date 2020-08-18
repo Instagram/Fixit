@@ -19,23 +19,13 @@ class UsePlusForStringConcatRule(CstLintRule):
     )
     VALID = [Valid("'abc'"), Valid("'abc' + 'def'"), Valid("f'abc'")]
     INVALID = [
-        Invalid(
-            "'ab' 'cd'",
-            "UsePlusForStringConcatRule",
-            expected_replacement="('ab' + 'cd')",
-        ),
+        Invalid("'ab' 'cd'", expected_replacement="('ab' + 'cd')",),
         # We can deal with nested concatenated strings
         Invalid(
-            "'ab' 'cd' 'ef' 'gh'",
-            "UsePlusForStringConcatRule",
-            expected_replacement="('ab' + 'cd' + 'ef' + 'gh')",
+            "'ab' 'cd' 'ef' 'gh'", expected_replacement="('ab' + 'cd' + 'ef' + 'gh')",
         ),
         # works for f-strings too
-        Invalid(
-            "f'ab' f'cd'",
-            "UsePlusForStringConcatRule",
-            expected_replacement="(f'ab' + f'cd')",
-        ),
+        Invalid("f'ab' f'cd'", expected_replacement="(f'ab' + f'cd')",),
         # arbitrary whitespace between the elements is preserved
         Invalid(
             """
@@ -45,7 +35,6 @@ class UsePlusForStringConcatRule(CstLintRule):
                     'cd'  # trailing comment
                 )
             """,
-            "UsePlusForStringConcatRule",
             expected_replacement="""
                 (
                     # comment

@@ -42,7 +42,6 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[str, None]:
                 pass
             """,
-            "ReplaceUnionWithOptionalRule",
         ),
         Invalid(
             """
@@ -50,7 +49,6 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[Dict[str, int], None]:
                 pass
             """,
-            "ReplaceUnionWithOptionalRule",
             expected_replacement="""
             from typing import Optional
             def func() -> Optional[Dict[str, int]]:
@@ -63,7 +61,6 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[str, None]:
                 pass
             """,
-            "ReplaceUnionWithOptionalRule",
             expected_replacement="""
             from typing import Optional
             def func() -> Optional[str]:
@@ -76,7 +73,6 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             def func() -> Union[Dict, None]:
                 pass
             """,
-            "ReplaceUnionWithOptionalRule",
             expected_replacement="""
             from typing import Optional
             def func() -> Optional[Dict]:

@@ -18,9 +18,7 @@ class NoAssertEqualsRule(CstLintRule):
     VALID = [Valid("self.assertEqual(a, b)")]
     INVALID = [
         Invalid(
-            "self.assertEquals(a, b)",
-            "NoAssertEqualsRule",
-            expected_replacement="self.assertEqual(a, b)",
+            "self.assertEquals(a, b)", expected_replacement="self.assertEqual(a, b)",
         )
     ]
 

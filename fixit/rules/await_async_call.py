@@ -71,7 +71,6 @@ class AwaitAsyncCallRule(CstLintRule):
             async def bar():
                 foo()
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             async def foo(): pass
             async def bar():
@@ -85,7 +84,6 @@ class AwaitAsyncCallRule(CstLintRule):
             obj = Foo()
             obj._attr
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def _attr(self): pass
@@ -100,7 +98,6 @@ class AwaitAsyncCallRule(CstLintRule):
             obj = Foo()
             obj._method()
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def _method(self): pass
@@ -115,7 +112,6 @@ class AwaitAsyncCallRule(CstLintRule):
             obj = Foo()
             result = obj._method()
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def _method(self): pass
@@ -133,7 +129,6 @@ class AwaitAsyncCallRule(CstLintRule):
                     return Foo()
             user = NodeUser.get().bar()
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def bar(): pass
@@ -151,7 +146,6 @@ class AwaitAsyncCallRule(CstLintRule):
             obj = Foo()
             attribute = obj._attr
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def _attr(self): pass
@@ -165,7 +159,6 @@ class AwaitAsyncCallRule(CstLintRule):
             x = True
             if x and foo(): pass
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             async def foo() -> bool: pass
             x = True
@@ -178,7 +171,6 @@ class AwaitAsyncCallRule(CstLintRule):
             x = True
             are_both_true = x and foo()
             """,
-            kind="AwaitAsyncCallRule",
             expected_replacement="""
             async def foo() -> bool: pass
             x = True
@@ -191,7 +183,6 @@ class AwaitAsyncCallRule(CstLintRule):
             if foo():
                 do_stuff()
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             async def foo() -> bool: pass
             if await foo():
@@ -204,7 +195,6 @@ class AwaitAsyncCallRule(CstLintRule):
             if not foo():
                 do_stuff()
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             async def foo() -> bool: pass
             if not await foo():
@@ -218,7 +208,6 @@ class AwaitAsyncCallRule(CstLintRule):
                 def bar(self):
                     if self._attr: pass
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def _attr(self): pass
@@ -233,7 +222,6 @@ class AwaitAsyncCallRule(CstLintRule):
                 def bar(self):
                     if not self._attr: pass
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def _attr(self): pass
@@ -250,7 +238,6 @@ class AwaitAsyncCallRule(CstLintRule):
                 return Foo()
             attribute = bar()._attr
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 async def _attr(self): pass
@@ -269,7 +256,6 @@ class AwaitAsyncCallRule(CstLintRule):
                 return Foo()
             attribute = bar()._attr
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             class Foo:
                 def _attr(self): pass
@@ -284,7 +270,6 @@ class AwaitAsyncCallRule(CstLintRule):
             async def bar() -> bool: pass
             while bar(): pass
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             async def bar() -> bool: pass
             while await bar(): pass
@@ -295,7 +280,6 @@ class AwaitAsyncCallRule(CstLintRule):
             async def bar() -> bool: pass
             while not bar(): pass
             """,
-            "AwaitAsyncCallRule",
             expected_replacement="""
             async def bar() -> bool: pass
             while not await bar(): pass

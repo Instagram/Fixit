@@ -39,7 +39,6 @@ class GatherSequentialAwaitRule(CstLintRule):
                 for _i in range(0, 2):
                     await async_foo()
             """,
-            "GatherSequentialAwaitRule",
             line=3,
         ),
         Invalid(
@@ -48,7 +47,6 @@ class GatherSequentialAwaitRule(CstLintRule):
                 for _i in range(0, 2):
                     x = await async_foo()
             """,
-            "GatherSequentialAwaitRule",
             line=3,
         ),
         Invalid(
@@ -56,7 +54,6 @@ class GatherSequentialAwaitRule(CstLintRule):
             async def async_check_list_comprehension():
                 [await async_foo() for _i in range(0, 2)]
             """,
-            "GatherSequentialAwaitRule",
             line=2,
         ),
     ]

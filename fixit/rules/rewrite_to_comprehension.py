@@ -42,70 +42,57 @@ class RewriteToComprehension(CstLintRule):
         # IG142
         Invalid(
             "list(val for val in iterable)",
-            "RewriteToComprehension",
             expected_replacement="[val for val in iterable]",
         ),
         # Nested list comprehenstion
         Invalid(
             "list(val for row in matrix for val in row)",
-            "RewriteToComprehension",
             expected_replacement="[val for row in matrix for val in row]",
         ),
         Invalid(
             "set(val for val in iterable)",
-            "RewriteToComprehension",
             expected_replacement="{val for val in iterable}",
         ),
         Invalid(
             "dict((x, f(x)) for val in iterable)",
-            "RewriteToComprehension",
             expected_replacement="{x: f(x) for val in iterable}",
         ),
         Invalid(
             "dict((x, y) for y, x in iterable)",
-            "RewriteToComprehension",
             expected_replacement="{x: y for y, x in iterable}",
         ),
         Invalid(
             "dict([val, val+1] for val in iterable)",
-            "RewriteToComprehension",
             expected_replacement="{val: val+1 for val in iterable}",
         ),
         Invalid(
             'dict((x["name"], json.loads(x["data"])) for x in responses)',
-            "RewriteToComprehension",
             expected_replacement='{x["name"]: json.loads(x["data"]) for x in responses}',
         ),
         # Nested dict comprehension
         Invalid(
             "dict((k, v) for k, v in iter for iter in iters)",
-            "RewriteToComprehension",
             expected_replacement="{k: v for k, v in iter for iter in iters}",
         ),
         # IG143
         Invalid(
             "set([val for val in iterable])",
-            "RewriteToComprehension",
             expected_replacement="{val for val in iterable}",
         ),
         Invalid(
             "dict([[val, val+1] for val in iterable])",
-            "RewriteToComprehension",
             expected_replacement="{val: val+1 for val in iterable}",
         ),
         Invalid(
             "dict([(x, f(x)) for x in foo])",
-            "RewriteToComprehension",
             expected_replacement="{x: f(x) for x in foo}",
         ),
         Invalid(
             "dict([(x, y) for y, x in iterable])",
-            "RewriteToComprehension",
             expected_replacement="{x: y for y, x in iterable}",
         ),
         Invalid(
             "set([val for row in matrix for val in row])",
-            "RewriteToComprehension",
             expected_replacement="{val for row in matrix for val in row}",
         ),
     ]

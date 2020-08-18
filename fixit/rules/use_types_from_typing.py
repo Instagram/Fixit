@@ -57,7 +57,6 @@ class UseTypesFromTypingRule(CstLintRule):
             def whatever(list: list[str]) -> None:
                 pass
             """,
-            "UseTypesFromTypingRule",
             expected_replacement="""
             from typing import List
             def whatever(list: List[str]) -> None:
@@ -69,21 +68,18 @@ class UseTypesFromTypingRule(CstLintRule):
             def function(list: list[str]) -> None:
                 pass
             """,
-            "UseTypesFromTypingRule",
         ),
         Invalid(
             """
             def func() -> None:
                 thing: dict[str, str] = {}
             """,
-            "UseTypesFromTypingRule",
         ),
         Invalid(
             """
             def func() -> None:
                 thing: tuple[str]
             """,
-            "UseTypesFromTypingRule",
         ),
         Invalid(
             """
@@ -91,7 +87,6 @@ class UseTypesFromTypingRule(CstLintRule):
             def func() -> None:
                 thing: dict[str, str] = {}
             """,
-            "UseTypesFromTypingRule",
             expected_replacement="""
             from typing import Dict
             def func() -> None:

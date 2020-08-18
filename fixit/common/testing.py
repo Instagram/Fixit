@@ -110,8 +110,8 @@ class LintRuleTestCase(unittest.TestCase):
                 raise AssertionError(
                     f"Expected column: {test_case.column} but found column: {test_case.column}"
                 )
-
-            if test_case.kind != report.code:
+            kind = test_case.kind if test_case.kind is not None else rule.__name__
+            if kind != report.code:
                 raise AssertionError(
                     f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
                 )

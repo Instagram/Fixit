@@ -35,7 +35,6 @@ class AvoidOrInExceptRule(CstLintRule):
             except ValueError or TypeError:
                 pass
             """,
-            "AvoidOrInExceptRule",
         )
     ]
 

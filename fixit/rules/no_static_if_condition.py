@@ -53,63 +53,54 @@ class NoStaticIfConditionRule(CstLintRule):
             if True:
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if crazy_expression or True:
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if crazy_expression and False:
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if crazy_expression and not True:
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if crazy_expression or not False:
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if crazy_expression or (something() or True):
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if crazy_expression and (something() and (not True)):
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if crazy_expression and (something() and (other_func() and not True)):
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
             if (crazy_expression and (something() and (not True))) or True:
                 do_something()
             """,
-            "NoStaticIfConditionRule",
         ),
         Invalid(
             """
@@ -117,7 +108,6 @@ class NoStaticIfConditionRule(CstLintRule):
                 if (await expression()) and False:
                     pass
             """,
-            "NoStaticIfConditionRule",
         ),
     ]
 

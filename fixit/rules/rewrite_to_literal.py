@@ -41,39 +41,25 @@ class RewriteToLiteral(CstLintRule):
 
     INVALID = [
         #  IG144
-        Invalid("tuple([1, 2])", "RewriteToLiteral", expected_replacement="(1, 2)"),
-        Invalid("tuple((1, 2))", "RewriteToLiteral", expected_replacement="(1, 2)"),
-        Invalid("tuple([])", "RewriteToLiteral", expected_replacement="()"),
+        Invalid("tuple([1, 2])", expected_replacement="(1, 2)"),
+        Invalid("tuple((1, 2))", expected_replacement="(1, 2)"),
+        Invalid("tuple([])", expected_replacement="()"),
+        Invalid("list([1, 2, 3])", expected_replacement="[1, 2, 3]"),
+        Invalid("list((1, 2, 3))", expected_replacement="[1, 2, 3]"),
+        Invalid("list([])", expected_replacement="[]"),
+        Invalid("set([1, 2, 3])", expected_replacement="{1, 2, 3}"),
+        Invalid("set((1, 2, 3))", expected_replacement="{1, 2, 3}"),
+        Invalid("set([])", expected_replacement="set()"),
+        Invalid("dict([(1, 2), (3, 4)])", expected_replacement="{1: 2, 3: 4}",),
+        Invalid("dict(((1, 2), (3, 4)))", expected_replacement="{1: 2, 3: 4}",),
         Invalid(
-            "list([1, 2, 3])", "RewriteToLiteral", expected_replacement="[1, 2, 3]"
+            "dict([[1, 2], [3, 4], [5, 6]])", expected_replacement="{1: 2, 3: 4, 5: 6}",
         ),
-        Invalid(
-            "list((1, 2, 3))", "RewriteToLiteral", expected_replacement="[1, 2, 3]"
-        ),
-        Invalid("list([])", "RewriteToLiteral", expected_replacement="[]"),
-        Invalid("set([1, 2, 3])", "RewriteToLiteral", expected_replacement="{1, 2, 3}"),
-        Invalid("set((1, 2, 3))", "RewriteToLiteral", expected_replacement="{1, 2, 3}"),
-        Invalid("set([])", "RewriteToLiteral", expected_replacement="set()"),
-        Invalid(
-            "dict([(1, 2), (3, 4)])",
-            "RewriteToLiteral",
-            expected_replacement="{1: 2, 3: 4}",
-        ),
-        Invalid(
-            "dict(((1, 2), (3, 4)))",
-            "RewriteToLiteral",
-            expected_replacement="{1: 2, 3: 4}",
-        ),
-        Invalid(
-            "dict([[1, 2], [3, 4], [5, 6]])",
-            "RewriteToLiteral",
-            expected_replacement="{1: 2, 3: 4, 5: 6}",
-        ),
-        Invalid("dict([])", "RewriteToLiteral", expected_replacement="{}"),
+        Invalid("dict([])", expected_replacement="{}"),
         #  IG145
-        Invalid("tuple()", "RewriteToLiteral", expected_replacement="()"),
-        Invalid("list()", "RewriteToLiteral", expected_replacement="[]"),
-        Invalid("dict()", "RewriteToLiteral", expected_replacement="{}"),
+        Invalid("tuple()", expected_replacement="()"),
+        Invalid("list()", expected_replacement="[]"),
+        Invalid("dict()", expected_replacement="{}"),
     ]
 
     def visit_Call(self, node: cst.Call) -> None:
