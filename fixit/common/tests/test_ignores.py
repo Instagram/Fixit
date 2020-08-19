@@ -32,7 +32,7 @@ class IgnoreInfoTest(UnitTest):
                     fn3()
                     """
                 ),
-                "ignored_code": "IG00",
+                "ignored_code": "IgnoredRule",
                 "ignored_lines": [2],
             },
             # When a noqa comment is specified with codes, it should only ignore the
@@ -40,64 +40,64 @@ class IgnoreInfoTest(UnitTest):
             "noqa_with_code": {
                 "source": dedent(
                     """\
-                    fn1()  # noqa: IG00
-                    fn2()  # noqa: IG00: Message
-                    fn3()  # noqa: IG00, IG02: Message
-                    fn4()  # noqa: IG01
-                    fn5()  # noqa: IG01, IG02
-                    fn6()  # noqa: IG01, IG02: Message
+                    fn1()  # noqa: IgnoredRule
+                    fn2()  # noqa: IgnoredRule: Message
+                    fn3()  # noqa: IgnoredRule, Ignored2Rule: Message
+                    fn4()  # noqa: Ignored1Rule
+                    fn5()  # noqa: Ignored1Rule, Ignored2Rule
+                    fn6()  # noqa: Ignored1Rule, Ignored2Rule: Message
                     """
                 ),
-                "ignored_code": "IG01",
+                "ignored_code": "Ignored1Rule",
                 "ignored_lines": [4, 5, 6],
             },
             "noqa_multiline": {
                 "source": dedent(
                     """\
                     fn1(line, \\
-                    continuation)  # noqa: IG00
+                    continuation)  # noqa: IgnoredRule
 
                     fn2()
 
                     fn3('''
                         multiline
                         string
-                    ''')  # noqa: IG00
+                    ''')  # noqa: IgnoredRule
                     """
                 ),
-                "ignored_code": "IG00",
+                "ignored_code": "IgnoredRule",
                 "ignored_lines": [1, 2, 6, 7, 8, 9],
             },
             "noqa_file": {
                 "source": dedent(
                     """\
-                    # noqa-file: IG00: Some reason
+                    # noqa-file: IgnoredRule: Some reason
                     fn1()
                     """
                 ),
-                "ignored_code": "IG00",
+                "ignored_code": "IgnoredRule",
                 "ignored_lines": [1, 2, 3],
             },
             "noqa_file_multiple_codes": {
                 "source": dedent(
                     """\
-                    # noqa-file: IG00, IG01, IG02: Some reason
+                    # noqa-file: IgnoredRule, Ignored1Rule, Ignored2Rule: Some reason
                     fn1()
                     """
                 ),
-                "ignored_code": "IG01",
+                "ignored_code": "Ignored1Rule",
                 "ignored_lines": [1, 2, 3],
             },
             "noqa_file_requires_code_and_reason": {
                 "source": dedent(
                     """\
                     # noqa-file
-                    # noqa-file: IG00
+                    # noqa-file: IgnoredRule
                     # Neither of these noqa-files should work because they're incomplete
                     fn1()
                     """
                 ),
-                "ignored_code": "IG00",
+                "ignored_code": "IgnoredRule",
                 "ignored_lines": [],
             },
             "lint_fixme": {
@@ -105,13 +105,13 @@ class IgnoreInfoTest(UnitTest):
                     """\
                     fn1()
 
-                    # lint-fixme: IG00: Some short reason
+                    # lint-fixme: IgnoredRule: Some short reason
                     fn2(  # this line should be ignored
                         "multiple",  # but these lines shouldn't
                         "arguments",
                     )
 
-                    # lint-fixme: IG00: Some reason spanning
+                    # lint-fixme: IgnoredRule: Some reason spanning
                     # lint: multiple lines because it's long.
                     fn3('''
                         multiline
@@ -121,7 +121,7 @@ class IgnoreInfoTest(UnitTest):
                     fn4()
                     """
                 ),
-                "ignored_code": "IG00",
+                "ignored_code": "IgnoredRule",
                 "ignored_lines": [3, 4, 9, 10, 11, 12, 13, 14],
             },
             "lint_ignore": {
@@ -129,13 +129,13 @@ class IgnoreInfoTest(UnitTest):
                     """\
                     fn1()
 
-                    # lint-ignore: IG00: Some reason
+                    # lint-ignore: IgnoredRule: Some reason
                     fn2()
 
                     fn3()
                     """
                 ),
-                "ignored_code": "IG00",
+                "ignored_code": "IgnoredRule",
                 "ignored_lines": [3, 4],
             },
             # A lint-ignore can exist right before an EOF. That's fine. We should ignore
@@ -143,10 +143,10 @@ class IgnoreInfoTest(UnitTest):
             "lint_ignore_eof": {
                 "source": dedent(
                     """\
-                    # lint-ignore: IG00
+                    # lint-ignore: IgnoredRule
                     """
                 ),
-                "ignored_code": "IG00",
+                "ignored_code": "IgnoredRule",
                 "ignored_lines": [1, 2],
             },
         }
@@ -189,27 +189,27 @@ class IgnoreInfoTest(UnitTest):
             },
             "used_noqa": {
                 "source": "fn()  # noqa",
-                "reports_on_lines": [(1, "IG999")],
+                "reports_on_lines": [(1, "Ignored999Rule")],
                 "unused_comments": [],
             },
             "unused_lint_ignore": {
-                "source": "# lint-ignore: IG999: Some reason\nfn()",
+                "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
                 "reports_on_lines": [],
                 "unused_comments": [1],
             },
             "used_lint_ignore": {
-                "source": "# lint-ignore: IG999: Some reason\nfn()",
-                "reports_on_lines": [(2, "IG999")],
+                "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
+                "reports_on_lines": [(2, "Ignored999Rule")],
                 "unused_comments": [],
             },
             "lint_ignore_is_used_before_noqa": {
-                "source": "# lint-ignore: IG999: Some reason\nfn()  # noqa",
-                "reports_on_lines": [(2, "IG999")],
+                "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()  # noqa",
+                "reports_on_lines": [(2, "Ignored999Rule")],
                 "unused_comments": [2],
             },
             "duplicate_lint_ignores": {
-                "source": "# lint-ignore: IG999: First\n# lint-ignore: IG999: Second\nfn()",
-                "reports_on_lines": [(3, "IG999")],
+                "source": "# lint-ignore: Ignored999Rule: First\n# lint-ignore: Ignored999Rule: Second\nfn()",
+                "reports_on_lines": [(3, "Ignored999Rule")],
                 "unused_comments": [2],
             },
         }

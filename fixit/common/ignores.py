@@ -147,7 +147,6 @@ class LocalIgnoreInfo:
                 end_line = line_mapping_info.get_next_non_empty_logical_line(
                     tok.start[0]
                 )
-                # lint-ignore: IG01: Asserts are okay in lint
                 assert end_line is not None, "Failed to get next non-empty logical line"
                 codes = _parse_comma_separated_rules(match.group("codes"))
                 # TODO: These suppressions can span multiple lines. We need to find

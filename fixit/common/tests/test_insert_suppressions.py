@@ -27,7 +27,7 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-fixme: IG00: Some message
+                    # lint-fixme: IgnoredRule: Some message
                     def fn():
                         ...
                     """
@@ -36,7 +36,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=1,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="Some message",
                     )
                 ],
@@ -50,7 +50,7 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-ignore: IG00: Some message
+                    # lint-ignore: IgnoredRule: Some message
                     def fn():
                         ...
                     """
@@ -59,7 +59,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.IGNORE,
                         before_line=1,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="Some message",
                     )
                 ],
@@ -73,14 +73,16 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-fixme: IG00
+                    # lint-fixme: IgnoredRule
                     def fn():
                         ...
                     """
                 ),
                 "comments": [
                     SuppressionComment(
-                        kind=SuppressionCommentKind.FIXME, before_line=1, code="IG00"
+                        kind=SuppressionCommentKind.FIXME,
+                        before_line=1,
+                        code="IgnoredRule",
                     )
                 ],
             },
@@ -94,7 +96,7 @@ class InsertSuppressionsTest(UnitTest):
                 "after": dedent(
                     """\
                     def fn():
-                        # lint-fixme: IG00: Some message
+                        # lint-fixme: IgnoredRule: Some message
                         ...
                     """
                 ),
@@ -102,7 +104,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=2,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="Some message",
                     )
                 ],
@@ -117,7 +119,7 @@ class InsertSuppressionsTest(UnitTest):
                 "after": dedent(
                     """\
                     def fn():
-                    \t# lint-fixme: IG00: Some message
+                    \t# lint-fixme: IgnoredRule: Some message
                     \t...
                     """
                 ),
@@ -125,7 +127,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=2,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="Some message",
                     )
                 ],
@@ -139,10 +141,10 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-fixme: IG00: Some message
-                    # lint-fixme: IG01: Another message
+                    # lint-fixme: IgnoredRule: Some message
+                    # lint-fixme: IgnoredRule1: Another message
                     def fn():
-                        # lint-fixme: IG02: Yet another
+                        # lint-fixme: IgnoredRule2: Yet another
                         ...
                     """
                 ),
@@ -150,19 +152,19 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=1,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="Some message",
                     ),
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=1,
-                        code="IG01",
+                        code="IgnoredRule1",
                         message="Another message",
                     ),
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=2,
-                        code="IG02",
+                        code="IgnoredRule2",
                         message="Yet another",
                     ),
                 ],
@@ -177,8 +179,8 @@ class InsertSuppressionsTest(UnitTest):
                 "after": dedent(
                     """\
                     def fn():
-                        # lint-fixme: IG00: Some
-                        # lint: really long
+                        # lint-fixme: IgnoredRule:
+                        # lint: Some really long
                         # lint: message that
                         # lint: rambles on and on
                         # lint: that needs to be
@@ -190,7 +192,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=2,
-                        code="IG00",
+                        code="IgnoredRule",
                         message=(
                             "Some really long message that rambles on and on that "
                             + "needs to be wrapped"
@@ -210,7 +212,7 @@ class InsertSuppressionsTest(UnitTest):
                 "after": dedent(
                     """\
                     def fn():
-                        # lint-fixme: IG00: This is the first line.
+                        # lint-fixme: IgnoredRule: This is the first line.
                         # lint: This is a subsequent line followed by a blank line.
                         # lint:
                         # lint: And this is the last line.
@@ -221,7 +223,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=2,
-                        code="IG00",
+                        code="IgnoredRule",
                         message=(
                             "This is the first line.\n"
                             + "This is a subsequent line followed by a blank line.\n"
@@ -246,7 +248,7 @@ class InsertSuppressionsTest(UnitTest):
                 "after": dedent(
                     """\
                     value = "abc"
-                    # lint-fixme: IG00: Some message
+                    # lint-fixme: IgnoredRule: Some message
                     value = \\
                         "abcd" + \\
                         "efgh" + \\
@@ -260,7 +262,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=4,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="Some message",
                     )
                 ],
@@ -280,7 +282,7 @@ class InsertSuppressionsTest(UnitTest):
                 "after": dedent(
                     """\
                     value = "abc"
-                    # lint-fixme: IG00: Some message
+                    # lint-fixme: IgnoredRule: Some message
                     value = '''
                         abcd
                         efgh
@@ -295,7 +297,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=4,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="Some message",
                     )
                 ],
@@ -309,7 +311,7 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-fixme: IG00: first block ...
+                    # lint-fixme: IgnoredRule: first block ...
                     def fn():
                         ...
                     """
@@ -318,7 +320,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=1,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="first block\n\nsecond block\nthird block",
                         max_lines=1,
                     )
@@ -333,7 +335,7 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-fixme: IG00: first block
+                    # lint-fixme: IgnoredRule: first block
                     # lint: ...
                     def fn():
                         ...
@@ -343,7 +345,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=1,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="first block\n\nsecond block\nthird block",
                         max_lines=2,
                     )
@@ -358,7 +360,7 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-fixme: IG00: first block
+                    # lint-fixme: IgnoredRule: first block
                     # lint:
                     # lint: second block ...
                     def fn():
@@ -369,7 +371,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=1,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="first block\n\nsecond block\nthird block",
                         max_lines=3,
                     )
@@ -387,7 +389,7 @@ class InsertSuppressionsTest(UnitTest):
                 ),
                 "after": dedent(
                     """\
-                    # lint-fixme: IG00: first line
+                    # lint-fixme: IgnoredRule: first line
                     # lint: second line which is too ...
                     def fn():
                         ...
@@ -397,7 +399,7 @@ class InsertSuppressionsTest(UnitTest):
                     SuppressionComment(
                         kind=SuppressionCommentKind.FIXME,
                         before_line=1,
-                        code="IG00",
+                        code="IgnoredRule",
                         message="first line\nsecond line which is too long\nlast line",
                         max_lines=2,
                     )

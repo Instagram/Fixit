@@ -6,7 +6,7 @@
 import abc
 import ast
 from pathlib import Path
-from pickle import PicklingError  # noqa: IG37: We just want PicklingError
+from pickle import PicklingError
 from typing import Collection, Optional, Sequence, Union
 
 import libcst as cst

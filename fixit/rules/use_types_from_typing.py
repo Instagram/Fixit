@@ -12,7 +12,7 @@ from fixit.common.base import CstContext, CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
-IG117_REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
+REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
     "You are using builtins.{builtin_type} as a type annotation "
     + "but the type system doesn't recognize it as a valid type."
     + " You should use typing.{correct_type} instead."
@@ -114,7 +114,7 @@ class UseTypesFromTypingRule(CstLintRule):
                 replacement = node.with_changes(value=correct_type)
             self.report(
                 node,
-                IG117_REPLACE_BUILTIN_TYPE_ANNOTATION.format(
+                REPLACE_BUILTIN_TYPE_ANNOTATION.format(
                     builtin_type=node.value, correct_type=correct_type
                 ),
                 replacement=replacement,

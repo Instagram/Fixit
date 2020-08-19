@@ -105,7 +105,6 @@ def get_formatted_reports_for_path(
         )
     insert_suppressions_result = insert_suppressions(source, comments)
     updated_source = insert_suppressions_result.updated_source
-    # lint-ignore: IG01: Asserts are fine in scripts
     assert (
         not insert_suppressions_result.failed_insertions
     ), "Failed to insert some comments. This should not be possible."
