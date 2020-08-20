@@ -63,6 +63,11 @@ def gen_example_cases(rule: LintRuleT, key: str) -> str:
     return s
 
 
+def _has_autofix(rule: LintRuleT) -> bool:
+    invalids = getattr(rule, "INVALID", [])
+    return any(i.expected_replacement for i in invalids)
+
+
 def create_rule_doc(directory: Path) -> None:
     directory.mkdir(exist_ok=True)
 
@@ -71,7 +76,16 @@ def create_rule_doc(directory: Path) -> None:
         with (directory / f"{rule_name}.rst").open("w") as fp:
             fp.write(_add_title_style(rule_name, "="))
             doc = rule.__doc__
-            if doc:
+            if doc is not None:
                 fp.write(dedent(doc))
+            message = getattr(rule, "MESSAGE", None)
+            if message is not None:
+                fp.write(_add_title_style("Message", "-"))
+                fp.write(message + "\n")
+            fp.write(
+                _add_title_style(
+                    f"Has Autofix: {'Yes' if _has_autofix(rule) else 'No'}", "-"
+                )
+            )
             fp.write(gen_example_cases(rule, "VALID"))
             fp.write(gen_example_cases(rule, "INVALID"))
