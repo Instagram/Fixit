@@ -213,13 +213,10 @@ def setup(app):
     app.connect("autodoc-process-signature", strip_class_signature)
     app.connect("autodoc-process-docstring", strip_class_signature_docstring)
     app.add_css_file("custom.css")
-    import sys
+    from fixit.common.document import create_rule_doc
     from pathlib import Path
 
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from docs.source.lib import create_rule_doc
-
-    create_rule_doc()
+    create_rule_doc(Path(__file__).parent / "rules")
 
 
 nbsphinx_prolog = r"""
