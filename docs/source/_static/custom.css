@@ -1,0 +1,23 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.toggle {
+    display: block;
+    clear: both;
+    margin-bottom: 24px;
+}
+
+.toggle:after {
+    content: "Show More Examples [+]";
+}
+
+.toggle.open:before {
+    content: "Hide Examples [-]";
+}
+.toggle.open:after {
+    content: "";
+}
