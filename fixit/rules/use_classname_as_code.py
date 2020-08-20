@@ -8,7 +8,6 @@ from typing import cast
 
 import libcst as cst
 import libcst.matchers as m
-from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
@@ -20,7 +19,6 @@ class UseClassNameAsCodeRule(CstLintRule):
     """
 
     MESSAGE = "`IG`-series codes are deprecated. Use class name as code instead."
-    METADATA_DEPENDENCIES = (QualifiedNameProvider,)
     VALID = [
         Valid(
             """
@@ -77,10 +75,6 @@ class UseClassNameAsCodeRule(CstLintRule):
             """,
         ),
     ]
-
-    QUALIFIED_CSTLINTRULE: QualifiedName = QualifiedName(
-        name="fixit.common.base.CstLintRule", source=QualifiedNameSource.IMPORT
-    )
 
     def __init__(self, context: CstContext) -> None:
         super().__init__(context)
