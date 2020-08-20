@@ -1,5 +1,8 @@
-# Fixit
+.. image:: docs/source/_static/logo/logo.svg
+   :width: 600 px
+   :alt: Fixit
 
+A lint framework writes better Python code for you.
 
 Development
 -----------
