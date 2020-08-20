@@ -10,7 +10,7 @@ All of the ignore logic for the lint engine.
 import tokenize
 from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum  # noqa: IG29: The linter shouldn't depend on distillery's libs
+from enum import Enum
 from typing import Collection, Dict, List, Mapping, Optional, Sequence, Type, Union
 
 from fixit.common.base import CstLintRule

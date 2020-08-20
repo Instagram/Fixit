@@ -100,6 +100,24 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_code": "IgnoredRule",
                 "ignored_lines": [],
             },
+            "backwards_compatibility_classname": {
+                "source": dedent(
+                    """\
+                    fn1() # noqa: IG00, IgnoredRule
+                    """
+                ),
+                "ignored_code": "IgnoredRule",
+                "ignored_lines": [1],
+            },
+            "backwards_compatibility_oldcode": {
+                "source": dedent(
+                    """\
+                    fn1() # noqa: IG00, IgnoredRule
+                    """
+                ),
+                "ignored_code": "IG00",
+                "ignored_lines": [1],
+            },
             "lint_fixme": {
                 "source": dedent(
                     """\
