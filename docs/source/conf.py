@@ -111,8 +111,8 @@ html_static_path = ["_static"]
 #
 # html_sidebars = {}
 
-html_logo = "_static/logo/horizontal_white_sidebar.png"
-html_favicon = "_static/logo/favicon.ico"
+html_logo = "_static/logo/logo_whilte.png"
+html_favicon = "_static/logo/icon.png"
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -219,7 +219,7 @@ def setup(app):
     from fixit.common.document import create_rule_doc
     from pathlib import Path
 
-    create_rule_doc(Path(__file__).parent / "rules")
+    create_rule_doc(Path(__file__).parent / "rules", to_fold_examples=True)
 
 
 nbsphinx_prolog = r"""

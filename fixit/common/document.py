@@ -6,9 +6,11 @@
 import difflib
 from pathlib import Path
 from textwrap import dedent, indent
+from typing import Union
 
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_rules_from_config
+from fixit.common.utils import InvalidTestCase, ValidTestCase
 
 
 def _add_code_indent(code: str) -> str:
@@ -26,40 +28,52 @@ def _add_title_style(title: str, symbol: str) -> str:
     )
 
 
-def gen_example_cases(rule: LintRuleT, key: str) -> str:
+def _get_example(example: Union[ValidTestCase, InvalidTestCase], index: int) -> str:
     s = ""
-    if hasattr(rule, key):
-        s += _add_title_style(f"{key} Code Examples", "-")
-        for idx, example in enumerate(getattr(rule, key)):
-            source = dedent(example.code)
+    source = dedent(example.code)
+    s += dedent(
+        f"""
+        # {index + 1}:
+
+        .. code-block:: python
+
+        """
+    )
+    s += _add_code_indent(source)
+    if isinstance(example, InvalidTestCase):
+        replacement = example.expected_replacement
+        if replacement is not None:
+            autofix = dedent(replacement)
+            diff = "\n".join(
+                difflib.unified_diff(
+                    source.splitlines(), autofix.splitlines(), lineterm=""
+                )
+            )
             s += dedent(
-                f"""
-                # {idx + 1}:
+                """
+                Autofix:
 
                 .. code-block:: python
 
                 """
             )
-            s += _add_code_indent(source)
-            if (
-                hasattr(example, "expected_replacement")
-                and example.expected_replacement is not None
-            ):
-                autofix = dedent(example.expected_replacement)
-                diff = "\n".join(
-                    difflib.unified_diff(
-                        source.splitlines(), autofix.splitlines(), lineterm=""
-                    )
-                )
-                s += dedent(
-                    """
-                    Autofix:
+            s += _add_code_indent(diff)
+    return s
 
-                    .. code-block:: python
 
-                    """
-                )
-                s += _add_code_indent(diff)
+def gen_example_cases(rule: LintRuleT, key: str, to_fold_examples: bool = True) -> str:
+    s = ""
+    examples_before_folding = 3
+    if hasattr(rule, key):
+        s += _add_title_style(f"{key} Code Examples", "-")
+        for idx, example in enumerate(getattr(rule, key)):
+            if to_fold_examples and idx >= examples_before_folding:
+                if idx == examples_before_folding:
+                    s += ".. container:: toggle\n\n"
+                s += _add_code_indent(_get_example(example, idx))
+            else:
+                s += _get_example(example, idx)
+
     return s
 
 
@@ -68,9 +82,8 @@ def _has_autofix(rule: LintRuleT) -> bool:
     return any(i.expected_replacement for i in invalids)
 
 
-def create_rule_doc(directory: Path) -> None:
+def create_rule_doc(directory: Path, to_fold_examples: bool = False) -> None:
     directory.mkdir(exist_ok=True)
-
     for rule in get_rules_from_config():
         rule_name = rule.__name__
         with (directory / f"{rule_name}.rst").open("w") as fp:
@@ -87,5 +100,5 @@ def create_rule_doc(directory: Path) -> None:
                     f"Has Autofix: {'Yes' if _has_autofix(rule) else 'No'}", "-"
                 )
             )
-            fp.write(gen_example_cases(rule, "VALID"))
-            fp.write(gen_example_cases(rule, "INVALID"))
+            fp.write(gen_example_cases(rule, "VALID", to_fold_examples))
+            fp.write(gen_example_cases(rule, "INVALID", to_fold_examples))
