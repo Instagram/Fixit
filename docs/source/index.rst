@@ -8,6 +8,8 @@ Fixit
 ======
 
 .. include:: ../../README.rst
+    :start-after: intro-start
+    :end-before: intro-end
 
 .. toctree::
    :glob:
