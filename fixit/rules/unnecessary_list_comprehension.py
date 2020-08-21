@@ -16,7 +16,7 @@ UNNECESSARY_LIST_COMPREHENSION: str = (
 )
 
 
-class UnnecessaryListComprehensionRule(CstLintRule):
+class NoUnnecessaryListComprehensionRule(CstLintRule):
     """
     A derivative of flake8-comprehensions's C407 rule.
     """
