@@ -38,7 +38,7 @@ class _RenameTransformer(cst.CSTTransformer):
         return updated_node
 
 
-class ClsInClassmethodRule(CstLintRule):
+class UseClsInClassmethodRule(CstLintRule):
     METADATA_DEPENDENCIES = (QualifiedNameProvider, ScopeProvider)
     MESSAGE = "when using @classmethod, the first argument must be 'cls'."
     VALID = [
