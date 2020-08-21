@@ -12,16 +12,21 @@ Fixit
     :end-before: intro-end
 
 .. toctree::
-   :glob:
-   :caption: Rules:
+   :maxdepth: 2
+   :caption: Introduction:
 
-   rules/*
+   why_fixit
 
 .. toctree::
    :maxdepth: 2
    :caption: Tutorial:
 
+.. toctree::
+   :glob:
+   :maxdepth: 1
+   :caption: Rules:
 
+   rules/*
 
 Indices and tables
 ==================
