@@ -11,7 +11,7 @@ on important progress.
 At some point, they may start to ignore lint suggestions, even the important ones.
 
 We'd like to help developers move faster by **auto-fixing** lint violations.
-Tha first challenge is most tools analyze source code using
+The first challenge is most tools analyze source code using
 `AST <https://docs.python.org/3/library/ast.html>`_ which doesn't preserve formatting info
 (comments, whitespaces, etc) and makes it hard to build autofix.
 We built `LibCST <https://github.com/Instagram/LibCST>`_ to make parsing and modifying
