@@ -9,9 +9,6 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
 
 from libcst.metadata import MetadataWrapper
-from libcst.testing.utils import (  # noqa IG69: this module is only used by tests
-    UnitTest,
-)
 
 from fixit.common.base import CstLintRule
 from fixit.common.generate_pyre_fixtures import get_fixture_path

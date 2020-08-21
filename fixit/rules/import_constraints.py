@@ -16,12 +16,6 @@ from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
-IG69_IMPORT_CONSTRAINT_VIOLATION: str = (
-    "According to the settings for this directory in the .fixit.config.yaml configuration file, "
-    + "{imported} cannot be imported from within {current_file}. "
-)
-
-
 TEST_REPO_ROOT: str = str(Path(__file__).parent.parent)
 
 
@@ -144,6 +138,11 @@ class ImportConstraintsRule(CstLintRule):
     _repo_root: Path
     _type_checking_stack: List[cst.If]
     _abs_file_path: Path
+
+    MESSAGE: str = (
+        "According to the settings for this directory in the .fixit.config.yaml configuration file, "
+        + "{imported} cannot be imported from within {current_file}. "
+    )
 
     VALID = [
         # Everything is allowed
@@ -418,7 +417,7 @@ class ImportConstraintsRule(CstLintRule):
             if not rule.allow:
                 self.report(
                     node,
-                    IG69_IMPORT_CONSTRAINT_VIOLATION.format(
+                    self.MESSAGE.format(
                         imported=name, current_file=self.context.file_path
                     ),
                 )

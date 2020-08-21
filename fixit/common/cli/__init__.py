@@ -141,7 +141,6 @@ def map_paths(
         for t in tasks:
             yield _map_paths_worker(t)
     else:
-        # lint-ignore: IG01: Asserts are okay in lint
         assert not isinstance(workers, LintWorkers), "Unreachable"
         # Don't spawn more processes than there are tasks. Multiprocessing is eager and
         # will spawn workers immediately even if there's no work for them to do.

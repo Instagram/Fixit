@@ -30,16 +30,14 @@ NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
     # We do not care about the ``: `` that follows ``noqa``
     # We do not care about the casing of ``noqa``
     # We want a comma-separated list of errors
-    # TODO; support non-numerical lint codes
-    r"# noqa(?!-file)(?:: (?P<codes>([A-Z]+[0-9]+(?:[,\s]+)?)+))?",
+    r"# noqa(?!-file)(?:: (?P<codes>([a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+))?",
     re.IGNORECASE,
 )
 LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
     # We're looking for items that look like this:
-    # ``# lint-fixme: IG00``
-    # ``# lint-fixme: IG00: Details``
-    # ``# lint-fixme: IG01, IG02: Details``
-    # TODO: support non-numerical lint codes
+    # ``# lint-fixme: LintRuleName``
+    # ``# lint-fixme: LintRuleName: Details``
+    # ``# lint-fixme: LintRuleName1, LintRuleName2: Details``
     r"# lint-(?:ignore|fixme)"
     + r": (?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+)"
     + r"(?:: (?P<reason>.+))?"
@@ -51,8 +49,8 @@ LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
 FLAKE8_NOQA_FILE: Pattern[str] = re.compile(r"# flake8[:=]\s*noqa", re.IGNORECASE)
 
 # Skip evaluation of a given rule for a given file
-# `# noqa-file: IG02: Some reason why we can't use this rule`
-# `# noqa-file: IG02,IG52: Some reason why we can't use these rules`
+# `# noqa-file: LintRuleName: Some reason why we can't use this rule`
+# `# noqa-file: LintRuleName,LintRuleName2: Some reason why we can't use these rules`
 #
 # TODO: Be a bit more lenient with parsing, and surface useful error messages when
 # looking at the comments. E.g. It's not obvious right now that a reason must be

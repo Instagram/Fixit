@@ -19,7 +19,7 @@ from fixit.rule_lint_engine import lint_file
 
 DUMMY_FILE_PATH = Path(__file__)
 DUMMY_SOURCE = b"pass\npass\npass\n"
-DUMMY_LINT_CODE = "IG00"
+DUMMY_LINT_CODE = "DummyLintRule"
 DUMMY_LINT_MESSAGE = "dummy lint message"
 
 

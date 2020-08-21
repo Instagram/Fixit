@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import ast
-import pickle  # noqa: IG37: We're testing that pickle *doesn't* work.
+import pickle
 from pathlib import Path
 
 import libcst as cst
@@ -20,7 +20,7 @@ class LintRuleReportTest(UnitTest):
                 AstLintRuleReport(
                     file_path=Path("fake/path.py"),
                     node=ast.parse(""),
-                    code="IG00",
+                    code="SomeFakeRule",
                     message="some message",
                     line=1,
                     column=1,
@@ -30,7 +30,7 @@ class LintRuleReportTest(UnitTest):
                 CstLintRuleReport(
                     file_path=Path("fake/path.py"),
                     node=cst.parse_statement("pass\n"),
-                    code="IG00",
+                    code="SomeFakeRule",
                     message="some message",
                     line=1,
                     column=1,

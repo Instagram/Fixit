@@ -25,7 +25,7 @@ class LintRuleReportFormatterTest(UnitTest):
         self.report = CstLintRuleReport(
             file_path=self.fake_filepath,
             node=cst.parse_statement("pass\n"),
-            code="IG00",
+            code="SomeFakeRule",
             message=(
                 "Some long message that should span multiple lines.\n"
                 + "\n"
@@ -44,7 +44,8 @@ class LintRuleReportFormatterTest(UnitTest):
             (
                 str(self.fake_filepath)
                 + ":1:1\n"
-                + "    IG00 Some long\n"
+                + "    SomeFakeRule\n"
+                + "    Some long\n"
                 + "    message that\n"
                 + "    should span\n"
                 + "    multiple lines.\n"
