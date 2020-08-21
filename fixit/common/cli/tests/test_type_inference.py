@@ -27,7 +27,7 @@ class DummyTypeDependentRule(CstLintRule):
     METADATA_DEPENDENCIES = (TypeInferenceProvider,)
 
     def visit_Module(self, node: cst.Module) -> None:
-        self.report(node, "IG00 dummy message")
+        self.report(node, "Dummy message")
 
 
 def map_paths_operation(

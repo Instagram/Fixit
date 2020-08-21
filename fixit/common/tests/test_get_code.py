@@ -9,9 +9,10 @@ from fixit.common.base import _get_code
 
 
 class GetCodeTest(UnitTest):
-    def test_validate_message(self) -> None:
-        self.assertEqual(_get_code("IG00 Message"), "IG00")
-        with self.assertRaisesRegex(ValueError, "IGXX"):
-            _get_code("Message")
-        with self.assertRaisesRegex(ValueError, "space"):
-            _get_code("IG00: Message")
+    def test_validate_message_old_code(self) -> None:
+        self.assertEqual(_get_code("IG00 Old-school message", "SomeClassName"), "IG00")
+
+    def test_return_classname(self) -> None:
+        self.assertEqual(
+            _get_code("Message blah blah", "SomeClassName"), "SomeClassName"
+        )

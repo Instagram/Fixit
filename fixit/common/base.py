@@ -32,16 +32,12 @@ LintRuleT = Union[Type["CstLintRule"], Type["PseudoLintRule"]]
 CACHE_DEPENDENT_PROVIDERS: Tuple["ProviderT"] = (TypeInferenceProvider,)
 
 
-def _get_code(message: str) -> str:
+def _get_code(message: str, class_name: str) -> str:
     """Extract the lint code from the beginning of the lint message."""
-    # TODO: This shouldn't really exist, and we should treat lint codes and messages as
-    # separate concepts.
+    # TODO: Deprecate this function.
     code_match = re.match(r"^(?P<code>IG\d+) \S", message)
     if not code_match:
-        raise ValueError(
-            "Report messages should begin with IGXX, where XX is the number "
-            + "associated with the rule, followed by a single space."
-        )
+        return class_name
     return code_match.group("code")
 
 
@@ -135,7 +131,8 @@ class CstLintRule(BatchableCSTVisitor, metaclass=ABCMeta):
         report = CstLintRuleReport(
             file_path=self.context.file_path,
             node=node,
-            code=self.__class__.__name__,
+            # TODO deprecate _get_code() completely and replace with self.__class__.__name__
+            code=_get_code(message, self.__class__.__name__),
             message=message.split(" ", 1)[1],
             line=position.line,
             # libcst columns are 0-indexed but arc is 1-indexed

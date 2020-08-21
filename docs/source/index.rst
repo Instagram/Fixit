@@ -18,25 +18,15 @@ Fixit
    why_fixit
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Tutorial:
+
+.. toctree::
    :glob:
    :maxdepth: 1
    :caption: Rules:
 
    rules/*
-
-
-
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Tutorial:
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Reference:
-
 
 Indices and tables
 ==================
@@ -44,3 +34,7 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. include:: ../../README.rst
+    :start-after: fb-docs-start
+    :end-before: fb-docs-end

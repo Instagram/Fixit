@@ -10,7 +10,7 @@ All of the ignore logic for the lint engine.
 import tokenize
 from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum  # noqa: IG29: The linter shouldn't depend on distillery's libs
+from enum import Enum
 from typing import Collection, Dict, List, Mapping, Optional, Sequence, Type, Union
 
 from fixit.common.base import CstLintRule
@@ -147,7 +147,6 @@ class LocalIgnoreInfo:
                 end_line = line_mapping_info.get_next_non_empty_logical_line(
                     tok.start[0]
                 )
-                # lint-ignore: IG01: Asserts are okay in lint
                 assert end_line is not None, "Failed to get next non-empty logical line"
                 codes = _parse_comma_separated_rules(match.group("codes"))
                 # TODO: These suppressions can span multiple lines. We need to find

@@ -15,6 +15,10 @@ It is optimized for efficiency, easy to customize and comes with many builtin li
 
 .. intro-end
 
+Further Reading
+---------------
+- `Static Analysis at Scale: An Instagram Story. <https://instagram-engineering.com/static-analysis-at-scale-an-instagram-story-8f498ab71a0c>`_
+
 Development
 -----------
 
@@ -72,4 +76,14 @@ To generate documents, do the following in the root:
 License
 =======
 
-Fixit is MIT licensed, as found in the LICENSE file.
+Fixit is `MIT licensed <LICENSE>`_, as found in the LICENSE file.
+
+.. fb-docs-start
+
+Privacy Policy and Terms of Use
+===============================
+
+- `Privacy Policy <https://opensource.facebook.com/legal/privacy>`_
+- `Terms of Use <https://opensource.facebook.com/legal/terms>`_
+
+.. fb-docs-end

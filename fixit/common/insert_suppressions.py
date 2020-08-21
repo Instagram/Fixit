@@ -59,9 +59,8 @@ class SuppressionComment:
         lines = []
         lines.extend(
             textwrap.wrap(
-                raw_message_lines[0],
+                f"# {self.kind.value}: {self.code}: " + raw_message_lines[0],
                 width=width,
-                initial_indent=f"# {self.kind.value}: {self.code}: ",
                 subsequent_indent=BODY_PREFIX_WITH_SPACE,
             )
         )

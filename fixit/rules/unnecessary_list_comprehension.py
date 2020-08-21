@@ -10,13 +10,13 @@ from fixit.common.base import CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
-IG66_UNNECESSARY_LIST_COMPREHENSION: str = (
+UNNECESSARY_LIST_COMPREHENSION: str = (
     "Unnecessary list comprehension - {func} can take a generator, and is likely "
     + "to short-circuit, so constructing a list is probably wasteful."
 )
 
 
-class UnnecessaryListComprehensionRule(CstLintRule):
+class NoUnnecessaryListComprehensionRule(CstLintRule):
     """
     A derivative of flake8-comprehensions's C407 rule.
     """
@@ -55,7 +55,7 @@ class UnnecessaryListComprehensionRule(CstLintRule):
             list_comp = cst.ensure_type(node.args[0].value, cst.ListComp)
             self.report(
                 node,
-                IG66_UNNECESSARY_LIST_COMPREHENSION.format(
+                UNNECESSARY_LIST_COMPREHENSION.format(
                     func=cst.ensure_type(node.func, cst.Name).value
                 ),
                 replacement=node.deep_replace(

@@ -37,7 +37,7 @@ class FakeLintSuccessReport(LintSuccessReportBase):
 
 class FakeRule(CstLintRule):
     def visit_Module(self, node: Module) -> None:
-        self.report(node, "IG00 dummy message")
+        self.report(node, "Dummy message")
 
 
 def mock_operation(

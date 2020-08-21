@@ -10,18 +10,18 @@ from fixit.common.base import CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
-IG144_UNNECESSARY_LITERAL: str = (
+UNNECESSARY_LITERAL: str = (
     "It's unnecessary to use a list or tuple within a call to {func} since"
     + "there is literal syntax for this type"
 )
-IG145_UNNCESSARY_CALL: str = (
+UNNCESSARY_CALL: str = (
     "It's slower to call {func}() than using the empty literal, because"
     + " the name {func} must be looked up in the global scope in case it has"
     + " been rebound."
 )
 
 
-class RewriteToLiteral(CstLintRule):
+class RewriteToLiteralRule(CstLintRule):
     """
     A derivative of flake8-comprehensions' C405-C406 and C409-C410. It's
     unnecessary to use a list or tuple literal within a call to tuple, list,
@@ -40,7 +40,6 @@ class RewriteToLiteral(CstLintRule):
     ]
 
     INVALID = [
-        #  IG144
         Invalid("tuple([1, 2])", expected_replacement="(1, 2)"),
         Invalid("tuple((1, 2))", expected_replacement="(1, 2)"),
         Invalid("tuple([])", expected_replacement="()"),
@@ -56,20 +55,19 @@ class RewriteToLiteral(CstLintRule):
             "dict([[1, 2], [3, 4], [5, 6]])", expected_replacement="{1: 2, 3: 4, 5: 6}",
         ),
         Invalid("dict([])", expected_replacement="{}"),
-        #  IG145
         Invalid("tuple()", expected_replacement="()"),
         Invalid("list()", expected_replacement="[]"),
         Invalid("dict()", expected_replacement="{}"),
     ]
 
     def visit_Call(self, node: cst.Call) -> None:
-        if m.matches(  #  IG144
+        if m.matches(
             node,
             m.Call(
                 func=m.Name("tuple") | m.Name("list") | m.Name("set") | m.Name("dict"),
                 args=[m.Arg(value=m.List() | m.Tuple())],
             ),
-        ) or m.matches(  #  IG145
+        ) or m.matches(
             node,
             m.Call(func=m.Name("tuple") | m.Name("list") | m.Name("dict"), args=[]),
         ):
@@ -82,17 +80,17 @@ class RewriteToLiteral(CstLintRule):
             exp = cst.ensure_type(node, cst.Call)
             call_name = cst.ensure_type(exp.func, cst.Name).value
 
-            # If this is a empty call, it's an IG145 where we rewrite the call
+            # If this is a empty call, it's an Unnecessary Call where we rewrite the call
             # to literal, except set().
             if not exp.args:
                 elements = []
-                message_formatter = IG145_UNNCESSARY_CALL
+                message_formatter = UNNCESSARY_CALL
             else:
                 arg = exp.args[0].value
                 elements = cst.ensure_type(
                     arg, cst.List if isinstance(arg, cst.List) else cst.Tuple
                 ).elements
-                message_formatter = IG144_UNNECESSARY_LITERAL
+                message_formatter = UNNECESSARY_LITERAL
 
             if call_name == "tuple":
                 new_node = cst.Tuple(elements=elements)
@@ -100,11 +98,11 @@ class RewriteToLiteral(CstLintRule):
                 new_node = cst.List(elements=elements)
             elif call_name == "set":
                 # set() doesn't have an equivelant literal call. If it was
-                # matched here, it's an IG144, unnecessary literal suggestion.
+                # matched here, it's an unnecessary literal suggestion.
                 if len(elements) == 0:
                     self.report(
                         node,
-                        IG144_UNNECESSARY_LITERAL.format(func=call_name),
+                        UNNECESSARY_LITERAL.format(func=call_name),
                         replacement=node.deep_replace(
                             node, cst.Call(func=cst.Name("set"))
                         ),

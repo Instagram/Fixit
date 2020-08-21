@@ -3,8 +3,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# noqa-file: IG01: Asserts are okay in this file, because it's not used in prod
-
 import argparse
 import ast
 import io

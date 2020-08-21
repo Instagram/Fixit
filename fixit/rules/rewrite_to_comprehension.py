@@ -10,17 +10,17 @@ from fixit.common.base import CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
-IG142_UNNECESSARY_GENERATOR: str = (
+UNNECESSARY_GENERATOR: str = (
     "It's unnecessary to use {func} around a geneartor expression, since "
     + "there are equivalent comprehensions for this type."
 )
-IG143_UNNECESSARY_LIST_COMPREHENSION: str = (
+UNNECESSARY_LIST_COMPREHENSION: str = (
     "It's unnecessary to use a list comprehension inside a call to {func} "
     + "since there are equivalent comprehensions for this type"
 )
 
 
-class RewriteToComprehension(CstLintRule):
+class RewriteToComprehensionRule(CstLintRule):
     """
     A derivative of flake8-comprehensions's C400-C402 and C403-C404.
     Comprehensions are more efficient than functions calls. This C400-C402
@@ -39,7 +39,6 @@ class RewriteToComprehension(CstLintRule):
     ]
 
     INVALID = [
-        # IG142
         Invalid(
             "list(val for val in iterable)",
             expected_replacement="[val for val in iterable]",
@@ -74,7 +73,6 @@ class RewriteToComprehension(CstLintRule):
             "dict((k, v) for k, v in iter for iter in iters)",
             expected_replacement="{k: v for k, v in iter for iter in iters}",
         ),
-        # IG143
         Invalid(
             "set([val for val in iterable])",
             expected_replacement="{val for val in iterable}",
@@ -109,10 +107,10 @@ class RewriteToComprehension(CstLintRule):
 
             if m.matches(node.args[0].value, m.GeneratorExp()):
                 exp = cst.ensure_type(node.args[0].value, cst.GeneratorExp)
-                message_formatter = IG142_UNNECESSARY_GENERATOR
+                message_formatter = UNNECESSARY_GENERATOR
             else:
                 exp = cst.ensure_type(node.args[0].value, cst.ListComp)
-                message_formatter = IG143_UNNECESSARY_LIST_COMPREHENSION
+                message_formatter = UNNECESSARY_LIST_COMPREHENSION
 
             replacement = None
             if call_name == "list":
