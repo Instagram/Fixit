@@ -17,8 +17,8 @@ The first challenge is most tools analyze source code using
 We built `LibCST <https://github.com/Instagram/LibCST>`_ to make parsing and modifying
 source code as a Concrete Syntax Tree easily.
 
-Learning from building Flake8 plugin
-====================================
+Learning from building a Flake8 plugin
+======================================
 
 Many of our old lint rules are implemented in a monolithic single-file
 `Flake8 plugin <https://flake8.pycqa.org/en/latest/plugin-development/index.html>`_.
@@ -26,7 +26,7 @@ This offered a lot of flexibility and helped facilitate a shared structure for t
 but it led to a number of severe downsides:
 
 - Rules were highly coupled, with a significant amount of shared state and helper functions.
-  It was common to make a small change to one lint rule, and break other lint rules.
+  It was common to make a small change to one lint rule which broke the others.
   Because of poor testing practices, these breakages could be missed.
 - It wasn't possible to run rules in isolation, making benchmarking and testing more difficult.
   Disabling a rule in Flake8 consists of running the whole linter and
@@ -43,14 +43,14 @@ Design Principles
 =================
 When designing Fixit, we used the following list of principles.
 
-- **Autofix.** Lint rules should provide autofix whenever possible to help developer write
+- **Autofix.** Lint rules should provide autofix whenever possible to help developers write
   better code faster. The autofix can run as a codemod on an existing codebase to avoid
-  introducing tons of lint violations when adding a new lint rule.
+  introducing lots of lint violations when adding a new lint rule.
 - **Modular.** A lint rule is a standalone class which keeps its own logic and states from
-  other rules. That keeps developing a lint rule simple and doesn't break other rules.
-- **Fast.** All lint rule run on a single syntax tree traversal and reuse shared metadata
-  to provide lint suggestions fast.
+  other rules. That makes developing a lint rule simple and less likely to break others.
+- **Fast.** All lint rules are applied during a single traversal of syntax tree and reuse
+  shared metadata to provide lint suggestions fast.
 - **Configurable.** Each lint rule is configurable in the config file. That makes lint rules
-  highly customizable. When disable a lint rule, the rule doesn't run at all.
-- **Ease of Test.** Test a lint rule is as simple as providing code examples. The examples
+  highly customizable. When a lint rule is disabled, it doesn't run at all.
+- **Testable.** Testing a lint rule is as simple as providing code examples. Those
   are also used in document to help developers understand the line rule easily.
