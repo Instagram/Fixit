@@ -185,7 +185,7 @@ def main(raw_args: Sequence[str]) -> int:
     else:
         message = MessageKind.USE_LINT_REPORT
 
-    metadata_caches = get_metadata_caches(args.rule, args.cache_timeout, file_paths)
+    metadata_caches = get_metadata_caches({args.rule}, args.cache_timeout, file_paths)
 
     # opts is a more type-safe version of args that we pass around
     opts = InsertSuppressionsOpts(

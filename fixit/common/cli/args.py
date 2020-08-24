@@ -7,10 +7,16 @@ import argparse
 import importlib
 from enum import Enum
 from pathlib import Path
+from typing import List
 
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
-from fixit.common.utils import find_and_import_rule
+from fixit.common.utils import (
+    LintRuleCollectionT,
+    LintRuleNotFoundError,
+    find_and_import_rule,
+    import_distinct_rules_from_package,
+)
 
 
 class FixtureDirNotFoundError(Exception):
@@ -30,10 +36,25 @@ def import_rule(rule_name: str) -> LintRuleT:
     return find_and_import_rule(rule_class_name, get_lint_config().packages)
 
 
+def import_rules_or_packages(rules_or_packages: List[str]) -> LintRuleCollectionT:
+    all_rules = set()
+    for rule_or_package in rules_or_packages:
+        try:
+            all_rules.update(import_distinct_rules_from_package(rule_or_package))
+        except ModuleNotFoundError:
+            try:
+                all_rules.add(import_rule(rule_or_package))
+            except LintRuleNotFoundError:
+                raise ValueError(
+                    f"Unable to import rule or package named {rule_or_package}"
+                )
+    return all_rules
+
+
 def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
-        "--fixture_dir",
+        "--fixture-dir",
         type=(lambda p: Path(p).resolve(strict=True)),
         help=("Main fixture file directory for integration testing."),
         default=get_lint_config().fixture_dir,
@@ -44,7 +65,9 @@ def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
 def get_rules_package_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
-        "--rules-package", help=("Main package for lint rules."), default="fixit.rules",
+        "--rules-package",
+        help=("Full dotted path of a package containing lint rules."),
+        default="fixit.rules",
     )
     return parser
 
@@ -55,8 +78,22 @@ def get_rule_parser() -> argparse.ArgumentParser:
         "rule",
         type=import_rule,
         help=(
-            "The name of your lint rule class or the full dotted path to your lint rule class."
+            "The name of your lint rule class or the full dotted path to your lint rule class. "
             + "(e.g. `NoAssertEqualsRule` or `fixit.rules.no_assert_equals.NoAssertEqualsRule`)"
+        ),
+    )
+    return parser
+
+
+def get_rules_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--rules",
+        nargs="*",
+        type=str,
+        help=(
+            "The names of lint rule classes to run, or packages containing lint rules, separated by a space. "
+            + "(e.g `--rules NoAssertEqualsRule NoUnnecessaryListComprehensionRule my.custom.package`)"
         ),
     )
     return parser
@@ -71,8 +108,8 @@ def get_paths_parser() -> argparse.ArgumentParser:
         default=(get_lint_config().repo_root,),
         help=(
             "The name of a directory (e.g. media) or file (e.g. media/views.py) on "
-            + "which to run the lint rule. "
-            + "If not specified the lint rule is run on the `repo_root` specified in Fixit's config file."
+            + "which to run the script. If not specified, the lint rule is run on the"
+            + " `repo_root` specified in the `fixit.config.yaml` file."
         ),
     )
     return parser

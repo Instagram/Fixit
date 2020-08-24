@@ -5,46 +5,40 @@
 
 # Usage:
 #
-#   $ python -m fixit.common.cli.test_rule --help
-#   $ python -m fixit.common.cli.test_rule AvoidOrInExceptRule
-#   $ python -m fixit.common.cli.test_rule AvoidOrInExceptRule .
+#   $ python -m fixit.common.cli.test_rules --help
+#   $ python -m fixit.common.cli.test_rules
+#   $ python -m fixit.common.cli.test_rules --rules AvoidOrInExceptRule
+#   $ python -m fixit.common.cli.test_rules . --rules AvoidOrInExceptRule NoUnnecessaryListComprehensionRule
+#   $ python -m fixit.common.cli.test_rules . --rules AvoidOrInExceptRule my.custom.rules.package
+#   $ python -m fixit.common.cli.test_rules . --rules fixit.rules
 
 import argparse
 import itertools
 import shutil
 import sys
 import time
-from collections import defaultdict
 from dataclasses import dataclass
-from logging import Handler, Logger, LogRecord, getLogger
 from pathlib import Path
-from subprocess import TimeoutExpired
-from typing import (
-    TYPE_CHECKING,
-    DefaultDict,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-)
+from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence
 
 from libcst import ParserSyntaxError, parse_module
-from libcst.metadata import MetadataWrapper, TypeInferenceProvider
+from libcst.metadata import MetadataWrapper
 
-from fixit.common.base import LintRuleT
 from fixit.common.cli import find_files, map_paths
 from fixit.common.cli.args import (
     get_compact_parser,
     get_multiprocessing_parser,
     get_paths_parser,
-    get_rule_parser,
+    get_rules_parser,
     get_skip_ignore_byte_marker_parser,
     get_use_ignore_comments_parser,
+    import_rules_or_packages,
 )
 from fixit.common.cli.formatter import LintRuleReportFormatter
-from fixit.common.cli.utils import print_red, print_yellow
-from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
+from fixit.common.cli.full_repo_metadata import get_metadata_caches
+from fixit.common.cli.utils import print_red
+from fixit.common.config import get_rules_from_config
+from fixit.common.utils import LintRuleCollectionT
 from fixit.rule_lint_engine import lint_file
 
 
@@ -54,67 +48,10 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class LintOpts:
-    rule: LintRuleT
+    rules: LintRuleCollectionT
     use_ignore_byte_markers: bool
     use_ignore_comments: bool
     formatter: LintRuleReportFormatter
-
-
-class CustomMetadataErrorHandler(Handler):
-    timeout_paths: List[str] = []
-    other_exceptions: DefaultDict[Exception, List[str]] = defaultdict(list)
-
-    def emit(self, record: LogRecord) -> None:
-        # According to logging documentation, exc_info will be a tuple of three values: (type, value, traceback)
-        # see https://docs.python.org/3.8/library/logging.html#logrecord-objects
-        exc_info = record.exc_info
-        if exc_info is not None:
-            exc_type = exc_info[0]
-            failed_paths = record.__dict__.get("paths")
-            if exc_type is not None:
-                # Store exceptions in memory for processing later.
-                if exc_type is TimeoutExpired:
-                    self.timeout_paths += failed_paths
-                elif exc_type is Exception:
-                    self.other_exceptions[exc_type] += failed_paths
-
-
-def get_metadata_caches(
-    rule: LintRuleT, cache_timeout: int, file_paths: Iterable[str]
-) -> Optional[Mapping[str, Mapping["ProviderT", object]]]:
-    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
-    get_inherited_dependencies = getattr(rule, "get_inherited_dependencies", None)
-
-    if get_inherited_dependencies is None:
-        # It is not a MetadataDependent type.
-        return
-    if TypeInferenceProvider in get_inherited_dependencies():
-        logger: Logger = getLogger("Metadata Cache Logger")
-        handler = CustomMetadataErrorHandler()
-        logger.addHandler(handler)
-        full_repo_metadata_config: FullRepoMetadataConfig = FullRepoMetadataConfig(
-            providers={TypeInferenceProvider},
-            timeout_seconds=cache_timeout,
-            batch_size=100,
-            logger=logger,
-        )
-        metadata_caches = get_repo_caches(file_paths, full_repo_metadata_config)
-        # Let user know of any cache fetching failures.
-        if handler.timeout_paths:
-            print(
-                "Unable to get metadata cache for the following paths:\n"
-                + "\n".join(handler.timeout_paths)
-            )
-            print_yellow(
-                "Try increasing the --cache-timeout value or passing fewer files."
-            )
-        for exc, failed_paths in handler.other_exceptions.items():
-            print(
-                f"Encountered {exc} when trying to get metadata for the following paths:\n"
-                + "\n".join(failed_paths)
-            )
-            print_yellow("Perhaps running ```pyre start``` might help?")
-    return metadata_caches
 
 
 def get_formatted_reports_for_path(
@@ -132,7 +69,7 @@ def get_formatted_reports_for_path(
         raw_reports = lint_file(
             path,
             source,
-            rules={opts.rule},
+            rules=opts.rules,
             use_ignore_byte_markers=opts.use_ignore_byte_markers,
             use_ignore_comments=opts.use_ignore_comments,
             cst_wrapper=cst_wrapper,
@@ -148,16 +85,18 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def main(raw_args: Sequence[str]) -> None:
+def main(raw_args: Sequence[str]) -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Validates your lint rule by running it against the specified, "
+            "Validates your lint rules by running them against the specified, "
             + "directory or file. This is not a substitute for unit tests, "
-            + "but it can provide additional confidence in your lint rule.\n"
+            + "but it can provide additional confidence in your lint rules.\n"
+            + "If no lint rules or packages are specified, runs all lint rules "
+            + "found in the packages specified in `fixit.config.yaml`."
         ),
         parents=[
-            get_rule_parser(),
             get_paths_parser(),
+            get_rules_parser(),
             get_use_ignore_comments_parser(),
             get_skip_ignore_byte_marker_parser(),
             get_compact_parser(),
@@ -177,17 +116,23 @@ def main(raw_args: Sequence[str]) -> None:
 
     # expand path if it's a directory
     file_paths = tuple(find_files(args.paths))
+    all_rules = (
+        import_rules_or_packages(args.rules)
+        if args.rules is not None
+        else get_rules_from_config()
+    )
 
     if not args.compact:
         print(f"Scanning {len(file_paths)} files")
+        print(f"Testing {len(all_rules)} rules")
         print()
     start_time = time.time()
 
-    metadata_caches = get_metadata_caches(args.rule, args.cache_timeout, file_paths)
+    metadata_caches = get_metadata_caches(all_rules, args.cache_timeout, file_paths)
 
     # opts is a more type-safe version of args that we pass around
     opts = LintOpts(
-        rule=args.rule,
+        rules=all_rules,
         use_ignore_byte_markers=args.use_ignore_byte_markers,
         use_ignore_comments=args.use_ignore_comments,
         formatter=LintRuleReportFormatter(width, args.compact),
@@ -219,11 +164,8 @@ def main(raw_args: Sequence[str]) -> None:
         )
 
     # Return with an exit code of 1 if there are any violations found.
-    sys.exit(int(bool(formatted_reports)))
+    return int(bool(formatted_reports))
 
 
-# lint-fixme: IG237, NoMainCheckRule: Scripts within IG distillery should be invoked with "igscript" and
-# lint: disallow execution by checking for __main__.
-# lint: See https://fburl.com/igscript.
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
