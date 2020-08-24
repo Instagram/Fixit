@@ -15,6 +15,7 @@ from types import ModuleType
 from typing import Dict, List, Optional, Set, Type, Union, cast
 
 import libcst as cst
+from libcst._add_slots import add_slots
 from libcst.metadata import BaseMetadataProvider, MetadataWrapper, TypeInferenceProvider
 from libcst.metadata.type_inference_provider import PyreData
 
@@ -46,6 +47,7 @@ class LintRuleNotFoundError(Exception):
 LintRuleCollectionT = Set[Union[Type[CstLintRule], Type[PseudoLintRule]]]
 
 
+@add_slots
 @dataclass(frozen=True)
 class ValidTestCase:
     code: str
@@ -57,6 +59,7 @@ class ValidTestCase:
     )
 
 
+@add_slots
 @dataclass(frozen=True)
 class InvalidTestCase:
     code: str

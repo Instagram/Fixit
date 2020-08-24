@@ -105,7 +105,7 @@ class LintRuleTestCase(unittest.TestCase):
 
             if not (test_case.column is None or test_case.column == report.column):
                 raise AssertionError(
-                    f"Expected column: {test_case.column} but found column: {test_case.column}"
+                    f"Expected column: {test_case.column} but found column: {report.column}"
                 )
             kind = test_case.kind if test_case.kind is not None else rule.__name__
             if kind != report.code:

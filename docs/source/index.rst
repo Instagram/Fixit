@@ -21,6 +21,7 @@ Fixit
    :caption: Tutorial:
 
    Build a Lint Rule <build_a_lint_rule>
+   Test a Lint Rule <test_a_lint_rule>
 
 .. toctree::
    :glob:
