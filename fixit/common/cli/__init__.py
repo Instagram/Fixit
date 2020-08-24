@@ -62,13 +62,13 @@ _MapPathsWorkerArgsT = Tuple[
 ]
 
 
-def find_files(paths: Iterable[str]) -> Iterator[str]:
+def find_files(paths: Iterable[Union[str, Path]]) -> Iterator[str]:
     """
     Given an iterable of paths, yields any files and walks over any directories.
     """
     for path in paths:
         if os.path.isfile(path):
-            yield path
+            yield str(path)
         else:
             for root, _dirs, files in os.walk(path):
                 for f in files:
