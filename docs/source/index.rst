@@ -20,6 +20,7 @@ Fixit
    :maxdepth: 2
    :caption: Tutorial:
 
+   Getting Started <getting_started>
    Build a Lint Rule <build_a_lint_rule>
    Test a Lint Rule <test_a_lint_rule>
 
