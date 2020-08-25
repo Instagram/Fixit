@@ -5,12 +5,12 @@
 
 # Usage:
 #
-#   $ python -m fixit.common.cli.test_rules --help
-#   $ python -m fixit.common.cli.test_rules
-#   $ python -m fixit.common.cli.test_rules --rules AvoidOrInExceptRule
-#   $ python -m fixit.common.cli.test_rules . --rules AvoidOrInExceptRule NoUnnecessaryListComprehensionRule
-#   $ python -m fixit.common.cli.test_rules . --rules AvoidOrInExceptRule my.custom.rules.package
-#   $ python -m fixit.common.cli.test_rules . --rules fixit.rules
+#   $ python -m fixit.common.cli.run_rules --help
+#   $ python -m fixit.common.cli.run_rules
+#   $ python -m fixit.common.cli.run_rules --rules AvoidOrInExceptRule
+#   $ python -m fixit.common.cli.run_rules . --rules AvoidOrInExceptRule NoUnnecessaryListComprehensionRule
+#   $ python -m fixit.common.cli.run_rules . --rules AvoidOrInExceptRule my.custom.rules.package
+#   $ python -m fixit.common.cli.run_rules . --rules fixit.rules
 
 import argparse
 import itertools
