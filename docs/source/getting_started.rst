@@ -13,7 +13,7 @@ Configuration File
 
     python -m fixit.common.cli.init_config
 
-This will create a ``.fixit.config.yaml`` with default settings in the current working directory.
+  This will create a ``.fixit.config.yaml`` with default settings in the current working directory.
 
 2. Next, you may want to edit or add some specific settings. The available configurations are:
 
@@ -21,7 +21,7 @@ This will create a ``.fixit.config.yaml`` with default settings in the current w
 
     block_list_patterns: ['@generated', '@nolint']
 
-will tell Fixit to skip linting any files that have ``@generated`` or ``@nolint`` in their contents.
+  will tell Fixit to skip linting any files that have ``@generated`` or ``@nolint`` in their contents.
 
 - ``block_list_rules``: A list of rules (whether custom or from Fixit) that should not be applied to the repository. For example::
 
@@ -32,7 +32,7 @@ will tell Fixit to skip linting any files that have ``@generated`` or ``@nolint`
 
     formatter: [black, '-']
 
-Here, the formatter of choice would be `Black <https://black.readthedocs.io/en/stable/>`_ and the added ``-`` tells it to read from standard input, and write to standard output so that it is compatible with Fixit's formatting logic.
+  Here, the formatter of choice would be `Black <https://black.readthedocs.io/en/stable/>`_ and the added ``-`` tells it to read from standard input, and write to standard output so that it is compatible with Fixit's formatting logic.
 
 - ``packages``: The Python packages in which to search for lint rules. For example::
 
@@ -48,7 +48,7 @@ Here, the formatter of choice would be `Black <https://black.readthedocs.io/en/s
         fixit:
             rules: [["*", "allow"]]
 
-(see :ref:`ImportConstraintsRule` for more details on this example)
+  (see :ref:`ImportConstraintsRule` for more details on this example)
 
 3. A `.fixit.config.yaml` example with populated settings::
 
