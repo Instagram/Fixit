@@ -62,13 +62,13 @@ _MapPathsWorkerArgsT = Tuple[
 ]
 
 
-def find_files(paths: Iterable[str]) -> Iterator[str]:
+def find_files(paths: Iterable[Union[str, Path]]) -> Iterator[str]:
     """
     Given an iterable of paths, yields any files and walks over any directories.
     """
     for path in paths:
         if os.path.isfile(path):
-            yield path
+            yield str(path)
         else:
             for root, _dirs, files in os.walk(path):
                 for f in files:
@@ -99,14 +99,14 @@ def map_paths(
 
     `operation` must be a top-level function (not a method or inner function), since it
     needs to be imported by pickle and used across process boundaries.
-    NOTE: this function does not verify the signature of `operation`. If `metadata_wrappers`
+    NOTE: this function does not verify the signature of `operation`. If `metadata_caches`
     is passed in, it is up to the caller to make sure that `operation` is equipped to handle
     a `MetadataWrapper` argument.
 
     `paths` should only contain file paths (not directories). Use `find_files` if you
     have directory paths and need to expand them.
 
-    `metadata_wrappers` is an optional argument for those callers expecting to use type metadata
+    `metadata_caches` is an optional argument for those callers expecting to use type metadata
     for linting. If passed, it should be a mapping of Path to a LibCST MetadataWrapper to be used
     for the linting of the corresponding file.
 

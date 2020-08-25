@@ -6,13 +6,15 @@
 from collections import defaultdict
 from logging import Handler, Logger, LogRecord, getLogger
 from subprocess import TimeoutExpired
-from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Type, cast
+from typing import TYPE_CHECKING, DefaultDict, Iterable, List, Mapping, Optional, Type
 
 from libcst.metadata import TypeInferenceProvider
 
-from fixit.common.base import CstLintRule, LintRuleT
+from fixit.common.base import CstLintRule
 from fixit.common.cli import FullRepoMetadataConfig
+from fixit.common.cli.utils import print_yellow
 from fixit.common.full_repo_metadata import get_repo_caches
+from fixit.common.utils import LintRuleCollectionT
 
 
 if TYPE_CHECKING:
@@ -21,7 +23,7 @@ if TYPE_CHECKING:
 
 class MetadataCacheErrorHandler(Handler):
     timeout_paths: List[str] = []
-    other_exceptions: Dict[Type[Exception], List[str]] = defaultdict(list)
+    other_exceptions: DefaultDict[Type[Exception], List[str]] = defaultdict(list)
 
     def emit(self, record: LogRecord) -> None:
         # According to logging documentation, exc_info will be a tuple of three values: (type, value, traceback)
@@ -39,35 +41,40 @@ class MetadataCacheErrorHandler(Handler):
 
 
 def get_metadata_caches(
-    rule: LintRuleT, cache_timeout: int, file_paths: Iterable[str]
+    rules: LintRuleCollectionT, cache_timeout: int, file_paths: Iterable[str]
 ) -> Optional[Mapping[str, Mapping["ProviderT", object]]]:
-    # Returns `None` if metadata cache is not required for this lint rule.
+    """
+    Returns a metadata cache if needed or `None` if metadata cache is not required for
+    any of the lint rules in the set ```rules```.
+    """
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
 
-    if issubclass(rule, CstLintRule):
-        rule = cast(Type[CstLintRule], rule)
-        if rule.requires_metadata_caches():
-            logger: Logger = getLogger("Metadata Caches Logger")
-            handler = MetadataCacheErrorHandler()
-            logger.addHandler(handler)
-            full_repo_metadata_config: FullRepoMetadataConfig = FullRepoMetadataConfig(
-                providers={TypeInferenceProvider},
-                timeout_seconds=cache_timeout,
-                batch_size=100,
-                logger=logger,
+    if any(
+        issubclass(r, CstLintRule) and getattr(r, "requires_metadata_caches")()
+        for r in rules
+    ):
+        logger: Logger = getLogger("Metadata Caches Logger")
+        handler = MetadataCacheErrorHandler()
+        logger.addHandler(handler)
+        full_repo_metadata_config: FullRepoMetadataConfig = FullRepoMetadataConfig(
+            providers={TypeInferenceProvider},
+            timeout_seconds=cache_timeout,
+            batch_size=100,
+            logger=logger,
+        )
+        metadata_caches = get_repo_caches(file_paths, full_repo_metadata_config)
+        # Let user know of any cache retrieval failures.
+        if handler.timeout_paths:
+            print(
+                "Unable to get metadata cache for the following paths:\n"
+                + "\n".join(handler.timeout_paths)
             )
-            metadata_caches = get_repo_caches(file_paths, full_repo_metadata_config)
-            # Let user know of any cache retrieval failures.
-            if handler.timeout_paths:
-                print(
-                    "Unable to get metadata cache for the following paths:\n"
-                    + "\n".join(handler.timeout_paths)
-                    + "\nDid you remember to run `pyre start`?"
-                    + "\nYou can also try increasing the --cache-timeout value or passing fewer files."
-                )
-            for k, v in handler.other_exceptions.items():
-                print(
-                    f"Encountered exception {k} for the following paths:\n"
-                    + "\n".join(v)
-                )
+            print_yellow(
+                "Try increasing the --cache-timeout value or passing fewer files."
+            )
+        for k, v in handler.other_exceptions.items():
+            print(
+                f"Encountered exception {k} for the following paths:\n" + "\n".join(v)
+            )
+            print_yellow("Running `pyre start` may solve the issue.")
     return metadata_caches
