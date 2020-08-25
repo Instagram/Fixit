@@ -12,8 +12,7 @@ Fixit
     :end-before: intro-end
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Introduction:
+   :maxdepth: 1
 
    why_fixit
 
@@ -21,12 +20,21 @@ Fixit
    :maxdepth: 2
    :caption: Tutorial:
 
+   Build a Lint Rule <build_a_lint_rule>
+   Test a Lint Rule <test_a_lint_rule>
+
 .. toctree::
    :glob:
    :maxdepth: 1
    :caption: Rules:
 
    rules/*
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference:
+
+   api
 
 Indices and tables
 ==================
