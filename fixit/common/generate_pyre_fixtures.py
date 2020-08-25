@@ -15,12 +15,12 @@ from libcst.metadata.type_inference_provider import (
     run_command,
 )
 
-from fixit.common.base import CstLintRule, LintRuleT
-from fixit.common.cli.args import (
+from fixit.cli.args import (
     get_pyre_fixture_dir_parser,
     get_rule_parser,
     get_rules_package_parser,
 )
+from fixit.common.base import CstLintRule, LintRuleT
 from fixit.common.utils import _dedent
 
 

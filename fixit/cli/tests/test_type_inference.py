@@ -13,8 +13,8 @@ from libcst.metadata import MetadataWrapper, TypeInferenceProvider
 from libcst.metadata.base_provider import ProviderT
 from libcst.testing.utils import UnitTest
 
+from fixit.cli import LintWorkers, map_paths
 from fixit.common.base import CstLintRule, LintConfig, LintRuleT
-from fixit.common.cli import LintWorkers, map_paths
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file
@@ -33,7 +33,7 @@ class DummyTypeDependentRule(CstLintRule):
 def map_paths_operation(
     path: Path, rules: Set[LintRuleT], type_cache: Optional[Mapping[ProviderT, object]],
 ) -> Union[str, Collection[BaseLintRuleReport]]:
-    # A top-level function to be accessible by `map_paths` from `fixit.common.cli`.
+    # A top-level function to be accessible by `map_paths` from `fixit.cli`.
     cst_wrapper = None
     try:
         if type_cache is not None:

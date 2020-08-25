@@ -10,9 +10,9 @@ from typing import Collection, List, Sequence, cast
 from libcst import Module
 from libcst.testing.utils import UnitTest
 
+from fixit.cli import LintOpts, map_paths
+from fixit.cli.args import LintWorkers
 from fixit.common.base import CstLintRule, LintConfig
-from fixit.common.cli import LintOpts, map_paths
-from fixit.common.cli.args import LintWorkers
 from fixit.common.report import (
     BaseLintRuleReport,
     LintFailureReportBase,
