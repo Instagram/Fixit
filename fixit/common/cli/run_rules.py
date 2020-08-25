@@ -32,12 +32,10 @@ from fixit.common.cli.args import (
     get_rules_parser,
     get_skip_ignore_byte_marker_parser,
     get_use_ignore_comments_parser,
-    import_rules_or_packages,
 )
 from fixit.common.cli.formatter import LintRuleReportFormatter
 from fixit.common.cli.full_repo_metadata import get_metadata_caches
 from fixit.common.cli.utils import print_red
-from fixit.common.config import get_rules_from_config
 from fixit.common.utils import LintRuleCollectionT
 from fixit.rule_lint_engine import lint_file
 
@@ -116,11 +114,7 @@ def main(raw_args: Sequence[str]) -> int:
 
     # expand path if it's a directory
     file_paths = tuple(find_files(args.paths))
-    all_rules = (
-        import_rules_or_packages(args.rules)
-        if args.rules is not None
-        else get_rules_from_config()
-    )
+    all_rules = args.rules
 
     if not args.compact:
         print(f"Scanning {len(file_paths)} files")

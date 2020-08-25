@@ -10,9 +10,8 @@ from pathlib import Path
 from typing import List
 
 from fixit.common.base import LintRuleT
-from fixit.common.config import get_lint_config
+from fixit.common.config import get_lint_config, get_rules_from_config
 from fixit.common.utils import (
-    LintRuleCollectionT,
     LintRuleNotFoundError,
     find_and_import_rule,
     import_distinct_rules_from_package,
@@ -34,21 +33,6 @@ def import_rule(rule_name: str) -> LintRuleT:
         return imported_rule
     # Otherwise, only a class name was provided, so try to find the rule by searching each package specified in the config.
     return find_and_import_rule(rule_class_name, get_lint_config().packages)
-
-
-def import_rules_or_packages(rules_or_packages: List[str]) -> LintRuleCollectionT:
-    all_rules = set()
-    for rule_or_package in rules_or_packages:
-        try:
-            all_rules.update(import_distinct_rules_from_package(rule_or_package))
-        except ModuleNotFoundError:
-            try:
-                all_rules.add(import_rule(rule_or_package))
-            except LintRuleNotFoundError:
-                raise ValueError(
-                    f"Unable to import rule or package named {rule_or_package}"
-                )
-    return all_rules
 
 
 def get_pyre_fixture_dir_parser() -> argparse.ArgumentParser:
@@ -85,16 +69,41 @@ def get_rule_parser() -> argparse.ArgumentParser:
     return parser
 
 
+class RuleAction(argparse.Action):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: List[str],
+        option_string: str,
+    ) -> None:
+        all_rules = set()
+        for rule_or_package in values:
+            try:
+                # Try to treat as a package first.
+                all_rules.update(import_distinct_rules_from_package(rule_or_package))
+            except ModuleNotFoundError:
+                try:
+                    all_rules.add(import_rule(rule_or_package))
+                except LintRuleNotFoundError:
+                    raise ValueError(
+                        f"Unable to import rule or package named {rule_or_package}"
+                    )
+        setattr(namespace, self.dest, all_rules)
+
+
 def get_rules_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
         "--rules",
         nargs="*",
-        type=str,
         help=(
             "The names of lint rule classes to run, or packages containing lint rules, separated by a space. "
             + "(e.g `--rules NoAssertEqualsRule NoUnnecessaryListComprehensionRule my.custom.package`)"
         ),
+        action=RuleAction,
+        dest="rules",
+        default=get_rules_from_config(),
     )
     return parser
 
