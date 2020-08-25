@@ -89,7 +89,7 @@ def main(raw_args: Sequence[str]) -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Validates your lint rules by running them against the specified, "
-            + "directory or file. This is not a substitute for unit tests, "
+            + "directory or file(s). This is not a substitute for unit tests, "
             + "but it can provide additional confidence in your lint rules.\n"
             + "If no lint rules or packages are specified, runs all lint rules "
             + "found in the packages specified in `fixit.config.yaml`."
