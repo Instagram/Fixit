@@ -22,7 +22,7 @@ This will create a default `.fixit.config.yaml` in the current working directory
     block_list_patterns: ['@generated', '@nolint']
 
 - ``block_list_rules``: A list of rules (whether custom or from Fixit) that should not be applied to the repository.
-- ``fixture_dir``: The directory in which fixtures files required for unit testing are to be found. This is only necessary if you are testing rules that use a metadata cache (see :ref:`AwaitAsyncCallRule` for an example of such a rule). This can be an absolute path, or a path relative to `repo_root` (see below).
+- ``fixture_dir``: The directory in which fixture files required for unit testing are to be found. This is only necessary if you are testing rules that use a metadata cache (see :ref:`AwaitAsyncCallRule` for an example of such a rule). This can be an absolute path, or a path relative to `repo_root` (see below).
 - ``formatter``: A list of the formatter commands to use after a lint is complete. For example::
 
     formatter: [black, '-']
