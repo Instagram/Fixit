@@ -9,11 +9,11 @@ is to create a config file.
 Configuration File
 ==================
 
-1. To start, run::
+1. To initialize a configuration file populated with some defaults, run::
 
     python -m fixit.common.cli.init_config
 
-to create a `.fixit.config.yaml` populated with some defaults in the current working directory.
+This will create a default `.fixit.config.yaml` in the current working directory.
 
 2. Next, you may want to edit or add some specific settings. The available configurations are
 
@@ -60,3 +60,25 @@ to create a `.fixit.config.yaml` populated with some defaults in the current wor
                 rules: [["*", "allow"]]
 
 ... with some example values for each setting.
+
+
+Enforcing Custom Rules
+======================
+
+After finishing up the configuration, you may want to enforce some custom lint rules in your repository.
+
+1. Start by creating a directory where your custom rules will live. Make sure to include an `__init__.py` file so that the directory is importable as a package.
+This and simply be an empty file. For example::
+
+    my_repo_root
+        └── lint
+            └── custom_rules
+                └── __init__.py
+
+2. Include the dotted name of the package in the `.fixit.config.yaml` file under the `packages` setting::
+
+    packages:
+    - fixit.rules
+    - lint.custom_rules
+
+3. See the :doc:`Build a Lint Rule <build_a_lint_rule>` page for more details on how to write the logic for a custom lint rule.
