@@ -17,6 +17,10 @@ def _add_code_indent(code: str) -> str:
     return indent(code, "    ") + "\n"
 
 
+def _add_reference_label(label: str) -> str:
+    return f".. _{label}:\n"
+
+
 def _add_title_style(title: str, symbol: str) -> str:
     title_length = len(title)
     return dedent(
@@ -87,6 +91,7 @@ def create_rule_doc(directory: Path, to_fold_examples: bool = False) -> None:
     for rule in get_rules_from_config():
         rule_name = rule.__name__
         with (directory / f"{rule_name}.rst").open("w") as fp:
+            fp.write(_add_reference_label(rule_name))
             fp.write(_add_title_style(rule_name, "="))
             doc = rule.__doc__
             if doc is not None:
