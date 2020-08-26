@@ -127,9 +127,9 @@ Applying Autofixes
 
 Some rules come with provided autofix suggestions. We have provided a script to help you automatically apply these suggested fixes. To do this, run::
 
-    python -m fixit.cli.apply_fix <rule_name> <file_or_directory>
+    python -m fixit.cli.apply_fix <file_or_directory> --rules <rule_name_or_package>
 
-This will apply a lint rule's autofix to the source code in the specified file(s) or directory.
+This will apply one or more lint rules' autofix to the source code in the specified file(s) or directory.
 
 - For more detailes on this script's usage, run::
 
