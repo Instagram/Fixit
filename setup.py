@@ -28,7 +28,7 @@ FIXIT_VERSION = version.FIXIT_VERSION
 
 setuptools.setup(
     name="fixit",
-    description="A Python lint framework provides autofixer rules.",
+    description="A lint framework that writes better Python code for you.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     version=FIXIT_VERSION,
@@ -57,9 +57,11 @@ setuptools.setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Quality Assurance"
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Typing :: Typed",
     ],
     zip_safe=False,  # for mypy compatibility https://mypy.readthedocs.io/en/latest/installed_packages.html
     include_package_data=True,
