@@ -128,9 +128,10 @@ def get_paths_parser() -> argparse.ArgumentParser:
         type=relative_to_repo_root,
         default=(Path(get_lint_config().repo_root),),
         help=(
-            "The name of a directory (e.g. media) or file (e.g. media/views.py) on "
-            + "which to run the script. If not specified, the lint rule is run on the"
-            + " `repo_root` specified in the `fixit.config.yaml` file."
+            "The name of a directory (e.g. media) or file (e.g. media/views.py) "
+            + "relative to the `repo_root` specified in the `fixit.config.yaml` file"
+            + " on which to run this script. "
+            + "If not specified, the `repo_root` value is used."
         ),
     )
     return parser
