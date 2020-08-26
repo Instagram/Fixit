@@ -35,7 +35,7 @@ class LintRuleReportFormatter:
         return self._format_position(report)
 
     def _format_details_raw(self, report: BaseLintRuleReport) -> str:
-        return f"{report.code} {report.message}"
+        return f"{report.code}: {report.message}"
 
     def _format_details(self, report: BaseLintRuleReport) -> str:
         lines = self._format_details_raw(report).split("\n")

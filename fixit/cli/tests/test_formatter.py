@@ -44,7 +44,7 @@ class LintRuleReportFormatterTest(UnitTest):
             (
                 str(self.fake_filepath)
                 + ":1:1\n"
-                + "    SomeFakeRule\n"
+                + "    SomeFakeRule:\n"
                 + "    Some long\n"
                 + "    message that\n"
                 + "    should span\n"

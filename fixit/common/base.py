@@ -133,7 +133,7 @@ class CstLintRule(BatchableCSTVisitor, metaclass=ABCMeta):
             node=node,
             # TODO deprecate _get_code() completely and replace with self.__class__.__name__
             code=_get_code(message, self.__class__.__name__),
-            message=message.split(" ", 1)[1],
+            message=message,
             line=position.line,
             # libcst columns are 0-indexed but arc is 1-indexed
             column=(position.column + 1),
