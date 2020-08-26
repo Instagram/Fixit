@@ -70,16 +70,12 @@ jobs:
         run: |
           python -m pip install tox
           tox --version
-      - name: Test
-        run: |
-          tox -e $(python .github/scripts/tox_job.py)
       - name: Lint
         run: |
           tox -e lint
-      - name: Coverage
+      - name: Test
         run: |
-          tox -e coverage
-        continue-on-error: true
+          tox -e $(python .github/scripts/tox_job.py)
 
   pyre:
     runs-on: ${{ matrix.os }}
