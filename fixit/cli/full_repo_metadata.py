@@ -30,14 +30,14 @@ class MetadataCacheErrorHandler(Handler):
         # see https://docs.python.org/3.8/library/logging.html#logrecord-objects
         exc_info = record.exc_info
         if exc_info is not None:
-            exc_type = exc_info[0]
+            exc_type, exc_msg = exc_info[0], exc_info[1]
             failed_paths = record.__dict__.get("paths")
             if exc_type is not None:
                 # Store exceptions in memory for processing later.
                 if exc_type is TimeoutExpired:
                     self.timeout_paths += failed_paths
                 else:
-                    self.other_exceptions[exc_type] += failed_paths
+                    self.other_exceptions[f"{exc_type}: {exc_msg}"] += failed_paths
 
 
 def get_metadata_caches(

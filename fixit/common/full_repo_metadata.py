@@ -62,13 +62,13 @@ def get_repo_caches(
         )
         try:
             frm.resolve_cache()
-        except Exception:
+        except Exception as e:
             # We want to fail silently since some metadata providers can be flaky. If a logger is provided by the caller, we'll add a log here.
             logger = config.logger
             if logger is not None:
                 logger.warning(
                     "Failed to retrieve metadata cache.",
-                    exc_info=True,
+                    exc_info=e,
                     extra={"paths": paths_batch},
                 )
             # Populate with placeholder caches to avoid failures down the line. This will however result in reduced functionality in cache-dependent lint rules.
