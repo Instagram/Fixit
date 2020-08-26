@@ -11,11 +11,11 @@ Configuration File
 
 1. To initialize a configuration file populated with some defaults, run::
 
-    python -m fixit.common.cli.init_config
+    python -m fixit.cli.init_config
 
   This will create a ``.fixit.config.yaml`` with default settings in the current working directory.
 
-2. Next, you may want to edit or add some specific settings. The available configurations are:
+2. Next, you may wish to edit or add some specific settings. The available configurations are:
 
 - ``block_list_patterns``: A list of patterns that indicate that a file should not be linted. For example::
 
@@ -73,7 +73,7 @@ Configuration File
 Enforcing Custom Rules
 ======================
 
-After finishing up the configuration, you may want to enforce some custom lint rules in your repository.
+After finishing up the configuration, you may wish to enforce some custom lint rules in your repository.
 
 1. Start by creating a directory where your custom rules will live. Make sure to include an ``__init__.py`` file so that the directory is importable as a package.
 This can simply be an empty file. For example::
@@ -90,3 +90,61 @@ This can simply be an empty file. For example::
     - lint.custom_rules
 
 3. See the :doc:`Build a Lint Rule <build_a_lint_rule>` page for more details on how to write the logic for a custom lint rule.
+
+
+Running Lint Rules
+==================
+
+You may also want to run some rules against your repository to see all current violations.
+
+- To run only the pre-packaged Fixit rules against the entire repository, run::
+
+    python -m fixit.cli.run_rules --rules fixit.rules
+
+- To run only your custom rules package against the entire repository, run::
+
+    python -m fixit.cli.run_rules --rules <dotted_name_of_custom_package>
+
+- To run a specific rule against the entire repository, run::
+
+    python -m fixit.cli.run_rules --rules <rule_name>
+
+- To run all the rule packages under the ``packages`` settings in the `.fixit.config.yaml` file against the entire repository, run::
+
+    python -m fixit.cli.run_rules
+
+- To run all the rule packages under the ``packages`` settings in the `.fixit.config.yaml` file against a particular file or directory, run::
+
+    python -m fixit.cli.run_rules <file_or_directory>
+
+- To run all the rule packages under the ``packages`` settings in the `.fixit.config.yaml` file against mutliple files or directories, run::
+
+    python -m fixit.cli.run_rules <file_or_directory> <file_or_directory2> <file_or_directory3>
+
+
+Applying Autofixes
+==================
+
+Some rules come with provided autofix suggestions. We have provided a script to help you automatically apply these suggested fixes. To do this, run::
+
+    python -m fixit.cli.apply_fix <rule_name> <file_or_directory>
+
+This will apply a lint rule's autofix to the source code in the specified file(s) or directory.
+
+- For more detailes on this script's usage, run::
+
+    python -m fixit.cli.apply_fix --help
+
+
+Suppressing Violations
+======================
+
+You may wish to suppress existing lint violations from the lint engine altogether. We have provided a script to help you automatically insert lint suppressions. To do this, run::
+
+    python -m fixit.cli.insert_suppressions <rule_name> <file_or_directory>
+
+This will insert a suppression in the form of a ``# lint-fixme`` comment above lines in the source code that violate the specified rule.
+
+- For more detailes on this script's usage, run::
+
+    python -m fixit.cli.insert_suppressions --help
