@@ -2,9 +2,9 @@
    :width: 600 px
    :alt: Fixit
 
-A lint framework writes better Python code for you.
-
 .. intro-start
+
+:title:`A lint framework that writes better Python code for you.`
 
 Fixit is a lint framework that compliments `Flake8 <https://github.com/PyCQA/flake8>`_.
 It’s based on `LibCST <https://github.com/Instagram/LibCST/>`_ which makes it possible
