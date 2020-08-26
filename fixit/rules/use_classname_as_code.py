@@ -83,7 +83,7 @@ class UseClassNameAsCodeRule(CstLintRule):
     def visit_SimpleString(self, node: cst.SimpleString) -> None:
         matched = re.match(r"^(\'|\")(?P<igcode>IG\d+ )\S", node.value)
 
-        if matched:
+        if matched is not None:
             replacement_string = node.value.replace(matched.group("igcode"), "", 1)
             self.report(
                 node,
