@@ -149,7 +149,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
     ]
 
     def leave_If(self, original_node: cst.If) -> None:
-        changes: Dict[str, cst.CSTNode] = dict()
+        changes: Dict[str, cst.CSTNode] = {}
         test_expression: cst.BaseExpression = original_node.test
         if m.matches(test_expression, m.Name()):
             # We are inside a simple check such as "if x".

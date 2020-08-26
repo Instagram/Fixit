@@ -89,7 +89,7 @@ def lint_file(
 
     # Don't waste time evaluating rules that are globally ignored.
     evaluated_rules = [
-        r for r in rules if not ignore_info or ignore_info.should_evaluate_rule(r)
+        r for r in rules if ignore_info is None or ignore_info.should_evaluate_rule(r)
     ]
     # Categorize lint rules.
     cst_rules: List[Type[CstLintRule]] = []

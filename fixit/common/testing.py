@@ -123,10 +123,10 @@ def _gen_test_methods_for_rule(
     and maps them to altered names with a `test_` prefix so that 'unittest' can discover them
     later on and an index postfix so that individual tests can be selected from the command line.
     """
-    valid_tcs = dict()
-    invalid_tcs = dict()
+    valid_tcs = {}
+    invalid_tcs = {}
     requires_fixtures = False
-    fixture_paths: Dict[str, Path] = dict()
+    fixture_paths: Dict[str, Path] = {}
     fixture_subdir: Path = get_fixture_path(fixture_dir, rule.__module__, rules_package)
     if issubclass(rule, CstLintRule):
 
@@ -206,7 +206,7 @@ def add_lint_rule_tests_to_module(
     """
     for test_case in _gen_all_test_methods(rules, fixture_dir, rules_package):
         rule_name = test_case.rule.__name__
-        test_methods_to_add: Dict[str, Callable] = dict()
+        test_methods_to_add: Dict[str, Callable] = {}
 
         for test_method_name, test_method_data in test_case.test_methods.items():
             fixture_file = test_case.fixture_paths.get(test_method_name)
