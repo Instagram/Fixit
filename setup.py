@@ -28,7 +28,7 @@ FIXIT_VERSION = version.FIXIT_VERSION
 
 setuptools.setup(
     name="fixit",
-    description="A lint framework writes better Python code for you.",
+    description="A lint framework that writes better Python code for you.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     version=FIXIT_VERSION,
