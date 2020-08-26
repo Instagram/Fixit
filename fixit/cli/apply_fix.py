@@ -5,9 +5,9 @@
 
 # Usage:
 #
-#   $ python -m fixit.common.cli.apply_fix --help
-#   $ python -m fixit.common.cli.apply_fix fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
-#   $ python -m fixit.common.cli.apply_fix fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
+#   $ python -m fixit.cli.apply_fix --help
+#   $ python -m fixit.cli.apply_fix fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
+#   $ python -m fixit.cli.apply_fix fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
 import argparse
 import itertools
 import shutil
@@ -20,9 +20,8 @@ from typing import Iterable, Sequence
 from libcst import ParserSyntaxError
 from libcst.codemod._cli import invoke_formatter
 
-from fixit.common.base import LintRuleT
-from fixit.common.cli import find_files, map_paths
-from fixit.common.cli.args import (
+from fixit.cli import find_files, map_paths
+from fixit.cli.args import (
     get_compact_parser,
     get_multiprocessing_parser,
     get_paths_parser,
@@ -31,8 +30,9 @@ from fixit.common.cli.args import (
     get_skip_ignore_byte_marker_parser,
     get_skip_ignore_comments_parser,
 )
-from fixit.common.cli.formatter import LintRuleReportFormatter
-from fixit.common.cli.utils import print_red
+from fixit.cli.formatter import LintRuleReportFormatter
+from fixit.cli.utils import print_red
+from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file_and_apply_patches

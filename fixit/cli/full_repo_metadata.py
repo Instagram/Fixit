@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING, DefaultDict, Iterable, List, Mapping, Optional
 
 from libcst.metadata import TypeInferenceProvider
 
+from fixit.cli import FullRepoMetadataConfig
+from fixit.cli.utils import print_yellow
 from fixit.common.base import CstLintRule
-from fixit.common.cli import FullRepoMetadataConfig
-from fixit.common.cli.utils import print_yellow
 from fixit.common.full_repo_metadata import get_repo_caches
 from fixit.common.utils import LintRuleCollectionT
 

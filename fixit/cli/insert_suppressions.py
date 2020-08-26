@@ -5,9 +5,9 @@
 
 # Usage:
 #
-#   $ python -m fixit.common.cli.insert_suppressions --help
-#   $ python -m fixit.common.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
-#   $ python -m fixit.common.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
+#   $ python -m fixit.cli.insert_suppressions --help
+#   $ python -m fixit.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
+#   $ python -m fixit.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
 import argparse
 import itertools
 import shutil
@@ -22,9 +22,8 @@ from libcst import ParserSyntaxError, parse_module
 from libcst.codemod._cli import invoke_formatter
 from libcst.metadata import MetadataWrapper
 
-from fixit.common.base import LintRuleT
-from fixit.common.cli import find_files, map_paths
-from fixit.common.cli.args import (
+from fixit.cli import find_files, map_paths
+from fixit.cli.args import (
     get_compact_parser,
     get_metadata_cache_parser,
     get_multiprocessing_parser,
@@ -32,9 +31,10 @@ from fixit.common.cli.args import (
     get_rule_parser,
     get_skip_autoformatter_parser,
 )
-from fixit.common.cli.formatter import LintRuleReportFormatter
-from fixit.common.cli.full_repo_metadata import get_metadata_caches
-from fixit.common.cli.utils import print_red
+from fixit.cli.formatter import LintRuleReportFormatter
+from fixit.cli.full_repo_metadata import get_metadata_caches
+from fixit.cli.utils import print_red
+from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
 from fixit.common.insert_suppressions import (
     SuppressionComment,

@@ -5,7 +5,7 @@
 from libcst.codemod.commands.noop import NOOPCommand
 from libcst.testing.utils import UnitTest
 
-from fixit.common.cli.args import get_rule_parser
+from fixit.cli.args import get_rule_parser
 
 
 class SomeFakeRule:
@@ -15,7 +15,7 @@ class SomeFakeRule:
 class LintRuleCLIArgsTest(UnitTest):
     def test_rule_parser(self) -> None:
         parser = get_rule_parser().parse_args(
-            ["fixit.common.cli.tests.test_args.SomeFakeRule"]
+            ["fixit.cli.tests.test_args.SomeFakeRule"]
         )
         self.assertEqual(parser.rule, SomeFakeRule)
 
