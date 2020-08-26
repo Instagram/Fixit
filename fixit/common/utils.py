@@ -28,6 +28,13 @@ def _dedent(src: str) -> str:
     return textwrap.dedent(src)
 
 
+def dedent_with_lstrip(src: str) -> str:
+    src = textwrap.dedent(src)
+    if src.startswith("\n"):
+        return "".join(src[1:])
+    return src
+
+
 def _str_or_any(value: Optional[int]) -> str:
     return "<any>" if value is None else str(value)
 

@@ -129,6 +129,7 @@ def get_use_ignore_comments_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--use-ignore-comments",
         action="store_true",
+        default=True,
         help="Obey `# noqa`, `# lint-fixme` and `# lint-ignore` comments.",
     )
     return parser
