@@ -3,7 +3,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from textwrap import dedent
 from typing import Iterable
 
 from libcst.testing.utils import UnitTest, data_provider
@@ -13,20 +12,21 @@ from fixit.common.insert_suppressions import (
     SuppressionCommentKind,
     insert_suppressions,
 )
+from fixit.common.utils import dedent_with_lstrip
 
 
 class InsertSuppressionsTest(UnitTest):
     @data_provider(
         {
             "simple_fixme": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-fixme: IgnoredRule: Some message
                     def fn():
                         ...
@@ -42,14 +42,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "simple_ignore": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-ignore: IgnoredRule: Some message
                     def fn():
                         ...
@@ -65,14 +65,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "no_message": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-fixme: IgnoredRule
                     def fn():
                         ...
@@ -87,14 +87,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "indented": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     def fn():
                         # lint-fixme: IgnoredRule: Some message
                         ...
@@ -110,14 +110,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "indented_tabs": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                     \t...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     def fn():
                     \t# lint-fixme: IgnoredRule: Some message
                     \t...
@@ -133,14 +133,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "multiple_comments": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-fixme: IgnoredRule: Some message
                     # lint-fixme: IgnoredRule1: Another message
                     def fn():
@@ -170,14 +170,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "multiline_comment": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     def fn():
                         # lint-fixme: IgnoredRule:
                         # lint: Some really long
@@ -203,14 +203,14 @@ class InsertSuppressionsTest(UnitTest):
                 "code_width": 30,
             },
             "newlines_in_message": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     def fn():
                         # lint-fixme: IgnoredRule: This is the first line.
                         # lint: This is a subsequent line followed by a blank line.
@@ -235,8 +235,8 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "logical_line_continuation": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     value = "abc"
                     value = \\
                         "abcd" + \\
@@ -245,8 +245,8 @@ class InsertSuppressionsTest(UnitTest):
                         "mnop"
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     value = "abc"
                     # lint-fixme: IgnoredRule: Some message
                     value = \\
@@ -268,8 +268,8 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "logical_line_multiline_string": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     value = "abc"
                     value = '''
                         abcd
@@ -279,8 +279,8 @@ class InsertSuppressionsTest(UnitTest):
                     '''
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     value = "abc"
                     # lint-fixme: IgnoredRule: Some message
                     value = '''
@@ -303,14 +303,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "max_lines_first_block": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-fixme: IgnoredRule: first block ...
                     def fn():
                         ...
@@ -327,14 +327,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "max_lines_between_blocks": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-fixme: IgnoredRule: first block
                     # lint: ...
                     def fn():
@@ -352,14 +352,14 @@ class InsertSuppressionsTest(UnitTest):
                 ],
             },
             "max_lines_subsequent_blocks": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-fixme: IgnoredRule: first block
                     # lint:
                     # lint: second block ...
@@ -381,14 +381,14 @@ class InsertSuppressionsTest(UnitTest):
             # truncated, but we don't quite have enough space for the "[...]" ellipsis
             # at the end.
             "max_lines_requires_trimming": {
-                "before": dedent(
-                    """\
+                "before": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
                 ),
-                "after": dedent(
-                    """\
+                "after": dedent_with_lstrip(
+                    """
                     # lint-fixme: IgnoredRule: first line
                     # lint: second line which is too ...
                     def fn():

@@ -5,19 +5,19 @@
 
 import tokenize
 from io import BytesIO
-from textwrap import dedent
 
 from libcst.testing.utils import UnitTest
 
 from fixit.common.comments import CommentInfo
+from fixit.common.utils import dedent_with_lstrip
 
 
 class CommentInfoTest(UnitTest):
     def test_comment_info(self) -> None:
         # A comment on a line with no other leading tokens is a "comment on own line".
         # In contrast, trailing comments come after other tokens on the same line.
-        code = dedent(
-            """\
+        code = dedent_with_lstrip(
+            """
             # comment on own line
             # this is a
             # multiline comment
