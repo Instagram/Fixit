@@ -108,17 +108,30 @@ def get_rules_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def relative_to_repo_root(_path: str) -> Path:
+    repo_root = get_lint_config().repo_root
+    try:
+        return Path(_path).resolve(strict=True).relative_to(repo_root)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"Invalid value {_path}.\n"
+            + f"Paths must be relative to the repo root `{repo_root}`"
+            + " from the `repo_root` setting in the `.fixit.config.yaml` file."
+        )
+
+
 def get_paths_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
         "paths",
         nargs="*",
-        type=(lambda p: Path(p).resolve(strict=True)),
-        default=(get_lint_config().repo_root,),
+        type=relative_to_repo_root,
+        default=(Path(get_lint_config().repo_root),),
         help=(
-            "The name of a directory (e.g. media) or file (e.g. media/views.py) on "
-            + "which to run the script. If not specified, the lint rule is run on the"
-            + " `repo_root` specified in the `fixit.config.yaml` file."
+            "The name of a directory (e.g. media) or file (e.g. media/views.py) "
+            + "relative to the `repo_root` specified in the `fixit.config.yaml` file"
+            + " on which to run this script. "
+            + "If not specified, the `repo_root` value is used."
         ),
     )
     return parser
