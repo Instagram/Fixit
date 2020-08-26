@@ -5,12 +5,12 @@
 
 # Usage:
 #
-#   $ python -m fixit.common.cli.run_rules --help
-#   $ python -m fixit.common.cli.run_rules
-#   $ python -m fixit.common.cli.run_rules --rules AvoidOrInExceptRule
-#   $ python -m fixit.common.cli.run_rules . --rules AvoidOrInExceptRule NoUnnecessaryListComprehensionRule
-#   $ python -m fixit.common.cli.run_rules . --rules AvoidOrInExceptRule my.custom.rules.package
-#   $ python -m fixit.common.cli.run_rules . --rules fixit.rules
+#   $ python -m fixit.cli.run_rules --help
+#   $ python -m fixit.cli.run_rules
+#   $ python -m fixit.cli.run_rules --rules AvoidOrInExceptRule
+#   $ python -m fixit.cli.run_rules . --rules AvoidOrInExceptRule NoUnnecessaryListComprehensionRule
+#   $ python -m fixit.cli.run_rules . --rules AvoidOrInExceptRule my.custom.rules.package
+#   $ python -m fixit.cli.run_rules . --rules fixit.rules
 
 import argparse
 import itertools
@@ -24,8 +24,8 @@ from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence
 from libcst import ParserSyntaxError, parse_module
 from libcst.metadata import MetadataWrapper
 
-from fixit.common.cli import find_files, map_paths
-from fixit.common.cli.args import (
+from fixit.cli import find_files, map_paths
+from fixit.cli.args import (
     get_compact_parser,
     get_multiprocessing_parser,
     get_paths_parser,
@@ -33,9 +33,9 @@ from fixit.common.cli.args import (
     get_skip_ignore_byte_marker_parser,
     get_use_ignore_comments_parser,
 )
-from fixit.common.cli.formatter import LintRuleReportFormatter
-from fixit.common.cli.full_repo_metadata import get_metadata_caches
-from fixit.common.cli.utils import print_red
+from fixit.cli.formatter import LintRuleReportFormatter
+from fixit.cli.full_repo_metadata import get_metadata_caches
+from fixit.cli.utils import print_red
 from fixit.common.utils import LintRuleCollectionT
 from fixit.rule_lint_engine import lint_file
 
