@@ -25,22 +25,23 @@ from fixit.cli.args import (
     get_compact_parser,
     get_multiprocessing_parser,
     get_paths_parser,
-    get_rule_parser,
+    get_rules_parser,
     get_skip_autoformatter_parser,
     get_skip_ignore_byte_marker_parser,
     get_skip_ignore_comments_parser,
 )
 from fixit.cli.formatter import LintRuleReportFormatter
-from fixit.cli.utils import print_red
-from fixit.common.base import LintRuleT
+from fixit.cli.utils import print_red, print_yellow
+from fixit.common.base import CstLintRule
 from fixit.common.config import get_lint_config
 from fixit.common.report import BaseLintRuleReport
+from fixit.common.utils import LintRuleCollectionT
 from fixit.rule_lint_engine import lint_file_and_apply_patches
 
 
 @dataclass(frozen=True)
 class LintOpts:
-    rule: LintRuleT
+    rules: LintRuleCollectionT
     use_ignore_byte_markers: bool
     use_ignore_comments: bool
     skip_autoformatter: bool
@@ -63,7 +64,7 @@ def get_formatted_reports_for_path(
         lint_result = lint_file_and_apply_patches(
             path,
             source,
-            rules={opts.rule},
+            rules=opts.rules,
             use_ignore_byte_markers=opts.use_ignore_byte_markers,
             use_ignore_comments=opts.use_ignore_comments,
         )
@@ -100,7 +101,7 @@ def main(raw_args: Sequence[str]) -> int:
             + "but limited to the small subset of APIs provided by Fixit."
         ),
         parents=[
-            get_rule_parser(),
+            get_rules_parser(),
             get_paths_parser(),
             get_skip_ignore_comments_parser(),
             get_skip_ignore_byte_marker_parser(),
@@ -113,15 +114,23 @@ def main(raw_args: Sequence[str]) -> int:
     args = parser.parse_args(raw_args)
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
-    rule = args.rule
+    rules = args.rules
     # TODO `lint_file_and_apply_patches` cannot handle metadata_caches just yet, so we skip
     # rules that require these caches for now.
-    if (
-        hasattr(rule, "requires_metadata_caches")
-        and getattr(rule, "requires_metadata_caches")()
-    ):
-        print_red("Cannot run `apply_fix` with a rule that requires metadata cache.")
-        return 1
+    require_metadata_rules = set()
+    non_metadata_rules = set()
+
+    for r in rules:
+        if issubclass(r, CstLintRule) and getattr(r, "requires_metadata_caches")():
+            require_metadata_rules.add(r)
+        else:
+            non_metadata_rules.add(r)
+    if require_metadata_rules:
+        print_red("Cannot run `apply_fix` with rules that requires metadata cache:")
+        print(",\n".join([r.__name__ for r in require_metadata_rules]))
+        if not non_metadata_rules:
+            return 1
+        print_yellow("Skipping those rules.")
 
     # Find files if directory was provided.
     file_paths = tuple(find_files((str(p) for p in args.paths)))
@@ -134,7 +143,7 @@ def main(raw_args: Sequence[str]) -> int:
 
     # opts is a more type-safe version of args that we pass around
     opts = LintOpts(
-        rule=rule,
+        rules=non_metadata_rules,
         use_ignore_byte_markers=args.use_ignore_byte_markers,
         use_ignore_comments=args.use_ignore_comments,
         skip_autoformatter=args.skip_autoformatter,
