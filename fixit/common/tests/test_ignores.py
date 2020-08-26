@@ -6,7 +6,6 @@
 import tokenize
 from io import BytesIO
 from pathlib import Path
-from textwrap import dedent
 from typing import Container, Iterable, Tuple
 
 import libcst as cst
@@ -16,6 +15,7 @@ from fixit.common.comments import CommentInfo
 from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.report import CstLintRuleReport
+from fixit.common.utils import dedent_with_lstrip
 
 
 class IgnoreInfoTest(UnitTest):
@@ -25,8 +25,8 @@ class IgnoreInfoTest(UnitTest):
             # lint errors on that line. This is a bad practice, but we have to support
             # it for compatibility with existing code. (until we can codemod it away)
             "noqa_all_legacy": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     fn1()
                     fn2()  # noqa
                     fn3()
@@ -38,8 +38,8 @@ class IgnoreInfoTest(UnitTest):
             # When a noqa comment is specified with codes, it should only ignore the
             # specified codes.
             "noqa_with_code": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     fn1()  # noqa: IgnoredRule
                     fn2()  # noqa: IgnoredRule: Message
                     fn3()  # noqa: IgnoredRule, Ignored2Rule: Message
@@ -52,8 +52,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [4, 5, 6],
             },
             "noqa_multiline": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     fn1(line, \\
                     continuation)  # noqa: IgnoredRule
 
@@ -69,8 +69,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [1, 2, 6, 7, 8, 9],
             },
             "noqa_file": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     # noqa-file: IgnoredRule: Some reason
                     fn1()
                     """
@@ -79,8 +79,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [1, 2, 3],
             },
             "noqa_file_multiple_codes": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     # noqa-file: IgnoredRule, Ignored1Rule, Ignored2Rule: Some reason
                     fn1()
                     """
@@ -89,8 +89,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [1, 2, 3],
             },
             "noqa_file_requires_code_and_reason": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     # noqa-file
                     # noqa-file: IgnoredRule
                     # Neither of these noqa-files should work because they're incomplete
@@ -101,8 +101,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [],
             },
             "backwards_compatibility_classname": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     fn1() # noqa: IG00, IgnoredRule
                     """
                 ),
@@ -110,8 +110,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [1],
             },
             "backwards_compatibility_oldcode": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     fn1() # noqa: IG00, IgnoredRule
                     """
                 ),
@@ -119,8 +119,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [1],
             },
             "lint_fixme": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     fn1()
 
                     # lint-fixme: IgnoredRule: Some short reason
@@ -143,8 +143,8 @@ class IgnoreInfoTest(UnitTest):
                 "ignored_lines": [3, 4, 9, 10, 11, 12, 13, 14],
             },
             "lint_ignore": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     fn1()
 
                     # lint-ignore: IgnoredRule: Some reason
@@ -159,8 +159,8 @@ class IgnoreInfoTest(UnitTest):
             # A lint-ignore can exist right before an EOF. That's fine. We should ignore
             # all the way to the EOF.
             "lint_ignore_eof": {
-                "source": dedent(
-                    """\
+                "source": dedent_with_lstrip(
+                    """
                     # lint-ignore: IgnoredRule
                     """
                 ),

@@ -5,20 +5,20 @@
 
 import tokenize
 from io import BytesIO
-from textwrap import dedent
 from typing import Mapping
 
 from libcst.testing.utils import UnitTest, data_provider
 
 from fixit.common.line_mapping import LineMappingInfo
+from fixit.common.utils import dedent_with_lstrip
 
 
 class LineMappingInfoTest(UnitTest):
     @data_provider(
         {
             "simple": {
-                "code": dedent(
-                    """\
+                "code": dedent_with_lstrip(
+                    """
                     def fn():
                         ...
                     """
@@ -27,8 +27,8 @@ class LineMappingInfoTest(UnitTest):
                 "next_non_empty_logical_line": {1: 1, 2: 2, 3: 3},
             },
             "comments": {
-                "code": dedent(
-                    """\
+                "code": dedent_with_lstrip(
+                    """
                     # comment with
                     # multiple
                     # lines
@@ -49,8 +49,8 @@ class LineMappingInfoTest(UnitTest):
                 },
             },
             "blank_lines": {
-                "code": dedent(
-                    """\
+                "code": dedent_with_lstrip(
+                    """
 
 
                     def fn():
@@ -71,8 +71,8 @@ class LineMappingInfoTest(UnitTest):
                 },
             },
             "line_continuation": {
-                "code": dedent(
-                    """\
+                "code": dedent_with_lstrip(
+                    """
                     value = "abc"
                     value = \\
                         "abcd" + \\
@@ -93,8 +93,8 @@ class LineMappingInfoTest(UnitTest):
                 },
             },
             "multiline_string": {
-                "code": dedent(
-                    """\
+                "code": dedent_with_lstrip(
+                    """
                     value = "abc"
                     value = '''
                         abcd
