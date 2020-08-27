@@ -65,7 +65,7 @@ class SuppressionComment:
 
 # Loosely based on flake8's parse_comma_separated_list
 # https://gitlab.com/pycqa/flake8/blob/52d88d8ca7208d1edc554b41a/src/flake8/utils.py#L17
-# Used for parsing `# noqa` and `# noqa-file`
+# Used for parsing `# lint-fixme`,, `# lint-ignore`, `# noqa` and `# noqa-file`
 def _parse_comma_separated_rules(rules_str: Optional[str]) -> IgnoredRules:
     if rules_str is None:
         return AllRulesType.ALL_RULES

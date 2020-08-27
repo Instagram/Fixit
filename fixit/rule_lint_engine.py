@@ -19,6 +19,7 @@ from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
+from fixit.common.unused_suppressions import visit_unused_suppressions_rule
 from fixit.common.utils import LintRuleCollectionT
 
 
@@ -75,7 +76,7 @@ def lint_file(
     tokens = None
     if use_ignore_comments:
         # Don't compute tokens unless we have to, it slows down
-        # `scripts.lint.test_rule`.
+        # `fixit.cli.run_rules`.
         #
         # `tokenize` is actually much more expensive than generating the whole AST,
         # since AST parsing is heavily optimized C, and tokenize is pure python.
@@ -104,22 +105,23 @@ def lint_file(
     # those into our local `reports` list.
     ast_tree = None
     reports = []
-    if cst_rules:
-        if cst_wrapper is None:
-            cst_wrapper = MetadataWrapper(
-                cst.parse_module(source), unsafe_skip_copy=True
-            )
-        cst_context = CstContext(cst_wrapper, source, file_path, config)
-        _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
-        reports.extend(cst_context.reports)
+
+    if cst_wrapper is None:
+        cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
+    cst_context = CstContext(cst_wrapper, source, file_path, config)
+    _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
+    reports.extend(cst_context.reports)
+
     if pseudo_rules:
         psuedo_context = PseudoContext(file_path, source, tokens, ast_tree)
         for pr_cls in pseudo_rules:
             reports.extend(pr_cls(psuedo_context).lint_file())
 
-    # filter the accumulated errors that should be noqa'ed
+    # filter the accumulated errors that should be suppressed and report unused suprressions
     if ignore_info:
-        reports = [r for r in reports if not ignore_info.should_ignore_report(r)]
+        reports = visit_unused_suppressions_rule(
+            cst_wrapper, cst_context, reports, ignore_info
+        )
 
     return reports
 
