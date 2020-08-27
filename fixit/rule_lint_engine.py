@@ -118,7 +118,7 @@ def lint_file(
             reports.extend(pr_cls(psuedo_context).lint_file())
 
     # filter the accumulated errors that should be suppressed and report unused suprressions
-    if ignore_info:
+    if ignore_info is not None:
         reports = visit_unused_suppressions_rule(
             cst_wrapper, cst_context, reports, ignore_info
         )
