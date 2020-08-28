@@ -30,6 +30,7 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
     METADATA_DEPENDENCIES = (ParentNodeProvider,)
 
     def __init__(self, context: CstContext,) -> None:
+        # TODO: Support Flake8 suppressions.
         super().__init__(context)
         ignore_info: object = self.context.config.rule_config[self.__class__.__name__][
             "ignore_info"
@@ -53,68 +54,111 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
         ] = self.ignore_info.local_ignore_info.local_suppression_comments_by_line.get(
             comment_physical_line, []
         )
-
         if local_supp_comments:
             # Should only ever contain one element since a comment's 'local comment' will only be itself.
             assert len(local_supp_comments) == 1
             local_supp_comment = local_supp_comments[0]
 
-            ignored_rules = local_supp_comment.ignored_rules
-            # Just a check for the type-checker - it should never actually be AllRulesType
-            # because we don't support that in lint-fixme/lint-ignore comments.
-            # TODO: We can remove the AllRulesType check once we deprecate noqa.
-            if isinstance(ignored_rules, AllRulesType):
-                return
+            self.handle_suppression_comment(
+                original_node, local_supp_comment, comment_physical_line
+            )
 
-            # First find the suppressed codes that were included in the lint run. If the rule in question
-            # was not included in this run, we CANNOT know for sure that this lint suppression is unused.
-            ignored_rules_that_ran = {
-                ig for ig in ignored_rules if ig in self.rule_names
-            }
-
-            if ignored_rules_that_ran == set(ignored_rules):
-                if not local_supp_comment.used_by:
-                    # If we're here, all of the codes in this suppression refer to rules that ran, and
-                    # none of comment's codes suppress anything.
-                    # If it's not the first line in the comment, we have already dealt with it, so skip
-                    # all subsequent comment lines.
-                    if comment.value == local_supp_comment.tokens[0].string:
-                        # Report this comment and offer to remove it.
-                        self._report_and_remove_logical_comment(
-                            original_node, len(local_supp_comment.tokens)
-                        )
-
-            unreported_rules_that_ran = {
-                ir
-                for ir in ignored_rules_that_ran
-                if not any(ir == report.code for report in local_supp_comment.used_by)
-            }
-
-            if unreported_rules_that_ran:
-                new_codes = ", ".join(
-                    [c for c in ignored_rules if c not in unreported_rules_that_ran]
+    def handle_all_in_lint_run_suppression_comment(
+        self,
+        original_node: cst.EmptyLine,
+        local_supp_comment: SuppressionComment,
+        ignored_rules: Collection[str],
+        comment_physical_line: int,
+    ) -> None:
+        if not local_supp_comment.used_by:
+            # If we're here, all of the codes in this suppression refer to rules that ran, and
+            # none of comment's codes suppress anything.
+            # If it's not the first line in the comment, we have already dealt with it, so skip.
+            if comment_physical_line == local_supp_comment.tokens[0].start[0]:
+                # Report this comment and offer to remove it.
+                self._report_and_remove_logical_comment(
+                    original_node, len(local_supp_comment.tokens)
                 )
+        else:
+            # Some or all of the codes are being used to suppress reports.
+            self.find_and_handle_unused_codes(
+                original_node,
+                local_supp_comment,
+                ignored_rules,
+                ignored_rules,
+                comment_physical_line,
+            )
 
-                kind = (
-                    SuppressionCommentKind.FIXME
-                    if local_supp_comment.kind == "fixme"
-                    else SuppressionCommentKind.IGNORE
-                )
+    def handle_suppression_comment(
+        self,
+        original_node: cst.EmptyLine,
+        local_supp_comment: SuppressionComment,
+        comment_physical_line: int,
+    ) -> None:
+        ignored_rules = local_supp_comment.ignored_rules
+        # Just a check for the type-checker - it should never actually be AllRulesType
+        # because we don't support that in lint-fixme/lint-ignore comments.
+        # TODO: We can remove the AllRulesType check once we deprecate noqa.
+        if isinstance(ignored_rules, AllRulesType):
+            return
 
-                # Construct a new comment:
-                new_lines = NewSuppressionComment(
-                    kind=kind,
-                    before_line=comment_physical_line + 1,
-                    code=new_codes,
-                    message=local_supp_comment.reason,
-                ).to_lines()
+        # First find the suppressed codes that were included in the lint run. If the code in question
+        # was not included in this run, we CANNOT know for sure that this lint suppression is unused.
+        ignored_rules_that_ran = {ig for ig in ignored_rules if ig in self.rule_names}
 
-                self._report_and_replace_logical_comment(
-                    original_node,
-                    len(local_supp_comment.tokens),
-                    new_lines,
-                    unreported_rules_that_ran,
-                )
+        if ignored_rules_that_ran == set(ignored_rules):
+            self.handle_all_in_lint_run_suppression_comment(
+                original_node, local_supp_comment, ignored_rules, comment_physical_line
+            )
+        else:
+            self.find_and_handle_unused_codes(
+                original_node,
+                local_supp_comment,
+                ignored_rules,
+                ignored_rules_that_ran,
+                comment_physical_line,
+            )
+
+    def find_and_handle_unused_codes(
+        self,
+        original_node: cst.EmptyLine,
+        local_supp_comment: SuppressionComment,
+        ignored_rules: Collection[str],
+        ignored_rules_that_ran: Collection[str],
+        comment_physical_line: int,
+    ) -> None:
+        # Find which rules did not show a report, hence indicate that the code in the comment is unneeded.
+        unreported_rules_that_ran = {
+            ir
+            for ir in ignored_rules_that_ran
+            if not any(ir == report.code for report in local_supp_comment.used_by)
+        }
+
+        if unreported_rules_that_ran:
+            new_codes = ", ".join(
+                [c for c in ignored_rules if c not in unreported_rules_that_ran]
+            )
+
+            kind = (
+                SuppressionCommentKind.FIXME
+                if local_supp_comment.kind == "fixme"
+                else SuppressionCommentKind.IGNORE
+            )
+
+            # Construct a new comment:
+            new_lines = NewSuppressionComment(
+                kind=kind,
+                before_line=comment_physical_line + 1,
+                code=new_codes,
+                message=local_supp_comment.reason,
+            ).to_lines()
+
+            self._report_and_replace_logical_comment(
+                original_node,
+                len(local_supp_comment.tokens),
+                new_lines,
+                unreported_rules_that_ran,
+            )
 
     def _get_parent_attribute(
         self, empty_line_node: cst.EmptyLine
@@ -167,9 +211,9 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
             for line in replacement_lines
         ]
         new_attribute_value = (
-            list(av for av in attribute_value[:idx])
+            list(attribute_value[:idx])
             + replacement_emptyline_nodes
-            + list(av for av in attribute_value[idx + lines_span :])
+            + list(attribute_value[idx + lines_span :])
         )
 
         self.report(
@@ -190,8 +234,8 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
             node_to_remove
         )
 
-        new_attribute_value = (
-            list(av for av in attribute_value[:idx]) + list(av for av in attribute_value[idx + lines_span :])
+        new_attribute_value = list(attribute_value[:idx]) + list(
+            attribute_value[idx + lines_span :]
         )
 
         self.report(
