@@ -69,6 +69,7 @@ def get_formatted_reports_for_path(
             rules=opts.rules,
             use_ignore_byte_markers=opts.use_ignore_byte_markers,
             use_ignore_comments=opts.use_ignore_comments,
+            find_unused_suppressions=True,
         )
         raw_reports = lint_result.reports
         updated_source = lint_result.patched_source

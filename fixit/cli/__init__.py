@@ -184,6 +184,7 @@ def get_file_lint_result_json(
                 rules=opts.rules,
                 config=opts.config,
                 cst_wrapper=cst_wrapper,
+                find_unused_suppressions=True,
             ),
             **opts.extra,
         )

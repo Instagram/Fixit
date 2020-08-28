@@ -19,7 +19,7 @@ from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
-from fixit.common.unused_suppressions import visit_unused_suppressions_rule
+from fixit.common.unused_suppressions import RemoveUnusedSuppressionsRule
 from fixit.common.utils import LintRuleCollectionT
 
 
@@ -60,6 +60,7 @@ def lint_file(
     config: Optional[LintConfig] = None,
     rules: LintRuleCollectionT,
     cst_wrapper: Optional[MetadataWrapper] = None,
+    find_unused_suppressions: bool = False,
 ) -> Collection[BaseLintRuleReport]:
     """
     May raise a SyntaxError, which should be handled by the
@@ -108,20 +109,34 @@ def lint_file(
 
     if cst_wrapper is None:
         cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
-    cst_context = CstContext(cst_wrapper, source, file_path, config)
-    _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
-    reports.extend(cst_context.reports)
+    if cst_rules:
+        cst_context = CstContext(cst_wrapper, source, file_path, config)
+        _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
+        reports.extend(cst_context.reports)
 
     if pseudo_rules:
         psuedo_context = PseudoContext(file_path, source, tokens, ast_tree)
         for pr_cls in pseudo_rules:
             reports.extend(pr_cls(psuedo_context).lint_file())
 
-    # filter the accumulated errors that should be suppressed and report unused suprressions
     if ignore_info is not None:
-        reports = visit_unused_suppressions_rule(
-            cst_wrapper, cst_context, reports, ignore_info
-        )
+        # filter the accumulated errors that should be suppressed and report unused suppressions
+        reports = [r for r in reports if not ignore_info.should_ignore_report(r)]
+        if find_unused_suppressions and cst_rules:
+            # We had to make sure to call ignore_info.should_ignore_report before running our
+            # RemoveUnusedSuppressionsRule because ignore_info needs to be up to date for it to work.
+            # We can construct a new context since we want a fresh set of reports to append to reports.
+            config.rule_config[RemoveUnusedSuppressionsRule.__name__] = {
+                "ignore_info": ignore_info,
+                "rules": cst_rules,
+            }
+            unused_suppressions_context = CstContext(
+                cst_wrapper, source, file_path, config
+            )
+            _visit_cst_rules_with_context(
+                cst_wrapper, [RemoveUnusedSuppressionsRule], unused_suppressions_context
+            )
+            reports.extend(unused_suppressions_context.reports)
 
     return reports
 
@@ -141,6 +156,7 @@ def lint_file_and_apply_patches(
     config: Optional[LintConfig] = None,
     rules: LintRuleCollectionT,
     max_iter: int = 100,
+    find_unused_suppressions: bool = False,
 ) -> LintRuleReportsWithAppliedPatches:
     """
     Runs `lint_file` in a loop, patching one auto-fixable report on each iteration.
@@ -163,6 +179,7 @@ def lint_file_and_apply_patches(
             use_ignore_comments=use_ignore_comments,
             config=config,
             rules=rules,
+            find_unused_suppressions=find_unused_suppressions,
         )
 
         try:
