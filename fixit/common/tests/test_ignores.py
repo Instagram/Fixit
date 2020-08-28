@@ -215,9 +215,19 @@ class IgnoreInfoTest(UnitTest):
                 "reports_on_lines": [],
                 "unused_comments": [1],
             },
+            "unused_lint_ignore_mutliple_lines": {
+                "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
+                "reports_on_lines": [],
+                "unused_comments": [1],
+            },
             "used_lint_ignore": {
                 "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
                 "reports_on_lines": [(2, "Ignored999Rule")],
+                "unused_comments": [],
+            },
+            "used_lint_ignore_multiple_lines": {
+                "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
+                "reports_on_lines": [(3, "Ignored999Rule")],
                 "unused_comments": [],
             },
             "lint_ignore_is_used_before_noqa": {
@@ -229,6 +239,58 @@ class IgnoreInfoTest(UnitTest):
                 "source": "# lint-ignore: Ignored999Rule: First\n# lint-ignore: Ignored999Rule: Second\nfn()",
                 "reports_on_lines": [(3, "Ignored999Rule")],
                 "unused_comments": [2],
+            },
+            "multiple_used_lint_ignores": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [(5, "Ignored999Rule"), (5, "Ignored1000Rule")],
+                "unused_comments": [],
+            },
+            "multiple_unused_lint_ignores": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [],
+                "unused_comments": [1, 3],
+            },
+            "some_unused_lint_ignores": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [(5, "Ignored999Rule")],
+                "unused_comments": [3],
+            },
+            "some_unused_lint_ignores_2": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [(5, "Ignored1000Rule")],
+                "unused_comments": [1],
             },
         }
     )
