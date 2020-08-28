@@ -41,7 +41,7 @@ LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
     # ``# lint-fixme: LintRuleName1, LintRuleName2: Details``
     r"# lint-(ignore|fixme)"
     + r": (?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+)"
-    + r"(?:: (?P<reason>.+))?"
+    + r"(:( (?P<reason>.+)?)?)?"
 )
 
 # Skip evaluation of the given file.

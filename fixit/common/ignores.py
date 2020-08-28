@@ -11,7 +11,18 @@ import tokenize
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Collection, Dict, List, Mapping, Optional, Sequence, Type, Union
+from typing import (
+    Collection,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 from fixit.common.base import CstLintRule
 from fixit.common.comments import CommentInfo
@@ -21,6 +32,7 @@ from fixit.common.config import (
     NOQA_FILE_RULE,
     NOQA_INLINE_REGEXP,
 )
+from fixit.common.insert_suppressions import BODY_PREFIX_WITH_SPACE
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
@@ -47,13 +59,21 @@ class SuppressionComment:
     # of multiple tokens.
     tokens: Sequence[tokenize.TokenInfo]
     used_by: List[BaseLintRuleReport]
+    kind: str
+    reason: Optional[str]
 
     def __init__(
-        self, ignored_rules: IgnoredRules, tokens: Sequence[tokenize.TokenInfo]
+        self,
+        ignored_rules: IgnoredRules,
+        tokens: Sequence[tokenize.TokenInfo],
+        kind: str,
+        reason: Optional[str] = None,
     ) -> None:
         self.ignored_rules = ignored_rules
         self.tokens = tokens
         self.used_by = []
+        self.kind = kind
+        self.reason = reason
 
     def should_ignore_report(self, report: BaseLintRuleReport) -> bool:
         ignored_rules = self.ignored_rules
@@ -61,6 +81,9 @@ class SuppressionComment:
 
     def mark_used_by(self, report: BaseLintRuleReport) -> None:
         self.used_by.append(report)
+
+    def __repr__(self) -> str:
+        return "\n".join(t.string for t in self.tokens)
 
 
 # Loosely based on flake8's parse_comma_separated_list
@@ -130,6 +153,26 @@ class LocalIgnoreInfo:
         return False
 
     @staticmethod
+    def get_all_tokens_and_full_reason(
+        tokens: List[tokenize.TokenInfo],
+        comment_lines: Iterator[tokenize.TokenInfo],
+        end_line: int,
+        reason: Optional[str],
+    ) -> Tuple[List[tokenize.TokenInfo], Optional[str], Optional[tokenize.TokenInfo]]:
+        next_comment_line = next(comment_lines, None)
+        while next_comment_line is not None and next_comment_line.start[0] < end_line:
+            if not next_comment_line.string.startswith(BODY_PREFIX_WITH_SPACE):
+                break
+            reason_contd = next_comment_line.string.split(BODY_PREFIX_WITH_SPACE, 1)[1]
+            reason = (
+                " ".join([reason, reason_contd]) if reason is not None else reason_contd
+            )
+            tokens.append(next_comment_line)
+            next_comment_line = next(comment_lines, None)
+
+        return tokens, reason, next_comment_line
+
+    @staticmethod
     def compute(
         *, comment_info: CommentInfo, line_mapping_info: LineMappingInfo
     ) -> "LocalIgnoreInfo":
@@ -140,22 +183,44 @@ class LocalIgnoreInfo:
 
         # New `# lint-fixme` and `# lint-ignore` comments. These are preferred over
         # legacy `# noqa` comments.
-        for tok in comment_info.comments_on_own_line:
-            match = LINT_IGNORE_REGEXP.fullmatch(tok.string)
-            if match:
-                start_line = line_mapping_info.physical_to_logical[tok.start[0]]
-                end_line = line_mapping_info.get_next_non_empty_logical_line(
-                    tok.start[0]
-                )
+        comments_on_own_line_iter = iter(comment_info.comments_on_own_line)
+        next_comment_line: Optional[tokenize.TokenInfo] = next(
+            comments_on_own_line_iter, None
+        )
+
+        while next_comment_line is not None:
+            match = LINT_IGNORE_REGEXP.fullmatch(next_comment_line.string)
+            if match is not None:
+                # We are at the *start* of a suppression comment. There may be more physical lines
+                # to the comment. We assume any lines starting with `# lint: ` are a continuation.
+                start_line = next_comment_line.start[0]
+                end_line = line_mapping_info.get_next_non_empty_logical_line(start_line)
                 assert end_line is not None, "Failed to get next non-empty logical line"
+
+                (
+                    tokens,
+                    reason,
+                    next_comment_line,
+                ) = LocalIgnoreInfo.get_all_tokens_and_full_reason(
+                    [next_comment_line],
+                    comments_on_own_line_iter,
+                    end_line,
+                    match.group("reason"),
+                )
+
                 codes = _parse_comma_separated_rules(match.group("codes"))
-                # TODO: These suppressions can span multiple lines. We need to find
-                # every comment token (lines beginning with `# lint:`) associated with
-                # this suppression, not just the first.
-                comment = SuppressionComment(codes, [tok])
+                # Construct the SuppressionComment with all the information.
+                comment = SuppressionComment(codes, tokens, match.group(1), reason)
+
                 local_suppression_comments.append(comment)
-                for logical_line in range(start_line, end_line + 1):
-                    local_suppression_comments_by_line[logical_line].append(comment)
+
+                for tok in tokens:
+                    local_suppression_comments_by_line[tok.start[0]].append(comment)
+
+                # Finally we want to map the suppressed line of code to this suppression comment.
+                local_suppression_comments_by_line[end_line].append(comment)
+            else:
+                next_comment_line = next(comments_on_own_line_iter, None)
 
         # Legacy inline `# noqa` comments. This matches flake8's behavior.
         # Process these after `# lint-ignore` comments, because in the case of duplicate
@@ -166,7 +231,7 @@ class LocalIgnoreInfo:
             if match:
                 normalized_line = line_mapping_info.physical_to_logical[tok.start[0]]
                 codes = _parse_comma_separated_rules(match.group("codes"))
-                comment = SuppressionComment(codes, [tok])
+                comment = SuppressionComment(codes, [tok], kind="noqa")
                 local_suppression_comments.append(comment)
                 local_suppression_comments_by_line[normalized_line].append(comment)
 
