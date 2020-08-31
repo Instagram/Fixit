@@ -11,6 +11,7 @@ from libcst.metadata import ParentNodeProvider, PositionProvider
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.ignores import AllRulesType, IgnoreInfo, SuppressionComment
 from fixit.common.insert_suppressions import (
+    DEFAULT_MIN_COMMENT_WIDTH,
     SuppressionComment as NewSuppressionComment,
     SuppressionCommentKind,
 )
@@ -35,20 +36,25 @@ def _compose_new_comment(
         )
 
     new_codes = ", ".join([c for c in ignored_rules if c not in unneeded_codes])
+    if not new_codes:
+        return []
 
     kind = (
         SuppressionCommentKind.FIXME
         if local_supp_comment.kind == "fixme"
         else SuppressionCommentKind.IGNORE
     )
-
-    # Construct a new comment:
+    width = DEFAULT_MIN_COMMENT_WIDTH
+    for token in local_supp_comment.tokens:
+        width = max(len(token.string), width)
+    # Construct a new comment.
     new_lines = NewSuppressionComment(
         kind=kind,
         before_line=comment_physical_line + 1,
         code=new_codes,
         message=local_supp_comment.reason,
-    ).to_lines()
+        max_lines=len(local_supp_comment.tokens),
+    ).to_lines(width)
 
     return new_lines
 
