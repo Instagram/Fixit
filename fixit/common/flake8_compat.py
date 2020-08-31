@@ -56,7 +56,9 @@ class Flake8CompatAccumulatingFormatter(Flake8BaseFormatter):
 
 class Flake8CompatFileProcessor(Flake8FileProcessor):
     def __init__(self, *args: Any, context: PseudoContext, **kwargs: Any) -> None:
-        self.context: PseudoContext = context  # super calls read_lines; do this before super()
+        self.context: PseudoContext = (
+            context  # super calls read_lines; do this before super()
+        )
         super().__init__(*args, **kwargs)
 
     @property

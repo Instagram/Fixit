@@ -53,7 +53,8 @@ def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> No
 class TestCasePrecursor:
     rule: Type[CstLintRule]
     test_methods: Mapping[
-        str, Union[ValidTestCase, InvalidTestCase],
+        str,
+        Union[ValidTestCase, InvalidTestCase],
     ]
     fixture_paths: Mapping[str, Path]
 
@@ -119,7 +120,7 @@ class LintRuleTestCase(unittest.TestCase):
 def _gen_test_methods_for_rule(
     rule: Type[CstLintRule], fixture_dir: Path, rules_package: str
 ) -> TestCasePrecursor:
-    """ Aggregates all of the cases inside a single CstLintRule's VALID and INVALID attributes
+    """Aggregates all of the cases inside a single CstLintRule's VALID and INVALID attributes
     and maps them to altered names with a `test_` prefix so that 'unittest' can discover them
     later on and an index postfix so that individual tests can be selected from the command line.
     """

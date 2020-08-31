@@ -289,7 +289,9 @@ class ImportConstraintsRule(CstLintRule):
             config=_gen_testcase_config(
                 {
                     "dir_1/dir_2": {"rules": [["*", "deny"]]},
-                    "dir_1": {"rules": [["common.foo.bar", "allow"], ["*", "deny"]],},
+                    "dir_1": {
+                        "rules": [["common.foo.bar", "allow"], ["*", "deny"]],
+                    },
                 }
             ),
             filename="dir_1/dir_2/file.py",
@@ -300,7 +302,9 @@ class ImportConstraintsRule(CstLintRule):
             config=_gen_testcase_config(
                 {
                     "dir_1/dir_2": {"rules": [["*", "deny"]]},
-                    "dir_1": {"rules": [["common", "allow"], ["*", "deny"]],},
+                    "dir_1": {
+                        "rules": [["common", "allow"], ["*", "deny"]],
+                    },
                 }
             ),
             filename="dir_1/dir_2/file.py",
