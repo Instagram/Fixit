@@ -48,7 +48,7 @@ class SuppressionComment:
     message: Optional[str] = None
     max_lines: int = 3
 
-    def to_lines(self, width: int = DEFAULT_MIN_COMMENT_WIDTH) -> Sequence[str]:
+    def to_lines(self, width: int) -> Sequence[str]:
         message = self.message
         if message is None:
             return [f"# {self.kind.value}: {self.code}"]
