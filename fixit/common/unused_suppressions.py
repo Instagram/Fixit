@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Collection, Sequence, Tuple
+from typing import Collection, List, Sequence, Tuple, cast
 
 import libcst as cst
 from libcst.metadata import ParentNodeProvider, PositionProvider
@@ -18,6 +18,101 @@ from fixit.common.insert_suppressions import (
 
 UNUSED_SUPPRESSION_COMMENT_MESSAGE = "Unused lint suppression. This comment is not suppressing lint errors and should be removed."
 UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE = "The codes `{lint_codes}` in this comment are not suppressing lint errors. They can be removed from this suppression."
+
+
+def _compose_new_comment(
+    local_supp_comment: SuppressionComment,
+    unneeded_codes: Collection[str],
+    comment_physical_line: int,
+) -> Sequence[str]:
+    ignored_rules = local_supp_comment.ignored_rules
+    # Just a check for the type-checker - it should never actually be AllRulesType
+    # because we don't support that in lint-fixme/lint-ignore comments.
+    # TODO: We can remove the AllRulesType check once we deprecate noqa.
+    if isinstance(ignored_rules, AllRulesType):
+        raise ValueError(
+            f"Got `AllRulesType` for the suppressed rules in comment on line {comment_physical_line}"
+        )
+
+    new_codes = ", ".join([c for c in ignored_rules if c not in unneeded_codes])
+
+    kind = (
+        SuppressionCommentKind.FIXME
+        if local_supp_comment.kind == "fixme"
+        else SuppressionCommentKind.IGNORE
+    )
+
+    # Construct a new comment:
+    new_lines = NewSuppressionComment(
+        kind=kind,
+        before_line=comment_physical_line + 1,
+        code=new_codes,
+        message=local_supp_comment.reason,
+    ).to_lines()
+
+    return new_lines
+
+
+def _get_parent_attribute_name_and_child_index(
+    parent_node: cst.CSTNode, child_node: cst.EmptyLine
+) -> Tuple[str, int]:
+    """
+    Find the name of the parent Sequence attribute to which the child belongs, and its index.
+    """
+    # EmptyLine nodes can be found in parent attributes `header`, `footer`, `leading_lines`, `lines_after_decorators` and `empty_lines`
+    # The key is to find the right attribute.
+    possible_attribute_names = [
+        "header",
+        "footer",
+        "leading_lines",
+        "lines_after_decorators",
+        "empty_lines",
+    ]
+    for possible_attribute_name in possible_attribute_names:
+        attribute_value = getattr(parent_node, possible_attribute_name, None)
+        if attribute_value is not None:
+            for idx, node in enumerate(attribute_value):
+                if node is child_node:
+                    # We have located the attribute
+                    return (
+                        possible_attribute_name,
+                        idx,
+                    )
+
+    # If we get here... we should never get here.
+    raise ValueError(f"Unable to find parent attribute of {child_node}.")
+
+
+def _get_unused_codes_in_comment(
+    local_supp_comment: SuppressionComment, ignored_rules_that_ran: Collection[str]
+) -> Collection[str]:
+    """ Returns a subset of the rules in the comment which did not show up in any report. """
+    return {
+        ir
+        for ir in ignored_rules_that_ran
+        if not any(ir == report.code for report in local_supp_comment.used_by)
+    }
+
+
+def _modify_parent_attribute(
+    parent_node: cst.CSTNode,
+    attribute_name: str,
+    idx_left: int,
+    idx_right: int,
+    list_to_insert: List[cst.EmptyLine],
+) -> List[cst.EmptyLine]:
+    """
+    Replace the section starting at idx_left and ending at idx_right of the Sequence[cst.EmptyLine]-type attribute
+    with `list_to_insert`.
+    Returns the replacement attribute.
+    """
+    attribute_value = getattr(parent_node, attribute_name)
+    attribute_value = cast(Sequence[cst.EmptyLine], attribute_value)
+    return (
+        list(attribute_value[:idx_left])
+        + list_to_insert
+        + list(attribute_value[idx_right:])
+    )
 
 
 # This is a special lint rule that should not be included in the fixit.rules package as it needs to run after all other rules.
@@ -59,42 +154,20 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
             assert len(local_supp_comments) == 1
             local_supp_comment = local_supp_comments[0]
 
-            self.handle_suppression_comment(
+            self._handle_suppression_comment(
                 original_node, local_supp_comment, comment_physical_line
             )
 
-    def handle_all_in_lint_run_suppression_comment(
+    def _handle_suppression_comment(
         self,
         original_node: cst.EmptyLine,
         local_supp_comment: SuppressionComment,
-        ignored_rules: Collection[str],
         comment_physical_line: int,
     ) -> None:
-        if not local_supp_comment.used_by:
-            # If we're here, all of the codes in this suppression refer to rules that ran, and
-            # none of comment's codes suppress anything.
-            # If it's not the first line in the comment, we have already dealt with it, so skip.
-            if comment_physical_line == local_supp_comment.tokens[0].start[0]:
-                # Report this comment and offer to remove it.
-                self._report_and_remove_logical_comment(
-                    original_node, len(local_supp_comment.tokens)
-                )
-        else:
-            # Some or all of the codes are being used to suppress reports.
-            self.find_and_handle_unused_codes(
-                original_node,
-                local_supp_comment,
-                ignored_rules,
-                ignored_rules,
-                comment_physical_line,
-            )
+        # If it's not the first line of the comment, we have already dealt with it, so skip.
+        if comment_physical_line != local_supp_comment.tokens[0].start[0]:
+            return
 
-    def handle_suppression_comment(
-        self,
-        original_node: cst.EmptyLine,
-        local_supp_comment: SuppressionComment,
-        comment_physical_line: int,
-    ) -> None:
         ignored_rules = local_supp_comment.ignored_rules
         # Just a check for the type-checker - it should never actually be AllRulesType
         # because we don't support that in lint-fixme/lint-ignore comments.
@@ -106,88 +179,29 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
         # was not included in this run, we CANNOT know for sure that this lint suppression is unused.
         ignored_rules_that_ran = {ig for ig in ignored_rules if ig in self.rule_names}
 
-        if ignored_rules_that_ran == set(ignored_rules):
-            self.handle_all_in_lint_run_suppression_comment(
-                original_node, local_supp_comment, ignored_rules, comment_physical_line
+        if (
+            ignored_rules_that_ran == set(ignored_rules)
+            and not local_supp_comment.used_by
+        ):
+            # If we're here, all of the codes in this suppression refer to rules that ran, and
+            # none of comment's codes suppress anything, so we report this comment and offer to remove it.
+            self._report_and_remove_logical_comment(
+                original_node, len(local_supp_comment.tokens)
             )
         else:
-            self.find_and_handle_unused_codes(
-                original_node,
-                local_supp_comment,
-                ignored_rules,
-                ignored_rules_that_ran,
-                comment_physical_line,
+            unneeded_codes = _get_unused_codes_in_comment(
+                local_supp_comment, ignored_rules_that_ran
             )
-
-    def find_and_handle_unused_codes(
-        self,
-        original_node: cst.EmptyLine,
-        local_supp_comment: SuppressionComment,
-        ignored_rules: Collection[str],
-        ignored_rules_that_ran: Collection[str],
-        comment_physical_line: int,
-    ) -> None:
-        # Find which rules did not show a report, hence indicate that the code in the comment is unneeded.
-        unreported_rules_that_ran = {
-            ir
-            for ir in ignored_rules_that_ran
-            if not any(ir == report.code for report in local_supp_comment.used_by)
-        }
-
-        if unreported_rules_that_ran:
-            new_codes = ", ".join(
-                [c for c in ignored_rules if c not in unreported_rules_that_ran]
-            )
-
-            kind = (
-                SuppressionCommentKind.FIXME
-                if local_supp_comment.kind == "fixme"
-                else SuppressionCommentKind.IGNORE
-            )
-
-            # Construct a new comment:
-            new_lines = NewSuppressionComment(
-                kind=kind,
-                before_line=comment_physical_line + 1,
-                code=new_codes,
-                message=local_supp_comment.reason,
-            ).to_lines()
-
-            self._report_and_replace_logical_comment(
-                original_node,
-                len(local_supp_comment.tokens),
-                new_lines,
-                unreported_rules_that_ran,
-            )
-
-    def _get_parent_attribute(
-        self, empty_line_node: cst.EmptyLine
-    ) -> Tuple[cst.CSTNode, str, Sequence[cst.EmptyLine], int]:
-        parent_node = self.get_metadata(ParentNodeProvider, empty_line_node)
-        # EmptyLine nodes can be found in parent attributes `header`, `footer`, `leading_lines`, `lines_after_decorators` and `empty_lines`
-        # The key is to find the right attribute.
-        possible_attribute_names = [
-            "header",
-            "footer",
-            "leading_lines",
-            "lines_after_decorators",
-            "empty_lines",
-        ]
-        for possible_attribute_name in possible_attribute_names:
-            attribute_value = getattr(parent_node, possible_attribute_name, None)
-            if attribute_value is not None:
-                for idx, node in enumerate(attribute_value):
-                    if node is empty_line_node:
-                        # We have located the attribute
-                        return (
-                            parent_node,
-                            possible_attribute_name,
-                            attribute_value,
-                            idx,
-                        )
-
-        # If we get here... we should never get here.
-        raise ValueError(f"Unable to find parent attribute of {empty_line_node}.")
+            if unneeded_codes:
+                new_comment_lines = _compose_new_comment(
+                    local_supp_comment, unneeded_codes, comment_physical_line
+                )
+                self._report_and_replace_logical_comment(
+                    original_node,
+                    len(local_supp_comment.tokens),
+                    new_comment_lines,
+                    unneeded_codes,
+                )
 
     def _report_and_replace_logical_comment(
         self,
@@ -196,24 +210,25 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
         replacement_lines: Sequence[str],
         removed_codes: Collection[str],
     ) -> None:
-        parent_node, attribute_name, attribute_value, idx = self._get_parent_attribute(
-            node_to_replace
+        parent_node = self.get_metadata(ParentNodeProvider, node_to_replace)
+        attribute_name, idx = _get_parent_attribute_name_and_child_index(
+            parent_node, node_to_replace
         )
-        indent_value = node_to_replace.indent
-        whitespace_value = node_to_replace.whitespace
 
         replacement_emptyline_nodes = [
             cst.EmptyLine(
-                indent=indent_value,
-                whitespace=whitespace_value,
+                indent=node_to_replace.indent,
+                whitespace=node_to_replace.whitespace,
                 comment=cst.Comment(line),
             )
             for line in replacement_lines
         ]
-        new_attribute_value = (
-            list(attribute_value[:idx])
-            + replacement_emptyline_nodes
-            + list(attribute_value[idx + lines_span :])
+        new_attribute_value: List[cst.EmptyLine] = _modify_parent_attribute(
+            parent_node,
+            attribute_name,
+            idx,
+            idx + lines_span,
+            replacement_emptyline_nodes,
         )
 
         self.report(
@@ -229,13 +244,12 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
     def _report_and_remove_logical_comment(
         self, node_to_remove: cst.EmptyLine, lines_span: int
     ) -> None:
-
-        parent_node, attribute_name, attribute_value, idx = self._get_parent_attribute(
-            node_to_remove
+        parent_node = self.get_metadata(ParentNodeProvider, node_to_remove)
+        attribute_name, idx = _get_parent_attribute_name_and_child_index(
+            parent_node, node_to_remove
         )
-
-        new_attribute_value = list(attribute_value[:idx]) + list(
-            attribute_value[idx + lines_span :]
+        new_attribute_value = _modify_parent_attribute(
+            parent_node, attribute_name, idx, idx + lines_span, []
         )
 
         self.report(
