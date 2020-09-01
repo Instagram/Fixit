@@ -40,13 +40,34 @@ class CompareSingletonPrimitivesByIsRule(CstLintRule):
         Valid("2 != x"),
     ]
     INVALID = [
-        Invalid(code="x != True", expected_replacement="x is not True",),
-        Invalid(code="x != False", expected_replacement="x is not False",),
-        Invalid(code="x == False", expected_replacement="x is False",),
-        Invalid(code="x == None", expected_replacement="x is None",),
-        Invalid(code="x != None", expected_replacement="x is not None",),
-        Invalid(code="False == x", expected_replacement="False is x",),
-        Invalid(code="x is True == y", expected_replacement="x is True is y",),
+        Invalid(
+            code="x != True",
+            expected_replacement="x is not True",
+        ),
+        Invalid(
+            code="x != False",
+            expected_replacement="x is not False",
+        ),
+        Invalid(
+            code="x == False",
+            expected_replacement="x is False",
+        ),
+        Invalid(
+            code="x == None",
+            expected_replacement="x is None",
+        ),
+        Invalid(
+            code="x != None",
+            expected_replacement="x is not None",
+        ),
+        Invalid(
+            code="False == x",
+            expected_replacement="False is x",
+        ),
+        Invalid(
+            code="x is True == y",
+            expected_replacement="x is True is y",
+        ),
     ]
 
     QUALIFIED_SINGLETON_PRIMITIVES: FrozenSet[QualifiedName] = frozenset(

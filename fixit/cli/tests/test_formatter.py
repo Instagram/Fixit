@@ -61,7 +61,8 @@ class LintRuleReportFormatterTest(UnitTest):
     def test_format_compact(self) -> None:
         compact_formatter = LintRuleReportFormatter(width=20, compact=True)
         self.assertEqual(
-            compact_formatter.format(self.report), str(self.fake_filepath) + ":1:1",
+            compact_formatter.format(self.report),
+            str(self.fake_filepath) + ":1:1",
         )
 
     def test_format_extended(self) -> None:

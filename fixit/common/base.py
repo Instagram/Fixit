@@ -23,8 +23,9 @@ from fixit.common.report import BaseLintRuleReport, CstLintRuleReport
 
 
 if TYPE_CHECKING:
-    from fixit.common.pseudo_rule import PseudoLintRule
     from libcst.metadata.base_provider import ProviderT
+
+    from fixit.common.pseudo_rule import PseudoLintRule
 
 
 LintRuleT = Union[Type["CstLintRule"], Type["PseudoLintRule"]]

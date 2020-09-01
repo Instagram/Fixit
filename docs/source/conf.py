@@ -216,8 +216,9 @@ def setup(app):
     app.connect("autodoc-process-signature", strip_class_signature)
     app.connect("autodoc-process-docstring", strip_class_signature_docstring)
     app.add_css_file("custom.css")
-    from fixit.common.document import create_rule_doc
     from pathlib import Path
+
+    from fixit.common.document import create_rule_doc
 
     create_rule_doc(Path(__file__).parent / "rules", to_fold_examples=True)
 

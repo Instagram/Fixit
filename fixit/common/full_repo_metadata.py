@@ -13,6 +13,7 @@ from libcst.metadata import FullRepoManager, TypeInferenceProvider
 
 if TYPE_CHECKING:
     from logging import Logger
+
     from libcst.metadata.base_provider import ProviderT
 
 
@@ -32,7 +33,8 @@ class FullRepoMetadataConfig:
 
 
 def get_repo_caches(
-    paths: Iterable[str], config: FullRepoMetadataConfig,
+    paths: Iterable[str],
+    config: FullRepoMetadataConfig,
 ) -> Mapping[str, Dict["ProviderT", object]]:
     """
     Generate type metadata by instantiating a :class:`~libcst.metadata.FullRepoManager` with

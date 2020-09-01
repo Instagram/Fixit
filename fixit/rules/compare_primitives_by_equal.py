@@ -26,12 +26,27 @@ class ComparePrimitivesByEqualRule(CstLintRule):
     INVALID = [
         Invalid("a is 1", expected_replacement="a == 1"),
         Invalid("a is '1'", expected_replacement="a == '1'"),
-        Invalid("a is f'1{b}'", expected_replacement="a == f'1{b}'",),
-        Invalid("a is not f'1{d}'", expected_replacement="a != f'1{d}'",),
+        Invalid(
+            "a is f'1{b}'",
+            expected_replacement="a == f'1{b}'",
+        ),
+        Invalid(
+            "a is not f'1{d}'",
+            expected_replacement="a != f'1{d}'",
+        ),
         Invalid("1 is a", expected_replacement="1 == a"),
-        Invalid("'2' > '1' is a", expected_replacement="'2' > '1' == a",),
-        Invalid("3 > a is 2", expected_replacement="3 > a == 2",),
-        Invalid("1  is   2", expected_replacement="1  ==   2",),
+        Invalid(
+            "'2' > '1' is a",
+            expected_replacement="'2' > '1' == a",
+        ),
+        Invalid(
+            "3 > a is 2",
+            expected_replacement="3 > a == 2",
+        ),
+        Invalid(
+            "1  is   2",
+            expected_replacement="1  ==   2",
+        ),
     ]
     PRIMITIVES = (cst.BaseNumber, cst.BaseString)
 
