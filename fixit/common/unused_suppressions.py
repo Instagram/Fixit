@@ -130,7 +130,10 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
 
     METADATA_DEPENDENCIES = (ParentNodeProvider,)
 
-    def __init__(self, context: CstContext,) -> None:
+    def __init__(
+        self,
+        context: CstContext,
+    ) -> None:
         # TODO: Support Flake8 suppressions.
         super().__init__(context)
         ignore_info: object = self.context.config.rule_config[self.__class__.__name__][
@@ -217,6 +220,7 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
         removed_codes: Collection[str],
     ) -> None:
         parent_node = self.get_metadata(ParentNodeProvider, node_to_replace)
+        assert parent_node is not None
         attribute_name, idx = _get_parent_attribute_name_and_child_index(
             parent_node, node_to_replace
         )
@@ -251,6 +255,7 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
         self, node_to_remove: cst.EmptyLine, lines_span: int
     ) -> None:
         parent_node = self.get_metadata(ParentNodeProvider, node_to_remove)
+        assert parent_node is not None
         attribute_name, idx = _get_parent_attribute_name_and_child_index(
             parent_node, node_to_remove
         )
