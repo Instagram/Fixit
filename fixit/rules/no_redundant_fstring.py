@@ -9,12 +9,12 @@ import libcst.matchers as m
 from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
-class NoUnnecessaryFormatStringRule(CstLintRule):
+class NoRedundantFStringRule(CstLintRule):
     """
-    Remove unnecessary f-string without placeholders.
+    Remove redundant f-string without placeholders.
     """
 
-    MESSAGE: str = "f-string doesn't have placeholders, remove unnecessary f-string."
+    MESSAGE: str = "f-string doesn't have placeholders, remove redundant f-string."
 
     VALID = [
         Valid('good: str = "good"'),
