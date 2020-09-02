@@ -7,8 +7,7 @@ from typing import List
 
 import libcst as cst
 
-from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class UsePlusForStringConcatRule(CstLintRule):

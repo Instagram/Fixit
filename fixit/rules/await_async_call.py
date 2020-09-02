@@ -10,8 +10,7 @@ import libcst.matchers as m
 from libcst.helpers import get_full_name_for_node
 from libcst.metadata import TypeInferenceProvider
 
-from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class AwaitAsyncCallRule(CstLintRule):

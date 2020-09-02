@@ -8,8 +8,7 @@ from typing import FrozenSet, Union
 import libcst as cst
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
-from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class CompareSingletonPrimitivesByIsRule(CstLintRule):
