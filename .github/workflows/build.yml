@@ -127,8 +127,3 @@ jobs:
       - name: coverage
         run: |
           tox -e coverage
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage_report.html
-          path: coverage_report.html
