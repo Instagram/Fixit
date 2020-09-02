@@ -71,22 +71,6 @@ class AutofixingLintRuleReportFormatter(LintRuleReportFormatter):
         return f"{super()._format_header(report)}{fixed_str}"
 
 
-def get_reports_for_path(
-    path: Path,
-    source: bytes,
-    rules: LintRuleCollectionT,
-    use_ignore_byte_markers: bool,
-    use_ignore_comments: bool,
-) -> LintRuleReportsWithAppliedPatches:
-    return lint_file_and_apply_patches(
-        path,
-        source,
-        rules=rules,
-        use_ignore_byte_markers=use_ignore_byte_markers,
-        use_ignore_comments=use_ignore_comments,
-    )
-
-
 def get_one_patchable_report_for_path(
     path: Path,
     source: bytes,
@@ -125,12 +109,12 @@ def apply_fix_operation(
     patched_files_list = opts.patched_files_list
     try:
         if patched_files_list is None:
-            lint_result = get_reports_for_path(
+            lint_result = lint_file_and_apply_patches(
                 path,
                 source,
-                opts.rules,
-                opts.use_ignore_byte_markers,
-                opts.use_ignore_comments,
+                rules=opts.rules,
+                use_ignore_byte_markers=opts.use_ignore_byte_markers,
+                use_ignore_comments=opts.use_ignore_comments,
             )
             raw_reports = lint_result.reports
             updated_source = lint_result.patched_source
