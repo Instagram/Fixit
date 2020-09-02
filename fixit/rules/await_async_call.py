@@ -14,6 +14,11 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class AwaitAsyncCallRule(CstLintRule):
+    """
+    Enforces calls to coroutines are preceeded by the ``await`` keyword. Awaiting on a coroutine will execute it while
+    simply calling a coroutine returns a coroutine object (https://docs.python.org/3/library/asyncio-task.html#coroutines).
+    """
+
     MESSAGE: str = (
         "Async function call will only be executed with `await` statement. Did you forget to add `await`? "
         + "If you intend to not await, please add comment to disable this warning: # lint-fixme: AwaitAsyncCallRule "

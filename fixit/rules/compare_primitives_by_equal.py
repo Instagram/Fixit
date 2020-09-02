@@ -9,6 +9,12 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class ComparePrimitivesByEqualRule(CstLintRule):
+    """
+    Enforces the use of ``==`` and ``!=`` in comparisons to primitives rather than ``is`` and ``is not``.
+    The ``==`` operator checks equality (https://docs.python.org/3/reference/datamodel.html#object.__eq__),
+    while ``is`` checks identity (https://docs.python.org/3/reference/expressions.html#is).
+    """
+
     MESSAGE = "Don't use `is` or `is not` to compare primitives, as they compare references. Use == or != instead."
     VALID = [
         Valid("a == 1"),

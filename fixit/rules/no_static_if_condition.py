@@ -12,8 +12,12 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class NoStaticIfConditionRule(CstLintRule):
+    """
+    Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
+    """
+
     MESSAGE: str = (
-        "Your if condition appears to evalute to a static value (eg `or True`, `and False`). "
+        "Your if condition appears to evaluate to a static value (e.g. `or True`, `and False`). "
         + "Please double check this logic and if it is actually temporary debug code."
     )
     VALID = [

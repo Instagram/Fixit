@@ -26,6 +26,11 @@ BUILTINS_TO_REPLACE: Set[str] = {"dict", "list", "set", "tuple"}
 
 
 class UseTypesFromTypingRule(CstLintRule):
+    """
+    Enforces the use of types from the ``typing`` module in type annotations in place of ``builtins.{builtin_type}``
+    since the type system doesn't recognize the latter as a valid type.
+    """
+
     METADATA_DEPENDENCIES = (ScopeProvider,)
     VALID = [
         Valid(

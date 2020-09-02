@@ -19,7 +19,7 @@ from fixit import (
 
 class UseClassNameAsCodeRule(CstLintRule):
     """
-    Meta lint rule checking that codes of lint rules are migrated to new format.
+    Meta lint rule which checks that codes of lint rules are migrated to new format in lint rule class definitions.
     """
 
     MESSAGE = "`IG`-series codes are deprecated. Use class name as code instead."
