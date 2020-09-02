@@ -139,12 +139,13 @@ def lint_file_and_apply_patches(
     config: Optional[LintConfig] = None,
     rules: LintRuleCollectionT,
     max_iter: int = 100,
+    cst_wrapper: Optional[MetadataWrapper] = None,
 ) -> LintRuleReportsWithAppliedPatches:
     """
     Runs `lint_file` in a loop, patching one auto-fixable report on each iteration.
 
     Applying a single fix at a time prevents the scenario where multiple autofixes
-    to combine in a way that results in invalid code.
+    combine in a way that results in invalid code.
     """
     # lint_file will fetch this if we don't, but it requires disk I/O, so let's fetch it
     # here to avoid hitting the disk inside our autofixer loop.
@@ -161,6 +162,7 @@ def lint_file_and_apply_patches(
             use_ignore_comments=use_ignore_comments,
             config=config,
             rules=rules,
+            cst_wrapper=cst_wrapper,
         )
 
         try:
