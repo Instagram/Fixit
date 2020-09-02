@@ -34,7 +34,7 @@ To apply autofix on existing code::
 You can learn more about how to `configure Fixit <https://fixit.readthedocs.io/en/latest/getting_started.html#Configuration-File>`_,
 `build a lint rule <https://fixit.readthedocs.io/en/latest/build_a_lint_rule.html>`_,
 `test a lint rule <https://fixit.readthedocs.io/en/latest/test_a_lint_rule.html>`_ from our tutorials.
-Try it out with our `notebook examples <https://fixit.readthedocs.io/en/latest/test_a_lint_rule.html>`_.
+Try it out with our `notebook examples <https://fixit.readthedocs.io/en/latest/getting_started.html>`_.
 
 Further Reading
 ---------------
