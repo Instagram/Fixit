@@ -49,7 +49,7 @@ setuptools.setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: Quality Assurance"
+        "Topic :: Software Development :: Quality Assurance",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
