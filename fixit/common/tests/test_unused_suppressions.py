@@ -11,7 +11,7 @@ from libcst.testing.utils import UnitTest, data_provider
 
 from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.comments import CommentInfo
-from fixit.common.ignores import IgnoreInfo, SuppressionComment
+from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.report import CstLintRuleReport
 from fixit.common.unused_suppressions import (
@@ -367,9 +367,15 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
     def test_compose_new_comment_oneline(self) -> None:
         source = dedent_with_lstrip("# lint-fixme: UsedRule, UsedRule2: reason...")
         tokens = _get_tokens(source.encode())
-        local_suppression_comment = SuppressionComment(
-            ["UsedRule", "UsedRule2"], tokens, "fixme", "reason..."
+        ignore_info = IgnoreInfo.compute(
+            comment_info=CommentInfo.compute(tokens=tokens),
+            line_mapping_info=LineMappingInfo.compute(tokens=tokens),
         )
+        local_suppression_comments = (
+            ignore_info.local_ignore_info.local_suppression_comments_by_line[1]
+        )
+        self.assertEqual(len(local_suppression_comments), 1)
+        local_suppression_comment = local_suppression_comments[0]
 
         # First code unneeded.
         unneeded_codes = ["UsedRule"]
@@ -412,10 +418,15 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
             """
         )
         tokens = _get_tokens(source.encode())
-        # Construct the SuppressionComment with all the information.
-        local_suppression_comment = SuppressionComment(
-            ["UsedRule", "UsedRule2"], tokens, "fixme", "reason... reason continued"
+        ignore_info = IgnoreInfo.compute(
+            comment_info=CommentInfo.compute(tokens=tokens),
+            line_mapping_info=LineMappingInfo.compute(tokens=tokens),
         )
+        local_suppression_comments = (
+            ignore_info.local_ignore_info.local_suppression_comments_by_line[1]
+        )
+        self.assertEqual(len(local_suppression_comments), 1)
+        local_suppression_comment = local_suppression_comments[0]
 
         # First code unneeded.
         unneeded_codes = ["UsedRule"]
