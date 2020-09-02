@@ -9,9 +9,8 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.metadata import TypeInferenceProvider
 
-from fixit.common.base import CstLintRule
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 from fixit.common.report import CstLintRuleReport
-from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class UseIsNoneOnOptionalRule(CstLintRule):
