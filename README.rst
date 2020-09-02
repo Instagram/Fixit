@@ -2,6 +2,13 @@
    :width: 600 px
    :alt: Fixit
 
+|readthedocs-badge|
+
+.. |readthedocs-badge| image:: https://readthedocs.org/projects/pip/badge/?version=latest&style=flat
+   :target: https://fixit.readthedocs.io/en/latest/
+   :alt: Documentation
+
+
 .. intro-start
 
 :title:`A lint framework that writes better Python code for you.`
