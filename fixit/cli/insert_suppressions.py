@@ -80,11 +80,7 @@ def get_formatted_reports_for_path(
     try:
         cst_wrapper = None
         if metadata_cache is not None:
-            cst_wrapper = MetadataWrapper(
-                parse_module(source),
-                True,
-                metadata_cache,
-            )
+            cst_wrapper = MetadataWrapper(parse_module(source), True, metadata_cache,)
         raw_reports = lint_file(
             path, source, rules={opts.rule}, cst_wrapper=cst_wrapper
         )

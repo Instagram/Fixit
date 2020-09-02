@@ -15,6 +15,7 @@ class NoStaticIfConditionRule(CstLintRule):
     """
     Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
     """
+
     MESSAGE: str = (
         "Your if condition appears to evaluate to a static value (e.g. `or True`, `and False`). "
         + "Please double check this logic and if it is actually temporary debug code."

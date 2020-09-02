@@ -172,9 +172,7 @@ def get_file_lint_result_json(
         cst_wrapper = None
         if metadata_cache is not None:
             cst_wrapper = MetadataWrapper(
-                cst.parse_module(source),
-                True,
-                metadata_cache,
+                cst.parse_module(source), True, metadata_cache,
             )
         results = opts.success_report.create_reports(
             path,

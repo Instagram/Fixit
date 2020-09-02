@@ -48,17 +48,10 @@ class RewriteToLiteralRule(CstLintRule):
         Invalid("set([1, 2, 3])", expected_replacement="{1, 2, 3}"),
         Invalid("set((1, 2, 3))", expected_replacement="{1, 2, 3}"),
         Invalid("set([])", expected_replacement="set()"),
+        Invalid("dict([(1, 2), (3, 4)])", expected_replacement="{1: 2, 3: 4}",),
+        Invalid("dict(((1, 2), (3, 4)))", expected_replacement="{1: 2, 3: 4}",),
         Invalid(
-            "dict([(1, 2), (3, 4)])",
-            expected_replacement="{1: 2, 3: 4}",
-        ),
-        Invalid(
-            "dict(((1, 2), (3, 4)))",
-            expected_replacement="{1: 2, 3: 4}",
-        ),
-        Invalid(
-            "dict([[1, 2], [3, 4], [5, 6]])",
-            expected_replacement="{1: 2, 3: 4, 5: 6}",
+            "dict([[1, 2], [3, 4], [5, 6]])", expected_replacement="{1: 2, 3: 4, 5: 6}",
         ),
         Invalid("dict([])", expected_replacement="{}"),
         Invalid("tuple()", expected_replacement="()"),

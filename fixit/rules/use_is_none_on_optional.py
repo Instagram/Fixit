@@ -20,6 +20,7 @@ class UseIsNoneOnOptionalRule(CstLintRule):
     object's ``__bool__()`` method returns False, its ``__len__()`` method returns '0', or it is one of the constants ``None`` or ``False``.
     (https://docs.python.org/3.8/library/stdtypes.html#truth-value-testing).
     """
+
     METADATA_DEPENDENCIES = (TypeInferenceProvider,)
     MESSAGE: str = (
         "When checking if an `Optional` has a value, avoid using it as a boolean since it implicitly checks the object's `__bool__()`, `__len__()` is not `0`, or the value is not `None`. "

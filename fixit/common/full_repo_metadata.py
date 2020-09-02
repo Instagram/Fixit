@@ -33,8 +33,7 @@ class FullRepoMetadataConfig:
 
 
 def get_repo_caches(
-    paths: Iterable[str],
-    config: FullRepoMetadataConfig,
+    paths: Iterable[str], config: FullRepoMetadataConfig,
 ) -> Mapping[str, Dict["ProviderT", object]]:
     """
     Generate type metadata by instantiating a :class:`~libcst.metadata.FullRepoManager` with

@@ -53,8 +53,7 @@ def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> No
 class TestCasePrecursor:
     rule: Type[CstLintRule]
     test_methods: Mapping[
-        str,
-        Union[ValidTestCase, InvalidTestCase],
+        str, Union[ValidTestCase, InvalidTestCase],
     ]
     fixture_paths: Mapping[str, Path]
 

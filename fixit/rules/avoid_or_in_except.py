@@ -16,6 +16,7 @@ class AvoidOrInExceptRule(CstLintRule):
     ``except (ValueError, TypeError)``
     (https://docs.python.org/3/tutorial/errors.html#handling-exceptions)
     """
+
     MESSAGE: str = (
         "Avoid using 'or' in an except block. For example:"
         + "'except ValueError or TypeError' only catches 'ValueError'. Instead, use "

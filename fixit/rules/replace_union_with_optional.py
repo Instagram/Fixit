@@ -19,6 +19,7 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
     Enforces the use of ``Optional[T]`` over ``Union[T, None]`` and ``Union[None, T]``.
     See https://docs.python.org/3/library/typing.html#typing.Optional to learn more about Optionals.
     """
+
     MESSAGE: str = (
         "`Optional[T]` is preferred over `Union[T, None]` or `Union[None, T]`. "
         + "Learn more: https://docs.python.org/3/library/typing.html#typing.Optional"

@@ -119,7 +119,5 @@ class UseClassNameAsCodeRule(CstLintRule):
                 matched = re.match(r"^(\'|\")(?P<igcode>IG\d+)(\'|\")\Z", string_value)
                 if matched:
                     self.report(
-                        node,
-                        self.MESSAGE,
-                        replacement=cst.RemovalSentinel.REMOVE,
+                        node, self.MESSAGE, replacement=cst.RemovalSentinel.REMOVE,
                     )

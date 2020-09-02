@@ -55,9 +55,7 @@ class AutofixingLintRuleReportFormatter(LintRuleReportFormatter):
 
 
 def get_formatted_reports_for_path(
-    path: Path,
-    opts: LintOpts,
-    _=None,
+    path: Path, opts: LintOpts, _=None,
 ) -> Iterable[str]:
     with open(path, "rb") as f:
         source = f.read()
@@ -154,10 +152,7 @@ def main(raw_args: Sequence[str]) -> int:
 
     formatted_reports_iter = itertools.chain.from_iterable(
         map_paths(
-            get_formatted_reports_for_path,
-            file_paths,
-            opts,
-            workers=args.workers,
+            get_formatted_reports_for_path, file_paths, opts, workers=args.workers,
         )
     )
 

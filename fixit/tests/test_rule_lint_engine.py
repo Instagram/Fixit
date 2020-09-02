@@ -41,9 +41,7 @@ class ParenthesizeAttributeLintRule(CstLintRule):
                 lpar=[cst.LeftParen()], rpar=[cst.RightParen()]
             )
             self.report(
-                node,
-                "All attributes should be parenthesized.",
-                replacement=new_node,
+                node, "All attributes should be parenthesized.", replacement=new_node,
             )
 
 

@@ -28,8 +28,7 @@ def import_rule(rule_name: str) -> LintRuleT:
     if rule_module_path:
         # If user provided a dotted path, we assume it's valid and import the rule directly.
         imported_rule = getattr(
-            importlib.import_module(rule_module_path),
-            rule_class_name,
+            importlib.import_module(rule_module_path), rule_class_name,
         )
         return imported_rule
     # Otherwise, only a class name was provided, so try to find the rule by searching each package specified in the config.

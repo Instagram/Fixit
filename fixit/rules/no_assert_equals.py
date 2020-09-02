@@ -14,6 +14,7 @@ class NoAssertEqualsRule(CstLintRule):
     Discourages use of ``assertEquals`` as it is deprecated (see https://docs.python.org/2/library/unittest.html#deprecated-aliases
     and https://bugs.python.org/issue9424). Use the standardized ``assertEqual`` instead.
     """
+
     MESSAGE: str = (
         '"assertEquals" is deprecated, use "assertEqual" instead.\n'
         + "See https://docs.python.org/2/library/unittest.html#deprecated-aliases and https://bugs.python.org/issue9424."
@@ -21,8 +22,7 @@ class NoAssertEqualsRule(CstLintRule):
     VALID = [Valid("self.assertEqual(a, b)")]
     INVALID = [
         Invalid(
-            "self.assertEquals(a, b)",
-            expected_replacement="self.assertEqual(a, b)",
+            "self.assertEquals(a, b)", expected_replacement="self.assertEqual(a, b)",
         )
     ]
 
