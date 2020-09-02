@@ -18,12 +18,16 @@ It is optimized for efficiency, easy to customize and comes with many builtin li
 Getting Started
 ---------------
 
+To install Fixit::
+
+  pip install fixit
+
 Fixit provides CLI commands.
-To run fixit rules on existing code to get code quality suggestions::
+To run built-in Fixit rules on existing code to get code quality suggestions::
 
   python -m fixit.cli.run_rules
 
-To apply autofix::
+To apply autofix on existing code::
 
   python -m fixit.cli.apply_fix
 
