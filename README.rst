@@ -15,6 +15,21 @@ It is optimized for efficiency, easy to customize and comes with many builtin li
 
 .. intro-end
 
+Getting Started
+---------------
+
+Fixit provides CLI commands.
+To run fixit rules on existing code to get code quality suggestions::
+
+  python -m fixit.cli.run_rules
+
+To apply autofix::
+
+  python -m fixit.cli.apply_fix
+
+You can learn more about how to configure Fixit, build a lint rule, test a lint rule from our tutorials.
+Try it out with our notebook examples.
+
 Further Reading
 ---------------
 - `Static Analysis at Scale: An Instagram Story. <https://instagram-engineering.com/static-analysis-at-scale-an-instagram-story-8f498ab71a0c>`_
