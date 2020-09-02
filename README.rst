@@ -6,11 +6,11 @@
 
 :title:`A lint framework that writes better Python code for you.`
 
-Fixit is a lint framework that compliments `Flake8 <https://github.com/PyCQA/flake8>`_.
+Fixit is a lint framework that complements `Flake8 <https://github.com/PyCQA/flake8>`_.
 It’s based on `LibCST <https://github.com/Instagram/LibCST/>`_ which makes it possible
 to provide **auto-fixes**.
-Lint rules are made easy to build through matcher pattern, test toolkit,
-utility helpers (e.g. scope analysis) for non-trivial boilerplate.
+Lint rules are made easy to build through pattern matching, a test toolkit,
+and utility helpers (e.g. scope analysis) for non-trivial boilerplate.
 It is optimized for efficiency, easy to customize and comes with many builtin lint rules.
 
 .. intro-end
@@ -66,7 +66,7 @@ verify types for the library, do the following in the root:
 
     pyre --preserve-pythonpath check
 
-To generate documents, do the following in the root:
+To generate documentation, do the following in the root:
 
 .. code-block:: shell
 
