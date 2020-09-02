@@ -338,3 +338,35 @@ class IgnoreInfoTest(UnitTest):
             ),
             sorted(unused_comments),
         )
+
+    def test_multiline_suppression(self) -> None:
+        source = """
+        # lint-ignore: SomeCode: some reason
+        # lint: and some reason continued
+        # lint: onto multiple lines.
+        x = "Some ignored violation"
+        """
+        tokens = tuple(tokenize.tokenize(BytesIO(source.encode("utf-8")).readline))
+        ignore_info = IgnoreInfo.compute(
+            comment_info=CommentInfo.compute(tokens=tokens),
+            line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+        )
+
+        self.assertEqual(
+            len(ignore_info.local_ignore_info.local_suppression_comments), 1
+        )
+        local_supp_comment = next(
+            lsc for lsc in ignore_info.local_ignore_info.local_suppression_comments
+        )
+        self.assertEqual(
+            local_supp_comment.reason,
+            "some reason and some reason continued onto multiple lines.",
+        )
+        # Verify that all local suppression comment lines map to the same SuppressionComment instance.
+        for (
+            lines,
+            supp_comments,
+        ) in ignore_info.local_ignore_info.local_suppression_comments_by_line.items():
+            self.assertEqual(len(supp_comments), 1)
+            supp_comment = supp_comments[0]
+            self.assertIs(supp_comment, local_supp_comment)
