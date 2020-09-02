@@ -9,7 +9,7 @@ import libcst.matchers as m
 from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
-class NoRedundantFString(CstLintRule):
+class NoRedundantFStringRule(CstLintRule):
     """
     Remove redundant f-string without placeholders.
     """
