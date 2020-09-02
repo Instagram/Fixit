@@ -8,8 +8,7 @@ from typing import Optional
 import libcst as cst
 import libcst.matchers as m
 
-from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class NoStaticIfConditionRule(CstLintRule):

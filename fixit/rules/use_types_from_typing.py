@@ -8,8 +8,12 @@ from typing import Set
 import libcst
 from libcst.metadata import ScopeProvider
 
-from fixit.common.base import CstContext, CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import (
+    CstContext,
+    CstLintRule,
+    InvalidTestCase as Invalid,
+    ValidTestCase as Valid,
+)
 
 
 REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
