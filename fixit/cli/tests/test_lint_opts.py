@@ -29,7 +29,9 @@ class FakeLintSuccessReport(LintSuccessReportBase):
 
     @staticmethod
     def create_reports(
-        path: Path, reports: Collection[BaseLintRuleReport], global_list: List[str],
+        path: Path,
+        reports: Collection[BaseLintRuleReport],
+        global_list: List[str],
     ) -> Sequence["FakeLintSuccessReport"]:
         global_list.append(str(path))
         return [FakeLintSuccessReport(str(path), "success", ["fake picklable report"])]
@@ -41,7 +43,9 @@ class FakeRule(CstLintRule):
 
 
 def mock_operation(
-    path: Path, opts: LintOpts, _=None,
+    path: Path,
+    opts: LintOpts,
+    _=None,
 ) -> Sequence[FakeLintSuccessReport]:
     results = opts.success_report.create_reports(
         path,

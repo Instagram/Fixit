@@ -31,14 +31,18 @@ class DummyTypeDependentRule(CstLintRule):
 
 
 def map_paths_operation(
-    path: Path, rules: Set[LintRuleT], type_cache: Optional[Mapping[ProviderT, object]],
+    path: Path,
+    rules: Set[LintRuleT],
+    type_cache: Optional[Mapping[ProviderT, object]],
 ) -> Union[str, Collection[BaseLintRuleReport]]:
     # A top-level function to be accessible by `map_paths` from `fixit.cli`.
     cst_wrapper = None
     try:
         if type_cache is not None:
             cst_wrapper = MetadataWrapper(
-                cst.parse_module(SOURCE_CODE), True, type_cache,
+                cst.parse_module(SOURCE_CODE),
+                True,
+                type_cache,
             )
         return lint_file(
             file_path=path,
