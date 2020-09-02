@@ -127,3 +127,5 @@ jobs:
       - name: coverage
         run: |
           tox -e coverage
+      - name: codecov
+        uses: codecov/codecov-action@v1
