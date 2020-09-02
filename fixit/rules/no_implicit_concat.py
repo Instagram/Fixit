@@ -11,10 +11,14 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class UsePlusForStringConcatRule(CstLintRule):
+    """
+    Enforces use of explicit string concatenations using a ``+`` sign where an implicit concatenation is detected.
+    An implicit concatenation is a tuple or a call with multiple strings and a missing comma, e.g: ``("a" "b")``, and may have unexpected results.
+    """
     MESSAGE: str = (
         "Implicit string concatenation detected, please add '+' to be explicit. "
-        + 'E.g. a tuple or a call ("a" "b") with a missing comma makes the multiple strings '
-        + "been concatenated as one string and causes unexpected result."
+        + 'E.g. a tuple or a call ("a" "b") with a missing comma results in multiple strings '
+        + "being concatenated as one string and causes unexpected behaviour."
     )
     VALID = [Valid("'abc'"), Valid("'abc' + 'def'"), Valid("f'abc'")]
     INVALID = [

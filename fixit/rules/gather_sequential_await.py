@@ -9,6 +9,9 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class GatherSequentialAwaitRule(CstLintRule):
+    """
+    Discourages awaiting coroutines in a loop as this will run them sequentially. Using ``asyncio.gather()`` will run them concurrently.
+    """
     MESSAGE: str = (
         "Using await in a loop will run async function sequentially. Use "
         + "asyncio.gather() to run async functions concurrently."

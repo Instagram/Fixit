@@ -38,6 +38,9 @@ class _RenameTransformer(cst.CSTTransformer):
 
 
 class UseClsInClassmethodRule(CstLintRule):
+    """
+    Enforces using ``cls`` as the first argument in a ``@classmethod``.
+    """
     METADATA_DEPENDENCIES = (QualifiedNameProvider, ScopeProvider)
     MESSAGE = "when using @classmethod, the first argument must be 'cls'."
     VALID = [

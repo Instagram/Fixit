@@ -10,6 +10,12 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 class AvoidOrInExceptRule(CstLintRule):
+    """
+    Discourages use of ``or`` in except clauses. If an except clause needs to catch multiple exceptions,
+    they must be expressed as a parenthesized tuple, for example:
+    ``except (ValueError, TypeError)``
+    (https://docs.python.org/3/tutorial/errors.html#handling-exceptions)
+    """
     MESSAGE: str = (
         "Avoid using 'or' in an except block. For example:"
         + "'except ValueError or TypeError' only catches 'ValueError'. Instead, use "
