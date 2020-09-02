@@ -34,7 +34,10 @@ from fixit.cli.args import (
     get_use_ignore_comments_parser,
 )
 from fixit.cli.formatter import LintRuleReportFormatter
-from fixit.cli.full_repo_metadata import get_metadata_caches
+from fixit.cli.full_repo_metadata import (
+    get_metadata_caches,
+    rules_require_metadata_cache,
+)
 from fixit.cli.utils import print_red
 from fixit.common.utils import LintRuleCollectionT
 from fixit.rule_lint_engine import lint_file
@@ -122,7 +125,9 @@ def main(raw_args: Sequence[str]) -> int:
         print()
     start_time = time.time()
 
-    metadata_caches = get_metadata_caches(all_rules, args.cache_timeout, file_paths)
+    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
+    if rules_require_metadata_cache(all_rules):
+        metadata_caches = get_metadata_caches(args.cache_timeout, file_paths)
 
     # opts is a more type-safe version of args that we pass around
     opts = LintOpts(

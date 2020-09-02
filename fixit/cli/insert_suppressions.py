@@ -32,7 +32,10 @@ from fixit.cli.args import (
     get_skip_autoformatter_parser,
 )
 from fixit.cli.formatter import LintRuleReportFormatter
-from fixit.cli.full_repo_metadata import get_metadata_caches
+from fixit.cli.full_repo_metadata import (
+    get_metadata_caches,
+    rules_require_metadata_cache,
+)
 from fixit.cli.utils import print_red
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
@@ -189,7 +192,9 @@ def main(raw_args: Sequence[str]) -> int:
     else:
         message = MessageKind.USE_LINT_REPORT
 
-    metadata_caches = get_metadata_caches({args.rule}, args.cache_timeout, file_paths)
+    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
+    if rules_require_metadata_cache({args.rule}):
+        metadata_caches = get_metadata_caches(args.cache_timeout, file_paths)
 
     # opts is a more type-safe version of args that we pass around
     opts = InsertSuppressionsOpts(
