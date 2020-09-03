@@ -52,18 +52,20 @@ class LintRuleNotFoundError(Exception):
 
 
 LintRuleCollectionT = Set[Union[Type[CstLintRule], Type[PseudoLintRule]]]
+DEFAULT_FILENAME: str = "not/a/real/file/path.py"
+DEFAULT_CONFIG: LintConfig = LintConfig(
+    repo_root=str(
+        Path(__file__).parent.parent
+    ),  # Set base config repo_root to `fixit` directory for testing.
+)
 
 
 @add_slots
 @dataclass(frozen=True)
 class ValidTestCase:
     code: str
-    filename: str = "not/a/real/file/path.py"
-    config: LintConfig = LintConfig(
-        repo_root=str(
-            Path(__file__).parent.parent
-        ),  # Set base config repo_root to `fixit` directory for testing.
-    )
+    filename: str = DEFAULT_FILENAME
+    config: LintConfig = DEFAULT_CONFIG
 
 
 @add_slots
@@ -74,12 +76,8 @@ class InvalidTestCase:
     line: Optional[int] = None
     column: Optional[int] = None
     expected_replacement: Optional[str] = None
-    filename: str = "not/a/real/file/path.py"
-    config: LintConfig = LintConfig(
-        repo_root=str(
-            Path(__file__).parent.parent
-        ),  # Set base config repo_root to `fixit` directory for testing.
-    )
+    filename: str = DEFAULT_FILENAME
+    config: LintConfig = DEFAULT_CONFIG
 
     @property
     def expected_str(self) -> str:
