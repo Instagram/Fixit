@@ -231,30 +231,27 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
 
         lines_span = len(local_supp_comment.tokens)
 
-        if (
-            ignored_rules_that_ran == set(ignored_rules)
-            and not local_supp_comment.used_by
-        ):
-            # If we're here, all of the codes in this suppression refer to rules that ran, and
-            # none of comment's codes suppress anything, so we report this comment and offer to remove it.
-            new_parent_attribute_value = _modify_parent_attribute(
-                parent_node, parent_attribute_name, index, index + lines_span, []
+        unneeded_codes = _get_unused_codes_in_comment(
+            local_supp_comment, ignored_rules_that_ran
+        )
+        if unneeded_codes:
+            new_comment_lines = _compose_new_comment(
+                local_supp_comment, unneeded_codes, comment_physical_line
             )
-            self.report(
-                parent_node,
-                message=UNUSED_SUPPRESSION_COMMENT_MESSAGE,
-                replacement=parent_node.with_changes(
-                    **{parent_attribute_name: new_parent_attribute_value}
-                ),
-            )
-        else:
-            unneeded_codes = _get_unused_codes_in_comment(
-                local_supp_comment, ignored_rules_that_ran
-            )
-            if unneeded_codes:
-                new_comment_lines = _compose_new_comment(
-                    local_supp_comment, unneeded_codes, comment_physical_line
+            if not new_comment_lines:
+                # If we're here, all of the codes in this suppression refer to rules that ran, and
+                # none of comment's codes suppress anything, so we report this comment and offer to remove it.
+                new_parent_attribute_value = _modify_parent_attribute(
+                    parent_node, parent_attribute_name, index, index + lines_span, []
                 )
+                self.report(
+                    parent_node,
+                    message=UNUSED_SUPPRESSION_COMMENT_MESSAGE,
+                    replacement=parent_node.with_changes(
+                        **{parent_attribute_name: new_parent_attribute_value}
+                    ),
+                )
+            else:
                 node_to_replace = getattr(parent_node, parent_attribute_name)[index]
                 replacement_emptyline_nodes = [
                     cst.EmptyLine(
