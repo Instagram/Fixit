@@ -27,7 +27,6 @@ class GatherSequentialAwaitRule(CstLintRule):
         Valid(
             """
             # await in a loop is fine if it's a test.
-            # filename="foo/tests/test_foo.py"
             async def async_check_call():
                 for _i in range(0, 2):
                     await async_foo()
