@@ -47,7 +47,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule],
                 "rules_without_report": [],
-                "reported_line": 2,
+                "suppressed_line": 2,
                 "expected_unused_suppressions_report_messages": [],
             },
             "used_suppression_one_code_oneline_with_reason": {
@@ -59,7 +59,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule],
                 "rules_without_report": [],
-                "reported_line": 2,
+                "suppressed_line": 2,
                 "expected_unused_suppressions_report_messages": [],
             },
             "used_suppression_one_code_multiline": {
@@ -73,7 +73,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule],
                 "rules_without_report": [],
-                "reported_line": 4,
+                "suppressed_line": 4,
                 "expected_unused_suppressions_report_messages": [],
             },
             "used_suppression_many_codes_oneline": {
@@ -85,7 +85,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [],
-                "reported_line": 2,
+                "suppressed_line": 2,
                 "expected_unused_suppressions_report_messages": [],
             },
             "used_suppression_many_codes_multiline": {
@@ -98,7 +98,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [],
-                "reported_line": 3,
+                "suppressed_line": 3,
                 "expected_unused_suppressions_report_messages": [],
             },
             "unused_suppression_one_code_oneline": {
@@ -110,7 +110,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule],
                 "rules_without_report": [UsedRule],
-                "reported_line": -1,
+                "suppressed_line": 2,
                 "expected_unused_suppressions_report_messages": [
                     UNUSED_SUPPRESSION_COMMENT_MESSAGE
                 ],
@@ -132,7 +132,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule],
                 "rules_without_report": [UsedRule],
-                "reported_line": -1,
+                "suppressed_line": 3,
                 "expected_unused_suppressions_report_messages": [
                     UNUSED_SUPPRESSION_COMMENT_MESSAGE
                 ],
@@ -153,7 +153,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [UsedRule],
-                "reported_line": 2,
+                "suppressed_line": 2,
                 "expected_unused_suppressions_report_messages": [
                     UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE.format(
                         lint_codes="UsedRule"
@@ -178,7 +178,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [UsedRule],
-                "reported_line": 3,
+                "suppressed_line": 3,
                 "expected_unused_suppressions_report_messages": [
                     UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE.format(
                         lint_codes="UsedRule"
@@ -204,7 +204,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [UsedRule, UsedRule2],
-                "reported_line": 3,
+                "suppressed_line": 3,
                 "expected_unused_suppressions_report_messages": [
                     UNUSED_SUPPRESSION_COMMENT_MESSAGE
                 ],
@@ -228,7 +228,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [UsedRule],
-                "reported_line": 5,
+                "suppressed_line": 5,
                 "expected_unused_suppressions_report_messages": [
                     UNUSED_SUPPRESSION_COMMENT_MESSAGE
                 ],
@@ -254,7 +254,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [UsedRule, UsedRule2],
-                "reported_line": 5,
+                "suppressed_line": 5,
                 "expected_unused_suppressions_report_messages": [
                     UNUSED_SUPPRESSION_COMMENT_MESSAGE,
                     UNUSED_SUPPRESSION_COMMENT_MESSAGE,
@@ -285,7 +285,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [],
-                "reported_line": 2,
+                "suppressed_line": 2,
                 "expected_unused_suppressions_report_messages": [],
             },
             "suppressions_with_unlinted_codes_multiline": {
@@ -298,7 +298,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 ).encode(),
                 "rules_in_lint_run": [UsedRule, UsedRule2],
                 "rules_without_report": [],
-                "reported_line": 3,
+                "suppressed_line": 3,
                 "expected_unused_suppressions_report_messages": [],
             },
         }
@@ -309,7 +309,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
         source: bytes,
         rules_in_lint_run: Collection[Type[CstLintRule]],
         rules_without_report: Collection[Type[CstLintRule]],
-        reported_line: int,
+        suppressed_line: int,
         expected_unused_suppressions_report_messages: Collection[str],
         expected_replacements: Optional[List[str]] = None,
     ) -> None:
@@ -319,7 +319,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 node=cst.EmptyLine(),
                 code=rule.__name__,
                 message="message",
-                line=reported_line,
+                line=suppressed_line,
                 column=0,
                 module=cst.MetadataWrapper(cst.parse_module(source)),
                 module_bytes=source,
