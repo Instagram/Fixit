@@ -235,10 +235,10 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                 "expected_replacements": [
                     dedent_with_lstrip(
                         """
-                # lint-ignore: UsedRule2: second reason
-                # lint: second reason continued.
-                foo = bar
-                """
+                        # lint-ignore: UsedRule2: second reason
+                        # lint: second reason continued.
+                        foo = bar
+                        """
                     )
                 ],
             },
