@@ -272,7 +272,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
                         # lint-ignore: UsedRule: first reason
                         # lint: first reason continued.
                         foo = bar
-                    """
+                        """
                     ),
                 ],
             },
