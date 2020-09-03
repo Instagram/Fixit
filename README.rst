@@ -2,12 +2,22 @@
    :width: 600 px
    :alt: Fixit
 
-|readthedocs-badge|
+|readthedocs-badge| |codecov-badge| |pypi-badge| |pypi-download|
 
 .. |readthedocs-badge| image:: https://readthedocs.org/projects/pip/badge/?version=latest&style=flat
    :target: https://fixit.readthedocs.io/en/latest/
    :alt: Documentation
 
+.. |codecov-badge| image:: https://codecov.io/gh/Instagram/Fixit/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/Instagram/Fixit/branch/master
+
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/fixit.svg
+   :target: https://pypi.org/project/fixit
+   :alt: PYPI
+
+.. |pypi-download| image:: https://pepy.tech/badge/fixit/month
+   :target: https://pepy.tech/project/fixit/month
+   :alt: PYPI Download
 
 .. intro-start
 
