@@ -55,16 +55,20 @@ class SuppressionComment:
 
         # chunk the message up splitting by newlines
         raw_message_lines = message.split("\n")
+        initial_indent = f"# {self.kind.value}: {self.code}"
 
         lines = []
         lines.extend(
             textwrap.wrap(
-                f"# {self.kind.value}: {self.code}: " + raw_message_lines[0],
-                width=width,
+                ": " + raw_message_lines[0],
+                initial_indent=initial_indent,
+                # We don't want a weirdly formed comment with the first line being
+                # longer than the rest.
+                width=max(len(initial_indent), width),
                 subsequent_indent=BODY_PREFIX_WITH_SPACE,
+                drop_whitespace=True,
             )
         )
-
         # textwrap replaces newlines (`\n`) with a space. This isn't the behavior we
         # want, so we need to wrap each line independently.
         for rml in raw_message_lines[1:]:

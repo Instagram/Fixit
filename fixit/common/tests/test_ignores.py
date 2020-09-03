@@ -215,9 +215,19 @@ class IgnoreInfoTest(UnitTest):
                 "reports_on_lines": [],
                 "unused_comments": [1],
             },
+            "unused_lint_ignore_mutliple_lines": {
+                "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
+                "reports_on_lines": [],
+                "unused_comments": [1],
+            },
             "used_lint_ignore": {
                 "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
                 "reports_on_lines": [(2, "Ignored999Rule")],
+                "unused_comments": [],
+            },
+            "used_lint_ignore_multiple_lines": {
+                "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
+                "reports_on_lines": [(3, "Ignored999Rule")],
                 "unused_comments": [],
             },
             "lint_ignore_is_used_before_noqa": {
@@ -229,6 +239,58 @@ class IgnoreInfoTest(UnitTest):
                 "source": "# lint-ignore: Ignored999Rule: First\n# lint-ignore: Ignored999Rule: Second\nfn()",
                 "reports_on_lines": [(3, "Ignored999Rule")],
                 "unused_comments": [2],
+            },
+            "multiple_used_lint_ignores": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [(5, "Ignored999Rule"), (5, "Ignored1000Rule")],
+                "unused_comments": [],
+            },
+            "multiple_unused_lint_ignores": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [],
+                "unused_comments": [1, 3],
+            },
+            "some_unused_lint_ignores": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [(5, "Ignored999Rule")],
+                "unused_comments": [3],
+            },
+            "some_unused_lint_ignores_2": {
+                "source": dedent_with_lstrip(
+                    """
+                    # lint-ignore: Ignored999Rule: Some
+                    # lint: reason blah blah blah
+                    # lint-ignore: Ignored1000Rule: Some
+                    # lint: other reason blah blah
+                    fn()
+                    """
+                ),
+                "reports_on_lines": [(5, "Ignored1000Rule")],
+                "unused_comments": [1],
             },
         }
     )
@@ -276,3 +338,35 @@ class IgnoreInfoTest(UnitTest):
             ),
             sorted(unused_comments),
         )
+
+    def test_multiline_suppression(self) -> None:
+        source = """
+        # lint-ignore: SomeCode: some reason
+        # lint: and some reason continued
+        # lint: onto multiple lines.
+        x = "Some ignored violation"
+        """
+        tokens = tuple(tokenize.tokenize(BytesIO(source.encode("utf-8")).readline))
+        ignore_info = IgnoreInfo.compute(
+            comment_info=CommentInfo.compute(tokens=tokens),
+            line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+        )
+
+        self.assertEqual(
+            len(ignore_info.local_ignore_info.local_suppression_comments), 1
+        )
+        local_supp_comment = next(
+            lsc for lsc in ignore_info.local_ignore_info.local_suppression_comments
+        )
+        self.assertEqual(
+            local_supp_comment.reason,
+            "some reason and some reason continued onto multiple lines.",
+        )
+        # Verify that all local suppression comment lines map to the same SuppressionComment instance.
+        for (
+            lines,
+            supp_comments,
+        ) in ignore_info.local_ignore_info.local_suppression_comments_by_line.items():
+            self.assertEqual(len(supp_comments), 1)
+            supp_comment = supp_comments[0]
+            self.assertIs(supp_comment, local_supp_comment)

@@ -21,6 +21,7 @@ LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
 
 # https://gitlab.com/pycqa/flake8/blob/9631dac52aa6ed8a3de9d0983c/src/flake8/defaults.py
 NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
+    # TODO: Deprecate
     # We're looking for items that look like this:
     # ``# noqa``
     # ``# noqa: E123``
@@ -30,7 +31,7 @@ NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
     # We do not care about the ``: `` that follows ``noqa``
     # We do not care about the casing of ``noqa``
     # We want a comma-separated list of errors
-    r"# noqa(?!-file)(?:: (?P<codes>([a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+))?",
+    r"^# noqa(?!-file)(?:: (?P<codes>([a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+))?",
     re.IGNORECASE,
 )
 LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
@@ -38,9 +39,9 @@ LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
     # ``# lint-fixme: LintRuleName``
     # ``# lint-fixme: LintRuleName: Details``
     # ``# lint-fixme: LintRuleName1, LintRuleName2: Details``
-    r"# lint-(?:ignore|fixme)"
+    r"# lint-(ignore|fixme)"
     + r": (?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+)"
-    + r"(?:: (?P<reason>.+))?"
+    + r"(:( (?P<reason>.+)?)?)?"
 )
 
 # Skip evaluation of the given file.
@@ -52,9 +53,7 @@ FLAKE8_NOQA_FILE: Pattern[str] = re.compile(r"# flake8[:=]\s*noqa", re.IGNORECAS
 # `# noqa-file: LintRuleName: Some reason why we can't use this rule`
 # `# noqa-file: LintRuleName,LintRuleName2: Some reason why we can't use these rules`
 #
-# TODO: Be a bit more lenient with parsing, and surface useful error messages when
-# looking at the comments. E.g. It's not obvious right now that a reason must be
-# specified.
+# TODO: Deprecate
 NOQA_FILE_RULE: Pattern[str] = re.compile(
     r"# noqa-file: "
     + r"(?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+): "

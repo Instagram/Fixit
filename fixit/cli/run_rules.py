@@ -74,6 +74,7 @@ def get_formatted_reports_for_path(
             use_ignore_byte_markers=opts.use_ignore_byte_markers,
             use_ignore_comments=opts.use_ignore_comments,
             cst_wrapper=cst_wrapper,
+            find_unused_suppressions=True,
         )
     except (SyntaxError, ParserSyntaxError) as e:
         print_red(
