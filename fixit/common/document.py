@@ -4,11 +4,12 @@
 # LICENSE file in the root directory of this source tree.
 
 import difflib
-import json
 from dataclasses import asdict
 from pathlib import Path
 from textwrap import dedent, indent
 from typing import Union
+
+import yaml
 
 from fixit.common.base import LintConfig, LintRuleT
 from fixit.common.config import get_rules_from_config
@@ -51,11 +52,13 @@ def _add_config(config: LintConfig) -> str:
             """
             config:
 
-            .. code-block:: json
+            .. code-block:: yaml
 
             """
         )
-        s += _add_code_indent(json.dumps(custom_conf, indent=4))
+        s += _add_code_indent(
+            yaml.dump(custom_conf, indent=2, default_flow_style=False)
+        )
     return s
 
 
