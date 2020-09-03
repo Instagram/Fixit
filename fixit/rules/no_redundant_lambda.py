@@ -22,7 +22,6 @@ class NoRedundantLambdaFunction(CstLintRule):
         Valid("lambda x: foo(y)"),
         Valid("lambda x: foo(x, y)"),
         Valid("lambda x, y: foo(x)"),
-        Valid("lambda x, /: foo(x)"),
         Valid("lambda *, x: foo(x)"),
         Valid("lambda x = y: foo(x)"),
         Valid("lambda x, y: foo(y, x)"),
