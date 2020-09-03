@@ -4,13 +4,20 @@
 # LICENSE file in the root directory of this source tree.
 
 import difflib
+import json
+from dataclasses import asdict
 from pathlib import Path
 from textwrap import dedent, indent
 from typing import Union
 
-from fixit.common.base import LintRuleT
+from fixit.common.base import LintConfig, LintRuleT
 from fixit.common.config import get_rules_from_config
-from fixit.common.utils import InvalidTestCase, ValidTestCase
+from fixit.common.utils import (
+    DEFAULT_CONFIG,
+    DEFAULT_FILENAME,
+    InvalidTestCase,
+    ValidTestCase,
+)
 
 
 def _add_code_indent(code: str) -> str:
@@ -32,18 +39,48 @@ def _add_title_style(title: str, symbol: str) -> str:
     )
 
 
+def _add_config(config: LintConfig) -> str:
+    s = ""
+    if config != DEFAULT_CONFIG:
+        conf = asdict(config)
+        default_conf = asdict(DEFAULT_CONFIG)
+        custom_conf = {
+            key: val for key, val in conf.items() if val != default_conf[key]
+        }
+        s = dedent(
+            """
+            config:
+
+            .. code-block:: json
+
+            """
+        )
+        s += _add_code_indent(json.dumps(custom_conf, indent=4))
+    return s
+
+
 def _get_example(example: Union[ValidTestCase, InvalidTestCase], index: int) -> str:
     s = ""
     source = dedent(example.code)
-    s += dedent(
+    filename = (
+        f"path: :file:`{example.filename}`"
+        if example.filename != DEFAULT_FILENAME
+        else ""
+    )
+    case = dedent(
         f"""
         # {index + 1}:
 
+        {_add_code_indent(_add_code_indent(_add_config(example.config)))}
+
+        {filename}
+
         .. code-block:: python
 
+        {_add_code_indent(_add_code_indent(_add_code_indent(source)))}
         """
     )
-    s += _add_code_indent(source)
+    s += case
     if isinstance(example, InvalidTestCase):
         replacement = example.expected_replacement
         if replacement is not None:
@@ -73,7 +110,7 @@ def gen_example_cases(rule: LintRuleT, key: str, to_fold_examples: bool = True) 
         for idx, example in enumerate(getattr(rule, key)):
             if to_fold_examples and idx >= examples_before_folding:
                 if idx == examples_before_folding:
-                    s += ".. container:: toggle\n\n"
+                    s += "\n.. container:: toggle\n\n"
                 s += _add_code_indent(_get_example(example, idx))
             else:
                 s += _get_example(example, idx)
