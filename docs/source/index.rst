@@ -18,7 +18,8 @@ Fixit
    Getting Started <getting_started>
    Build a Lint Rule <build_a_lint_rule>
    Test a Lint Rule <test_a_lint_rule>
-   why_fixit
+   Why Fixit? <why_fixit>
+   Contributing to Fixit <contributing>
 
 .. toctree::
    :glob:
