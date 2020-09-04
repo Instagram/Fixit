@@ -18,17 +18,17 @@ from fixit import (
 
 class ChainedInstanceCheckRule(CstLintRule):
     """
-    The built-in ``isinstance`` function instead of a single type,
+    The built-in ``isinstance`` function, instead of a single type,
     can take a tuple of types and check whether given target suits
-    any of them. Instead of chaining multiple ``isinstance`` calls
-    with a boolean-or operation, they can be simplified into a single
-    ``isinstance`` call.
+    any of them. Rather than chaining multiple ``isinstance`` calls
+    with a boolean-or operation, a single ``isinstance`` call where
+    the second argument is a tuple of all types can be used.
     """
 
     MESSAGE: str = (
         "Multiple isinstance calls with the same target but "
         + "different types can be collapsed into a single call "
-        + " with a tuple of types"
+        + "with a tuple of types."
     )
 
     VALID = [
