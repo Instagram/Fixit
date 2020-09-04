@@ -16,7 +16,10 @@ UNNECESSARY_LAMBDA: str = (
 )
 
 
-class NoRedundantLambdaFunction(CstLintRule):
+class NoRedundantLambdaRule(CstLintRule):
+    """A lamba function which has a single objective of
+    passing all it is arguments to another callable can
+    be safely replaced by that callable."""
 
     VALID = [
         Valid("lambda x: foo(y)"),
@@ -25,11 +28,13 @@ class NoRedundantLambdaFunction(CstLintRule):
         Valid("lambda *, x: foo(x)"),
         Valid("lambda x = y: foo(x)"),
         Valid("lambda x, y: foo(y, x)"),
+        Valid("lambda self: self.func()"),
         Valid("lambda x, y: foo(y=x, x=y)"),
         Valid("lambda x, y, *z: foo(x, y, z)"),
         Valid("lambda x, y, **z: foo(x, y, z)"),
     ]
     INVALID = [
+        Invalid("lambda: self.func()", expected_replacement="self.func"),
         Invalid("lambda x: foo(x)", expected_replacement="foo"),
         Invalid(
             "lambda x, y, z: (t + u).math_call(x, y, z)",
