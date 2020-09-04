@@ -16,8 +16,8 @@ possible.
 
 Our Development Process
 =======================
-This github repo is the source of truth and all changes need to be reviewed in
-pull requests.
+This `Github repo <https://github.com/Instagram/Fixit>`_ is the source of truth and all
+changes need to be reviewed in pull requests.
 
 Pull Requests
 -------------
@@ -48,7 +48,7 @@ outlined on that page and do not file a public issue.
 
 Coding Style
 ------------
-We use flake8, isort and black to enforce coding style.
+We use Fixit, flake8, isort and black to enforce coding style.
 
 License
 -------
