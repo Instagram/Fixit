@@ -3,15 +3,20 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import List, Set
+from typing import List, Optional, Set
 
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import (
+    CstContext,
+    CstLintRule,
+    InvalidTestCase as Invalid,
+    ValidTestCase as Valid,
+)
 
 
-class ChainedInstanceRule(CstLintRule):
+class ChainedInstanceCheckRule(CstLintRule):
     """
     The built-in ``isinstance`` function instead of a single type,
     can take a tuple of types and check whether given target suits
@@ -52,8 +57,8 @@ class ChainedInstanceRule(CstLintRule):
         ),
     ]
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, context: CstContext) -> None:
+        super().__init__(context)
 
         # Since we already unwrap a boolean op's
         # children
@@ -69,18 +74,23 @@ class ChainedInstanceRule(CstLintRule):
         ):
             args = self._collect_isinstance_args(node)
             if args is not None:
+                right = cst.ensure_type(node.right, cst.Call)
                 elements = [cst.Element(arg.value) for arg in args]
-                new_isinstance_call = node.right.with_deep_changes(
-                    old_node=node.right.args[1], value=cst.Tuple(elements)
+                new_isinstance_call = right.with_deep_changes(
+                    old_node=right.args[1], value=cst.Tuple(elements)
                 )
                 self.report(node, replacement=new_isinstance_call)
-                return False
 
-    def _collect_isinstance_args(self, node: cst.BooleanOperation) -> List[cst.Arg]:
+    def _collect_isinstance_args(
+        self, node: cst.BooleanOperation
+    ) -> Optional[List[cst.Arg]]:
         target = cst.ensure_type(node.right, cst.Call).args[0].value
         expected_call = m.Call(
             func=m.Name(value="isinstance"),
-            args=[m.Arg(value=target), m.Arg(value=~m.Tuple())],
+            args=[
+                m.Arg(value=m.MatchIfTrue(target.deep_equals)),
+                m.Arg(value=~m.Tuple()),
+            ],
         )
         expected_boolop = m.BooleanOperation(operator=m.Or(), right=expected_call)
 
@@ -88,6 +98,7 @@ class ChainedInstanceRule(CstLintRule):
         stack = []
         current = node
         while m.matches(current, expected_boolop):
+            current = cst.ensure_type(current, cst.BooleanOperation)
             seen.append(current)
             stack.insert(0, current.right)
             current = current.left
