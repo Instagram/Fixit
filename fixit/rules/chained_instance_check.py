@@ -32,8 +32,10 @@ class ChainedInstanceCheckRule(CstLintRule):
     )
 
     VALID = [
+        Valid("foo() or foo()"),
         Valid("foo(x, y) or foo(x, z)"),
         Valid("foo(x, y) or foo(x, z) or foo(x, q)"),
+        Valid("isinstance() or isinstance()"),
         Valid("isinstance(x) or isinstance(x)"),
         Valid("isinstance(x, y) or isinstance(x)"),
         Valid("isinstance(x) or isinstance(x, y)"),
