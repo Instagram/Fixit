@@ -16,7 +16,7 @@ from fixit import (
 )
 
 
-class ChainedInstanceCheckRule(CstLintRule):
+class CollapseIsinstanceChecksRule(CstLintRule):
     """
     The built-in ``isinstance`` function, instead of a single type,
     can take a tuple of types and check whether given target suits
