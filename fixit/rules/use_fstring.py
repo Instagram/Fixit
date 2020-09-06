@@ -94,7 +94,7 @@ class UseFstringRule(CstLintRule):
     MESSAGE: str = (
         "Do not use printf style formatting or .format(). "
         + "Use f-string instead to be more readable and efficient. "
-        + "See https://fburl.com/usefstring."
+        + "See https://www.python.org/dev/peps/pep-0498/"
     )
 
     VALID = [
