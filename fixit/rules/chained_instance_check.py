@@ -73,7 +73,7 @@ class CollapseIsinstanceChecksRule(CstLintRule):
         ),
         Invalid(
             "something or isinstance(x, y) or isinstance(x, z) or another",
-            expected_replacement="something or isinstance(x, (y, z)) or another"
+            expected_replacement="something or isinstance(x, (y, z)) or another",
         ),
         Invalid(
             "isinstance(x, y) or isinstance(x, z) or isinstance(x, q) or isinstance(x, w)",
