@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import List, Optional, Set, Union
+from typing import Dict, Iterator, List, Set, Tuple
 
 import libcst as cst
 import libcst.matchers as m
@@ -54,10 +54,11 @@ class CollapseIsinstanceChecksRule(CstLintRule):
         Valid("isinstance(x, a) or isinstance(y, b) or isinstance(z, c)"),
         Valid(
             """
-            def isinstance(x, y):
-                return None
-            if isinstance(x, y) or isinstance(x, z):
-                pass
+            def foo():
+                def isinstance(x, y):
+                    return _foo_bar(x, y)
+                if isinstance(x, y) or isinstance(x, z):
+                    print("foo")
             """
         ),
     ]
@@ -71,6 +72,10 @@ class CollapseIsinstanceChecksRule(CstLintRule):
             expected_replacement="isinstance(x, (y, z, q))",
         ),
         Invalid(
+            "something or isinstance(x, y) or isinstance(x, z) or another",
+            expected_replacement="something or isinstance(x, (y, z)) or another"
+        ),
+        Invalid(
             "isinstance(x, y) or isinstance(x, z) or isinstance(x, q) or isinstance(x, w)",
             expected_replacement="isinstance(x, (y, z, q, w))",
         ),
@@ -80,12 +85,12 @@ class CollapseIsinstanceChecksRule(CstLintRule):
         ),
         Invalid(
             "isinstance(x, a) or isinstance(x, b) or isinstance(y, c) or isinstance(y, d) "
-            + " or isinstance(z, e)",
+            + "or isinstance(z, e)",
             expected_replacement="isinstance(x, (a, b)) or isinstance(y, (c, d)) or isinstance(z, e)",
         ),
         Invalid(
             "isinstance(x, a) or isinstance(x, b) or isinstance(y, c) or isinstance(y, d) "
-            + " or isinstance(z, e) or isinstance(q, f) or isinstance(q, g) or isinstance(q, h)",
+            + "or isinstance(z, e) or isinstance(q, f) or isinstance(q, g) or isinstance(q, h)",
             expected_replacement=(
                 "isinstance(x, (a, b)) or isinstance(y, (c, d)) or isinstance(z, e)"
                 + " or isinstance(q, (f, g, h))"
@@ -95,94 +100,74 @@ class CollapseIsinstanceChecksRule(CstLintRule):
 
     def __init__(self, context: CstContext) -> None:
         super().__init__(context)
-
-        # Since we already unwrap a boolean op's
-        # children
         self.seen_boolean_operations: Set[cst.BooleanOperation] = set()
 
     def visit_BooleanOperation(self, node: cst.BooleanOperation) -> None:
-        # Initially match with a partial pattern (in order to ensure
-        # we have enough args to construct more accurate / advanced
-        # pattern).
-
-        if node not in self.seen_boolean_operations and m.matches(
-            node,
-            m.BooleanOperation(right=m.Call(args=[m.AtLeastN(n=1)]), operator=m.Or()),
-        ):
-            calls = self._collect_isinstance_calls(node)
-            if calls is None:
-                return None
-
-            replacement = self._merge_isinstance_calls(calls)
-            if replacement is not None:
-                self.report(node, replacement=replacement)
-
-    def _collect_isinstance_calls(
-        self, node: cst.BooleanOperation
-    ) -> Optional[List[cst.Call]]:
-        expected_call = m.Call(
-            func=m.Name(value="isinstance"),
-            args=[
-                m.Arg(),
-                m.Arg(value=~m.Tuple()),
-            ],
-        )
-        expected_boolop = m.BooleanOperation(operator=m.Or(), right=expected_call)
-
-        seen = []
-        stack: List[cst.Call] = []
-        current = node
-        while m.matches(current, expected_boolop):
-            current = cst.ensure_type(current, cst.BooleanOperation)
-            seen.append(current)
-            stack.insert(0, cst.ensure_type(current.right, cst.Call))
-            current = current.left
-
-        if m.matches(current, expected_call):
-            stack.insert(0, cst.ensure_type(current, cst.Call))
-        else:
+        if node in self.seen_boolean_operations:
             return None
 
-        self.seen_boolean_operations.update(seen)
-        return stack
+        stack = tuple(self.unwrap(node))
+        operands, targets = self.collect_targets(stack)
 
-    def _merge_isinstance_calls(
-        self, stack: List[cst.Call]
-    ) -> Optional[Union[cst.Call, cst.BooleanOperation]]:
-
-        targets = {}
-        for call in stack:
-            func = cst.ensure_type(call, cst.Call).func
-            for context in self.get_metadata(QualifiedNameProvider, func):
-                if (
-                    context.name != "builtins.isinstance"
-                    or context.source is not QualifiedNameSource.BUILTIN
-                ):
-                    return None
-
-            target, match = call.args[0].value, call.args[1].value
-            for possible_target in targets:
-                if target.deep_equals(possible_target):
-                    targets[possible_target].append(match)
-                    break
-            else:
-                targets[target] = [match]
-
-        if all(len(matches) == 1 for matches in targets.values()):
+        # If nothing gets collapsed, just exit from this short-path
+        if len(operands) == len(stack):
             return None
 
         replacement = None
-        for target, matches in targets.items():
-            if len(matches) == 1:
-                arg = cst.Arg(*matches)
-            else:
-                arg = cst.Arg(cst.Tuple([cst.Element(match) for match in matches]))
-            call = cst.Call(cst.Name("isinstance"), [cst.Arg(target), arg])
+        for operand in operands:
+            if operand in targets:
+                matches = targets[operand]
+                if len(matches) == 1:
+                    arg = cst.Arg(value=matches[0])
+                else:
+                    arg = cst.Arg(cst.Tuple([cst.Element(match) for match in matches]))
+                operand = cst.Call(cst.Name("isinstance"), [cst.Arg(operand), arg])
+
             if replacement is None:
-                replacement = call
-            elif isinstance(replacement, (cst.Call, cst.BooleanOperation)):
+                replacement = operand
+            else:
                 replacement = cst.BooleanOperation(
-                    left=replacement, right=call, operator=cst.Or()
+                    left=replacement, right=operand, operator=cst.Or()
                 )
 
-        return replacement
+        if replacement is not None:
+            self.report(node, replacement=replacement)
+
+    def unwrap(self, node: cst.BaseExpression) -> Iterator[cst.BaseExpression]:
+        if m.matches(node, m.BooleanOperation(operator=m.Or())):
+            bool_op = cst.ensure_type(node, cst.BooleanOperation)
+            self.seen_boolean_operations.add(bool_op)
+            yield from self.unwrap(bool_op.left)
+            yield bool_op.right
+        else:
+            yield node
+
+    def collect_targets(
+        self, stack: Tuple[cst.BaseExpression, ...]
+    ) -> Tuple[
+        List[cst.BaseExpression], Dict[cst.BaseExpression, List[cst.BaseExpression]]
+    ]:
+        targets = {}
+        operands = []
+
+        for operand in stack:
+            if m.matches(
+                operand, m.Call(func=m.DoNotCare(), args=[m.Arg(), m.Arg(~m.Tuple())])
+            ):
+                call = cst.ensure_type(operand, cst.Call)
+                if not QualifiedNameProvider.has_name(self, call, _ISINSTANCE):
+                    operands.append(operand)
+                    continue
+
+                target, match = call.args[0].value, call.args[1].value
+                for possible_target in targets:
+                    if target.deep_equals(possible_target):
+                        targets[possible_target].append(match)
+                        break
+                else:
+                    operands.append(target)
+                    targets[target] = [match]
+            else:
+                operands.append(operand)
+
+        return operands, targets
