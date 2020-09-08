@@ -1,6 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 #
-# This source code is licensed under the MIT license found in the
+# This source code is licensed under the MIT license found in thefla
 # LICENSE file in the root directory of this source tree.
 
 # Usage:
@@ -10,9 +10,11 @@
 #   $ python -m fixit.cli.add_new_rule --path fixit/rules/new_rule.py
 
 import argparse
-from fixit.common.config import get_lint_config
-from libcst.codemod._cli import invoke_formatter
 from pathlib import Path
+
+from libcst.codemod._cli import invoke_formatter
+
+from fixit.common.config import get_lint_config
 
 
 _LICENCE = """\
