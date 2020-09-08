@@ -16,8 +16,7 @@ Usage:
 
 """
 
-_LICENCE = """
-# Copyright (c) Facebook, Inc. and its affiliates.
+_LICENCE = """# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -44,15 +43,15 @@ class Rule(CstLintRule):
 """
 
 
-def is_path_exists(path: str) -> Union[Path, TypeError, FileExistsError]:
+def is_path_exists(path: str) -> Path:
     """Check for valid path, if yes, return `Path` else raise `Error` """
-    path = Path(path)
-    if path.exists():
-        raise FileNotFoundError(f"{path} already exists")
-    elif not path.parent.exists():
-        raise TypeError(f"{path} is not a valid path, provide path with file name")
+    filepath = Path(path)
+    if filepath.exists():
+        raise FileNotFoundError(f"{filepath} already exists")
+    elif not filepath.parent.exists():
+        raise TypeError(f"{filepath} is not a valid path, provide path with file name")
     else:
-        return path
+        return filepath
 
 
 def create_rule_file(file_path: Path) -> None:
@@ -64,7 +63,7 @@ def create_rule_file(file_path: Path) -> None:
     print(f"Successfully created {file_path.name} rule file at {file_path.parent}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Creates a skeleton of adding new rule file"
     )
