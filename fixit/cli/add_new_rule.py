@@ -3,19 +3,20 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# Usage:
+#
+#   $ python -m fixit.cli.add_new_rule --help
+#   $ python -m fixit.cli.add_new_rule
+#   $ python -m fixit.cli.add_new_rule --path fixit/rules/new_rule.py
+
 import argparse
+from fixit.common.config import get_lint_config
+from libcst.codemod._cli import invoke_formatter
 from pathlib import Path
 
 
-"""
-Usage:
-   $ python -m fixit.cli.add_new_rule --help
-   $ python -m fixit.cli.add_new_rule
-   $ python -m fixit.cli.add_new_rule --path fixit/rules/new_rule.py
-
-"""
-
-_LICENCE = """# Copyright (c) Facebook, Inc. and its affiliates.
+_LICENCE = """\
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -62,8 +63,10 @@ def is_path_exists(path: str) -> Path:
 def create_rule_file(file_path: Path) -> None:
     """Create a new rule file."""
     context = _LICENCE + _IMPORTS + _TO_DOS + _RULE_CLASS
+    updated_context = invoke_formatter(get_lint_config().formatter, context)
+
     with open(file_path, "w") as f:
-        f.write(context)
+        f.write(updated_context)
 
     print(f"Successfully created {file_path.name} rule file at {file_path.parent}")
 
