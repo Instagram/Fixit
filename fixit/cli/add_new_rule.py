@@ -1,6 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 #
-# This source code is licensed under the MIT license found in thefla
+# This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
 # Usage:
@@ -17,8 +17,7 @@ from libcst.codemod._cli import invoke_formatter
 from fixit.common.config import get_lint_config
 
 
-_LICENCE = """\
-# Copyright (c) Facebook, Inc. and its affiliates.
+_LICENCE = """# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -26,6 +25,9 @@ _LICENCE = """\
 """
 
 _IMPORTS = """
+import libcst as cst
+import libcst.matchers as m
+
 from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 """
