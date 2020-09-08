@@ -17,8 +17,8 @@ class Rule(CstLintRule):
     docstring or new_rule description
     """
 
-    MESSAGE = "Enter rule description message"
+    MESSAGE = 'Enter rule description message'
 
-    VALID = [Valid()]
+    VALID = [Valid("'example'")]
 
-    INVALID = [Invalid()]
+    INVALID = [Invalid("'example'")]

@@ -42,9 +42,9 @@ class Rule(CstLintRule):
 
     MESSAGE = 'Enter rule description message'
 
-    VALID = [Valid()]
+    VALID = [Valid("'example'")]
 
-    INVALID = [Invalid()]
+    INVALID = [Invalid("'example'")]
 """
 
 
