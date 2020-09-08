@@ -5,7 +5,6 @@
 
 import argparse
 from pathlib import Path
-from typing import Union
 
 
 """
@@ -24,8 +23,14 @@ _LICENCE = """# Copyright (c) Facebook, Inc. and its affiliates.
 """
 
 _IMPORTS = """
-import libcst as cst
 from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+
+"""
+
+_TO_DOS = """
+\"""
+This is a model rule file for adding a new rule to fixit module
+\"""
 
 """
 
@@ -34,12 +39,12 @@ class Rule(CstLintRule):
     \"""
     docstring or new_rule description
     \"""
+
     MESSAGE = 'Enter rule description message'
 
     VALID = [Valid()]
 
     INVALID = [Invalid()]
-
 """
 
 
@@ -56,7 +61,7 @@ def is_path_exists(path: str) -> Path:
 
 def create_rule_file(file_path: Path) -> None:
     """Create a new rule file."""
-    context = _LICENCE + _IMPORTS + _RULE_CLASS
+    context = _LICENCE + _IMPORTS + _TO_DOS + _RULE_CLASS
     with open(file_path, "w") as f:
         f.write(context)
 
