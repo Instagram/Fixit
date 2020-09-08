@@ -16,7 +16,7 @@ Usage:
 
 """
 
-_LICENCE = """\
+_LICENCE = """
 # Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
@@ -24,13 +24,13 @@ _LICENCE = """\
 
 """
 
-_IMPORTS = """\
+_IMPORTS = """
 import libcst as cst
 from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 """
 
-_RULE_CLASS = """\
+_RULE_CLASS = """
 class Rule(CstLintRule):
     \"""
     docstring or new_rule description
