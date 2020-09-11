@@ -46,6 +46,12 @@ setuptools.setup(
             if "=" in dep
         ],
     },
+    entry_points={
+        "console_scripts": [
+            "fixit-run=fixit.cli::run_rules",
+            "fixit-apply=fixit.cli::apply_fix",
+        ],
+    },
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries",
