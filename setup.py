@@ -38,7 +38,9 @@ setuptools.setup(
     package_data={"fixit": ["py.typed"]},
     test_suite="fixit",
     python_requires=">=3.6",
-    install_requires=[dep.strip() for dep in open("requirements.txt").readlines()],
+    install_requires=[
+        dep.strip().split(">=")[0] for dep in open("requirements.txt").readlines()
+    ],
     extras_require={
         "dev": [
             dep.strip()
