@@ -7,13 +7,14 @@
 #
 #   $ python -m fixit.cli.add_new_rule --help
 #   $ python -m fixit.cli.add_new_rule
-#   $ python -m fixit.cli.add_new_rule --path fixit/rules/new_rule.py
+#   $ python -m fixit.cli.add_new_rule --path fixit/rules/new_rule.py --name rule_name
 
 import argparse
 from pathlib import Path
 
 from libcst.codemod._cli import invoke_formatter
 
+from fixit.cli.utils import snake_to_camelcase
 from fixit.common.config import get_lint_config
 
 
@@ -40,7 +41,7 @@ This is a model rule file for adding a new rule to fixit module
 """
 
 _RULE_CLASS = """
-class Rule(CstLintRule):
+class {class_name}Rule(CstLintRule):
     \"""
     docstring or new_rule description
     \"""
@@ -64,10 +65,19 @@ def is_path_exists(path: str) -> Path:
         return filepath
 
 
-def create_rule_file(file_path: Path) -> None:
+def is_valid_name(name: str) -> str:
+    """Check for valid rule name """
+    if name.endswith(("Rule", "Rules", "rule", "rules")):
+        raise NameError("Please enter rule name without the suffix, `rule` or `Rule`")
+    return snake_to_camelcase(name) if name else ""
+
+
+def create_rule_file(file_path: Path, rule_name: str) -> None:
     """Create a new rule file."""
     context = _LICENCE + _IMPORTS + _TO_DOS + _RULE_CLASS
-    updated_context = invoke_formatter(get_lint_config().formatter, context)
+    updated_context = invoke_formatter(
+        get_lint_config().formatter, context.format(class_name=rule_name)
+    )
 
     with open(file_path, "w") as f:
         f.write(updated_context)
@@ -87,8 +97,16 @@ def main() -> None:
         help="Path to add rule file, Default is fixit/rules/new_rule.py",
     )
 
+    parser.add_argument(
+        "-n",
+        "--name",
+        type=is_valid_name,
+        default="",
+        help="Name of the rule, Default is Rule",
+    )
+
     args = parser.parse_args()
-    create_rule_file(args.path)
+    create_rule_file(args.path, args.name)
 
 
 if __name__ == "__main__":
