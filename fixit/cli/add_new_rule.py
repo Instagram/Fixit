@@ -67,13 +67,14 @@ def is_path_exists(path: str) -> Path:
 
 def is_valid_name(name: str) -> str:
     """Check for valid rule name """
-    if name.endswith(("Rule", "Rules", "rule", "rules")):
-        raise NameError("Please enter rule name without the suffix, `rule` or `Rule`")
-    return snake_to_camelcase(name) if name else ""
+    if name.casefold().endswith(("rule", "rules")):
+        raise ValueError("Please enter rule name without the suffix, 'rule' or 'Rule'")
+    return snake_to_camelcase(name)
 
 
 def create_rule_file(file_path: Path, rule_name: str) -> None:
     """Create a new rule file."""
+    rule_name = is_valid_name(rule_name)
     context = _LICENCE + _IMPORTS + _TO_DOS + _RULE_CLASS
     updated_context = invoke_formatter(
         get_lint_config().formatter, context.format(class_name=rule_name)
@@ -100,13 +101,16 @@ def main() -> None:
     parser.add_argument(
         "-n",
         "--name",
-        type=is_valid_name,
+        type=str,
         default="",
         help="Name of the rule, Default is Rule",
     )
 
     args = parser.parse_args()
-    create_rule_file(args.path, args.name)
+
+    file_path = args.path
+    rule_name = args.name if args.name else file_path.stem
+    create_rule_file(file_path, rule_name)
 
 
 if __name__ == "__main__":
