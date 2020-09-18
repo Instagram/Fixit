@@ -94,8 +94,8 @@ def main() -> None:
         "-p",
         "--path",
         type=is_path_exists,
-        default=Path("fixit/rules/new_rule.py"),
-        help="Path to add rule file, Default is fixit/rules/new_rule.py",
+        default=Path("fixit/rules/new.py"),
+        help="Path to add rule file, Default is fixit/rules/new.py",
     )
 
     parser.add_argument(
@@ -103,7 +103,7 @@ def main() -> None:
         "--name",
         type=str,
         default="",
-        help="Name of the rule, Default is Rule",
+        help="Name of the rule, Default is New",
     )
 
     args = parser.parse_args()
