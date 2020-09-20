@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import Sequence
+
 import libcst as cst
 import libcst.matchers as m
 
@@ -83,6 +85,9 @@ class NoAssertTrueForComparisonsRule(CstLintRule):
 
         if result:
             second_arg = result["second"]
+            if isinstance(second_arg, Sequence):
+                second_arg = second_arg[0]
+
             if m.matches(second_arg, m.Name("True")):
                 new_call = node.with_changes(
                     args=[node.args[0].with_changes(comma=cst.MaybeSentinel.DEFAULT)],
