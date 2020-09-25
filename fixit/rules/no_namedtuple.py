@@ -6,10 +6,10 @@
 from typing import List, Optional, Sequence, Tuple
 
 import libcst as cst
-from fixit.common.base import CstLintRule
-from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 from libcst import MaybeSentinel, ensure_type, parse_expression
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
+
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class NoNamedTupleRule(CstLintRule):
@@ -19,9 +19,7 @@ class NoNamedTupleRule(CstLintRule):
     instantiation. See PEP 557 (https://www.python.org/dev/peps/pep-0557).
     """
 
-    MESSAGE: str = (
-        "Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead."
-    )
+    MESSAGE: str = "Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead."
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
 
     VALID = [
