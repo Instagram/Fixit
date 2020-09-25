@@ -17,6 +17,7 @@ class NoNamedTupleRule(CstLintRule):
     Enforce the use of ``dataclasses.dataclass`` decorator instead of ``NamedTuple`` for cleaner customization and
     inheritance. It supports default value, combining fields for inheritance, and omitting optional fields at
     instantiation. See `PEP 557 <https://www.python.org/dev/peps/pep-0557>`_.
+    @dataclass  is faster at reading an object's nested properties and executing its methods. (`benchmark <https://medium.com/@jacktator/dataclass-vs-namedtuple-vs-object-for-performance-optimization-in-python-691e234253b9>`_)
     """
 
     MESSAGE: str = "Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead for simplicity, efficiency and consistency."
