@@ -14,7 +14,7 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 class NoNamedTupleRule(CstLintRule):
     """
-    Enforce the use of `dataclasses.dataclass` decorator instead of NamedTuple for cleaner customization and
+    Enforce the use of ``dataclasses.dataclass`` decorator instead of ``NamedTuple`` for cleaner customization and
     inheritance. It supports default value, combining fields for inheritance, and omitting optional fields at
     instantiation. See PEP 557 (https://www.python.org/dev/peps/pep-0557).
     """
