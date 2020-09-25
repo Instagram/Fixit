@@ -6,10 +6,10 @@
 from typing import List, Optional, Sequence, Tuple
 
 import libcst as cst
-from cst import MaybeSentinel, ensure_type, parse_expression
-from cst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 from fixit.common.base import CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
+from libcst import MaybeSentinel, ensure_type, parse_expression
+from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 
 class NoNamedTupleRule(CstLintRule):
