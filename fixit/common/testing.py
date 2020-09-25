@@ -88,7 +88,8 @@ class LintRuleTestCase(unittest.TestCase):
                 len(reports),
                 0,
                 'Expected a report for this "invalid" test case but `self.report` was '
-                + 'not called:\n' + test_case.code,
+                + "not called:\n"
+                + test_case.code,
             )
             self.assertLessEqual(
                 len(reports),
