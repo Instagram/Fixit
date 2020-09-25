@@ -19,7 +19,7 @@ class NoNamedTupleRule(CstLintRule):
     instantiation. See `PEP 557 <https://www.python.org/dev/peps/pep-0557>`_.
     """
 
-    MESSAGE: str = "Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead."
+    MESSAGE: str = "Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead for simplicity, efficiency and consistency."
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
 
     VALID = [
