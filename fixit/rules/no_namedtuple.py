@@ -8,7 +8,6 @@ from typing import List, Optional, Sequence, Tuple
 import libcst as cst
 from cst import MaybeSentinel, ensure_type, parse_expression
 from cst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
-
 from fixit.common.base import CstLintRule
 from fixit.common.utils import InvalidTestCase as Invalid, ValidTestCase as Valid
 
@@ -181,7 +180,6 @@ class NoNamedTupleRule(CstLintRule):
                 + [cst.Decorator(decorator=call)],
             )
             self.report(original_node, replacement=replacement)
-
 
     def partition_bases(
         self, original_bases: Sequence[cst.Arg]
