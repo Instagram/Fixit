@@ -20,8 +20,8 @@ from fixit import (
 class NoStringTypeAnnotationRule(CstLintRule):
     """
     Enforce the use of type identifier instead of using string type hints for simplicity and better syntax highlighting.
-    Starting in Python 3.7, `from __future__ import annotations` can postpone evaluation of type annotations
-    `PEP 563 <https://www.python.org/dev/peps/pep-0563/#forward-references>`
+    Starting in Python 3.7, ``from __future__ import annotations`` can postpone evaluation of type annotations
+    `PEP 563 <https://www.python.org/dev/peps/pep-0563/#forward-references>`_
     and thus forward references no longer need to use string annotation style.
     """
 
