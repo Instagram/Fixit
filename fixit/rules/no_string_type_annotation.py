@@ -293,7 +293,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
         if not self.has_future_annotations_import:
             return
         if self.in_annotation and not self.in_literal:
-            # This is not allowed past Python3.7 since its no longer necessary.
+            # This is not allowed past Python3.7 since it's no longer necessary.
             self.report(
                 node,
                 replacement=cst.parse_expression(
