@@ -3,8 +3,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from __future__ import annotations
-
 from typing import Set
 
 import libcst as cst
@@ -22,8 +20,8 @@ from fixit import (
 class NoStringTypeAnnotationRule(CstLintRule):
     """
     Enforce the use of type identifier instead of using string type hints for simplicity and better syntax highlighting.
-    Starting in Python 3.7, `from __future__ import annotations` can postpone evaluation of type annotations  
-    `PEP 563 <https://www.python.org/dev/peps/pep-0563/#forward-references>`_
+    Starting in Python 3.7, `from __future__ import annotations` can postpone evaluation of type annotations
+    `PEP 563 <https://www.python.org/dev/peps/pep-0563/#forward-references>`
     and thus forward references no longer need to use string annotation style.
     """
 
