@@ -9,7 +9,7 @@ from typing import Set
 
 import libcst as cst
 import libcst.matchers as m
-from libcst.metadata import QualifiedNameProvider,
+from libcst.metadata import QualifiedNameProvider
 
 
 from fixit import (
