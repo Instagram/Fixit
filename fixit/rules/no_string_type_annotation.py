@@ -5,16 +5,12 @@
 
 from __future__ import annotations
 
-from typing import Optional, Set, Union
+from typing import Set
 
 import libcst as cst
 import libcst.matchers as m
-from libcst.metadata import (
-    ClassScope,
-    GlobalScope,
-    QualifiedNameProvider,
-    ScopeProvider,
-)
+from libcst.metadata import QualifiedNameProvider,
+
 
 from fixit import (
     CstContext,
