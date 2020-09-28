@@ -22,3 +22,8 @@ def print_cyan(message: str) -> None:
 
 def print_red(message: str) -> None:
     print_color(91, message)
+
+
+def snake_to_camelcase(name: str) -> str:
+    """Convert snake-case string to camel-case string."""
+    return "".join(n.capitalize() for n in name.split("_"))
