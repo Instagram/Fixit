@@ -81,26 +81,24 @@ to format code. To format changes to be conformant, run the following in the roo
     tox -e autofix
 
 To run all tests, you'll need to install `tox <https://tox.readthedocs.io/en/latest/>`_
-and do the following in the root:
+and do the following in the root: (use py37, py38 to choose from Python version 3.7 or 3.8)::
 
-.. code-block:: shell
+    tox -e py38
 
-    tox -e py37
+You can also run individual unit tests by specifying a module like
+this::
 
-You can also run individual tests by using unittest and specifying a module like
-this:
+    tox -e py38 -- fixit.common.tests.test_report
 
-.. code-block:: shell
+To run all test cases of a specific rule (e.g. ``NoInheritFromObjectRule``)::
 
-    python -m unittest fixit.common.testing.LintRuleTest
+    tox -e py38 -- fixit.tests.NoInheritFromObjectRule
 
 See the `unittest documentation <https://docs.python.org/3/library/unittest.html>`_
 for more examples of how to run tests.
 
 We use `Pyre <https://github.com/facebook/pyre-check>`_ for type-checking. To
-verify types for the library, do the following in the root:
-
-.. code-block:: shell
+verify types for the library, do the following in the root::
 
     pyre --preserve-pythonpath check
 

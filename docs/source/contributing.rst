@@ -23,10 +23,10 @@ Pull Requests
 -------------
 We actively welcome your pull requests.
 
-1. Fork the repo and create your branch from `master`.
+1. Fork the repo and create your branch from ``master``.
 2. If you've added code that should be tested, add tests.
 3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes by `tox test`.
+4. Ensure the test suite passes by ``tox test``.
 5. Make sure your code lints.
 6. If you haven't already, complete the Contributor License Agreement ("CLA").
 
@@ -49,6 +49,7 @@ outlined on that page and do not file a public issue.
 Coding Style
 ------------
 We use Fixit, flake8, isort and black to enforce coding style.
+Code can be autoformatted by ``tox -e autofix``.
 
 License
 -------
