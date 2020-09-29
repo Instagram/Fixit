@@ -81,7 +81,7 @@ to format code. To format changes to be conformant, run the following in the roo
     tox -e autofix
 
 To run all tests, you'll need to install `tox <https://tox.readthedocs.io/en/latest/>`_
-and do the following in the root: (use py37, py38 to chose from Python version 3.7 or 3.8)::
+and do the following in the root: (use py37, py38 to choose from Python version 3.7 or 3.8)::
 
     tox -e py38
 
