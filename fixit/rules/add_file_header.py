@@ -94,7 +94,18 @@ class AddMissingHeaderRule(CstLintRule):
                 }
             ),
             expected_replacement="# header line\n# wrong header",
-        )
+        ),
+        Invalid(
+            """
+            #!/usr/bin/env python
+            # wrong header""",
+            config=LintConfig(
+                rule_config={
+                    "AddMissingHeaderRule": {"path": "*.py", "header": "# header line"}
+                }
+            ),
+            expected_replacement="#!/usr/bin/env python\n# header line\n# wrong header",
+        ),
     ]
 
     def __init__(self, context: CstContext) -> None:
@@ -133,9 +144,14 @@ class AddMissingHeaderRule(CstLintRule):
         if self.rule_disabled:
             return
         if not m.matches(node, m.Module(header=[*self.header_matcher, m.ZeroOrMore()])):
+            shebang, header = [], node.header
+            if header:
+                comment = header[0].comment
+                if isinstance(comment, cst.Comment) and comment.value.startswith("#!"):
+                    shebang, header = [header[0]], header[1:]
             self.report(
                 node,
                 replacement=node.with_changes(
-                    header=[*self.header_replacement, *node.header]
+                    header=[*shebang, *self.header_replacement, *header]
                 ),
             )
