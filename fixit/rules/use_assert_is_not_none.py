@@ -58,6 +58,10 @@ class UseAssertIsNotNoneRule(CstLintRule):
             "self.assertFalse(f(x) is not None)",
             expected_replacement="self.assertIsNone(f(x))",
         ),
+        Invalid(
+            "self.assertFalse(x is None)",
+            expected_replacement="self.assertIsNotNone(x)",
+        ),
     ]
 
     def visit_Call(self, node: cst.Call) -> None:
