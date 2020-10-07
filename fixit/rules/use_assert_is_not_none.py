@@ -65,9 +65,9 @@ class UseAssertIsNotNoneRule(CstLintRule):
     ]
 
     def visit_Call(self, node: cst.Call) -> None:
-        found_match: bool = False
-        new_cst_attr: Optional[str] = None
-        new_node_arg: Optional[cst.Arg] = None
+        found_match = False
+        new_cst_attr = None
+        new_node_arg = None
 
         # `self.assertTrue(x is not None)` -> `self.assertIsNotNone(x)`
         if m.matches(
