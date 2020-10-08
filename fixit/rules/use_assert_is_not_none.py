@@ -128,7 +128,12 @@ class UseAssertIsNotNoneRule(CstLintRule):
                 ),
                 args=[
                     cst.Arg(
-                        ensure_type(node.args[0].value.expression, cst.Comparison).left
+                        ensure_type(
+                            ensure_type(
+                                node.args[0].value, cst.UnaryOperation
+                            ).expression,
+                            cst.Comparison,
+                        ).left
                     )
                 ],
             )
@@ -231,7 +236,12 @@ class UseAssertIsNotNoneRule(CstLintRule):
                 ),
                 args=[
                     cst.Arg(
-                        ensure_type(node.args[0].value.expression, cst.Comparison).left
+                        ensure_type(
+                            ensure_type(
+                                node.args[0].value, cst.UnaryOperation
+                            ).expression,
+                            cst.Comparison,
+                        ).left
                     )
                 ],
             )
