@@ -58,7 +58,7 @@ class ImportsTest(UnitTest):
 
         # Test with an existing dummy rule.
         imported_rule = import_rule_from_package(rules_package[0], "DummyRule2")
-        self.assertTrue(imported_rule is not None)
+        self.assertIsNotNone(imported_rule)
         self.assertEqual(imported_rule.__name__, "DummyRule2")
         self.assertEqual(imported_rule.__module__, f"{DUMMY_PACKAGE}.dummy_2")
 
