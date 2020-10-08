@@ -24,16 +24,23 @@ class UseAssertIsNotNoneRule(CstLintRule):
     )
 
     VALID = [
-        Valid("self.assertTrue(not x is None)"),
-        Valid("self.assertTrue(x)"),
-        Valid("self.assertFalse(not x is None)"),
-        Valid("self.assertFalse(x)"),
+        Valid("self.assertIsNotNone(x)"),
+        Valid("self.assertIsNone(x)"),
+        Valid("self.assertIsNone(None)"),
+        Valid("self.assertIsNotNone(f(x))"),
+        Valid("self.assertIsNone(f(x))"),
+        Valid("self.assertIsNone(object.key)"),
+        Valid("self.assertIsNotNone(object.key)"),
     ]
 
     INVALID = [
         Invalid(
             "self.assertTrue(a is not None)",
             expected_replacement="self.assertIsNotNone(a)",
+        ),
+        Invalid(
+            "self.assertTrue(not x is None)",
+            expected_replacement="self.assertIsNotNone(x)",
         ),
         Invalid(
             "self.assertTrue(f() is not None)",
@@ -48,6 +55,10 @@ class UseAssertIsNotNoneRule(CstLintRule):
         ),
         Invalid(
             "self.assertFalse(x is not None)",
+            expected_replacement="self.assertIsNone(x)",
+        ),
+        Invalid(
+            "self.assertFalse(not x is None)",
             expected_replacement="self.assertIsNone(x)",
         ),
         Invalid(
@@ -89,6 +100,39 @@ class UseAssertIsNotNoneRule(CstLintRule):
             )
             self.report(node, replacement=new_call)
 
+        # `self.assertTrue(not x is None)` -> `self.assertIsNotNone(x)`
+        elif m.matches(
+            node,
+            m.Call(
+                func=m.Attribute(value=m.Name("self"), attr=m.Name("assertTrue")),
+                args=[
+                    m.Arg(
+                        value=m.UnaryOperation(
+                            operator=m.Not(),
+                            expression=m.Comparison(
+                                comparisons=[
+                                    m.ComparisonTarget(
+                                        m.Is(), comparator=m.Name("None")
+                                    )
+                                ]
+                            ),
+                        )
+                    )
+                ],
+            ),
+        ):
+
+            new_call = node.with_changes(
+                func=cst.Attribute(
+                    value=cst.Name("self"), attr=cst.Name("assertIsNotNone")
+                ),
+                args=[
+                    cst.Arg(
+                        ensure_type(node.args[0].value.expression, cst.Comparison).left
+                    )
+                ],
+            )
+            self.report(node, replacement=new_call)
         # `self.assertFalse(x is None)` -> `self.assertIsNotNone(x)`
         elif m.matches(
             node,
@@ -157,5 +201,38 @@ class UseAssertIsNotNoneRule(CstLintRule):
                     value=cst.Name("self"), attr=cst.Name("assertIsNone")
                 ),
                 args=[cst.Arg(ensure_type(node.args[0].value, cst.Comparison).left)],
+            )
+            self.report(node, replacement=new_call)
+        # `self.assertFalse(not x is None)` -> `self.assertIsNone(x)`
+        elif m.matches(
+            node,
+            m.Call(
+                func=m.Attribute(value=m.Name("self"), attr=m.Name("assertFalse")),
+                args=[
+                    m.Arg(
+                        value=m.UnaryOperation(
+                            operator=m.Not(),
+                            expression=m.Comparison(
+                                comparisons=[
+                                    m.ComparisonTarget(
+                                        m.Is(), comparator=m.Name("None")
+                                    )
+                                ]
+                            ),
+                        )
+                    )
+                ],
+            ),
+        ):
+
+            new_call = node.with_changes(
+                func=cst.Attribute(
+                    value=cst.Name("self"), attr=cst.Name("assertIsNone")
+                ),
+                args=[
+                    cst.Arg(
+                        ensure_type(node.args[0].value.expression, cst.Comparison).left
+                    )
+                ],
             )
             self.report(node, replacement=new_call)
