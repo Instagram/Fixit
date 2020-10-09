@@ -153,78 +153,19 @@ class UseAssertIsNotNoneRule(CstLintRule):
                     ensure_type(argument, cst.UnaryOperation).expression, cst.Comparison
                 ).left
 
-            new_call = node
+            negations_seen = 0
+            if m.matches(assertion_name, m.Name("assertFalse")):
+                negations_seen += 1
+            if m.matches(argument, m.UnaryOperation()):
+                negations_seen += 1
+            if m.matches(comparison_type, m.IsNot()):
+                negations_seen += 1
 
-            if m.matches(assertion_name, m.Name("assertTrue")):
-                if m.matches(argument, m.Comparison()):
-                    if m.matches(comparison_type, m.IsNot()):
-                        # `self.assertTrue(x is not None)` -> `self.assertIsNotNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNotNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
-                    elif m.matches(comparison_type, m.Is()):
-                        # `self.assertTrue(x is None)` -> `self.assertIsNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
-                elif m.matches(argument, m.UnaryOperation()):
-                    if m.matches(comparison_type, m.Is()):
-                        # `self.assertTrue(not x is None)` -> `self.assertIsNotNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNotNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
-                    elif m.matches(comparison_type, m.IsNot()):
-                        # `self.assertTrue(not x is not None)` -> `self.assertIsNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
-            elif m.matches(assertion_name, m.Name("assertFalse")):
-                if m.matches(argument, m.Comparison()):
-                    if m.matches(comparison_type, m.IsNot()):
-                        # `self.assertFalse(x is not None)` -> `self.assertIsNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
-                    elif m.matches(comparison_type, m.Is()):
-                        # `self.assertFalse(x is None)` -> `self.assertIsNotNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNotNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
-                elif m.matches(argument, m.UnaryOperation()):
-                    if m.matches(comparison_type, m.Is()):
-                        # `self.assertFalse(not x is None)` -> `self.assertIsNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
-                    elif m.matches(comparison_type, m.IsNot()):
-                        # `self.assertFalse(not x is not None)` -> `self.assertIsNotNone(x)`
-                        new_call = node.with_changes(
-                            func=cst.Attribute(
-                                value=cst.Name("self"), attr=cst.Name("assertIsNotNone")
-                            ),
-                            args=[cst.Arg(assertion_argument)],
-                        )
+            new_attr = "assertIsNone" if negations_seen % 2 == 0 else "assertIsNotNone"
+            new_call = node.with_changes(
+                func=cst.Attribute(value=cst.Name("self"), attr=cst.Name(new_attr)),
+                args=[cst.Arg(assertion_argument)],
+            )
 
             if new_call is not node:
                 self.report(node, replacement=new_call)
