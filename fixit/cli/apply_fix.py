@@ -320,7 +320,7 @@ def register_subparser(parsers: argparse._SubParsersAction) -> None:
     apply_fix_parser.set_defaults(subparser_fn=_main)
 
 
-def _main(args: argparse.Namespace):
+def _main(args: argparse.Namespace) -> None:
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
     rules = args.rules
@@ -399,8 +399,6 @@ def _main(args: argparse.Namespace):
             f"Found {total_reports_count} reports in {len(file_paths)} files in "
             + f"{time.time() - start_time :.2f} seconds."
         )
-
-    return 0
 
 
 if __name__ == "__main__":

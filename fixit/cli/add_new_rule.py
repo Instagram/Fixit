@@ -139,7 +139,7 @@ def register_subparser(parsers: argparse._SubParsersAction) -> None:
     add_new_rule_parser.set_defaults(subparser_fn=_main)
 
 
-def _main(args: argparse.Namespace):
+def _main(args: argparse.Namespace) -> None:
     file_path = args.path
     rule_name = args.name if args.name else file_path.stem
     create_rule_file(file_path, rule_name)

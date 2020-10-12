@@ -32,7 +32,9 @@ def get_fixit_version() -> str:
     )
 
     version: ModuleType = importlib.util.module_from_spec(spec)
+    # pyre-ignore Pyre doesn't know about importlib entirely.
     spec.loader.exec_module(version)
+    # pyre-ignore Pyre has no way of knowing that this constant exists.
     return version.FIXIT_VERSION
 
 
