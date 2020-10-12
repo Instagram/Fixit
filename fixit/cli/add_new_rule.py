@@ -113,5 +113,37 @@ def main() -> None:
     create_rule_file(file_path, rule_name)
 
 
+def register_subparser(parsers: argparse._SubParsersAction) -> None:
+    """Add subparser for `add_new_rule` command."""
+    add_new_rule_parser = parsers.add_parser(
+        "add_new_rule",
+        help="Creates a skeleton of adding new rule file.",
+    )
+
+    add_new_rule_parser.add_argument(
+        "-p",
+        "--path",
+        type=is_path_exists,
+        default=Path("fixit/rules/new.py"),
+        help="Path to add rule file, defaults to fixit/rules/new.py",
+    )
+
+    add_new_rule_parser.add_argument(
+        "-n",
+        "--name",
+        type=str,
+        default="",
+        help="Name of the rule, defaults to `New`",
+    )
+
+    add_new_rule_parser.set_defaults(subparser_fn=_main)
+
+
+def _main(args: argparse.Namespace):
+    file_path = args.path
+    rule_name = args.name if args.name else file_path.stem
+    create_rule_file(file_path, rule_name)
+
+
 if __name__ == "__main__":
     main()

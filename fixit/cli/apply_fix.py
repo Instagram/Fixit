@@ -292,5 +292,116 @@ def main(raw_args: Sequence[str]) -> int:
     return 0
 
 
+def register_subparser(parsers: argparse._SubParsersAction) -> None:
+    """Add subparser for `apply_fix` command."""
+    apply_fix_parser = parsers.add_parser(
+        "apply_fix",
+        description=(
+            "Runs a lint rule's autofixer over all of over a set of "
+            + "files or directories.\n"
+            + "\n"
+            + "This is similar to the functionality provided by LibCST codemods "
+            + "(https://libcst.readthedocs.io/en/latest/codemods_tutorial.html), "
+            + "but limited to the small subset of APIs provided by Fixit."
+        ),
+        help="Apply lint rule fix(s)",
+        parents=[
+            get_rules_parser(),
+            get_metadata_cache_parser(),
+            get_paths_parser(),
+            get_skip_ignore_comments_parser(),
+            get_skip_ignore_byte_marker_parser(),
+            get_skip_autoformatter_parser(),
+            get_compact_parser(),
+            get_multiprocessing_parser(),
+        ],
+    )
+
+    apply_fix_parser.set_defaults(subparser_fn=_main)
+
+
+def _main(args: argparse.Namespace):
+    width = shutil.get_terminal_size(fallback=(80, 24)).columns
+
+    rules = args.rules
+    use_ignore_byte_markers = args.use_ignore_byte_markers
+    use_ignore_comments = args.use_ignore_comments
+    skip_autoformatter = args.skip_autoformatter
+    formatter = AutofixingLintRuleReportFormatter(width, args.compact)
+    workers = args.workers
+
+    # Find files if directory was provided.
+    file_paths = tuple(find_files(args.paths))
+
+    if not args.compact:
+        print(f"Scanning {len(file_paths)} files")
+        print("\n".join(file_paths))
+        print()
+    start_time = time.time()
+
+    total_reports_count = 0
+
+    if rules_require_metadata_cache(rules):
+        touched_files = set()
+        next_files = file_paths
+        with Manager() as manager:
+            # Avoid getting stuck in an infinite loop.
+            for _ in range(MAX_ITER):
+                if not next_files:
+                    break
+
+                patched_files = manager.list()
+                metadata_caches = get_metadata_caches(args.cache_timeout, next_files)
+
+                next_files = []
+                # opts is a more type-safe version of args that we pass around
+                opts = LintOpts(
+                    rules=rules,
+                    use_ignore_byte_markers=use_ignore_byte_markers,
+                    use_ignore_comments=use_ignore_comments,
+                    skip_autoformatter=skip_autoformatter,
+                    formatter=formatter,
+                    patched_files_list=patched_files,
+                )
+                total_reports_count += call_map_paths_and_print_reports(
+                    next_files, opts, workers, metadata_caches
+                )
+                next_files = list(patched_files)
+                touched_files.update(patched_files)
+
+        # Finally, format all the touched files.
+        if not skip_autoformatter:
+            for path in touched_files:
+                with open(path, "rb") as f:
+                    source = f.read()
+                # Format the code using the config file's formatter.
+                formatted_source = invoke_formatter(get_lint_config().formatter, source)
+                with open(path, "wb") as f:
+                    f.write(formatted_source)
+
+    else:
+        # opts is a more type-safe version of args that we pass around
+        opts = LintOpts(
+            rules=rules,
+            use_ignore_byte_markers=use_ignore_byte_markers,
+            use_ignore_comments=use_ignore_comments,
+            skip_autoformatter=skip_autoformatter,
+            formatter=formatter,
+        )
+
+        total_reports_count = call_map_paths_and_print_reports(
+            file_paths, opts, workers, None
+        )
+
+    if not args.compact:
+        print()
+        print(
+            f"Found {total_reports_count} reports in {len(file_paths)} files in "
+            + f"{time.time() - start_time :.2f} seconds."
+        )
+
+    return 0
+
+
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
