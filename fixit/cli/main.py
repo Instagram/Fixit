@@ -12,12 +12,12 @@
 
 import argparse
 import sys
-
+from typing import List
 from fixit._version import FIXIT_VERSION
 from fixit.cli import add_new_rule, apply_fix, insert_suppressions, run_rules
 
 
-def main(args=sys.argv[1:]) -> None:
+def main(argv: List[str] = sys.argv[1:]) -> None:
     """Launch the CLI and its arguments."""
     parser = argparse.ArgumentParser(
         prog="fixit",
@@ -35,7 +35,7 @@ def main(args=sys.argv[1:]) -> None:
     apply_fix.register_subparser(subparser)
     insert_suppressions.register_subparser(subparser)
 
-    args = parser.parse_args(args)
+    args = parser.parse_args(argv)
     args.subparser_fn(args)
 
 
