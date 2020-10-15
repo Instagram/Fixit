@@ -86,6 +86,13 @@ class UseAssertIsNotNoneRule(CstLintRule):
     ]
 
     def visit_Call(self, node: cst.Call) -> None:
+        match_compare_is_none = m.ComparisonTarget(
+            m.SaveMatchedNode(
+                m.OneOf(m.Is(), m.IsNot()),
+                "comparison_type",
+            ),
+            comparator=m.Name("None"),
+        )
         result = m.extract(
             node,
             m.Call(
@@ -100,29 +107,11 @@ class UseAssertIsNotNoneRule(CstLintRule):
                     m.Arg(
                         m.SaveMatchedNode(
                             m.OneOf(
-                                m.Comparison(
-                                    comparisons=[
-                                        m.ComparisonTarget(
-                                            m.SaveMatchedNode(
-                                                m.OneOf(m.IsNot(), m.Is()),
-                                                "comparison_type",
-                                            ),
-                                            comparator=m.Name("None"),
-                                        )
-                                    ]
-                                ),
+                                m.Comparison(comparisons=[match_compare_is_none]),
                                 m.UnaryOperation(
                                     operator=m.Not(),
                                     expression=m.Comparison(
-                                        comparisons=[
-                                            m.ComparisonTarget(
-                                                m.SaveMatchedNode(
-                                                    m.OneOf(m.Is(), m.IsNot()),
-                                                    "comparison_type",
-                                                ),
-                                                comparator=m.Name("None"),
-                                            )
-                                        ]
+                                        comparisons=[match_compare_is_none]
                                     ),
                                 ),
                             ),
