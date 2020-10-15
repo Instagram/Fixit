@@ -13,6 +13,7 @@
 import argparse
 import sys
 from typing import List
+
 from fixit._version import FIXIT_VERSION
 from fixit.cli import add_new_rule, apply_fix, insert_suppressions, run_rules
 
