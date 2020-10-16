@@ -319,8 +319,8 @@ class AwaitAsyncCallRule(CstLintRule):
 
     @staticmethod
     def _is_awaitable_callable(annotation: str) -> bool:
-        if not (annotation.startswith("typing.Callable") 
-            or annotation.startswith("typing.ClassMethod") or annotation.startswith("StaticMethod")):
+        if not (annotation.startswith("typing.Callable")
+                or annotation.startswith("typing.ClassMethod") or annotation.startswith("StaticMethod")):
             # Exit early if this is not even a `typing.Callable` annotation.
             return False
         try:
