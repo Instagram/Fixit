@@ -289,11 +289,38 @@ class AwaitAsyncCallRule(CstLintRule):
             while not await bar(): pass
             """,
         ),
+        Invalid(
+            """
+            class Foo:
+                @classmethod
+                async def _method(cls): pass
+            Foo._method()
+            """,
+            expected_replacement="""
+            class Foo:
+                async def _method(self): pass
+            await Foo._method()
+            """,
+        ),
+        Invalid(
+            """
+            class Foo:
+                @staticmethod
+                async def _method(self): pass
+            Foo._method()
+            """,
+            expected_replacement="""
+            class Foo:
+                async def _method(self): pass
+            await Foo._method()
+            """,
+        ),
     ]
 
     @staticmethod
     def _is_awaitable_callable(annotation: str) -> bool:
-        if not annotation.startswith("typing.Callable"):
+        if not (annotation.startswith("typing.Callable") 
+            or annotation.startswith("typing.ClassMethod") or annotation.startswith("StaticMethod")):
             # Exit early if this is not even a `typing.Callable` annotation.
             return False
         try:
