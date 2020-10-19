@@ -298,7 +298,8 @@ class AwaitAsyncCallRule(CstLintRule):
             """,
             expected_replacement="""
             class Foo:
-                async def _method(self): pass
+                @classmethod
+                async def _method(cls): pass
             await Foo._method()
             """,
         ),
@@ -311,6 +312,7 @@ class AwaitAsyncCallRule(CstLintRule):
             """,
             expected_replacement="""
             class Foo:
+                @staticmethod
                 async def _method(self): pass
             await Foo._method()
             """,
