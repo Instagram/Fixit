@@ -54,12 +54,12 @@ if TYPE_CHECKING:
 
 MAX_ITER: int = 100
 
-DESCRIPTION = """Runs a lint rule's autofixer over all of over a set of files or
+DESCRIPTION: str = """Runs a lint rule's autofixer over all of over a set of files or
 directories. This is similar to the functionality provided by LibCST codemods
 (https://libcst.readthedocs.io/en/latest/codemods_tutorial.html), but limited to the
 small subset of APIs provided by Fixit."""
 
-PARENTS = [
+PARENTS: List[argparse.ArgumentParser] = [
     get_rules_parser(),
     get_metadata_cache_parser(),
     get_paths_parser(),

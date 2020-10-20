@@ -18,7 +18,7 @@ import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional, Union
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.metadata import MetadataWrapper
@@ -45,12 +45,12 @@ from fixit.rule_lint_engine import lint_file
 if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
 
-DESCRIPTION = """Validates your lint rules by running them against the specified,
+DESCRIPTION: str = """Validates your lint rules by running them against the specified,
 directory or file(s). This is not a substitute for unit tests, but it can provide
 additional confidence in your lint rules. If no lint rules or packages are specified,
 runs all lint rules found in the packages specified in `fixit.config.yaml`."""
 
-PARENTS = [
+PARENTS: List[argparse.ArgumentParser] = [
     get_paths_parser(),
     get_rules_parser(),
     get_use_ignore_comments_parser(),
@@ -118,6 +118,7 @@ def _parser_arguments(
         _main(parser.parse_args())
 
 
+# pyre-ignore Pyre doesn't know about varible type when None given
 def register_subparser(parser: argparse._SubParsersAction = None) -> None:
     """Add parser or subparser for `run_rules` command."""
     if parser is None:

@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional, Union
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.codemod._cli import invoke_formatter
@@ -51,11 +51,11 @@ from fixit.rule_lint_engine import lint_file
 if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
 
-DESCRIPTION = """Inserts `# lint-fixme` comments into a file where lint violations are
-found. You should only use this tool if it's not feasible to fix the existing
+DESCRIPTION: str = """Inserts `# lint-fixme` comments into a file where lint violations
+are found. You should only use this tool if it's not feasible to fix the existing
 violations."""
 
-PARENTS = [
+PARENTS: List[argparse.ArgumentParser] = [
     get_rule_parser(),
     get_paths_parser(),
     get_skip_autoformatter_parser(),
