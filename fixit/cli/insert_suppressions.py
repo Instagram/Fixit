@@ -8,15 +8,15 @@
 #   $ python -m fixit.cli.insert_suppressions --help
 #   $ python -m fixit.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
 #   $ python -m fixit.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
+
 import argparse
 import itertools
 import shutil
-import sys
 import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Union
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.codemod._cli import invoke_formatter
@@ -50,6 +50,19 @@ from fixit.rule_lint_engine import lint_file
 
 if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
+
+DESCRIPTION = """Inserts `# lint-fixme` comments into a file where lint violations are
+found. You should only use this tool if it's not feasible to fix the existing
+violations."""
+
+PARENTS = [
+    get_rule_parser(),
+    get_paths_parser(),
+    get_skip_autoformatter_parser(),
+    get_compact_parser(),
+    get_metadata_cache_parser(),
+    get_multiprocessing_parser(),
+]
 
 
 class MessageKind(Enum):
@@ -129,24 +142,11 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def main(raw_args: Sequence[str]) -> int:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Inserts `# lint-fixme` comments into a file where lint violations are "
-            + "found.\n"
-            + "\n"
-            + "You should only use this tool if it's not feasible to fix the existing "
-            + "violations."
-        ),
-        parents=[
-            get_rule_parser(),
-            get_paths_parser(),
-            get_skip_autoformatter_parser(),
-            get_compact_parser(),
-            get_metadata_cache_parser(),
-            get_multiprocessing_parser(),
-        ],
-    )
+def _parser_arguments(
+    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser],
+    sub_parser: bool = True,
+) -> None:
+    """All required arguments for `insert_supressions`"""
     parser.add_argument(
         "--kind",
         default="fixme",
@@ -174,115 +174,28 @@ def main(raw_args: Sequence[str]) -> int:
         help="The maximum number of lines a comment can span before getting truncated",
     )
 
-    args = parser.parse_args(raw_args)
-    width = shutil.get_terminal_size(fallback=(80, 24)).columns
-
-    # Find files if directory was provided.
-    file_paths = tuple(find_files((str(p) for p in args.paths)))
-
-    if not args.compact:
-        print(f"Scanning {len(file_paths)} files")
-        print()
-    start_time = time.time()
-
-    if args.no_message:
-        message = MessageKind.NO_MESSAGE
-    elif args.message is not None:
-        message = args.message
+    if sub_parser:
+        parser.set_defaults(subparser_fn=_main)
     else:
-        message = MessageKind.USE_LINT_REPORT
+        _main(parser.parse_args())
 
-    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
-    if rules_require_metadata_cache({args.rule}):
-        metadata_caches = get_metadata_caches(args.cache_timeout, file_paths)
 
-    # opts is a more type-safe version of args that we pass around
-    opts = InsertSuppressionsOpts(
-        rule=args.rule,
-        skip_autoformatter=args.skip_autoformatter,
-        kind=SuppressionCommentKind[args.kind.upper()],
-        message=message,
-        max_lines=args.max_lines,
-        formatter=SuppressedLintRuleReportFormatter(width, args.compact),
-    )
-
-    formatted_reports_iter = itertools.chain.from_iterable(
-        map_paths(
-            get_formatted_reports_for_path,
-            file_paths,
-            opts,
-            workers=args.workers,
-            metadata_caches=metadata_caches,
+def register_subparser(parser: argparse._SubParsersAction = None) -> None:
+    """Add parser or subparser for `insert_supressions` command."""
+    if parser is None:
+        insert_supressions_parser = argparse.ArgumentParser(
+            description=DESCRIPTION, parents=PARENTS
         )
-    )
+        _parser_arguments(insert_supressions_parser, sub_parser=False)
 
-    formatted_reports = []
-    for formatted_report in formatted_reports_iter:
-        # Reports are yielded as soon as they're available. Stream the output to the
-        # terminal.
-        print(formatted_report)
-        # save the report from the iterator for later use
-        formatted_reports.append(formatted_report)
-
-    if not args.compact:
-        print()
-        print(
-            f"Found {len(formatted_reports)} reports in {len(file_paths)} files in "
-            + f"{time.time() - start_time :.2f} seconds."
+    else:
+        insert_supressions_parser = parser.add_parser(
+            "insert_suppressions",
+            description=DESCRIPTION,
+            parents=PARENTS,
+            help="Insert comments where violations are found",
         )
-    return 0
-
-
-def register_subparser(parsers: argparse._SubParsersAction) -> None:
-    """Add subparser for `insert_supressions` command."""
-    insert_supressions_parser = parsers.add_parser(
-        "insert_suppressions",
-        description=(
-            "Inserts `# lint-fixme` comments into a file where lint violations are "
-            + "found.\n"
-            + "\n"
-            + "You should only use this tool if it's not feasible to fix the existing "
-            + "violations."
-        ),
-        help="Insert comments where violations are found",
-        parents=[
-            get_rule_parser(),
-            get_paths_parser(),
-            get_skip_autoformatter_parser(),
-            get_compact_parser(),
-            get_metadata_cache_parser(),
-            get_multiprocessing_parser(),
-        ],
-    )
-
-    insert_supressions_parser.add_argument(
-        "--kind",
-        default="fixme",
-        choices=[kind.name.lower() for kind in SuppressionCommentKind],
-        help="Should we use `# lint-fixme` or `# lint-ignore`? Defaults to 'fixme'.",
-    )
-    message_group = insert_supressions_parser.add_mutually_exclusive_group()
-    message_group.add_argument(
-        "--message",
-        default=None,
-        help="Overrides the lint message used in the fixme comment.",
-    )
-    message_group.add_argument(
-        "--no-message",
-        action="store_true",
-        help=(
-            "Don't include a message with the suppression comment. Only include the "
-            + "lint code."
-        ),
-    )
-    insert_supressions_parser.add_argument(
-        "--max-lines",
-        default=3,
-        type=int,
-        help="The maximum number of lines a comment can span before getting truncated",
-    )
-
-    insert_supressions_parser.set_defaults(subparser_fn=_main)
+        _parser_arguments(insert_supressions_parser)
 
 
 def _main(args: argparse.Namespace) -> None:
@@ -344,4 +257,4 @@ def _main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    register_subparser()
