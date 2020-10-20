@@ -100,12 +100,12 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-# pyre-ignore Pyre confused when the argument type is two
 def _parser_arguments(
     parser: Union[argparse._SubParsersAction, argparse.ArgumentParser],
     sub_parser: bool = True,
 ) -> None:
     """All required arguments for `run_rules`"""
+    # pyre-ignore Pyre confused when the argument type is two
     parser.add_argument(
         "--cache-timeout",
         type=int,
@@ -114,8 +114,10 @@ def _parser_arguments(
     )
 
     if sub_parser:
+        # pyre-ignore Pyre confused when the argument type is two
         parser.set_defaults(subparser_fn=_main)
     else:
+        # pyre-ignore Pyre confused when the argument type is two
         _main(parser.parse_args())
 
 
