@@ -100,6 +100,7 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
+# pyre-ignore Pyre confused when the argument type is two
 def _parser_arguments(
     parser: Union[argparse._SubParsersAction, argparse.ArgumentParser],
     sub_parser: bool = True,
