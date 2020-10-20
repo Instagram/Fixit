@@ -87,9 +87,8 @@ def create_rule_file(file_path: Path, rule_name: str) -> None:
     print(f"Successfully created {file_path.name} rule file at {file_path.parent}")
 
 
-def _parser_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser],
-    sub_parser: bool = True,
+def _add_arguments(
+    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
 ) -> None:
     """All required arguments for `add_new_rule` """
     parser.add_argument(
@@ -105,11 +104,6 @@ def _parser_arguments(
         help="Name of the rule, defaults to `New`",
     )
 
-    if sub_parser:
-        parser.set_defaults(subparser_fn=_main)
-    else:
-        _main(parser.parse_args())
-
 
 def register_subparser(parser: argparse._SubParsersAction = None) -> None:
     """Add parser or subparser for `add_new_rule` command."""
@@ -117,14 +111,17 @@ def register_subparser(parser: argparse._SubParsersAction = None) -> None:
         add_rule_parser = argparse.ArgumentParser(
             description="Creates a skeleton of adding new rule file",
         )
-        _parser_arguments(add_rule_parser, sub_parser=False)
+        _add_arguments(add_rule_parser)
+        _main(add_rule_parser.parse_args())
+
     else:
         add_rule_parser = parser.add_parser(
             "add_new_rule",
             description="Creates a skeleton of adding new rule file.",
             help="Creates a skeleton of adding new rule file.",
         )
-        _parser_arguments(add_rule_parser)
+        _add_arguments(add_rule_parser)
+        add_rule_parser.set_defaults(subparser_fn=_main)
 
 
 def _main(args: argparse.Namespace) -> None:

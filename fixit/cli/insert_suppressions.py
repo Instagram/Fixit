@@ -142,9 +142,8 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def _parser_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser],
-    sub_parser: bool = True,
+def _add_arguments(
+    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
 ) -> None:
     """All required arguments for `insert_supressions`"""
     parser.add_argument(
@@ -174,11 +173,6 @@ def _parser_arguments(
         help="The maximum number of lines a comment can span before getting truncated",
     )
 
-    if sub_parser:
-        parser.set_defaults(subparser_fn=_main)
-    else:
-        _main(parser.parse_args())
-
 
 def register_subparser(parser: argparse._SubParsersAction = None) -> None:
     """Add parser or subparser for `insert_supressions` command."""
@@ -186,7 +180,8 @@ def register_subparser(parser: argparse._SubParsersAction = None) -> None:
         insert_supressions_parser = argparse.ArgumentParser(
             description=DESCRIPTION, parents=PARENTS
         )
-        _parser_arguments(insert_supressions_parser, sub_parser=False)
+        _add_arguments(insert_supressions_parser)
+        _main(insert_supressions_parser.parse_args())
 
     else:
         insert_supressions_parser = parser.add_parser(
@@ -195,7 +190,8 @@ def register_subparser(parser: argparse._SubParsersAction = None) -> None:
             parents=PARENTS,
             help="Insert comments where violations are found",
         )
-        _parser_arguments(insert_supressions_parser)
+        _add_arguments(insert_supressions_parser)
+        insert_supressions_parser.set_defaults(subparser_fn=_main)
 
 
 def _main(args: argparse.Namespace) -> None:

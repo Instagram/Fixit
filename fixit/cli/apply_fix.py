@@ -203,15 +203,12 @@ def call_map_paths_and_print_reports(
     return num_reports
 
 
-def _parser_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser],
-    sub_parser: bool = True,
+def _add_arguments(
+    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
 ) -> None:
     """All required arguments for `apply_fix`"""
-    if sub_parser:
-        parser.set_defaults(subparser_fn=_main)
-    else:
-        _main(parser.parse_args())
+    # Add arguments for `apply fix`
+    pass
 
 
 def register_subparser(parser: argparse._SubParsersAction = None) -> None:
@@ -221,7 +218,8 @@ def register_subparser(parser: argparse._SubParsersAction = None) -> None:
             description=DESCRIPTION,
             parents=PARENTS,
         )
-        _parser_arguments(apply_fix_parser, sub_parser=False)
+        _add_arguments(apply_fix_parser)
+        _main(apply_fix_parser.parse_args())
 
     else:
         apply_fix_parser = parser.add_parser(
@@ -230,7 +228,8 @@ def register_subparser(parser: argparse._SubParsersAction = None) -> None:
             parents=PARENTS,
             help="Apply lint rule fix(s)",
         )
-        _parser_arguments(apply_fix_parser)
+        _add_arguments(apply_fix_parser)
+        apply_fix_parser.set_defaults(subparser_fn=_main)
 
 
 def _main(args: argparse.Namespace) -> None:

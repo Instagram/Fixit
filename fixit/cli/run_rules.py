@@ -100,9 +100,8 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def _parser_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser],
-    sub_parser: bool = True,
+def _add_arguments(
+    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
 ) -> None:
     """All required arguments for `run_rules`"""
     # pyre-ignore Pyre confused when the argument type is two
@@ -113,13 +112,6 @@ def _parser_arguments(
         default=2,
     )
 
-    if sub_parser:
-        # pyre-ignore Pyre confused when the argument type is two
-        parser.set_defaults(subparser_fn=_main)
-    else:
-        # pyre-ignore Pyre confused when the argument type is two
-        _main(parser.parse_args())
-
 
 # pyre-ignore Pyre doesn't know about varible type when None given
 def register_subparser(parser: argparse._SubParsersAction = None) -> None:
@@ -129,7 +121,8 @@ def register_subparser(parser: argparse._SubParsersAction = None) -> None:
             description=DESCRIPTION,
             parents=PARENTS,
         )
-        _parser_arguments(run_rules_parser, sub_parser=False)
+        _add_arguments(run_rules_parser)
+        _main(run_rules_parser.parse_args())
 
     else:
         run_rules_parser = parser.add_parser(
@@ -138,7 +131,8 @@ def register_subparser(parser: argparse._SubParsersAction = None) -> None:
             parents=PARENTS,
             help="Run fixit rules against python code",
         )
-        _parser_arguments(run_rules_parser)
+        _add_arguments(run_rules_parser)
+        run_rules_parser.set_defaults(subparser_fn=_main)
 
 
 def _main(args: argparse.Namespace) -> None:
