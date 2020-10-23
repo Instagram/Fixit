@@ -85,6 +85,7 @@ def lint_file(
         ignore_info = IgnoreInfo.compute(
             comment_info=CommentInfo.compute(tokens=tokens),
             line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+            use_noqa=config.use_noqa,
         )
     else:
         ignore_info = None
