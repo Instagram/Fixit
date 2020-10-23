@@ -15,6 +15,7 @@
 import argparse
 import itertools
 import shutil
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -128,7 +129,7 @@ def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> N
         run_rules_parser.set_defaults(subparser_fn=_main)
 
 
-def _main(args: argparse.Namespace) -> None:
+def _main(args: argparse.Namespace) -> int:
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
     # expand path if it's a directory
@@ -178,6 +179,9 @@ def _main(args: argparse.Namespace) -> None:
             + f"{time.time() - start_time :.2f} seconds."
         )
 
+    # Return with an exit code of 1 if there are any violations found.
+    return int(bool(formatted_reports))
+
 
 if __name__ == "__main__":
-    register_subparser()
+    sys.exit(register_subparser())

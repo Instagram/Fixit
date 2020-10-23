@@ -41,4 +41,4 @@ def main(argv: List[str] = sys.argv[1:]) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

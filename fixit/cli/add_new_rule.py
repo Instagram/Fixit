@@ -10,6 +10,7 @@
 #   $ python -m fixit.cli.add_new_rule --path fixit/rules/new_rule.py --name rule_name
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -122,11 +123,13 @@ def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> N
         add_rule_parser.set_defaults(subparser_fn=_main)
 
 
-def _main(args: argparse.Namespace) -> None:
+def _main(args: argparse.Namespace) -> int:
     file_path = args.path
     rule_name = args.name if args.name else file_path.stem
     create_rule_file(file_path, rule_name)
 
+    return 0
+
 
 if __name__ == "__main__":
-    register_subparser()
+    sys.exit(register_subparser())

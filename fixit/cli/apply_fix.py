@@ -12,6 +12,7 @@
 import argparse
 import itertools
 import shutil
+import sys
 import time
 from dataclasses import dataclass
 from multiprocessing import Manager
@@ -230,7 +231,7 @@ def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> N
         apply_fix_parser.set_defaults(subparser_fn=_main)
 
 
-def _main(args: argparse.Namespace) -> None:
+def _main(args: argparse.Namespace) -> int:
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
     rules = args.rules
@@ -310,6 +311,8 @@ def _main(args: argparse.Namespace) -> None:
             + f"{time.time() - start_time :.2f} seconds."
         )
 
+    return 0
+
 
 if __name__ == "__main__":
-    register_subparser()
+    sys.exit(register_subparser())
