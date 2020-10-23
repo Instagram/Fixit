@@ -26,6 +26,7 @@ from libcst.metadata import MetadataWrapper
 from fixit.cli import find_files, map_paths
 from fixit.cli.args import (
     get_compact_parser,
+    get_metadata_cache_parser,
     get_multiprocessing_parser,
     get_paths_parser,
     get_rules_parser,
@@ -57,6 +58,7 @@ PARENTS: List[argparse.ArgumentParser] = [
     get_skip_ignore_byte_marker_parser(),
     get_compact_parser(),
     get_multiprocessing_parser(),
+    get_metadata_cache_parser()
 ]
 
 
@@ -102,12 +104,7 @@ def get_formatted_reports_for_path(
 
 def _add_arguments(parser: argparse.ArgumentParser) -> None:
     """All required arguments for `run_rules`"""
-    parser.add_argument(
-        "--cache-timeout",
-        type=int,
-        help="Timeout (seconds) for metadata cache fetching. Default is 2 seconds.",
-        default=2,
-    )
+    pass
 
 
 def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
