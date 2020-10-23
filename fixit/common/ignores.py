@@ -115,7 +115,9 @@ class GlobalIgnoreInfo:
         )
 
     @staticmethod
-    def compute(*, comment_info: CommentInfo) -> "GlobalIgnoreInfo":
+    def compute(*, comment_info: CommentInfo, use_noqa: bool) -> "GlobalIgnoreInfo":
+        if not use_noqa:
+            return GlobalIgnoreInfo(globally_ignored_rules=set())
         ignored_rules = set()
         for tok in comment_info.comments_on_own_line:
             if FLAKE8_NOQA_FILE.fullmatch(tok.string):
@@ -174,7 +176,7 @@ class LocalIgnoreInfo:
 
     @staticmethod
     def compute(
-        *, comment_info: CommentInfo, line_mapping_info: LineMappingInfo
+        *, comment_info: CommentInfo, line_mapping_info: LineMappingInfo, use_noqa: bool
     ) -> "LocalIgnoreInfo":
         local_suppression_comments: List[SuppressionComment] = []
         local_suppression_comments_by_line: Dict[
@@ -226,14 +228,17 @@ class LocalIgnoreInfo:
         # Process these after `# lint-ignore` comments, because in the case of duplicate
         # or overlapping ignores, we'd prefer to mark the noqa as unused, instead of the
         # more modern `# lint-ignore` comment.
-        for tok in comment_info.comments:
-            match = NOQA_INLINE_REGEXP.search(tok.string)
-            if match:
-                normalized_line = line_mapping_info.physical_to_logical[tok.start[0]]
-                codes = _parse_comma_separated_rules(match.group("codes"))
-                comment = SuppressionComment(codes, [tok], kind="noqa")
-                local_suppression_comments.append(comment)
-                local_suppression_comments_by_line[normalized_line].append(comment)
+        if use_noqa is True:
+            for tok in comment_info.comments:
+                match = NOQA_INLINE_REGEXP.search(tok.string)
+                if match:
+                    normalized_line = line_mapping_info.physical_to_logical[
+                        tok.start[0]
+                    ]
+                    codes = _parse_comma_separated_rules(match.group("codes"))
+                    comment = SuppressionComment(codes, [tok], kind="noqa")
+                    local_suppression_comments.append(comment)
+                    local_suppression_comments_by_line[normalized_line].append(comment)
 
         return LocalIgnoreInfo(
             local_suppression_comments,
@@ -262,11 +267,15 @@ class IgnoreInfo:
 
     @staticmethod
     def compute(
-        *, comment_info: CommentInfo, line_mapping_info: LineMappingInfo
+        *, comment_info: CommentInfo, line_mapping_info: LineMappingInfo, use_noqa: bool
     ) -> "IgnoreInfo":
-        global_ignore_info = GlobalIgnoreInfo.compute(comment_info=comment_info)
+        global_ignore_info = GlobalIgnoreInfo.compute(
+            comment_info=comment_info, use_noqa=use_noqa
+        )
         local_ignore_info = LocalIgnoreInfo.compute(
-            comment_info=comment_info, line_mapping_info=line_mapping_info
+            comment_info=comment_info,
+            line_mapping_info=line_mapping_info,
+            use_noqa=use_noqa,
         )
         return IgnoreInfo(
             global_ignore_info,

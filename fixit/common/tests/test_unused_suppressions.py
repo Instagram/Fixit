@@ -331,6 +331,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
         ignore_info = IgnoreInfo.compute(
             comment_info=CommentInfo.compute(tokens=tokens),
             line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+            use_noqa=False,
         )
         cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
         config = LintConfig(
@@ -370,6 +371,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
         ignore_info = IgnoreInfo.compute(
             comment_info=CommentInfo.compute(tokens=tokens),
             line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+            use_noqa=False,
         )
         local_suppression_comments = (
             ignore_info.local_ignore_info.local_suppression_comments_by_line[1]
@@ -421,6 +423,7 @@ class RemoveUnusedSuppressionsRuleTest(UnitTest):
         ignore_info = IgnoreInfo.compute(
             comment_info=CommentInfo.compute(tokens=tokens),
             line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+            use_noqa=False,
         )
         local_suppression_comments = (
             ignore_info.local_ignore_info.local_suppression_comments_by_line[1]

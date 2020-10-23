@@ -51,6 +51,7 @@ class LintConfig:
     block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
     block_list_rules: List[str] = field(default_factory=list)
     fixture_dir: str = "./fixtures"
+    use_noqa: bool = False
     formatter: List[str] = field(default_factory=list)
     packages: List[str] = field(default_factory=lambda: DEFAULT_PACKAGES)
     repo_root: str = "."

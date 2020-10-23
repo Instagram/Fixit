@@ -176,6 +176,7 @@ class IgnoreInfoTest(UnitTest):
         ignore_info = IgnoreInfo.compute(
             comment_info=CommentInfo.compute(tokens=tokens),
             line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+            use_noqa=True,
         )
         lines = range(1, tokens[-1].end[0] + 1)
         actual_ignored_lines = []
@@ -312,6 +313,7 @@ class IgnoreInfoTest(UnitTest):
         ignore_info = IgnoreInfo.compute(
             comment_info=CommentInfo.compute(tokens=tokens),
             line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+            use_noqa=True,
         )
 
         for line, code in reports_on_lines:
@@ -350,6 +352,7 @@ class IgnoreInfoTest(UnitTest):
         ignore_info = IgnoreInfo.compute(
             comment_info=CommentInfo.compute(tokens=tokens),
             line_mapping_info=LineMappingInfo.compute(tokens=tokens),
+            use_noqa=False,
         )
 
         self.assertEqual(
