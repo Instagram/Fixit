@@ -142,9 +142,7 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def _add_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
-) -> None:
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
     """All required arguments for `insert_supressions`"""
     parser.add_argument(
         "--kind",
@@ -174,7 +172,7 @@ def _add_arguments(
     )
 
 
-def register_subparser(parser: argparse._SubParsersAction = None) -> None:
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
     """Add parser or subparser for `insert_supressions` command."""
     if parser is None:
         insert_supressions_parser = argparse.ArgumentParser(

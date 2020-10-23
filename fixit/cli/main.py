@@ -19,7 +19,7 @@ from fixit.cli import add_new_rule, apply_fix, insert_suppressions, run_rules
 
 
 def main(argv: List[str] = sys.argv[1:]) -> None:
-    """Launch the CLI and its arguments."""
+    """Fixit CLI and its sub-commands"""
     parser = argparse.ArgumentParser(
         prog="fixit",
         description="These are common Fixit commands used in various situations:",
@@ -32,9 +32,9 @@ def main(argv: List[str] = sys.argv[1:]) -> None:
     subparser = parser.add_subparsers(title="command")
 
     add_new_rule.register_subparser(subparser)
-    run_rules.register_subparser(subparser)
     apply_fix.register_subparser(subparser)
     insert_suppressions.register_subparser(subparser)
+    run_rules.register_subparser(subparser)
 
     args = parser.parse_args(argv)
     args.subparser_fn(args)

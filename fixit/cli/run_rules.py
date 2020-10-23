@@ -18,7 +18,7 @@ import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.metadata import MetadataWrapper
@@ -100,11 +100,8 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def _add_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
-) -> None:
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
     """All required arguments for `run_rules`"""
-    # pyre-ignore Pyre confused when the argument type is two
     parser.add_argument(
         "--cache-timeout",
         type=int,
@@ -113,8 +110,7 @@ def _add_arguments(
     )
 
 
-# pyre-ignore Pyre doesn't know about varible type when None given
-def register_subparser(parser: argparse._SubParsersAction = None) -> None:
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
     """Add parser or subparser for `run_rules` command."""
     if parser is None:
         run_rules_parser = argparse.ArgumentParser(

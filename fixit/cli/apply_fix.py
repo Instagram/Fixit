@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass
 from multiprocessing import Manager
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.codemod._cli import invoke_formatter
@@ -203,15 +203,13 @@ def call_map_paths_and_print_reports(
     return num_reports
 
 
-def _add_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
-) -> None:
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
     """All required arguments for `apply_fix`"""
     # Add arguments for `apply fix`
     pass
 
 
-def register_subparser(parser: argparse._SubParsersAction = None) -> None:
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
     """Add parser or subparser for `apply_fix` command."""
     if parser is None:
         apply_fix_parser = argparse.ArgumentParser(

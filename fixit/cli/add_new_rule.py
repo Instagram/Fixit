@@ -11,7 +11,7 @@
 
 import argparse
 from pathlib import Path
-from typing import Union
+from typing import Optional
 
 from libcst.codemod._cli import invoke_formatter
 
@@ -87,9 +87,7 @@ def create_rule_file(file_path: Path, rule_name: str) -> None:
     print(f"Successfully created {file_path.name} rule file at {file_path.parent}")
 
 
-def _add_arguments(
-    parser: Union[argparse._SubParsersAction, argparse.ArgumentParser]
-) -> None:
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
     """All required arguments for `add_new_rule` """
     parser.add_argument(
         "--path",
@@ -105,7 +103,7 @@ def _add_arguments(
     )
 
 
-def register_subparser(parser: argparse._SubParsersAction = None) -> None:
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
     """Add parser or subparser for `add_new_rule` command."""
     if parser is None:
         add_rule_parser = argparse.ArgumentParser(
