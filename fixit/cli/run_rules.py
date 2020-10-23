@@ -58,7 +58,7 @@ PARENTS: List[argparse.ArgumentParser] = [
     get_skip_ignore_byte_marker_parser(),
     get_compact_parser(),
     get_multiprocessing_parser(),
-    get_metadata_cache_parser()
+    get_metadata_cache_parser(),
 ]
 
 
