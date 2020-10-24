@@ -10,7 +10,9 @@
 #   $ python -m fixit.cli.add_new_rule --path fixit/rules/new_rule.py --name rule_name
 
 import argparse
+import sys
 from pathlib import Path
+from typing import Optional
 
 from libcst.codemod._cli import invoke_formatter
 
@@ -86,32 +88,48 @@ def create_rule_file(file_path: Path, rule_name: str) -> None:
     print(f"Successfully created {file_path.name} rule file at {file_path.parent}")
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Creates a skeleton of adding new rule file"
-    )
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
+    """All required arguments for `add_new_rule` """
     parser.add_argument(
-        "-p",
         "--path",
         type=is_path_exists,
         default=Path("fixit/rules/new.py"),
         help="Path to add rule file, defaults to fixit/rules/new.py",
     )
-
     parser.add_argument(
-        "-n",
         "--name",
         type=str,
         default="",
         help="Name of the rule, defaults to `New`",
     )
 
-    args = parser.parse_args()
 
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
+    """Add parser or subparser for `add_new_rule` command."""
+    if parser is None:
+        add_rule_parser = argparse.ArgumentParser(
+            description="Creates a skeleton of adding new rule file",
+        )
+        _add_arguments(add_rule_parser)
+        sys.exit(_main(add_rule_parser.parse_args()))
+
+    else:
+        add_rule_parser = parser.add_parser(
+            "add_new_rule",
+            description="Creates a skeleton of adding new rule file.",
+            help="Creates a skeleton of adding new rule file.",
+        )
+        _add_arguments(add_rule_parser)
+        add_rule_parser.set_defaults(subparser_fn=_main)
+
+
+def _main(args: argparse.Namespace) -> int:
     file_path = args.path
     rule_name = args.name if args.name else file_path.stem
     create_rule_file(file_path, rule_name)
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    register_subparser()

@@ -19,7 +19,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.metadata import MetadataWrapper
@@ -27,6 +27,7 @@ from libcst.metadata import MetadataWrapper
 from fixit.cli import find_files, map_paths
 from fixit.cli.args import (
     get_compact_parser,
+    get_metadata_cache_parser,
     get_multiprocessing_parser,
     get_paths_parser,
     get_rules_parser,
@@ -45,6 +46,21 @@ from fixit.rule_lint_engine import lint_file
 
 if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
+
+DESCRIPTION: str = """Validates your lint rules by running them against the specified,
+directory or file(s). This is not a substitute for unit tests, but it can provide
+additional confidence in your lint rules. If no lint rules or packages are specified,
+runs all lint rules found in the packages specified in `fixit.config.yaml`."""
+
+PARENTS: List[argparse.ArgumentParser] = [
+    get_paths_parser(),
+    get_rules_parser(),
+    get_use_ignore_comments_parser(),
+    get_skip_ignore_byte_marker_parser(),
+    get_compact_parser(),
+    get_multiprocessing_parser(),
+    get_metadata_cache_parser(),
+]
 
 
 @dataclass(frozen=True)
@@ -87,33 +103,33 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def main(raw_args: Sequence[str]) -> int:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Validates your lint rules by running them against the specified, "
-            + "directory or file(s). This is not a substitute for unit tests, "
-            + "but it can provide additional confidence in your lint rules.\n"
-            + "If no lint rules or packages are specified, runs all lint rules "
-            + "found in the packages specified in `fixit.config.yaml`."
-        ),
-        parents=[
-            get_paths_parser(),
-            get_rules_parser(),
-            get_use_ignore_comments_parser(),
-            get_skip_ignore_byte_marker_parser(),
-            get_compact_parser(),
-            get_multiprocessing_parser(),
-        ],
-    )
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
+    """All required arguments for `run_rules`"""
+    pass
 
-    parser.add_argument(
-        "--cache-timeout",
-        type=int,
-        help="Timeout (seconds) for metadata cache fetching. Default is 2 seconds.",
-        default=2,
-    )
 
-    args = parser.parse_args(raw_args)
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
+    """Add parser or subparser for `run_rules` command."""
+    if parser is None:
+        run_rules_parser = argparse.ArgumentParser(
+            description=DESCRIPTION,
+            parents=PARENTS,
+        )
+        _add_arguments(run_rules_parser)
+        sys.exit(_main(run_rules_parser.parse_args()))
+
+    else:
+        run_rules_parser = parser.add_parser(
+            "run_rules",
+            description=DESCRIPTION,
+            parents=PARENTS,
+            help="Run fixit rules against python code",
+        )
+        _add_arguments(run_rules_parser)
+        run_rules_parser.set_defaults(subparser_fn=_main)
+
+
+def _main(args: argparse.Namespace) -> int:
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
     # expand path if it's a directory
@@ -168,4 +184,4 @@ def main(raw_args: Sequence[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    register_subparser()

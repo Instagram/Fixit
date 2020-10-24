@@ -8,6 +8,7 @@
 #   $ python -m fixit.cli.insert_suppressions --help
 #   $ python -m fixit.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule
 #   $ python -m fixit.cli.insert_suppressions fixit.rules.avoid_or_in_except.AvoidOrInExceptRule .
+
 import argparse
 import itertools
 import shutil
@@ -16,7 +17,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional, Union
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.codemod._cli import invoke_formatter
@@ -50,6 +51,19 @@ from fixit.rule_lint_engine import lint_file
 
 if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
+
+DESCRIPTION: str = """Inserts `# lint-fixme` comments into a file where lint violations
+are found. You should only use this tool if it's not feasible to fix the existing
+violations."""
+
+PARENTS: List[argparse.ArgumentParser] = [
+    get_rule_parser(),
+    get_paths_parser(),
+    get_skip_autoformatter_parser(),
+    get_compact_parser(),
+    get_metadata_cache_parser(),
+    get_multiprocessing_parser(),
+]
 
 
 class MessageKind(Enum):
@@ -129,24 +143,8 @@ def get_formatted_reports_for_path(
     return [opts.formatter.format(rr) for rr in raw_reports]
 
 
-def main(raw_args: Sequence[str]) -> int:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Inserts `# lint-fixme` comments into a file where lint violations are "
-            + "found.\n"
-            + "\n"
-            + "You should only use this tool if it's not feasible to fix the existing "
-            + "violations."
-        ),
-        parents=[
-            get_rule_parser(),
-            get_paths_parser(),
-            get_skip_autoformatter_parser(),
-            get_compact_parser(),
-            get_metadata_cache_parser(),
-            get_multiprocessing_parser(),
-        ],
-    )
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
+    """All required arguments for `insert_supressions`"""
     parser.add_argument(
         "--kind",
         default="fixme",
@@ -174,7 +172,28 @@ def main(raw_args: Sequence[str]) -> int:
         help="The maximum number of lines a comment can span before getting truncated",
     )
 
-    args = parser.parse_args(raw_args)
+
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
+    """Add parser or subparser for `insert_supressions` command."""
+    if parser is None:
+        insert_supressions_parser = argparse.ArgumentParser(
+            description=DESCRIPTION, parents=PARENTS
+        )
+        _add_arguments(insert_supressions_parser)
+        sys.exit(_main(insert_supressions_parser.parse_args()))
+
+    else:
+        insert_supressions_parser = parser.add_parser(
+            "insert_suppressions",
+            description=DESCRIPTION,
+            parents=PARENTS,
+            help="Insert comments where violations are found",
+        )
+        _add_arguments(insert_supressions_parser)
+        insert_supressions_parser.set_defaults(subparser_fn=_main)
+
+
+def _main(args: argparse.Namespace) -> int:
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
     # Find files if directory was provided.
@@ -230,8 +249,9 @@ def main(raw_args: Sequence[str]) -> int:
             f"Found {len(formatted_reports)} reports in {len(file_paths)} files in "
             + f"{time.time() - start_time :.2f} seconds."
         )
+
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    register_subparser()

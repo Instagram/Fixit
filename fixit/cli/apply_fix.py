@@ -8,6 +8,7 @@
 #   $ python -m fixit.cli.apply_fix --help
 #   $ python -m fixit.cli.apply_fix --rules AvoidOrInExceptRule
 #   $ python -m fixit.cli.apply_fix . --rules AvoidOrInExceptRule
+
 import argparse
 import itertools
 import shutil
@@ -16,7 +17,7 @@ import time
 from dataclasses import dataclass
 from multiprocessing import Manager
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional, Sequence
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
 
 from libcst import ParserSyntaxError, parse_module
 from libcst.codemod._cli import invoke_formatter
@@ -53,6 +54,22 @@ if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
 
 MAX_ITER: int = 100
+
+DESCRIPTION: str = """Runs a lint rule's autofixer over all of over a set of files or
+directories. This is similar to the functionality provided by LibCST codemods
+(https://libcst.readthedocs.io/en/latest/codemods_tutorial.html), but limited to the
+small subset of APIs provided by Fixit."""
+
+PARENTS: List[argparse.ArgumentParser] = [
+    get_rules_parser(),
+    get_metadata_cache_parser(),
+    get_paths_parser(),
+    get_skip_ignore_comments_parser(),
+    get_skip_ignore_byte_marker_parser(),
+    get_skip_autoformatter_parser(),
+    get_compact_parser(),
+    get_multiprocessing_parser(),
+]
 
 
 @dataclass(frozen=True)
@@ -187,29 +204,34 @@ def call_map_paths_and_print_reports(
     return num_reports
 
 
-def main(raw_args: Sequence[str]) -> int:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Runs a lint rule's autofixer over all of over a set of "
-            + "files or directories.\n"
-            + "\n"
-            + "This is similar to the functionality provided by LibCST codemods "
-            + "(https://libcst.readthedocs.io/en/latest/codemods_tutorial.html), "
-            + "but limited to the small subset of APIs provided by Fixit."
-        ),
-        parents=[
-            get_rules_parser(),
-            get_metadata_cache_parser(),
-            get_paths_parser(),
-            get_skip_ignore_comments_parser(),
-            get_skip_ignore_byte_marker_parser(),
-            get_skip_autoformatter_parser(),
-            get_compact_parser(),
-            get_multiprocessing_parser(),
-        ],
-    )
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
+    """All required arguments for `apply_fix`"""
+    # Add arguments for `apply fix`
+    pass
 
-    args = parser.parse_args(raw_args)
+
+def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> None:
+    """Add parser or subparser for `apply_fix` command."""
+    if parser is None:
+        apply_fix_parser = argparse.ArgumentParser(
+            description=DESCRIPTION,
+            parents=PARENTS,
+        )
+        _add_arguments(apply_fix_parser)
+        sys.exit(_main(apply_fix_parser.parse_args()))
+
+    else:
+        apply_fix_parser = parser.add_parser(
+            "apply_fix",
+            description=DESCRIPTION,
+            parents=PARENTS,
+            help="Apply lint rule fix(s)",
+        )
+        _add_arguments(apply_fix_parser)
+        apply_fix_parser.set_defaults(subparser_fn=_main)
+
+
+def _main(args: argparse.Namespace) -> int:
     width = shutil.get_terminal_size(fallback=(80, 24)).columns
 
     rules = args.rules
@@ -293,4 +315,4 @@ def main(raw_args: Sequence[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    register_subparser()

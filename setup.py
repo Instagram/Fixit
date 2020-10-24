@@ -57,4 +57,5 @@ setuptools.setup(
     ],
     zip_safe=False,  # for mypy compatibility https://mypy.readthedocs.io/en/latest/installed_packages.html
     include_package_data=True,
+    entry_points={"console_scripts": ["fixit = fixit.cli.main:main"]},
 )
