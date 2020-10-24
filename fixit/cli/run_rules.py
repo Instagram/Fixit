@@ -116,7 +116,7 @@ def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> N
             parents=PARENTS,
         )
         _add_arguments(run_rules_parser)
-        _main(run_rules_parser.parse_args())
+        sys.exit(_main(run_rules_parser.parse_args()))
 
     else:
         run_rules_parser = parser.add_parser(
@@ -184,4 +184,4 @@ def _main(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(register_subparser())
+    register_subparser()

@@ -37,8 +37,8 @@ def main(argv: List[str] = sys.argv[1:]) -> None:
     run_rules.register_subparser(subparser)
 
     args = parser.parse_args(argv)
-    args.subparser_fn(args)
+    sys.exit(args.subparser_fn(args))
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

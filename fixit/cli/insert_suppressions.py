@@ -180,7 +180,7 @@ def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> N
             description=DESCRIPTION, parents=PARENTS
         )
         _add_arguments(insert_supressions_parser)
-        _main(insert_supressions_parser.parse_args())
+        sys.exit(_main(insert_supressions_parser.parse_args()))
 
     else:
         insert_supressions_parser = parser.add_parser(
@@ -254,4 +254,4 @@ def _main(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(register_subparser())
+    register_subparser()

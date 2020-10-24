@@ -111,7 +111,7 @@ def register_subparser(parser: Optional[argparse._SubParsersAction] = None) -> N
             description="Creates a skeleton of adding new rule file",
         )
         _add_arguments(add_rule_parser)
-        _main(add_rule_parser.parse_args())
+        sys.exit(_main(add_rule_parser.parse_args()))
 
     else:
         add_rule_parser = parser.add_parser(
@@ -132,4 +132,4 @@ def _main(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(register_subparser())
+    register_subparser()
