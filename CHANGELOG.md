@@ -1,3 +1,14 @@
+# 0.1.2 - 2020-10-29
+
+## New Rules
+- Add SortedAttributesRule [#149](https://github.com/Instagram/Fixit/pull/149)
+
+## Added
+- New unified `fixit` CLI [#148](https://github.com/Instagram/Fixit/pull/148)
+
+## Updated
+- Add `use_noqa` configuration to control support of the `noqa` Flake8 suppression comment. Defaults to `False` [#151](https://github.com/Instagram/Fixit/pull/151)
+
 # 0.1.1 - 2020-10-08
 
 ## New Rules

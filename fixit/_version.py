@@ -4,4 +4,4 @@
 # LICENSE file in the root directory of this source tree.
 
 
-FIXIT_VERSION: str = "0.1.1"
+FIXIT_VERSION: str = "0.1.2"
