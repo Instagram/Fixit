@@ -1,0 +1,95 @@
+{
+  "types": [
+    {
+      "location": {
+        "start": {
+          "line": 1,
+          "column": 6
+        },
+        "stop": {
+          "line": 1,
+          "column": 9
+        }
+      },
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp88jl7yhf.Foo]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 2,
+          "column": 5
+        },
+        "stop": {
+          "line": 2,
+          "column": 16
+        }
+      },
+      "annotation": "typing.Type[classmethod]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 14
+        },
+        "stop": {
+          "line": 3,
+          "column": 21
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp88jl7yhf.Foo._method)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 3,
+          "column": 22
+        },
+        "stop": {
+          "line": 3,
+          "column": 25
+        }
+      },
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp88jl7yhf.Foo]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 0
+        },
+        "stop": {
+          "line": 4,
+          "column": 3
+        }
+      },
+      "annotation": "typing.Type[fixit.tests.fixtures.await_async_call.tmp88jl7yhf.Foo]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 0
+        },
+        "stop": {
+          "line": 4,
+          "column": 11
+        }
+      },
+      "annotation": "typing.Callable(fixit.tests.fixtures.await_async_call.tmp88jl7yhf.Foo._method)[[], typing.Coroutine[typing.Any, typing.Any, unknown]]"
+    },
+    {
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 0
+        },
+        "stop": {
+          "line": 4,
+          "column": 13
+        }
+      },
+      "annotation": "typing.Coroutine[typing.Any, typing.Any, unknown]"
+    }
+  ]
+}
