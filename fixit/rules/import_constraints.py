@@ -5,6 +5,7 @@
 
 import os
 from dataclasses import dataclass
+from fnmatch import fnmatch
 from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Set
@@ -251,6 +252,12 @@ class ImportConstraintsRule(CstLintRule):
             config=_gen_testcase_config({"some_dir": {"rules": [["*", "deny"]]}}),
             filename="some_dir/file.py",
         ),
+        # Glob for a specific filename
+        Invalid(
+            "import common",
+            config=_gen_testcase_config({"*/file.py": {"rules": [["*", "deny"]]}}),
+            filename="some_dir/file.py",
+        ),
         # Validate rules are evaluated in order
         Invalid(
             "from common.foo import bar",
@@ -328,12 +335,18 @@ class ImportConstraintsRule(CstLintRule):
             formatted_config: Dict[
                 Path, Dict[object, object]
             ] = self._parse_and_format_config(import_constraints_config)
-            # Run through logical ancestors of the filepath stopping early if a parent
-            # directory is found in the config. The closest parent's settings will be used.
-            for parent_dir in self._abs_file_path.parents:
-                if parent_dir in formatted_config:
-                    settings_for_dir = formatted_config[parent_dir]
-                    self._config = _ImportConfig.from_config(settings_for_dir)
+            # Try matching the filepath and all of its parents paths in any of the
+            # given configurations' glob patterns, stopping early if a match is
+            # found in the config. The closest match in the settings will be used.
+            parts = list(self._abs_file_path.parts)
+            while parts:
+                part_dir = os.path.join(*parts)
+                parts.pop()
+                for pattern, settings_for_dir in formatted_config.items():
+                    if fnmatch(part_dir, str(pattern)):
+                        self._config = _ImportConfig.from_config(settings_for_dir)
+                        break
+                if self._config is not None:
                     break
         self._type_checking_stack = []
 
