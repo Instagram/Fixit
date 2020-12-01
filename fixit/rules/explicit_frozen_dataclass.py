@@ -20,7 +20,6 @@ class ExplicitFrozenDataclassRule(CstLintRule):
     may unintentionally end up with mutable objects.
     """
 
-    ONCALL_SHORTNAME = "instagram_server_framework"
     MESSAGE: str = (
         "When using dataclasses, explicitly specify a frozen keyword argument. "
         + "Example: `@dataclass(frozen=True)` or `@dataclass(frozen=False)`. "
