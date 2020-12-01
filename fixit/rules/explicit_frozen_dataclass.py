@@ -5,9 +5,10 @@
 
 import libcst as cst
 import libcst.matchers as m
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 from libcst._nodes.whitespace import SimpleWhitespace
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
+
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class ExplicitFrozenDataclassRule(CstLintRule):
