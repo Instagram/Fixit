@@ -159,7 +159,7 @@ class UseClsInClassmethodRule(CstLintRule):
                         return cls.__name__
 
                     # Same-named vars in sub-scopes should not be replaced.
-                    b = [a for a in [1,2,3]]
+                    b = [cls for a in [1,2,3]]
                     def f(a):
                         return a + 1
             """,
