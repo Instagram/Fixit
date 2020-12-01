@@ -5,10 +5,9 @@
 
 import libcst as cst
 import libcst.matchers as m
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 from libcst._nodes.whitespace import SimpleWhitespace
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
-
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class ExplicitFrozenDataclassRule(CstLintRule):
@@ -243,6 +242,7 @@ class ExplicitFrozenDataclassRule(CstLintRule):
                     args = ()
                     func = decorator
 
+                # pyre-fixme[29]: `typing.Union[typing.Callable(tuple.__iter__)[[], typing.Iterator[Variable[_T_co](covariant)]], typing.Callable(typing.Sequence.__iter__)[[], typing.Iterator[cst._nodes.expression.Arg]]]` is not a function.
                 if not any(m.matches(arg.keyword, m.Name("frozen")) for arg in args):
                     new_decorator = cst.Call(
                         func=func,
