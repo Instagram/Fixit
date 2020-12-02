@@ -5,6 +5,7 @@
 
 import os
 from dataclasses import dataclass
+from enum import Enum
 from fnmatch import fnmatch
 from functools import lru_cache
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set
 
 import libcst as cst
 from libcst.helpers import get_full_name_for_node_or_raise
+from libcst.metadata import GlobalScope, ScopeProvider
 
 from fixit import (
     CstContext,
@@ -25,6 +27,15 @@ from fixit import (
 TEST_REPO_ROOT: str = str(Path(__file__).parent.parent)
 
 
+class RuleAction(Enum):
+    ALLOW = "allow"  # allow everywhere
+    DENY = "deny"  # deny everywhere
+    ALLOW_GLOBAL = "allow_global"  # allow in global scope
+    ALLOW_LOCAL = "allow_local"  # allow in local scopes
+    DENY_GLOBAL = "deny_global"  # deny in global scope
+    DENY_LOCAL = "deny_local"  # deny in local scopes
+
+
 def _gen_testcase_config(dir_rules: Dict[str, object]) -> LintConfig:
     return LintConfig(
         repo_root=TEST_REPO_ROOT, rule_config={"ImportConstraintsRule": dir_rules}
@@ -34,7 +45,7 @@ def _gen_testcase_config(dir_rules: Dict[str, object]) -> LintConfig:
 @dataclass(frozen=True)
 class _ImportRule:
     pattern: str  # dot-separated module/package name prefix, or wildcard (*)
-    allow: bool
+    action: RuleAction
 
     @staticmethod
     def from_config(rule: object) -> "_ImportRule":
@@ -46,9 +57,7 @@ class _ImportRule:
             )
         else:
             module, action = rule
-            if action not in ("allow", "deny"):
-                raise ValueError("A rule should either allow or deny a pattern")
-            return _ImportRule(module, action == "allow")
+            return _ImportRule(module, RuleAction(action))
 
     @property
     def is_wildcard(self) -> bool:
@@ -67,6 +76,7 @@ class _ImportConfig:
     rules: Sequence[_ImportRule]
     ignore_tests: bool
     ignore_types: bool
+    message: Optional[str]
 
     @staticmethod
     def from_config(settings_for_dir: Dict[object, object]) -> "_ImportConfig":
@@ -84,12 +94,17 @@ class _ImportConfig:
 
         ignore_tests = settings_for_dir.get("ignore_tests", True)
         ignore_types = settings_for_dir.get("ignore_types", True)
+        message = settings_for_dir.get("message")
         if not isinstance(ignore_tests, bool):
             raise ValueError("Setting `ignore_tests` value must be 'True' or 'False'.")
         if not isinstance(ignore_types, bool):
             raise ValueError("Setting `ignore_types` value must be 'True' or 'False'.")
+        if message is not None and not isinstance(message, str):
+            raise ValueError("Setting `message` value must be a string.")
 
-        return _ImportConfig(rules_for_file, ignore_tests, ignore_types)._validate()
+        return _ImportConfig(
+            rules_for_file, ignore_tests, ignore_types, message
+        )._validate()
 
     def _validate(self) -> "_ImportConfig":
         if len(self.rules) == 0:
@@ -130,14 +145,19 @@ class ImportConstraintsRule(CstLintRule):
                     ]
                     ignore_tests: True
                     ignore_types: True
+                    message: "'{imported}' cannot be imported from within '{current_file}'."
 
     Each rule under ``rules`` is evaluated in order from top to bottom and the last rule for each directory
-    should be a wildcard rule.
+    should be a wildcard rule. Rules can be ``"allow"``, ``"deny"``, ``"allow_global"``, ``"allow_local"``,
+    ``"deny_global"`` or ``"deny_local"``.
     ``ignore_tests`` and `ignore_types` should carry boolean values and can be omitted. They are both set to
     `True` by default.
     If ``ignore_types`` is True, this rule will ignore imports inside ``if TYPE_CHECKING`` blocks since those
     imports do not have an affect on runtime performance.
     If ``ignore_tests`` is True, this rule will not lint any files found in a testing module.
+    If ``message`` is passed, it must be a string containing a custom message. The string will be formatted
+    passing ``imported`` and ``current_file`` variables to be used if needed, with the symbol being imported
+    and the current file, respectively.
     """
 
     _config: Optional[_ImportConfig]
@@ -145,9 +165,10 @@ class ImportConstraintsRule(CstLintRule):
     _type_checking_stack: List[cst.If]
     _abs_file_path: Path
 
+    METADATA_DEPENDENCIES = (ScopeProvider,)
     MESSAGE: str = (
         "According to the settings for this directory in the .fixit.config.yaml configuration file, "
-        + "{imported} cannot be imported from within {current_file}. "
+        + "'{imported}' cannot be imported from within '{current_file}'."
     )
 
     VALID = [
@@ -243,6 +264,40 @@ class ImportConstraintsRule(CstLintRule):
             ),
             filename="dir_1/dir_2/file.py",
         ),
+        # Deny global
+        Valid(
+            """
+            def local_scope():
+                import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "deny_global"]]}}),
+            filename="dir/file.py",
+        ),
+        # Deny local
+        Valid(
+            """
+            import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "deny_local"]]}}),
+            filename="dir/file.py",
+        ),
+        # Allow global
+        Valid(
+            """
+            import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "allow_global"]]}}),
+            filename="dir/file.py",
+        ),
+        # Allow local
+        Valid(
+            """
+            def local_scope():
+                import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "allow_local"]]}}),
+            filename="dir/file.py",
+        ),
     ]
 
     INVALID = [
@@ -320,6 +375,56 @@ class ImportConstraintsRule(CstLintRule):
                 }
             ),
             filename="dir_1/dir_2/file.py",
+        ),
+        # Deny global
+        Invalid(
+            """
+            import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "deny_global"]]}}),
+            filename="dir/file.py",
+        ),
+        # Deny local
+        Invalid(
+            """
+            def local_scope():
+                import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "deny_local"]]}}),
+            filename="dir/file.py",
+        ),
+        # Allow global
+        Invalid(
+            """
+            def local_scope():
+                import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "allow_global"]]}}),
+            filename="dir/file.py",
+        ),
+        # Allow local
+        Invalid(
+            """
+            import common
+            """,
+            config=_gen_testcase_config({"dir": {"rules": [["*", "allow_local"]]}}),
+            filename="dir/file.py",
+        ),
+        # Custom message
+        Invalid(
+            """
+            import common
+            """,
+            config=_gen_testcase_config(
+                {
+                    "dir": {
+                        "rules": [["*", "deny"]],
+                        "message": "'{imported}' cannot be imported from '{current_file}'",
+                    }
+                }
+            ),
+            filename="dir/file.py",
+            expected_message=f"'common' cannot be imported from 'dir{os.path.sep}file.py'",
         ),
     ]
 
@@ -432,14 +537,31 @@ class ImportConstraintsRule(CstLintRule):
         config = self._config
         if config is None or (config.ignore_types and self._type_checking_stack):
             return
+        message = config.message or self.MESSAGE
         for name in names:
             if name.split(".", 1)[0] not in _get_local_roots(self._repo_root):
                 continue
             rule = config.match(name)
-            if not rule.allow:
-                self.report(
-                    node,
-                    self.MESSAGE.format(
-                        imported=name, current_file=self.context.file_path
-                    ),
-                )
+            action = rule.action
+            if action in {
+                RuleAction.ALLOW_GLOBAL,
+                RuleAction.ALLOW_LOCAL,
+                RuleAction.DENY_GLOBAL,
+                RuleAction.DENY_LOCAL,
+            }:
+                scope = self.get_metadata(ScopeProvider, node)
+                if isinstance(scope, GlobalScope):
+                    if action in {RuleAction.ALLOW_GLOBAL, RuleAction.DENY_LOCAL}:
+                        continue
+                else:
+                    if action in {RuleAction.ALLOW_LOCAL, RuleAction.DENY_GLOBAL}:
+                        continue
+            elif action == RuleAction.ALLOW:
+                continue
+            self.report(
+                node,
+                message.format(
+                    imported=name,
+                    current_file=self.context.file_path,
+                ),
+            )
