@@ -78,6 +78,7 @@ class InvalidTestCase:
     expected_replacement: Optional[str] = None
     filename: str = DEFAULT_FILENAME
     config: LintConfig = DEFAULT_CONFIG
+    expected_message: Optional[str] = None
 
     @property
     def expected_str(self) -> str:

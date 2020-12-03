@@ -36,7 +36,7 @@ class ImportConstraintsRuleConfigTest(UnitTest):
             _ImportConfig.from_config({"rules": [["*", "deny"], ["*", "allow"]]})
 
     def test_allow_or_deny(self) -> None:
-        with self.assertRaisesRegex(ValueError, "allow or deny"):
+        with self.assertRaisesRegex(ValueError, "not a valid RuleAction"):
             _ImportConfig.from_config(
                 {"rules": [["module_name", "wut"], ["*", "deny"]]}
             )

@@ -115,6 +115,13 @@ class LintRuleTestCase(unittest.TestCase):
                 raise AssertionError(
                     f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
                 )
+            if (
+                test_case.expected_message is not None
+                and test_case.expected_message != report.message
+            ):
+                raise AssertionError(
+                    f"Expected message:\n    {test_case.expected_message}\nBut got:\n    {report.message}"
+                )
 
             validate_patch(report, test_case)
 
