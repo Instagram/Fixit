@@ -1,3 +1,15 @@
+# 0.1.3 - 2020-12-09
+
+## New Rules
+- Add NoRedundantArgumentsSuperRule [#154](https://github.com/Instagram/Fixit/pull/154)
+- Add ExplicitFrozenDataclassRule [#158](https://github.com/Instagram/Fixit/pull/158)
+- Add UseLintFixmeCommentRule [#161](https://github.com/Instagram/Fixit/pull/161)
+- Add UseAssertInRule [#159](https://github.com/Instagram/Fixit/pull/159)
+
+## Updated
+- await async rule does not account for decorators [#150](https://github.com/Instagram/Fixit/pull/150)
+- Allow glob patterns instead of parent dirs for matching configs [#156](https://github.com/Instagram/Fixit/pull/156)
+
 # 0.1.2 - 2020-10-29
 
 ## New Rules
