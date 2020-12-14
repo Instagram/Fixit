@@ -10,7 +10,7 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 
 UNNECESSARY_GENERATOR: str = (
-    "It's unnecessary to use {func} around a geneartor expression, since "
+    "It's unnecessary to use {func} around a generator expression, since "
     + "there are equivalent comprehensions for this type."
 )
 UNNECESSARY_LIST_COMPREHENSION: str = (
