@@ -6,7 +6,7 @@
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast, List
 
 from libcst.metadata import MetadataWrapper
 
@@ -15,6 +15,7 @@ from fixit.common.generate_pyre_fixtures import get_fixture_path
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
     InvalidTestCase,
+    Position,
     LintRuleCollectionT,
     ValidTestCase,
     _dedent,
@@ -22,32 +23,32 @@ from fixit.common.utils import (
 )
 from fixit.rule_lint_engine import lint_file
 
-
-def validate_patch(report: BaseLintRuleReport, test_case: InvalidTestCase) -> None:
-    patch = report.patch
+def validate_patch(reports: List[BaseLintRuleReport], test_case: InvalidTestCase) -> None:
     expected_replacement = test_case.expected_replacement
+    patched_code = test_case.code
 
-    if patch is None:
-        if expected_replacement is not None:
+    for report in reports:
+        patch = report.patch
+        if patch is None :
+            if expected_replacement is not None:
+                raise AssertionError(
+                    "The rule for this test case has no auto-fix, but expected source was specified."
+                )
+            return
+        if expected_replacement is None:
             raise AssertionError(
-                "The rule for this test case has no auto-fix, but expected source was specified."
+                "The rule for this test case has an auto-fix, but no expected source was specified."
             )
-        return
 
-    if expected_replacement is None:
-        raise AssertionError(
-            "The rule for this test case has an auto-fix, but no expected source was specified."
-        )
+        patched_code = patch.apply(_dedent(patched_code))
 
     expected_replacement = _dedent(expected_replacement)
-    patched_code = patch.apply(_dedent(test_case.code))
     if patched_code != expected_replacement:
         raise AssertionError(
             "Auto-fix did not produce expected result.\n"
             + f"Expected:\n{expected_replacement}\n"
             + f"But found:\n{patched_code}"
         )
-
 
 @dataclass(frozen=True)
 class TestCasePrecursor:
@@ -91,39 +92,40 @@ class LintRuleTestCase(unittest.TestCase):
                 + "not called:\n"
                 + test_case.code,
             )
-            self.assertLessEqual(
+            self.assertEqual(
                 len(reports),
-                1,
-                'Expected one report from this "invalid" test case. Found multiple:\n'
-                + "\n".join(str(e) for e in reports),
+                len(test_case.positions),
+                f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: {len(test_case.positions)}.\n'
+                + "\n".join(str(e) for e in reports)
             )
 
             # pyre-fixme[16]: `Collection` has no attribute `__getitem__`.
-            report = reports[0]
 
-            if not (test_case.line is None or test_case.line == report.line):
-                raise AssertionError(
-                    f"Expected line: {test_case.line} but found line: {report.line}"
-                )
+            #We assert above that reports and positions are the same length
+            for report, position in zip(reports, test_case.positions):
+                if not (position.line is None or position.line == report.line):
+                    raise AssertionError(
+                        f"Expected line: {position.line} but found line: {report.line}"
+                    )
 
-            if not (test_case.column is None or test_case.column == report.column):
-                raise AssertionError(
-                    f"Expected column: {test_case.column} but found column: {report.column}"
-                )
-            kind = test_case.kind if test_case.kind is not None else rule.__name__
-            if kind != report.code:
-                raise AssertionError(
-                    f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
-                )
-            if (
-                test_case.expected_message is not None
-                and test_case.expected_message != report.message
-            ):
-                raise AssertionError(
-                    f"Expected message:\n    {test_case.expected_message}\nBut got:\n    {report.message}"
-                )
+                if not (position.column is None or position.column == report.column):
+                    raise AssertionError(
+                        f"Expected column: {position.column} but found column: {report.column}"
+                    )
+                kind = test_case.kind if test_case.kind is not None else rule.__name__
+                if kind != report.code:
+                    raise AssertionError(
+                        f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
+                    )
+                if (
+                    test_case.expected_message is not None
+                    and test_case.expected_message != report.message
+                ):
+                    raise AssertionError(
+                        f"Expected message:\n    {test_case.expected_message}\nBut got:\n    {report.message}"
+                    )
 
-            validate_patch(report, test_case)
+            validate_patch(reports, test_case)
 
 
 def _gen_test_methods_for_rule(

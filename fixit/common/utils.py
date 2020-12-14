@@ -9,7 +9,7 @@ import json
 import pkgutil
 import re
 import textwrap
-from dataclasses import dataclass
+from dataclasses import dataclass, InitVar
 from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Optional, Set, Type, Union, cast
@@ -67,23 +67,45 @@ class ValidTestCase:
     filename: str = DEFAULT_FILENAME
     config: LintConfig = DEFAULT_CONFIG
 
+@add_slots
+@dataclass(frozen=True)
+class Position:
+    line: Optional[int] = None
+    column: Optional[int] = None
+
+    @property
+    def position_str(self) -> str:
+        return f"{_str_or_any(self.line)}:{_str_or_any(self.column)}"
 
 @add_slots
 @dataclass(frozen=True)
 class InvalidTestCase:
     code: str
     kind: Optional[str] = None
+
+    #can we mark these as deprecated?
     line: Optional[int] = None
     column: Optional[int] = None
+
+    positions: Optional[List[Position]] = None
     expected_replacement: Optional[str] = None
     filename: str = DEFAULT_FILENAME
     config: LintConfig = DEFAULT_CONFIG
     expected_message: Optional[str] = None
 
     @property
-    def expected_str(self) -> str:
-        return f"{_str_or_any(self.line)}:{_str_or_any(self.column)}: {self.kind} ..."
+    def expected_str(self) -> List[str]:
+        return [f"{_str_or_any(p.line)}:{_str_or_any(p.column)}: {self.kind} ..." for p in self.positions]
 
+    def __post_init__(self):
+        #Accept line and column in generated __init__ for compatibility with existing
+        #test cases and add them into the positions list for new multiple report cases
+        if self.positions is None:
+            object.__setattr__(self, 'positions', [Position(line=self.line, column=self.column)])
+
+        #Maybe clean up the original properties down the line?
+        #object.__selattr__(self, 'line')
+        #object.__setattr__(self, 'column')
 
 def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
     """ Import all submodules of a module, recursively, including subpackages. """
