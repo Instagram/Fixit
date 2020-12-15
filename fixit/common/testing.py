@@ -41,6 +41,9 @@ def validate_patch(
     expected_replacement = test_case.expected_replacement
     patched_code = test_case.code
 
+    # Patches will contain positional changes indexed from the beginning of the test code, so if
+    # there are multiple reports apply them from last to first so positions don't skew
+    reports.reverse()
     for report in reports:
         patch = report.patch
         if patch is None:
@@ -113,8 +116,6 @@ class LintRuleTestCase(unittest.TestCase):
                 f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: {len(test_case.positions)}.\n'
                 + "\n".join(str(e) for e in reports),
             )
-
-            # pyre-fixme[16]: `Collection` has no attribute `__getitem__`.
 
             # We assert above that reports and positions are the same length
             for report, position in zip(reports, test_case.positions):

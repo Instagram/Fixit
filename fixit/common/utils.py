@@ -9,7 +9,7 @@ import json
 import pkgutil
 import re
 import textwrap
-from dataclasses import InitVar, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Optional, Set, Type, Union, cast
@@ -85,7 +85,7 @@ class InvalidTestCase:
     code: str
     kind: Optional[str] = None
 
-    # can we mark these as deprecated?
+    # should we mark these as deprecated?
     line: Optional[int] = None
     column: Optional[int] = None
 
@@ -111,8 +111,8 @@ class InvalidTestCase:
             )
 
         # Maybe clean up the original properties down the line?
-        # object.__selattr__(self, 'line')
-        # object.__setattr__(self, 'column')
+        # object.__setattr__(self, 'line', None)
+        # object.__setattr__(self, 'column', None)
 
 
 def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
