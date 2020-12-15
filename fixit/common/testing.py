@@ -27,7 +27,6 @@ from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
     InvalidTestCase,
     LintRuleCollectionT,
-    Position,
     ValidTestCase,
     _dedent,
     gen_type_inference_wrapper,
