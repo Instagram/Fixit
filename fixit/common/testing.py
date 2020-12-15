@@ -6,7 +6,18 @@
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast, List
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+    cast,
+)
 
 from libcst.metadata import MetadataWrapper
 
@@ -15,21 +26,24 @@ from fixit.common.generate_pyre_fixtures import get_fixture_path
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
     InvalidTestCase,
-    Position,
     LintRuleCollectionT,
+    Position,
     ValidTestCase,
     _dedent,
     gen_type_inference_wrapper,
 )
 from fixit.rule_lint_engine import lint_file
 
-def validate_patch(reports: List[BaseLintRuleReport], test_case: InvalidTestCase) -> None:
+
+def validate_patch(
+    reports: List[BaseLintRuleReport], test_case: InvalidTestCase
+) -> None:
     expected_replacement = test_case.expected_replacement
     patched_code = test_case.code
 
     for report in reports:
         patch = report.patch
-        if patch is None :
+        if patch is None:
             if expected_replacement is not None:
                 raise AssertionError(
                     "The rule for this test case has no auto-fix, but expected source was specified."
@@ -49,6 +63,7 @@ def validate_patch(reports: List[BaseLintRuleReport], test_case: InvalidTestCase
             + f"Expected:\n{expected_replacement}\n"
             + f"But found:\n{patched_code}"
         )
+
 
 @dataclass(frozen=True)
 class TestCasePrecursor:
@@ -96,12 +111,12 @@ class LintRuleTestCase(unittest.TestCase):
                 len(reports),
                 len(test_case.positions),
                 f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: {len(test_case.positions)}.\n'
-                + "\n".join(str(e) for e in reports)
+                + "\n".join(str(e) for e in reports),
             )
 
             # pyre-fixme[16]: `Collection` has no attribute `__getitem__`.
 
-            #We assert above that reports and positions are the same length
+            # We assert above that reports and positions are the same length
             for report, position in zip(reports, test_case.positions):
                 if not (position.line is None or position.line == report.line):
                     raise AssertionError(
