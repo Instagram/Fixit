@@ -17,6 +17,7 @@ from typing import (
     Type,
     Union,
     cast,
+    Collection,
 )
 
 from libcst.metadata import MetadataWrapper
@@ -33,17 +34,21 @@ from fixit.common.utils import (
 )
 from fixit.rule_lint_engine import lint_file
 
+def sort_reports(report: BaseLintRuleReport) -> float:
+    #Turn line, column into a 'line.column' float for sorting
+    return report.line + (report.column / pow(10,len(str(report.column))))
 
 def validate_patch(
-    reports: List[BaseLintRuleReport], test_case: InvalidTestCase
+    reports: Collection[BaseLintRuleReport], test_case: InvalidTestCase
 ) -> None:
     expected_replacement = test_case.expected_replacement
     patched_code = test_case.code
 
     # Patches will contain positional changes indexed from the beginning of the test code, so if
     # there are multiple reports apply them from last to first so positions don't skew
-    reports.reverse()
-    for report in reports:
+    reversed_reports = sorted(reports, key=sort_reports, reverse=True)
+
+    for report in reversed_reports:
         patch = report.patch
         if patch is None:
             if expected_replacement is not None:
@@ -58,7 +63,9 @@ def validate_patch(
 
         patched_code = patch.apply(_dedent(patched_code))
 
-    expected_replacement = _dedent(expected_replacement)
+    if expected_replacement:
+        expected_replacement = _dedent(expected_replacement)
+
     if patched_code != expected_replacement:
         raise AssertionError(
             "Auto-fix did not produce expected result.\n"
@@ -102,6 +109,7 @@ class LintRuleTestCase(unittest.TestCase):
                 + "\n".join(str(e) for e in reports),
             )
         else:
+
             self.assertGreater(
                 len(reports),
                 0,
@@ -109,38 +117,48 @@ class LintRuleTestCase(unittest.TestCase):
                 + "not called:\n"
                 + test_case.code,
             )
-            self.assertEqual(
-                len(reports),
-                len(test_case.positions),
-                f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: {len(test_case.positions)}.\n'
-                + "\n".join(str(e) for e in reports),
-            )
+            positions = test_case.positions
+            if positions:
+                self.assertEqual(
+                    len(reports),
+                    len(positions),
+                    f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: {len(positions)}.\n'
+                    + "\n".join(str(e) for e in reports),
+                )
+                            # We assert above that reports and positions are the same length
+                for report, position in zip(reports, positions):
+                    if not (position.line is None or position.line == report.line):
+                        raise AssertionError(
+                            f"Expected line: {position.line} but found line: {report.line}"
+                        )
 
-            # We assert above that reports and positions are the same length
-            for report, position in zip(reports, test_case.positions):
-                if not (position.line is None or position.line == report.line):
-                    raise AssertionError(
-                        f"Expected line: {position.line} but found line: {report.line}"
-                    )
+                    if not (position.column is None or position.column == report.column):
+                        raise AssertionError(
+                            f"Expected column: {position.column} but found column: {report.column}"
+                        )
+                    kind = test_case.kind if test_case.kind is not None else rule.__name__
+                    if kind != report.code:
+                        raise AssertionError(
+                            f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
+                        )
+                    if (
+                        test_case.expected_message is not None
+                        and test_case.expected_message != report.message
+                    ):
+                        raise AssertionError(
+                            f"Expected message:\n    {test_case.expected_message}\nBut got:\n    {report.message}"
+                        )
 
-                if not (position.column is None or position.column == report.column):
-                    raise AssertionError(
-                        f"Expected column: {position.column} but found column: {report.column}"
-                    )
-                kind = test_case.kind if test_case.kind is not None else rule.__name__
-                if kind != report.code:
-                    raise AssertionError(
-                        f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
-                    )
-                if (
-                    test_case.expected_message is not None
-                    and test_case.expected_message != report.message
-                ):
-                    raise AssertionError(
-                        f"Expected message:\n    {test_case.expected_message}\nBut got:\n    {report.message}"
-                    )
+                validate_patch(reports, test_case)
+            else:
+                self.assertEqual(
+                    len(reports),
+                    0,
+                    f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: 0.\n'
+                    + "\n".join(str(e) for e in reports),
+                )
 
-            validate_patch(reports, test_case)
+
 
 
 def _gen_test_methods_for_rule(

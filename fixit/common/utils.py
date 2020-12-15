@@ -96,13 +96,16 @@ class InvalidTestCase:
     expected_message: Optional[str] = None
 
     @property
-    def expected_str(self) -> List[str]:
-        return [
-            f"{_str_or_any(p.line)}:{_str_or_any(p.column)}: {self.kind} ..."
-            for p in self.positions
-        ]
+    def expected_str(self) -> Optional[List[str]]:
+        pos = self.positions
+        if pos:
+            return [
+                f"{_str_or_any(p.line)}:{_str_or_any(p.column)}: {self.kind} ..."
+                for p in pos
+            ]
 
-    def __post_init__(self):
+
+    def __post_init__(self) -> None:
         # Accept line and column in generated __init__ for compatibility with existing
         # test cases and add them into the positions list for new multiple report cases
         if self.positions is None:
