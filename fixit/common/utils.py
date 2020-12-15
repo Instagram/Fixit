@@ -104,7 +104,6 @@ class InvalidTestCase:
                 for p in pos
             ]
 
-
     def __post_init__(self) -> None:
         # Accept line and column in generated __init__ for compatibility with existing
         # test cases and add them into the positions list for new multiple report cases

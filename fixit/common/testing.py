@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Collection,
     Dict,
     Mapping,
     Optional,
@@ -16,7 +17,6 @@ from typing import (
     Type,
     Union,
     cast,
-    Collection,
 )
 
 from libcst.metadata import MetadataWrapper
@@ -33,9 +33,11 @@ from fixit.common.utils import (
 )
 from fixit.rule_lint_engine import lint_file
 
+
 def sort_reports(report: BaseLintRuleReport) -> float:
-    #Turn line, column into a 'line.column' float for sorting
-    return report.line + (report.column / pow(10,len(str(report.column))))
+    # Turn line, column into a 'line.column' float for sorting
+    return report.line + (report.column / pow(10, len(str(report.column))))
+
 
 def validate_patch(
     reports: Collection[BaseLintRuleReport], test_case: InvalidTestCase
@@ -124,18 +126,22 @@ class LintRuleTestCase(unittest.TestCase):
                     f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: {len(positions)}.\n'
                     + "\n".join(str(e) for e in reports),
                 )
-                            # We assert above that reports and positions are the same length
+                # We assert above that reports and positions are the same length
                 for report, position in zip(reports, positions):
                     if not (position.line is None or position.line == report.line):
                         raise AssertionError(
                             f"Expected line: {position.line} but found line: {report.line}"
                         )
 
-                    if not (position.column is None or position.column == report.column):
+                    if not (
+                        position.column is None or position.column == report.column
+                    ):
                         raise AssertionError(
                             f"Expected column: {position.column} but found column: {report.column}"
                         )
-                    kind = test_case.kind if test_case.kind is not None else rule.__name__
+                    kind = (
+                        test_case.kind if test_case.kind is not None else rule.__name__
+                    )
                     if kind != report.code:
                         raise AssertionError(
                             f"Expected:\n    {test_case.expected_str}\nBut found:\n    {report}"
@@ -156,8 +162,6 @@ class LintRuleTestCase(unittest.TestCase):
                     f'Expected report count to match positions count for this "invalid" test case, Reports : {len(reports)}, Positions: 0.\n'
                     + "\n".join(str(e) for e in reports),
                 )
-
-
 
 
 def _gen_test_methods_for_rule(
