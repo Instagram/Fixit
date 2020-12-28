@@ -38,6 +38,9 @@ def _visit_cst_rules_with_context(
     rule_instances = [r(context) for r in rules]
     rule_instances = [r for r in rule_instances if not r.should_skip_file()]
 
+    if not rule_instances:
+        return
+
     # before_visit/after_leave are used to update the context
     def before_visit(node: cst.CSTNode) -> None:
         context.node_stack.append(node)
@@ -108,9 +111,12 @@ def lint_file(
     ast_tree = None
     reports = []
 
-    if cst_wrapper is None:
-        cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
     if cst_rules:
+        if cst_wrapper is None:
+            cst_wrapper = MetadataWrapper(
+                cst.parse_module(source), unsafe_skip_copy=True
+            )
+
         cst_context = CstContext(cst_wrapper, source, file_path, config)
         _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
         reports.extend(cst_context.reports)
