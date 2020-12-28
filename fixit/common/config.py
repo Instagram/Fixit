@@ -43,6 +43,10 @@ LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
     + r": (?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+)"
     + r"(:( (?P<reason>.+)?)?)?"
 )
+HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = re.compile(rb"# lint-(ignore|fixme):")
+HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
+    rb"# (lint-(ignore|fixme):|noqa)"
+)
 
 # Skip evaluation of the given file.
 # People should use `# noqa-file` or `@no- lint` instead. This is here for compatibility

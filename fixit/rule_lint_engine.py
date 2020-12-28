@@ -15,7 +15,7 @@ from libcst.metadata import MetadataWrapper
 from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.comments import CommentInfo
 from fixit.common.config import get_lint_config
-from fixit.common.ignores import IgnoreInfo
+from fixit.common.ignores import IgnoreInfo, has_ignore_comments
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
 from fixit.common.report import BaseLintRuleReport
@@ -75,7 +75,7 @@ def lint_file(
         return []
 
     tokens = None
-    if use_ignore_comments:
+    if use_ignore_comments and has_ignore_comments(source, use_noqa=config.use_noqa):
         # Don't compute tokens unless we have to, it slows down
         # `fixit.cli.run_rules`.
         #

@@ -12,7 +12,7 @@ import libcst as cst
 from libcst.testing.utils import UnitTest, data_provider
 
 from fixit.common.comments import CommentInfo
-from fixit.common.ignores import IgnoreInfo
+from fixit.common.ignores import IgnoreInfo, has_ignore_comments
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.report import CstLintRuleReport
 from fixit.common.utils import dedent_with_lstrip
@@ -373,3 +373,57 @@ class IgnoreInfoTest(UnitTest):
             self.assertEqual(len(supp_comments), 1)
             supp_comment = supp_comments[0]
             self.assertIs(supp_comment, local_supp_comment)
+
+
+class HasIgnoreCommentsTest(UnitTest):
+    @data_provider(
+        {
+            "lint_ignore": {
+                "source": b"""
+                    def foo():...
+                    # lint-ignore:
+                    """,
+                "use_noqa": False,
+                "expected": True,
+            },
+            "lint_fixme": {
+                "source": b"""
+                    def foo():...
+                    # lint-fixme:
+                    """,
+                "use_noqa": False,
+                "expected": True,
+            },
+            "noqa_disabled": {
+                "source": b"""
+                    def foo():...
+                    # noqa
+                    """,
+                "use_noqa": False,
+                "expected": False,
+            },
+            "noqa_enabled": {
+                "source": b"""
+                    def foo():...
+                    # noqa
+                    """,
+                "use_noqa": True,
+                "expected": True,
+            },
+            "no_comments": {
+                "source": b"""
+                    def foo():...
+                    """,
+                "use_noqa": False,
+                "expected": False,
+            },
+        }
+    )
+    def test_has_ignore_comments(
+        self,
+        *,
+        source: bytes,
+        use_noqa: bool,
+        expected: bool,
+    ) -> None:
+        self.assertEqual(has_ignore_comments(source, use_noqa=use_noqa), expected)
