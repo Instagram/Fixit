@@ -130,6 +130,7 @@ def lint_file(
         # filter the accumulated errors that should be suppressed and report unused suppressions
         reports = [r for r in reports if not ignore_info.should_ignore_report(r)]
         if find_unused_suppressions and cst_rules:
+            assert cst_wrapper is not None
             # We had to make sure to call ignore_info.should_ignore_report before running our
             # RemoveUnusedSuppressionsRule because ignore_info needs to be up to date for it to work.
             # We can construct a new context since we want a fresh set of reports to append to reports.
