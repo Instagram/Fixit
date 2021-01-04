@@ -410,6 +410,14 @@ class HasIgnoreCommentsTest(UnitTest):
                 "use_noqa": True,
                 "expected": True,
             },
+            "noqa_enabled_flake8": {
+                "source": b"""
+                    def foo():...
+                    # flake8:
+                    """,
+                "use_noqa": True,
+                "expected": True,
+            },
             "no_comments": {
                 "source": b"""
                     def foo():...

@@ -45,7 +45,7 @@ LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
 )
 HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = re.compile(rb"# lint-(ignore|fixme):")
 HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
-    rb"# (lint-(ignore|fixme):|noqa)"
+    rb"# (lint-(ignore|fixme):|noqa|flake8)"
 )
 
 # Skip evaluation of the given file.
