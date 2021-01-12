@@ -60,14 +60,19 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
     + r"(?P<reason>.+)"
 )
 
+
+def _remove_capturing_groups(regex: bytes) -> bytes:
+    return re.sub(rb"\?<\w+>", b"", regex)
+
+
 HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = re.compile(LINT_IGNORE_REGEXP.pattern.encode())
 HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
     b"|".join(
         [
-            LINT_IGNORE_REGEXP.pattern.encode(),
-            NOQA_INLINE_REGEXP.pattern.encode(),
-            NOQA_FILE_RULE.pattern.encode(),
-            FLAKE8_NOQA_FILE.pattern.encode(),
+            _remove_capturing_groups(LINT_IGNORE_REGEXP.pattern.encode()),
+            _remove_capturing_groups(NOQA_INLINE_REGEXP.pattern.encode()),
+            _remove_capturing_groups(NOQA_FILE_RULE.pattern.encode()),
+            _remove_capturing_groups(FLAKE8_NOQA_FILE.pattern.encode()),
         ]
     )
 )
