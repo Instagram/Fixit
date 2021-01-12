@@ -43,9 +43,9 @@ LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
     + r": (?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+)"
     + r"(:( (?P<reason>.+)?)?)?"
 )
-HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = re.compile(rb"# lint-(ignore|fixme):")
+HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = config.LINT_IGNORE_REGEXP
 HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
-    rb"# (lint-(ignore|fixme):|noqa|flake8)"
+    b"|".join([config.LINT_IGNORE_REGEXP.pattern, config.NOQA_INLINE_REGEXP.pattern, config.NOQA_FILE_RULE.pattern, config.FLAKE8_NOQA_FILE.pattern])
 )
 
 # Skip evaluation of the given file.
