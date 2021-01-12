@@ -43,10 +43,6 @@ LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
     + r": (?P<codes>([-_a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+)"
     + r"(:( (?P<reason>.+)?)?)?"
 )
-HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = LINT_IGNORE_REGEXP
-HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
-    b"|".join([LINT_IGNORE_REGEXP.pattern, NOQA_INLINE_REGEXP.pattern, NOQA_FILE_RULE.pattern, FLAKE8_NOQA_FILE.pattern])
-)
 
 # Skip evaluation of the given file.
 # People should use `# noqa-file` or `@no- lint` instead. This is here for compatibility
@@ -64,6 +60,17 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
     + r"(?P<reason>.+)"
 )
 
+HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = re.compile(LINT_IGNORE_REGEXP.pattern.encode())
+HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
+    b"|".join(
+        [
+            LINT_IGNORE_REGEXP.pattern.encode(),
+            NOQA_INLINE_REGEXP.pattern.encode(),
+            NOQA_FILE_RULE.pattern.encode(),
+            FLAKE8_NOQA_FILE.pattern.encode(),
+        ]
+    )
+)
 
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
