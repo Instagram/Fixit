@@ -62,7 +62,7 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 
 
 def _remove_capturing_groups(regex: bytes) -> bytes:
-    return re.sub(rb"\?<\w+>", b"", regex)
+    return re.sub(rb"\?P<\w+>", b"", regex)
 
 
 HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = re.compile(LINT_IGNORE_REGEXP.pattern.encode())
