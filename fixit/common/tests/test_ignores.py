@@ -381,7 +381,7 @@ class HasIgnoreCommentsTest(UnitTest):
             "lint_ignore": {
                 "source": b"""
                     def foo():...
-                    # lint-ignore:
+                    # lint-ignore: rule
                     """,
                 "use_noqa": False,
                 "expected": True,
@@ -389,7 +389,7 @@ class HasIgnoreCommentsTest(UnitTest):
             "lint_fixme": {
                 "source": b"""
                     def foo():...
-                    # lint-fixme:
+                    # lint-fixme: rule
                     """,
                 "use_noqa": False,
                 "expected": True,
@@ -397,7 +397,7 @@ class HasIgnoreCommentsTest(UnitTest):
             "noqa_disabled": {
                 "source": b"""
                     def foo():...
-                    # noqa
+                    # noqa: rule
                     """,
                 "use_noqa": False,
                 "expected": False,
@@ -405,7 +405,7 @@ class HasIgnoreCommentsTest(UnitTest):
             "noqa_enabled": {
                 "source": b"""
                     def foo():...
-                    # noqa
+                    # noqa: rule
                     """,
                 "use_noqa": True,
                 "expected": True,
@@ -413,7 +413,7 @@ class HasIgnoreCommentsTest(UnitTest):
             "noqa_enabled_flake8": {
                 "source": b"""
                     def foo():...
-                    # flake8:
+                    # flake8: noqa
                     """,
                 "use_noqa": True,
                 "expected": True,
