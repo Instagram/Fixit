@@ -31,7 +31,7 @@ NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
     # We do not care about the ``: `` that follows ``noqa``
     # We do not care about the casing of ``noqa``
     # We want a comma-separated list of errors
-    r"^# noqa(?!-file)(?:: (?P<codes>([a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+))?",
+    r"# noqa(?!-file)(?:: (?P<codes>([a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+))?",
     re.IGNORECASE,
 )
 LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
