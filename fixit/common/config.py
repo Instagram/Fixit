@@ -74,7 +74,8 @@ HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
             _remove_capturing_groups(NOQA_FILE_RULE.pattern.encode()),
             _remove_capturing_groups(FLAKE8_NOQA_FILE.pattern.encode()),
         ]
-    )
+    ),
+    re.IGNORECASE,
 )
 
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]

@@ -397,7 +397,7 @@ class HasIgnoreCommentsTest(UnitTest):
             "noqa_disabled": {
                 "source": b"""
                     def foo():...
-                    # noqa: rule
+                    # noqa-file: rule: reason
                     """,
                 "use_noqa": False,
                 "expected": False,
@@ -405,7 +405,7 @@ class HasIgnoreCommentsTest(UnitTest):
             "noqa_enabled": {
                 "source": b"""
                     def foo():...
-                    # noqa: rule
+                    # noqa-file: rule: reason
                     """,
                 "use_noqa": True,
                 "expected": True,
@@ -415,6 +415,11 @@ class HasIgnoreCommentsTest(UnitTest):
                     def foo():...
                     # flake8: noqa
                     """,
+                "use_noqa": True,
+                "expected": True,
+            },
+            "noqa_enabled_inline": {
+                "source": b"# noqa\ndef foo(): ...",
                 "use_noqa": True,
                 "expected": True,
             },
