@@ -114,22 +114,18 @@ def get_validated_settings(
 @lru_cache()
 def get_lint_config() -> LintConfig:
     config = {}
-    current_dir = Path.cwd()
-    previous_dir: Optional[Path] = None
-    while current_dir != previous_dir:
+
+    cwd = Path.cwd()
+    for directory in (cwd, *cwd.parents):
         # Check for config file.
-        possible_config = current_dir / LINT_CONFIG_FILE_NAME
+        possible_config = directory / LINT_CONFIG_FILE_NAME
         if possible_config.is_file():
             with open(possible_config, "r") as f:
                 file_content = yaml.safe_load(f.read())
 
             if isinstance(file_content, dict):
-                config = get_validated_settings(file_content, current_dir)
+                config = get_validated_settings(file_content, directory)
                 break
-
-        # Try to go up a directory.
-        previous_dir = current_dir
-        current_dir = current_dir.parent
 
     # Find formatter executable if there is one.
     formatter_args = config.get("formatter", DEFAULT_FORMATTER)
