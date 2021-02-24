@@ -199,6 +199,35 @@ class IPCResult:
     paths: List[str]
 
 
+def ipc(opts: LintOpts, paths: List[str], prefix: str = None, workers: LintWorkers) -> IPCResult:
+    if workers is None:
+        workers = LintWorkers.CPU_COUNT
+
+    paths: Generator[str, None, None] = (
+        os.path.join(prefix, p) if prefix else p for p in paths
+    )
+
+    full_repo_metadata_config = opts.full_repo_metadata_config
+    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
+    if full_repo_metadata_config is not None:
+        metadata_caches = get_repo_caches(paths, full_repo_metadata_config)
+
+    results_iter: Iterator[Sequence[str]] = map_paths(
+        get_file_lint_result_json,
+        paths,
+        opts,
+        workers=workers,
+        metadata_caches=metadata_caches,
+    )
+    for results in results_iter:
+        # Use print outside of the executor to avoid multiple processes trying to write
+        # to stdout in parallel, which could cause a corrupted output.
+        for result in results:
+            print(result)
+
+    return IPCResult(paths)
+
+
 def ipc_main(opts: LintOpts) -> IPCResult:
     """
     Given a LintOpts config with lint rules and lint success/failure report formatter,
@@ -217,26 +246,5 @@ def ipc_main(opts: LintOpts) -> IPCResult:
     parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
-    paths: Generator[str, None, None] = (
-        os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
-    )
 
-    full_repo_metadata_config = opts.full_repo_metadata_config
-    metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
-    if full_repo_metadata_config is not None:
-        metadata_caches = get_repo_caches(paths, full_repo_metadata_config)
-
-    results_iter: Iterator[Sequence[str]] = map_paths(
-        get_file_lint_result_json,
-        paths,
-        opts,
-        workers=args.workers,
-        metadata_caches=metadata_caches,
-    )
-    for results in results_iter:
-        # Use print outside of the executor to avoid multiple processes trying to write
-        # to stdout in parallel, which could cause a corrupted output.
-        for result in results:
-            print(result)
-
-    return IPCResult(args.paths)
+    return ipc(ops=ops, paths=args.paths, prefix=args.prefix, workers=args.workers)
