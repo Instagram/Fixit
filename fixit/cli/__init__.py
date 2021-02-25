@@ -200,7 +200,10 @@ class IPCResult:
 
 
 def run_ipc(
-    opts: LintOpts, paths: List[str], prefix: str = None, workers: LintWorkers = None
+    opts: LintOpts,
+    paths: List[str],
+    prefix: Optional[str] = None,
+    workers: LintWorkers = LintWorkers.CPU_COUNT,
 ) -> IPCResult:
     """
     Given a LintOpts config with lint rules and lint success/failure report formatter,
@@ -211,8 +214,6 @@ def run_ipc(
 
     Returns an IPCResult object.
     """
-    if workers is None:
-        workers = LintWorkers.CPU_COUNT
 
     paths: Generator[str, None, None] = (
         os.path.join(prefix, p) if prefix else p for p in paths
@@ -236,7 +237,7 @@ def run_ipc(
         for result in results:
             print(result)
 
-    return IPCResult(paths)
+    return IPCResult(list(paths))
 
 
 def ipc_main(opts: LintOpts) -> IPCResult:

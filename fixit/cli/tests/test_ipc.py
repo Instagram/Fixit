@@ -7,6 +7,7 @@ import contextlib
 import io
 import json
 import tempfile
+from typing import Any, Dict
 
 from libcst.testing.utils import UnitTest
 
@@ -15,11 +16,10 @@ from fixit.cli.args import LintWorkers
 from fixit.cli.tests.test_lint_opts import generate_mock_lint_opt
 
 
-TARGET_PATH = None
-EXPECTED_SUCCESS_REPORT = json.loads(
+EXPECTED_SUCCESS_REPORT: Dict[str, Any] = json.loads(
     """{"path": "fill-this-out", "status": "success", "reports": ["fake picklable report"]}"""
 )
-EXPECTED_FAILURE_REPORT = json.loads(
+EXPECTED_FAILURE_REPORT: Dict[str, Any] = json.loads(
     """{"path": "fill-this-out", "status": "failure", "reports": ["fake picklable report"]}"""
 )
 

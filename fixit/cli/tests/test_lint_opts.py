@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Collection, List, Sequence, cast
+from typing import Collection, List, Optional, Sequence, cast
 
 from libcst import Module
 from libcst.testing.utils import UnitTest
@@ -71,7 +71,7 @@ def mock_operation(
     return cast(Sequence[FakeLintSuccessReport], results)
 
 
-def generate_mock_lint_opt(global_list=None):
+def generate_mock_lint_opt(global_list: Optional[List[str]] = None) -> LintOpts:
     if global_list is None:
         global_list = []
 
