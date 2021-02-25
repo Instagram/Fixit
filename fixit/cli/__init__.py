@@ -199,7 +199,9 @@ class IPCResult:
     paths: List[str]
 
 
-def run_ipc(opts: LintOpts, paths: List[str], prefix: str = None, workers: LintWorkers) -> IPCResult:
+def run_ipc(
+    opts: LintOpts, paths: List[str], prefix: str = None, workers: LintWorkers = None
+) -> IPCResult:
     """
     Given a LintOpts config with lint rules and lint success/failure report formatter,
     this IPC helper takes a path of source files (with an optional `prefix` that will be prepended).
@@ -254,4 +256,6 @@ def ipc_main(opts: LintOpts) -> IPCResult:
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
 
-    return run_ipc(ops=ops, paths=args.paths, prefix=args.prefix, workers=args.workers)
+    return run_ipc(
+        opts=opts, paths=args.paths, prefix=args.prefix, workers=args.workers
+    )
