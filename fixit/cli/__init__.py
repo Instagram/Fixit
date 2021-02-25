@@ -199,7 +199,16 @@ class IPCResult:
     paths: List[str]
 
 
-def ipc(opts: LintOpts, paths: List[str], prefix: str = None, workers: LintWorkers) -> IPCResult:
+def run_ipc(opts: LintOpts, paths: List[str], prefix: str = None, workers: LintWorkers) -> IPCResult:
+    """
+    Given a LintOpts config with lint rules and lint success/failure report formatter,
+    this IPC helper takes a path of source files (with an optional `prefix` that will be prepended).
+    Results are formed as JSON and delimited by newlines.
+    It uses a multiprocess pool and the results are streamed to stdout as soon
+    as they're available.
+
+    Returns an IPCResult object.
+    """
     if workers is None:
         workers = LintWorkers.CPU_COUNT
 
@@ -230,11 +239,9 @@ def ipc(opts: LintOpts, paths: List[str], prefix: str = None, workers: LintWorke
 
 def ipc_main(opts: LintOpts) -> IPCResult:
     """
-    Given a LintOpts config with lint rules and lint success/failure report formatter,
-    this IPC helper took paths of source files from either a path file (with @paths arg)
-    or a list of paths as args. Results are formed as JSON and delimited by newlines.
-    It uses a multiprocess pool and the results are streamed to stdout as soon
-    as they're available.
+    Like `run_ipc` instead this function expects arguments to be collected through argparse.
+    This IPC helper takes paths of source files from either a path file (with @paths arg)
+    or a list of paths as args.
 
     Returns an IPCResult object.
     """
@@ -247,4 +254,4 @@ def ipc_main(opts: LintOpts) -> IPCResult:
     parser.add_argument("--prefix", help="A prefix to be added to all paths.")
     args: argparse.Namespace = parser.parse_args()
 
-    return ipc(ops=ops, paths=args.paths, prefix=args.prefix, workers=args.workers)
+    return run_ipc(ops=ops, paths=args.paths, prefix=args.prefix, workers=args.workers)
