@@ -37,6 +37,22 @@ class FakeLintSuccessReport(LintSuccessReportBase):
         return [FakeLintSuccessReport(str(path), "success", ["fake picklable report"])]
 
 
+@dataclass(frozen=True)
+class FakeLintFailureReport(LintFailureReportBase):
+    path: str
+    status: str
+    reports: Collection[str]
+
+    @staticmethod
+    def create_reports(
+        path: Path,
+        reports: Collection[BaseLintRuleReport],
+        global_list: List[str],
+    ) -> Sequence["FakeLintFailureReport"]:
+        global_list.append(str(path))
+        return [FakeLintFailureReport(str(path), "failure", ["fake picklable report"])]
+
+
 class FakeRule(CstLintRule):
     def visit_Module(self, node: Module) -> None:
         self.report(node, "Dummy message")
@@ -55,15 +71,22 @@ def mock_operation(
     return cast(Sequence[FakeLintSuccessReport], results)
 
 
+def generate_mock_lint_opt(global_list=None):
+    if global_list is None:
+        global_list = []
+
+    return LintOpts(
+        {FakeRule},
+        FakeLintSuccessReport,
+        FakeLintFailureReport,
+        extra={"global_list": global_list},
+    )
+
+
 class LintOptsTest(UnitTest):
     def setUp(self) -> None:
         self.global_list = []
-        self.opts = LintOpts(
-            {FakeRule},
-            FakeLintSuccessReport,
-            LintFailureReportBase,
-            extra={"global_list": self.global_list},
-        )
+        self.opts = generate_mock_lint_opt(global_list=self.global_list)
 
     def test_extra_opts(self) -> None:
         path = "path.py"
