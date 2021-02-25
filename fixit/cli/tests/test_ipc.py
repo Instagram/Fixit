@@ -6,6 +6,7 @@
 import contextlib
 import io
 import json
+import os
 import tempfile
 from typing import Any, Dict
 
@@ -29,16 +30,20 @@ class IpcTest(UnitTest):
         self.opts = generate_mock_lint_opt()
 
     def test_single_path_ipc(self) -> None:
-        with io.StringIO() as buffer, tempfile.NamedTemporaryFile(
-            "w+"
-        ) as fd, contextlib.redirect_stdout(buffer):
+        with io.StringIO() as buffer, tempfile.TemporaryDirectory() as prefix, contextlib.redirect_stdout(
+            buffer
+        ):
             # create a valid file for the test to run against
-            fd.write("""test_str = 'hello world'""")
-            fd.flush()
-            path = fd.name
+            path = "path.py"
+
+            with open(os.path.join(prefix, path), "w") as fd:
+                fd.write("""test_str = 'hello world'""")
 
             run_ipc(
-                opts=self.opts, paths=[path], workers=LintWorkers.USE_CURRENT_THREAD
+                opts=self.opts,
+                paths=[path],
+                prefix=prefix,
+                workers=LintWorkers.USE_CURRENT_THREAD,
             )
 
             # get values from the buffer before we close it
@@ -48,35 +53,32 @@ class IpcTest(UnitTest):
         report = json.loads(output)
 
         target_report = EXPECTED_SUCCESS_REPORT.copy()
-        target_report["path"] = path
+        target_report["path"] = os.path.join(prefix, path)
 
         self.assertDictEqual(report, target_report)
 
     def test_multi_path_ipc(self) -> None:
-        with io.StringIO() as buffer, tempfile.NamedTemporaryFile(
-            "w+"
-        ) as fd_a, tempfile.NamedTemporaryFile(
-            "w+"
-        ) as fd_b, contextlib.redirect_stdout(
+        with io.StringIO() as buffer, tempfile.TemporaryDirectory() as prefix, contextlib.redirect_stdout(
             buffer
         ):
+            path_a = "path_a.py"
+            path_b = "path_b.py"
+            # this path doesn't exist at all, but the runner should still handle it gracefully
+            path_c = "does_not_exist.tmp"
+
             # create a valid file for the test to run against
-            fd_a.write("""test_str = 'hello world'""")
-            fd_a.flush()
+            with open(os.path.join(prefix, path_a), "w") as fd_a:
+                fd_a.write("""test_str = 'hello world'""")
 
             # now create an invalid one
             # mismatched tab-indent will do the trick
-            fd_b.write("""\ta = 1\nb = 2""")
-            fd_b.flush()
-            path_a = fd_a.name
-            path_b = fd_b.name
-
-            # this path doesn't exist at all, but the runner should still handle it gracefully
-            path_c = "/does/not/exist.tmp"
+            with open(os.path.join(prefix, path_b), "w") as fd_b:
+                fd_b.write("""\ta = 1\nb = 2""")
 
             run_ipc(
                 opts=self.opts,
                 paths=[path_a, path_b, path_c],
+                prefix=prefix,
                 workers=LintWorkers.USE_CURRENT_THREAD,
             )
 
@@ -86,18 +88,17 @@ class IpcTest(UnitTest):
 
         # each report is separated by a new-line
         reports = output.strip().split("\n")
-        print("split", reports)
         self.assertEqual(len(reports), 3)
         report_a, report_b, report_c = [json.loads(report) for report in reports]
 
         target_report_a = EXPECTED_SUCCESS_REPORT.copy()
-        target_report_a["path"] = path_a
+        target_report_a["path"] = os.path.join(prefix, path_a)
 
         target_report_b = EXPECTED_FAILURE_REPORT.copy()
-        target_report_b["path"] = path_b
+        target_report_b["path"] = os.path.join(prefix, path_b)
 
         target_report_c = EXPECTED_FAILURE_REPORT.copy()
-        target_report_c["path"] = path_c
+        target_report_c["path"] = os.path.join(prefix, path_c)
 
         self.assertDictEqual(report_a, target_report_a)
         self.assertDictEqual(report_b, target_report_b)
