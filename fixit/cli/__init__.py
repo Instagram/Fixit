@@ -12,6 +12,7 @@ import json
 import multiprocessing
 import os
 import traceback
+import warnings
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import (
@@ -46,7 +47,6 @@ from fixit.rule_lint_engine import lint_file
 
 if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
-
 
 _MapPathsOperationConfigT = TypeVar("_MapPathsOperationConfigT")
 _MapPathsOperationResultT = TypeVar("_MapPathsOperationResultT")
@@ -242,12 +242,19 @@ def run_ipc(
 
 def ipc_main(opts: LintOpts) -> IPCResult:
     """
-    Like `run_ipc` instead this function expects arguments to be collected through argparse.
-    This IPC helper takes paths of source files from either a path file (with @paths arg)
-    or a list of paths as args.
+    Like `run_ipc` instead this function expects arguments to be collected through
+    argparse. This IPC helper takes paths of source files from either a path file
+    (with @paths arg) or a list of paths as args.
 
     Returns an IPCResult object.
     """
+    warnings.warn(
+        """
+        Calling ipc_main as a command line tool is being deprecated.
+        Please use the module-level function `run_ipc` instead.""",
+        DeprecationWarning,
+    )
+
     parser = argparse.ArgumentParser(
         description="Runs Fixit lint rules and print results as console output.",
         fromfile_prefix_chars="@",
