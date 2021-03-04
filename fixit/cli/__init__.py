@@ -12,6 +12,7 @@ import json
 import multiprocessing
 import os
 import traceback
+import warnings
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import (
@@ -46,7 +47,6 @@ from fixit.rule_lint_engine import lint_file
 
 if TYPE_CHECKING:
     from libcst.metadata.base_provider import ProviderT
-
 
 _MapPathsOperationConfigT = TypeVar("_MapPathsOperationConfigT")
 _MapPathsOperationResultT = TypeVar("_MapPathsOperationResultT")
@@ -199,26 +199,24 @@ class IPCResult:
     paths: List[str]
 
 
-def ipc_main(opts: LintOpts) -> IPCResult:
+def run_ipc(
+    opts: LintOpts,
+    paths: List[str],
+    prefix: Optional[str] = None,
+    workers: LintWorkers = LintWorkers.CPU_COUNT,
+) -> IPCResult:
     """
     Given a LintOpts config with lint rules and lint success/failure report formatter,
-    this IPC helper took paths of source files from either a path file (with @paths arg)
-    or a list of paths as args. Results are formed as JSON and delimited by newlines.
+    this IPC helper takes a path of source files (with an optional `prefix` that will be prepended).
+    Results are formed as JSON and delimited by newlines.
     It uses a multiprocess pool and the results are streamed to stdout as soon
     as they're available.
 
     Returns an IPCResult object.
     """
-    parser = argparse.ArgumentParser(
-        description="Runs Fixit lint rules and print results as console output.",
-        fromfile_prefix_chars="@",
-        parents=[get_multiprocessing_parser()],
-    )
-    parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
-    parser.add_argument("--prefix", help="A prefix to be added to all paths.")
-    args: argparse.Namespace = parser.parse_args()
+
     paths: Generator[str, None, None] = (
-        os.path.join(args.prefix, p) if args.prefix else p for p in args.paths
+        os.path.join(prefix, p) if prefix else p for p in paths
     )
 
     full_repo_metadata_config = opts.full_repo_metadata_config
@@ -230,7 +228,7 @@ def ipc_main(opts: LintOpts) -> IPCResult:
         get_file_lint_result_json,
         paths,
         opts,
-        workers=args.workers,
+        workers=workers,
         metadata_caches=metadata_caches,
     )
     for results in results_iter:
@@ -239,4 +237,33 @@ def ipc_main(opts: LintOpts) -> IPCResult:
         for result in results:
             print(result)
 
-    return IPCResult(args.paths)
+    return IPCResult(list(paths))
+
+
+def ipc_main(opts: LintOpts) -> IPCResult:
+    """
+    Like `run_ipc` instead this function expects arguments to be collected through
+    argparse. This IPC helper takes paths of source files from either a path file
+    (with @paths arg) or a list of paths as args.
+
+    Returns an IPCResult object.
+    """
+    warnings.warn(
+        """
+        Calling ipc_main as a command line tool is being deprecated.
+        Please use the module-level function `run_ipc` instead.""",
+        DeprecationWarning,
+    )
+
+    parser = argparse.ArgumentParser(
+        description="Runs Fixit lint rules and print results as console output.",
+        fromfile_prefix_chars="@",
+        parents=[get_multiprocessing_parser()],
+    )
+    parser.add_argument("paths", nargs="*", help="List of paths to run lint rules on.")
+    parser.add_argument("--prefix", help="A prefix to be added to all paths.")
+    args: argparse.Namespace = parser.parse_args()
+
+    return run_ipc(
+        opts=opts, paths=args.paths, prefix=args.prefix, workers=args.workers
+    )
