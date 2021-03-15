@@ -13,7 +13,7 @@ UNNECESSARY_LITERAL: str = (
     "It's unnecessary to use a list or tuple within a call to {func} since"
     + " there is literal syntax for this type"
 )
-UNNCESSARY_CALL: str = (
+UNNECESSARY_CALL: str = (
     "It's slower to call {func}() than using the empty literal, because"
     + " the name {func} must be looked up in the global scope in case it has"
     + " been rebound."
@@ -64,6 +64,18 @@ class RewriteToLiteralRule(CstLintRule):
         Invalid("tuple()", expected_replacement="()"),
         Invalid("list()", expected_replacement="[]"),
         Invalid("dict()", expected_replacement="{}"),
+        Invalid("dict(test=[])", expected_replacement='{"test": []}'),
+        Invalid(
+            "dict(test=[], other=())", expected_replacement='{"test": [], "other": ()}'
+        ),
+        Invalid(
+            "dict(test=[], other=1)", expected_replacement='{"test": [], "other": 1}'
+        ),
+        Invalid(
+            "dict(other=1, test=[1, 2, 3])",
+            expected_replacement='{"other": 1, "test": [1, 2, 3]}',
+        ),
+        Invalid("dict([], other=1)", expected_replacement='{"other": 1}'),
     ]
 
     def visit_Call(self, node: cst.Call) -> None:
@@ -71,7 +83,11 @@ class RewriteToLiteralRule(CstLintRule):
             node,
             m.Call(
                 func=m.Name("tuple") | m.Name("list") | m.Name("set") | m.Name("dict"),
-                args=[m.Arg(value=m.List() | m.Tuple())],
+                args=[
+                    m.ZeroOrMore(),
+                    m.Arg(value=m.List() | m.Tuple()),
+                    m.ZeroOrMore(),
+                ],
             ),
         ) or m.matches(
             node,
@@ -85,12 +101,27 @@ class RewriteToLiteralRule(CstLintRule):
 
             exp = cst.ensure_type(node, cst.Call)
             call_name = cst.ensure_type(exp.func, cst.Name).value
+            keyword_dict = False
 
             # If this is a empty call, it's an Unnecessary Call where we rewrite the call
             # to literal, except set().
             if not exp.args:
                 elements = []
-                message_formatter = UNNCESSARY_CALL
+                message_formatter = UNNECESSARY_CALL
+            elif m.matches(
+                node,
+                m.Call(
+                    func=m.Name("dict"),
+                    args=[
+                        m.ZeroOrMore(),
+                        m.DoesNotMatch(m.Arg(keyword=None)),
+                        m.ZeroOrMore(),
+                    ],
+                ),
+            ):
+                keyword_dict = True
+                elements = []
+                message_formatter = UNNECESSARY_LITERAL
             else:
                 arg = exp.args[0].value
                 elements = cst.ensure_type(
@@ -115,27 +146,44 @@ class RewriteToLiteralRule(CstLintRule):
                     )
                     return
                 new_node = cst.Set(elements=elements)
-            elif len(elements) == 0 or m.matches(
-                exp.args[0].value,
-                m.Tuple(elements=[pairs_matcher]) | m.List(elements=[pairs_matcher]),
-            ):
-                new_node = cst.Dict(
-                    elements=[
-                        (
-                            lambda val: cst.DictElement(
-                                val.elements[0].value, val.elements[1].value
-                            )
-                        )(
-                            cst.ensure_type(
-                                ele.value,
-                                cst.Tuple
-                                if isinstance(ele.value, cst.Tuple)
-                                else cst.List,
-                            )
-                        )
-                        for ele in elements
-                    ]
+            elif (
+                len(elements) == 0
+                or m.matches(
+                    exp.args[0].value,
+                    m.Tuple(elements=[pairs_matcher])
+                    | m.List(elements=[pairs_matcher]),
                 )
+                or keyword_dict
+            ):
+                if keyword_dict:
+                    new_node = cst.Dict(
+                        elements=[
+                            cst.DictElement(
+                                cst.SimpleString(f'"{arg.keyword.value}"'),
+                                arg.value,
+                            )
+                            for arg in exp.args
+                            if arg.keyword
+                        ]
+                    )
+                else:
+                    new_node = cst.Dict(
+                        elements=[
+                            (
+                                lambda val: cst.DictElement(
+                                    val.elements[0].value, val.elements[1].value
+                                )
+                            )(
+                                cst.ensure_type(
+                                    ele.value,
+                                    cst.Tuple
+                                    if isinstance(ele.value, cst.Tuple)
+                                    else cst.List,
+                                )
+                            )
+                            for ele in elements
+                        ]
+                    )
             else:
                 # Unrecoginized form
                 return
