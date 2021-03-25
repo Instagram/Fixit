@@ -6,7 +6,10 @@
 from typing import Set
 
 import libcst
-from libcst.metadata import ScopeProvider
+from libcst.metadata import (
+    QualifiedNameProvider,
+    ScopeProvider,
+)
 
 from fixit import (
     CstContext,
@@ -23,6 +26,7 @@ REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
 )
 
 BUILTINS_TO_REPLACE: Set[str] = {"dict", "list", "set", "tuple"}
+QUALIFIED_BUILTINS_TO_REPLACE: Set[str] = {f"builtins.{s}" for s in BUILTINS_TO_REPLACE}
 
 
 class UseTypesFromTypingRule(CstLintRule):
@@ -31,7 +35,10 @@ class UseTypesFromTypingRule(CstLintRule):
     since the type system doesn't recognize the latter as a valid type.
     """
 
-    METADATA_DEPENDENCIES = (ScopeProvider,)
+    METADATA_DEPENDENCIES = (
+        QualifiedNameProvider,
+        ScopeProvider,
+    )
     VALID = [
         Valid(
             """
@@ -56,6 +63,15 @@ class UseTypesFromTypingRule(CstLintRule):
             from typing import Dict, List
             def function() -> bool:
                     return Dict == List
+            """
+        ),
+        Valid(
+            """
+            from typing import List as list
+            from graphene import List
+
+            def function(a: list[int]) -> List[int]:
+                    return []
             """
         ),
     ]
@@ -115,7 +131,20 @@ class UseTypesFromTypingRule(CstLintRule):
         self.annotation_counter -= 1
 
     def visit_Name(self, node: libcst.Name) -> None:
-        if self.annotation_counter > 0 and node.value in BUILTINS_TO_REPLACE:
+        # Avoid a false-positive in this scenario:
+        #
+        # ```
+        # from typing import List as list
+        # from graphene import List
+        # ```
+        qualified_names = self.get_metadata(QualifiedNameProvider, node, set())
+
+        is_builtin_type = node.value in BUILTINS_TO_REPLACE and all(
+            qualified_name.name in QUALIFIED_BUILTINS_TO_REPLACE
+            for qualified_name in qualified_names
+        )
+
+        if self.annotation_counter > 0 and is_builtin_type:
             correct_type = node.value.title()
             scope = self.get_metadata(ScopeProvider, node)
             replacement = None
