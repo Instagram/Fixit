@@ -6,10 +6,7 @@
 from typing import Set
 
 import libcst
-from libcst.metadata import (
-    QualifiedNameProvider,
-    ScopeProvider,
-)
+from libcst.metadata import QualifiedNameProvider, ScopeProvider
 
 from fixit import (
     CstContext,
