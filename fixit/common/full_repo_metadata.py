@@ -53,6 +53,7 @@ def get_repo_caches(
     caches = {}
     paths_iter = iter(paths)
     head: Optional[str] = next(paths_iter, None)
+    placeholder: bool = False if config.providers else True
     while head is not None:
         paths_batch = tuple(chain([head], islice(paths_iter, config.batch_size - 1)))
         head = next(paths_iter, None)
@@ -65,6 +66,7 @@ def get_repo_caches(
         try:
             frm.resolve_cache()
         except Exception:
+            placeholder = True
             # We want to fail silently since some metadata providers can be flaky. If a logger is provided by the caller, we'll add a log here.
             logger = config.logger
             if logger is not None:
@@ -73,13 +75,14 @@ def get_repo_caches(
                     exc_info=True,
                     extra={"paths": paths_batch},
                 )
+        if placeholder:
             # Populate with placeholder caches to avoid failures down the line. This will however result in reduced functionality in cache-dependent lint rules.
+            # TODO: Support multiple provider types for placeholder cache.
             caches.update(
                 dict.fromkeys(
                     paths_batch,
                     {
-                        provider: PLACEHOLDER_CACHES[provider]
-                        for provider in config.providers
+                        TypeInferenceProvider: PLACEHOLDER_CACHES[TypeInferenceProvider]
                     },
                 )
             )
