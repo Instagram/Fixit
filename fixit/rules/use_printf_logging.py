@@ -7,9 +7,14 @@ from typing import List, Set, Union
 
 import libcst as cst
 import libcst.matchers as m
-from fixit import CstContext, CstLintRule
-from fixit import InvalidTestCase as Invalid
-from fixit import ValidTestCase as Valid
+
+from fixit import (
+    CstContext,
+    CstLintRule,
+    InvalidTestCase as Invalid,
+    ValidTestCase as Valid,
+)
+
 
 LOG_FUNCTIONS: List[str] = [
     "critical",

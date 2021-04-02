@@ -8,9 +8,9 @@ from typing import Callable, cast
 
 import libcst as cst
 import libcst.matchers as m
-from fixit import CstLintRule
-from fixit import InvalidTestCase as Invalid
-from fixit import ValidTestCase as Valid
+
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+
 
 USE_FSTRING_SIMPLE_EXPRESSION_MAX_LENGTH = 30
 
