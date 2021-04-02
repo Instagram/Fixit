@@ -26,7 +26,7 @@ LOG_FUNCTIONS: List[str] = [
 ]
 
 
-def check_getLogger(node: cst.Assign | cst.AnnAssign) -> bool:
+def check_getLogger(node: Union[cst.Assign, cst.AnnAssign]) -> bool:
     # Check that logging.getLogger() is being assigned
     assign_val = node.value
     if assign_val is None:
