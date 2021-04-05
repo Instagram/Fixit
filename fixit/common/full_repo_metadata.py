@@ -81,9 +81,7 @@ def get_repo_caches(
             caches.update(
                 dict.fromkeys(
                     paths_batch,
-                    {
-                        TypeInferenceProvider: PLACEHOLDER_CACHES[TypeInferenceProvider]
-                    },
+                    {TypeInferenceProvider: PLACEHOLDER_CACHES[TypeInferenceProvider]},
                 )
             )
         else:

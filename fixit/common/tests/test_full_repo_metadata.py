@@ -99,8 +99,8 @@ class FullRepoMetadataTest(UnitTest):
 
     @patch("libcst.metadata.TypeInferenceProvider.gen_cache")
     def test_get_repo_caches_empty_providers(self, gen_cache: MagicMock) -> None:
-        repo_caches: Mapping[str, Dict[ProviderT, object]] = get_repo_caches(
-            (self.DUMMY_PATH,), FullRepoMetadataConfig({}, 1)
+        repo_caches = get_repo_caches(
+            (self.DUMMY_PATH,), FullRepoMetadataConfig(set(), 1)
         )
 
         self.assertEqual(
