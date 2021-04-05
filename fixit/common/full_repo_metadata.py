@@ -53,7 +53,7 @@ def get_repo_caches(
     caches = {}
     paths_iter = iter(paths)
     head: Optional[str] = next(paths_iter, None)
-    placeholder: bool = False if config.providers else True
+    placeholder: bool = not config.providers
     while head is not None:
         paths_batch = tuple(chain([head], islice(paths_iter, config.batch_size - 1)))
         head = next(paths_iter, None)
