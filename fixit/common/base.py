@@ -48,6 +48,7 @@ DEFAULT_PATTERNS = [f"@ge{''}nerated", "@nolint"]
 
 @dataclass(frozen=True)
 class LintConfig:
+    allow_list_rules: List[str] = field(default_factory=list)
     block_list_patterns: List[str] = field(default_factory=lambda: DEFAULT_PATTERNS)
     block_list_rules: List[str] = field(default_factory=list)
     fixture_dir: str = "./fixtures"

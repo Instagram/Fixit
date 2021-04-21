@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
+import shutil
 from pathlib import Path
 
 from libcst.testing.utils import UnitTest
@@ -19,7 +20,7 @@ from fixit.common.utils import (
 
 DUMMY_PACKAGE: str = "fixit.common.tests.dummy_package"
 DUMMY_SUBPACKAGE: str = "fixit.common.tests.dummy_package.dummy_subpackage"
-
+DUMMY_CONFIG_PATH: str = ".fixit.config.yaml"
 
 # Using dummy config file, test whether the rule import helpers work as expected.
 class ImportsTest(UnitTest):
@@ -75,3 +76,74 @@ class ImportsTest(UnitTest):
 
         with self.assertRaises(LintRuleNotFoundError):
             imported_rule = find_and_import_rule("DummyRule1000", rules_packages)
+
+
+class AllowListTest(UnitTest):
+    def setUp(self) -> None:
+        # We need to change the working directory so that the dummy config file is used.
+        self.old_wd = os.getcwd()
+        test_dir = Path(__file__).parent
+        os.chdir(test_dir)
+        next_dir = os.path.join(os.getcwd(), "dummy_package")
+        os.chdir(next_dir)
+
+        # We also need to clear the lru_cache for the get_lint_config function between tests.
+        getattr(get_lint_config, "cache_clear")()
+        shutil.copyfile(DUMMY_CONFIG_PATH, "/tmp/test.fixit.config.yaml")
+
+    def tearDown(self) -> None:
+        shutil.copyfile("/tmp/test.fixit.config.yaml", DUMMY_CONFIG_PATH)
+        # Need to change back to original working directory so that we don't mess with other unit tests.
+        os.chdir(self.old_wd)
+        getattr(get_lint_config, "cache_clear")()
+
+    def test_allow_list_rules_keyword_all(self) -> None:
+        allow_block = """\
+allow_list_rules:
+- all
+        """
+        with open(DUMMY_CONFIG_PATH, "a") as f:
+            f.write(allow_block)
+        rules = get_rules_from_config()
+
+        # Assert all rules are imported.
+        self.assertEqual(len(rules), 3)
+        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
+
+    def test_allow_list_rules_omit_one(self) -> None:
+        allow_block = """\
+allow_list_rules:
+- DummyRule1
+- DummyRule2
+        """
+        with open(DUMMY_CONFIG_PATH, "a") as f:
+            f.write(allow_block)
+        rules = get_rules_from_config()
+
+        # Only the two rules listed as imported
+        self.assertEqual(len(rules), 2)
+        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
+
+    def test_allow_list_rules_block_list_overrides(self) -> None:
+        allow_block = """\
+allow_list_rules:
+- DummyRule1
+- DummyRule2
+- DummyRule4
+        """
+        with open(DUMMY_CONFIG_PATH, "a") as f:
+            f.write(allow_block)
+        rules = get_rules_from_config()
+
+        # DummyRule4 is still not included because it is in the block_rules_list
+        self.assertEqual(len(rules), 2)
+        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
+
+    def test_allow_list_rules_empty(self) -> None:
+        allow_block = "allow_list_rules: []"
+        with open(DUMMY_CONFIG_PATH, "a") as f:
+            f.write(allow_block)
+        rules = get_rules_from_config()
+        # All rules should be imported.
+        self.assertEqual(len(rules), 3)
+        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))

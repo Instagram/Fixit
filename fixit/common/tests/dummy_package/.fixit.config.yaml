@@ -1,3 +1,5 @@
+block_list_rules:
+- DummyRule4
 packages:
 - fixit.common.tests.dummy_package.dummy_subpackage
 repo_root: .
