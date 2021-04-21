@@ -97,19 +97,6 @@ class AllowListTest(UnitTest):
         os.chdir(self.old_wd)
         getattr(get_lint_config, "cache_clear")()
 
-    def test_allow_list_rules_keyword_all(self) -> None:
-        allow_block = """\
-allow_list_rules:
-- all
-        """
-        with open(DUMMY_CONFIG_PATH, "a") as f:
-            f.write(allow_block)
-        rules = get_rules_from_config()
-
-        # Assert all rules are imported.
-        self.assertEqual(len(rules), 3)
-        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
-
     def test_allow_list_rules_omit_one(self) -> None:
         allow_block = """\
 allow_list_rules:
