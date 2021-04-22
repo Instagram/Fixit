@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Union
 
 import libcst as cst
-from libcst import FlattenSentinel
 from libcst.metadata import (
     CodePosition,
     ExperimentalReentrantCodegenProvider,
@@ -35,7 +34,7 @@ class LintPatch:
     def get(
         wrapper: MetadataWrapper,
         original_node: cst.CSTNode,
-        replacement_node: Union[cst.CSTNode, FlattenSentinel, cst.RemovalSentinel],
+        replacement_node: Union[cst.CSTNode, cst.FlattenSentinel, cst.RemovalSentinel],
     ) -> "LintPatch":
         # Batch the execution of these position providers
         wrapper.resolve_many(
