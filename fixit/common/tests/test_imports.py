@@ -13,6 +13,7 @@ from fixit.common.config import get_lint_config, get_rules_from_config
 from fixit.common.utils import (
     DuplicateLintRuleNameError,
     LintRuleNotFoundError,
+    dedent_with_lstrip,
     find_and_import_rule,
     import_rule_from_package,
 )
@@ -98,11 +99,13 @@ class AllowListTest(UnitTest):
         getattr(get_lint_config, "cache_clear")()
 
     def test_allow_list_rules_omit_one(self) -> None:
-        allow_block = """\
-allow_list_rules:
-- DummyRule1
-- DummyRule2
-        """
+        allow_block = dedent_with_lstrip(
+            """
+            allow_list_rules:
+            - DummyRule1
+            - DummyRule2
+            """
+        )
         with open(DUMMY_CONFIG_PATH, "a") as f:
             f.write(allow_block)
         rules = get_rules_from_config()
@@ -112,12 +115,14 @@ allow_list_rules:
         self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
 
     def test_allow_list_rules_block_list_overrides(self) -> None:
-        allow_block = """\
-allow_list_rules:
-- DummyRule1
-- DummyRule2
-- DummyRule4
-        """
+        allow_block = dedent_with_lstrip(
+            """
+            allow_list_rules:
+            - DummyRule1
+            - DummyRule2
+            - DummyRule4
+            """
+        )
         with open(DUMMY_CONFIG_PATH, "a") as f:
             f.write(allow_block)
         rules = get_rules_from_config()
