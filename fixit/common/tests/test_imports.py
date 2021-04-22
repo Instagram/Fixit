@@ -90,10 +90,11 @@ class AllowListTest(UnitTest):
 
         # We also need to clear the lru_cache for the get_lint_config function between tests.
         getattr(get_lint_config, "cache_clear")()
-        shutil.copyfile(DUMMY_CONFIG_PATH, "/tmp/test.fixit.config.yaml")
+        shutil.copyfile(DUMMY_CONFIG_PATH, "test.fixit.config.yaml")
 
     def tearDown(self) -> None:
-        shutil.copyfile("/tmp/test.fixit.config.yaml", DUMMY_CONFIG_PATH)
+        shutil.copyfile("test.fixit.config.yaml", DUMMY_CONFIG_PATH)
+        os.remove("test.fixit.config.yaml")
         # Need to change back to original working directory so that we don't mess with other unit tests.
         os.chdir(self.old_wd)
         getattr(get_lint_config, "cache_clear")()
