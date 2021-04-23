@@ -174,9 +174,7 @@ def _replace_or_remove(
     original_node: cst.CSTNode,
     replacement_node: Union[cst.CSTNode, cst.FlattenSentinel, cst.RemovalSentinel],
 ) -> cst.CSTNode:
-    if isinstance(replacement_node, cst.RemovalSentinel) or isinstance(
-        replacement_node, cst.FlattenSentinel
-    ):
+    if isinstance(replacement_node, (cst.RemovalSentinel, cst.FlattenSentinel)):
         return cst.ensure_type(parent.deep_remove(original_node), cst.CSTNode)
     else:
         return parent.deep_replace(original_node, replacement_node)
