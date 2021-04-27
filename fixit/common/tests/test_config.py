@@ -2,8 +2,6 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
-import os
 from pathlib import Path
 
 from jsonschema.exceptions import ValidationError
@@ -42,23 +40,6 @@ class TestConfig(UnitTest):
                         "__static__.compiler_flags",
                         "__strict__",
                     ]
-                },
-                "NoBadCallsRule": {
-                    "badCalls": {
-                        "calls": [
-                            "os.spawnl",
-                            "os.spawnle",
-                            "os.spawnlp",
-                            "os.spawnlpe",
-                            "os.spawnv",
-                            "os.spawnve",
-                            "os.spawnvp",
-                            "os.spawnvpe",
-                        ],
-                        "why": """Using `os.spawn*` is deprecated. Use `subprocess` instead.\
-                    See https://www.python.org/dev/peps/pep-0324/#replacing-os-spawn for more\
-                    information.""",
-                    }
                 },
             },
         }
