@@ -4,14 +4,17 @@
 # LICENSE file in the root directory of this source tree.
 
 import distutils.spawn
+import json
 import os
 import re
+import sys
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Pattern, Set
 
 import yaml
+from jsonschema import validate
 
 from fixit.common.base import LintConfig
 from fixit.common.utils import LintRuleCollectionT, import_distinct_rules_from_package
@@ -70,22 +73,19 @@ DEFAULT_FORMATTER = ["black", "-"]
 def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
 ) -> Dict[str, Any]:
+    # Validates the types and presence of the keys
+    cur_loc = os.path.realpath(os.path.join(current_dir, os.path.dirname(__file__)))
+    with open(os.path.join(cur_loc, "config.schema.json")) as f:
+        schema = json.load(f)
+    validate(instance=file_content, schema=schema)
+
     settings = {}
     for list_setting_name in LIST_SETTINGS:
         if list_setting_name in file_content:
-            if not (
-                isinstance(file_content[list_setting_name], list)
-                and all(isinstance(s, str) for s in file_content[list_setting_name])
-            ):
-                raise TypeError(
-                    f"Expected list of strings for `{list_setting_name}` setting."
-                )
             settings[list_setting_name] = file_content[list_setting_name]
     for path_setting_name in PATH_SETTINGS:
         if path_setting_name in file_content:
             setting_value = file_content[path_setting_name]
-            if not isinstance(setting_value, str):
-                raise TypeError(f"Expected string for `{path_setting_name}` setting.")
             abspath: Path = (current_dir / setting_value).resolve()
         else:
             abspath: Path = current_dir
@@ -95,17 +95,9 @@ def get_validated_settings(
     for nested_setting_name in NESTED_SETTINGS:
         if nested_setting_name in file_content:
             nested_setting = file_content[nested_setting_name]
-            if not isinstance(nested_setting, dict):
-                raise TypeError(
-                    f"Expected key-value pairs for `{nested_setting_name}` setting."
-                )
             settings[nested_setting_name] = {}
             # Verify that each setting is also a mapping
             for k, v in nested_setting.items():
-                if not isinstance(v, dict):
-                    raise TypeError(
-                        f"Expected key-value pairs for `{v}` setting in {nested_setting_name}."
-                    )
                 settings[nested_setting_name].update({k: v})
 
     return settings
