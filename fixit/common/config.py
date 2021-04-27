@@ -7,7 +7,6 @@ import distutils.spawn
 import json
 import os
 import re
-import sys
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
