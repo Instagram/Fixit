@@ -28,7 +28,6 @@ class TestConfig(UnitTest):
         )
 
     def test_validated_settings_all_keys(self) -> None:
-        self.maxDiff = None
         config = {
             "formatter": ["black", "-", "--no-diff"],
             "packages": ["python.fixit.rules"],
