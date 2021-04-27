@@ -83,7 +83,9 @@ class CstLintRuleReport(BaseLintRuleReport):
         column: int,
         module: cst.MetadataWrapper,
         module_bytes: bytes,
-        replacement_node: Optional[Union[cst.CSTNode, cst.RemovalSentinel]] = None,
+        replacement_node: Optional[
+            Union[cst.CSTNode, cst.FlattenSentinel, cst.RemovalSentinel]
+        ] = None,
     ) -> None:
         super().__init__(
             file_path=file_path, code=code, message=message, line=line, column=column
