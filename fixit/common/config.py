@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import distutils.spawn
+import importlib.resources as pkg_resources
 import json
 import os
 import re
@@ -73,9 +74,8 @@ def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
 ) -> Dict[str, Any]:
     # Validates the types and presence of the keys
-    cur_loc = os.path.realpath(os.path.join(current_dir, os.path.dirname(__file__)))
-    with open(os.path.join(cur_loc, "config.schema.json")) as f:
-        schema = json.load(f)
+    config = pkg_resources.read_text(__package__, "config.schema.json")
+    schema = json.loads(config)
     validate(instance=file_content, schema=schema)
 
     settings = {}

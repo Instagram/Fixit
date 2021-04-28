@@ -2,6 +2,7 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+
 from pathlib import Path
 
 from jsonschema.exceptions import ValidationError
@@ -26,6 +27,7 @@ class TestConfig(UnitTest):
         )
 
     def test_validated_settings_all_keys(self) -> None:
+        self.maxDiff = None
         config = {
             "formatter": ["black", "-", "--no-diff"],
             "packages": ["python.fixit.rules"],
