@@ -102,6 +102,7 @@ class UseFstringRule(CstLintRule):
         Valid('"hey"'),
         Valid('"hey" + "there"'),
         Valid('b"a type %s" % var'),
+        Valid('logging.error("printf style logging %s", my_var)'),
     ]
 
     INVALID = [
