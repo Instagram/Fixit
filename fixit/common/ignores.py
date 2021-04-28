@@ -28,6 +28,8 @@ from fixit.common.base import CstLintRule
 from fixit.common.comments import CommentInfo
 from fixit.common.config import (
     FLAKE8_NOQA_FILE,
+    HAS_LINT_IGNORE_OR_NOQA_REGEXP,
+    HAS_LINT_IGNORE_REGEXP,
     LINT_IGNORE_REGEXP,
     NOQA_FILE_RULE,
     NOQA_INLINE_REGEXP,
@@ -283,3 +285,13 @@ class IgnoreInfo:
             # TODO: compute global suppression comments and merge them here
             local_ignore_info.local_suppression_comments,
         )
+
+
+def has_ignore_comments(source: bytes, *, use_noqa: bool) -> bool:
+    """Quick check to see if there are any ignore comments in the code.
+
+    This allow us to avoid having to tokenize all the files, which is a slow
+    operation.
+    """
+    pattern = HAS_LINT_IGNORE_OR_NOQA_REGEXP if use_noqa else HAS_LINT_IGNORE_REGEXP
+    return bool(pattern.search(source))

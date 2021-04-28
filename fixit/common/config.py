@@ -31,7 +31,7 @@ NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
     # We do not care about the ``: `` that follows ``noqa``
     # We do not care about the casing of ``noqa``
     # We want a comma-separated list of errors
-    r"^# noqa(?!-file)(?:: (?P<codes>([a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+))?",
+    r"# noqa(?!-file)(?:: (?P<codes>([a-zA-Z0-9]+,\s*)*[-_a-zA-Z0-9]+))?",
     re.IGNORECASE,
 )
 LINT_IGNORE_REGEXP: Pattern[str] = re.compile(
@@ -60,6 +60,23 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
     + r"(?P<reason>.+)"
 )
 
+
+def _remove_capturing_groups(regex: bytes) -> bytes:
+    return re.sub(rb"\?P<\w+>", b"", regex)
+
+
+HAS_LINT_IGNORE_REGEXP: Pattern[bytes] = re.compile(LINT_IGNORE_REGEXP.pattern.encode())
+HAS_LINT_IGNORE_OR_NOQA_REGEXP: Pattern[bytes] = re.compile(
+    b"|".join(
+        [
+            _remove_capturing_groups(LINT_IGNORE_REGEXP.pattern.encode()),
+            _remove_capturing_groups(NOQA_INLINE_REGEXP.pattern.encode()),
+            _remove_capturing_groups(NOQA_FILE_RULE.pattern.encode()),
+            _remove_capturing_groups(FLAKE8_NOQA_FILE.pattern.encode()),
+        ]
+    ),
+    re.IGNORECASE,
+)
 
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
