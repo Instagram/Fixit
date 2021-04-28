@@ -117,7 +117,9 @@ class CstLintRule(BatchableCSTVisitor, metaclass=ABCMeta):
         message: Optional[str] = None,
         *,
         position: Optional[CodePosition] = None,
-        replacement: Optional[Union[cst.CSTNode, cst.RemovalSentinel]] = None,
+        replacement: Optional[
+            Union[cst.CSTNode, cst.RemovalSentinel, cst.FlattenSentinel]
+        ] = None,
     ) -> None:
         """
         Report a lint violation for a given node. Optionally specify a custom
