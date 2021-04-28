@@ -64,6 +64,21 @@ class CollapseIsinstanceChecksRule(CstLintRule):
     ]
     INVALID = [
         Invalid(
+            """
+            if something:
+                pass
+            elif isinstance(x, y) or isinstance(x, z):
+                pass
+            """,
+            expected_replacement=
+            """
+            if something:
+                pass
+            elif isinstance(x, (y, z)):
+                pass
+            """,
+        ),
+        Invalid(
             "isinstance(x, y) or isinstance(x, z)",
             expected_replacement="isinstance(x, (y, z))",
         ),
