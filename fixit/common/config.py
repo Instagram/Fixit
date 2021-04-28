@@ -27,6 +27,7 @@ from fixit.common.utils import LintRuleCollectionT, import_distinct_rules_from_p
 
 
 LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
+LINT_CONFIG_SCHEMA_NAME: str = "config.schema.json"
 
 # https://gitlab.com/pycqa/flake8/blob/9631dac52aa6ed8a3de9d0983c/src/flake8/defaults.py
 NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
@@ -79,10 +80,17 @@ DEFAULT_FORMATTER = ["black", "-"]
 def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
 ) -> Dict[str, Any]:
-    # Validates the types and presence of the keys
-    config = pkg_resources.read_text(__package__, "config.schema.json")
-    schema = json.loads(config)
-    validate(instance=file_content, schema=schema)
+    try:
+        # __package__ should never be none (config.py should not be run directly)
+        # But use .get() to make pyre happy
+        pkg = globals().get("__package__")
+        assert pkg, "No package was found, config types not validated."
+        config = pkg_resources.read_text(pkg, "config.schema.json")
+        # Validates the types and presence of the keys
+        schema = json.loads(config)
+        validate(instance=file_content, schema=schema)
+    except (AssertionError, FileNotFoundError):
+        pass
 
     settings = {}
     for list_setting_name in LIST_SETTINGS:

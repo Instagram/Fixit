@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 from pathlib import Path
 
 from jsonschema.exceptions import ValidationError
@@ -32,6 +33,8 @@ class TestConfig(UnitTest):
             "formatter": ["black", "-", "--no-diff"],
             "packages": ["python.fixit.rules"],
             "block_list_rules": ["Flake8PseudoLintRule"],
+            "fixture_dir": f"{os.getcwd()}",
+            "repo_root": f"{os.getcwd()}",
             "rule_config": {
                 "UnusedImportsRule": {
                     "ignored_unused_modules": [
