@@ -32,8 +32,6 @@ class TestConfig(UnitTest):
             "formatter": ["black", "-", "--no-diff"],
             "packages": ["python.fixit.rules"],
             "block_list_rules": ["Flake8PseudoLintRule"],
-            "fixture_dir": "/fake/path",
-            "repo_root": "/fake/path",
             "rule_config": {
                 "UnusedImportsRule": {
                     "ignored_unused_modules": [
