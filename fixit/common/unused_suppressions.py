@@ -62,7 +62,7 @@ def _compose_new_comment(
 def _get_unused_codes_in_comment(
     local_supp_comment: SuppressionComment, ignored_rules_that_ran: Collection[str]
 ) -> Collection[str]:
-    """ Returns a subset of the rules in the comment which did not show up in any report. """
+    """Returns a subset of the rules in the comment which did not show up in any report."""
     return {
         ir
         for ir in ignored_rules_that_ran
