@@ -70,19 +70,51 @@ class ValidTestCase:
 
 @add_slots
 @dataclass(frozen=True)
+class Position:
+    line: Optional[int] = None
+    column: Optional[int] = None
+
+    @property
+    def position_str(self) -> str:
+        return f"{_str_or_any(self.line)}:{_str_or_any(self.column)}"
+
+
+@add_slots
+@dataclass(frozen=True)
 class InvalidTestCase:
     code: str
     kind: Optional[str] = None
+
+    # should we mark these as deprecated?
     line: Optional[int] = None
     column: Optional[int] = None
+
+    positions: Optional[List[Position]] = None
     expected_replacement: Optional[str] = None
     filename: str = DEFAULT_FILENAME
     config: LintConfig = DEFAULT_CONFIG
     expected_message: Optional[str] = None
 
     @property
-    def expected_str(self) -> str:
-        return f"{_str_or_any(self.line)}:{_str_or_any(self.column)}: {self.kind} ..."
+    def expected_str(self) -> Optional[List[str]]:
+        pos = self.positions
+        if pos:
+            return [
+                f"{_str_or_any(p.line)}:{_str_or_any(p.column)}: {self.kind} ..."
+                for p in pos
+            ]
+
+    def __post_init__(self) -> None:
+        # Accept line and column in generated __init__ for compatibility with existing
+        # test cases and add them into the positions list for new multiple report cases
+        if self.positions is None:
+            object.__setattr__(
+                self, "positions", [Position(line=self.line, column=self.column)]
+            )
+
+        # Maybe clean up the original properties down the line?
+        # object.__setattr__(self, 'line', None)
+        # object.__setattr__(self, 'column', None)
 
 
 def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
