@@ -85,7 +85,7 @@ def get_validated_settings(
         # But use .get() to make pyre happy
         pkg = globals().get("__package__")
         assert pkg, "No package was found, config types not validated."
-        config = pkg_resources.read_text(pkg, "config.schema.json")
+        config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
         # Validates the types and presence of the keys
         schema = json.loads(config)
         validate(instance=file_content, schema=schema)
