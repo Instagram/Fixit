@@ -4,7 +4,13 @@
 # LICENSE file in the root directory of this source tree.
 
 import distutils.spawn
-import importlib.resources as pkg_resources
+
+
+try:
+    import importlib.resources as pkg_resources
+except ImportError:  # For <=3.6
+    import importlib_resources as pkg_resources
+
 import json
 import os
 import re
