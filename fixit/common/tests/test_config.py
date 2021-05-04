@@ -46,8 +46,10 @@ class TestConfig(UnitTest):
                 BOOLEAN_SETTINGS, LIST_SETTINGS, PATH_SETTINGS, NESTED_SETTINGS
             )
         )
-        # Assert all the settings are set
+        # Assert all the setting keys are present
         self.assertTrue(all(setting in settings_options for setting in settings.keys()))
+        # Assert everything has been set as expected
+        self.assertEqual(TEST_CONFIG, settings)
 
     def test_get_validated_settings_raises_type_error(self) -> None:
         TEST_CONFIG["use_noqa"] = "Yes"  # set the wrong type
