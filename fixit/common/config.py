@@ -71,31 +71,22 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 )
 
 
-LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
-NESTED_SETTINGS = ["rule_config"]
 DEFAULT_FORMATTER = ["black", "-"]
 
 
 def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
 ) -> Dict[str, Any]:
-    try:
-        # __package__ should never be none (config.py should not be run directly)
-        # But use .get() to make pyre happy
-        pkg = globals().get("__package__")
-        assert pkg, "No package was found, config types not validated."
-        config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
-        # Validates the types and presence of the keys
-        schema = json.loads(config)
-        validate(instance=file_content, schema=schema)
-    except (AssertionError, FileNotFoundError):
-        pass
+    # __package__ should never be none (config.py should not be run directly)
+    # But use .get() to make pyre happy
+    pkg = globals().get("__package__")
+    assert pkg, "No package was found, config types not validated."
+    config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
+    # Validates the types and presence of the keys
+    schema = json.loads(config)
+    validate(instance=file_content, schema=schema)
 
-    settings = {}
-    for list_setting_name in LIST_SETTINGS:
-        if list_setting_name in file_content:
-            settings[list_setting_name] = file_content[list_setting_name]
     for path_setting_name in PATH_SETTINGS:
         if path_setting_name in file_content:
             setting_value = file_content[path_setting_name]
@@ -103,17 +94,9 @@ def get_validated_settings(
         else:
             abspath: Path = current_dir
         # Set path setting to absolute path.
-        settings[path_setting_name] = str(abspath)
+        file_content[path_setting_name] = str(abspath)
 
-    for nested_setting_name in NESTED_SETTINGS:
-        if nested_setting_name in file_content:
-            nested_setting = file_content[nested_setting_name]
-            settings[nested_setting_name] = {}
-            # Verify that each setting is also a mapping
-            for k, v in nested_setting.items():
-                settings[nested_setting_name].update({k: v})
-
-    return settings
+    return file_content
 
 
 @lru_cache()

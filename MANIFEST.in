@@ -1,1 +1,1 @@
-include README.rst LICENSE CODE_OF_CONDUCT.md CONTRIBUTING.md requirements.txt requirements-dev.txt fixit/py.typed config.schema.json
+include README.rst LICENSE CODE_OF_CONDUCT.md CONTRIBUTING.md requirements.txt requirements-dev.txt fixit/py.typed fixit/common/config.schema.json
