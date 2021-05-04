@@ -63,14 +63,12 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 
 LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
+BOOLEAN_SETTINGS = ["use_noqa"]
 NESTED_SETTINGS = ["rule_config"]
 DEFAULT_FORMATTER = ["black", "-"]
 
 
-def get_validated_settings(
-    file_content: Dict[str, Any], current_dir: Path
-) -> Dict[str, Any]:
-    settings = {}
+def _set_list_settings(settings: Dict[str, Any], file_content: Dict[str, Any]) -> None:
     for list_setting_name in LIST_SETTINGS:
         if list_setting_name in file_content:
             if not (
@@ -81,6 +79,11 @@ def get_validated_settings(
                     f"Expected list of strings for `{list_setting_name}` setting."
                 )
             settings[list_setting_name] = file_content[list_setting_name]
+
+
+def _set_path_settings(
+    settings: Dict[str, Any], file_content: Dict[str, Any], current_dir: Path
+) -> None:
     for path_setting_name in PATH_SETTINGS:
         if path_setting_name in file_content:
             setting_value = file_content[path_setting_name]
@@ -92,6 +95,10 @@ def get_validated_settings(
         # Set path setting to absolute path.
         settings[path_setting_name] = str(abspath)
 
+
+def _set_nested_settings(
+    settings: Dict[str, Any], file_content: Dict[str, Any]
+) -> None:
     for nested_setting_name in NESTED_SETTINGS:
         if nested_setting_name in file_content:
             nested_setting = file_content[nested_setting_name]
@@ -108,6 +115,28 @@ def get_validated_settings(
                     )
                 settings[nested_setting_name].update({k: v})
 
+
+def _set_boolean_settings(
+    settings: Dict[str, Any], file_content: Dict[str, Any]
+) -> None:
+    for boolean_setting_name in BOOLEAN_SETTINGS:
+        if boolean_setting_name in file_content:
+            setting_value = file_content[boolean_setting_name]
+            if not isinstance(setting_value, bool):
+                raise TypeError(
+                    f"Expected boolean for `{boolean_setting_name}` setting."
+                )
+            settings[boolean_setting_name] = setting_value
+
+
+def get_validated_settings(
+    file_content: Dict[str, Any], current_dir: Path
+) -> Dict[str, Any]:
+    settings = {}
+    _set_list_settings(settings, file_content)
+    _set_path_settings(settings, file_content, current_dir)
+    _set_nested_settings(settings, file_content)
+    _set_boolean_settings(settings, file_content)
     return settings
 
 
