@@ -17,3 +17,7 @@ class DummyRule2(CstLintRule):
 
 class DummyRule3(CstLintRule):
     pass
+
+
+class DummyRule4(CstLintRule):
+    pass

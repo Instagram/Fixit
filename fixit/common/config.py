@@ -61,7 +61,13 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 )
 
 
-LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
+LIST_SETTINGS = [
+    "allow_list_rules",
+    "formatter",
+    "block_list_patterns",
+    "block_list_rules",
+    "packages",
+]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
 NESTED_SETTINGS = ["rule_config"]
 DEFAULT_FORMATTER = ["black", "-"]
@@ -152,7 +158,10 @@ def get_rules_from_config() -> LintRuleCollectionT:
     all_names: Set[str] = set()
     for package in lint_config.packages:
         rules_from_pkg = import_distinct_rules_from_package(
-            package, lint_config.block_list_rules, all_names
+            package,
+            lint_config.block_list_rules,
+            all_names,
+            lint_config.allow_list_rules,
         )
         rules.update(rules_from_pkg)
     return rules
