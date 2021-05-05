@@ -34,7 +34,7 @@ class LintPatch:
     def get(
         wrapper: MetadataWrapper,
         original_node: cst.CSTNode,
-        replacement_node: Union[cst.CSTNode, cst.RemovalSentinel],
+        replacement_node: Union[cst.CSTNode, cst.FlattenSentinel, cst.RemovalSentinel],
     ) -> "LintPatch":
         # Batch the execution of these position providers
         wrapper.resolve_many(
@@ -172,9 +172,9 @@ class LintPatch:
 def _replace_or_remove(
     parent: cst.CSTNode,
     original_node: cst.CSTNode,
-    replacement_node: Union[cst.CSTNode, cst.RemovalSentinel],
+    replacement_node: Union[cst.CSTNode, cst.FlattenSentinel, cst.RemovalSentinel],
 ) -> cst.CSTNode:
-    if isinstance(replacement_node, cst.RemovalSentinel):
+    if isinstance(replacement_node, (cst.RemovalSentinel, cst.FlattenSentinel)):
         return cst.ensure_type(parent.deep_remove(original_node), cst.CSTNode)
     else:
         return parent.deep_replace(original_node, replacement_node)

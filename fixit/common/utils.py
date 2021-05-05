@@ -86,7 +86,7 @@ class InvalidTestCase:
 
 
 def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
-    """ Import all submodules of a module, recursively, including subpackages. """
+    """Import all submodules of a module, recursively, including subpackages."""
     package: ModuleType = importlib.import_module(package)
     results = {}
     # pyre-fixme[16]: `ModuleType` has no attribute `__path__`.

@@ -57,7 +57,7 @@ class {class_name}Rule(CstLintRule):
 
 
 def is_path_exists(path: str) -> Path:
-    """Check for valid path, if yes, return `Path` else raise `Error` """
+    """Check for valid path, if yes, return `Path` else raise `Error`"""
     filepath = Path(path)
     if filepath.exists():
         raise FileExistsError(f"{filepath} already exists")
@@ -68,7 +68,7 @@ def is_path_exists(path: str) -> Path:
 
 
 def is_valid_name(name: str) -> str:
-    """Check for valid rule name """
+    """Check for valid rule name"""
     if name.casefold().endswith(("rule", "rules")):
         raise ValueError("Please enter rule name without the suffix, 'rule' or 'Rule'")
     return snake_to_camelcase(name)
@@ -89,7 +89,7 @@ def create_rule_file(file_path: Path, rule_name: str) -> None:
 
 
 def _add_arguments(parser: argparse.ArgumentParser) -> None:
-    """All required arguments for `add_new_rule` """
+    """All required arguments for `add_new_rule`"""
     parser.add_argument(
         "--path",
         type=is_path_exists,
