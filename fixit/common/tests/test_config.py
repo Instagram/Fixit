@@ -15,9 +15,8 @@ from fixit.common.config import get_validated_settings
 class TestConfig(UnitTest):
     def test_validated_settings_with_bad_types(self) -> None:
         bad_config = {"block_list_rules": False}
-        with self.assertRaises(ValidationError) as ex:
+        with self.assertRaisesRegex(ValidationError, "False is not of type 'array'"):
             get_validated_settings(bad_config, Path("."))
-        self.assertIn("False is not of type 'array'", str(ex.exception))
 
     def test_validated_settings_with_correct_types(self) -> None:
         config = {"block_list_rules": ["FakeRule"]}
