@@ -1,0 +1,52 @@
+{
+    "$id": "config.schema.json",
+    "title": "FixIt Configuration File Schema",
+    "description": "Schema definition for FixIt configuration files",
+    "type": "object",
+    "properties": {
+        "block_list_patterns": {
+            "description": "A list of patterns that indicate that a file should not be linted.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "block_list_rules": {
+            "description": "A list of rules (whether custom or from Fixit) that should not be applied to the repository.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "fixture_dir": {
+            "description": "The directory in which fixture files required for unit testing are to be found.",
+            "type": "string"
+        },
+        "use_noqa": {
+            "description": "Defaults to False. Use True to support Flake8 lint suppression comment: noqa.",
+            "type": "boolean"
+        },
+        "formatter": {
+            "description": "A list of the formatter commands to use after a lint is complete.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "packages": {
+            "description": "The Python packages in which to search for lint rules.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "repo_root": {
+            "description": "The path to the repository root.",
+            "type": "string"
+        },
+        "rule_config": {
+            "description": "Rule-specific configurations.",
+            "type": "object"
+        }
+    }
+}
