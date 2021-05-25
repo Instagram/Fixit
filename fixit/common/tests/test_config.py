@@ -12,6 +12,26 @@ from libcst.testing.utils import UnitTest
 from fixit.common.config import get_validated_settings
 
 
+TEST_CONFIG = {
+    "formatter": ["black", "-", "--no-diff"],
+    "packages": ["python.fixit.rules"],
+    "block_list_rules": ["Flake8PseudoLintRule"],
+    "fixture_dir": f"{os.getcwd()}",
+    "repo_root": f"{os.getcwd()}",
+    "use_noqa": False,
+    "rule_config": {
+        "UnusedImportsRule": {
+            "ignored_unused_modules": [
+                "__future__",
+                "__static__",
+                "__static__.compiler_flags",
+                "__strict__",
+            ]
+        },
+    },
+}
+
+
 class TestConfig(UnitTest):
     def test_validated_settings_with_bad_types(self) -> None:
         bad_config = {"block_list_rules": False}
