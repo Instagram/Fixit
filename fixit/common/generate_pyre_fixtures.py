@@ -7,7 +7,7 @@ import argparse
 import json
 import tempfile
 from pathlib import Path
-from typing import cast, List
+from typing import List, cast
 
 from libcst.metadata.type_inference_provider import (
     PyreData,
