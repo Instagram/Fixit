@@ -4,6 +4,14 @@
 # LICENSE file in the root directory of this source tree.
 
 import distutils.spawn
+
+
+try:
+    import importlib.resources as pkg_resources
+except ImportError:  # For <=3.6
+    import importlib_resources as pkg_resources
+
+import json
 import os
 import re
 from dataclasses import asdict
@@ -12,12 +20,14 @@ from pathlib import Path
 from typing import Any, Dict, Pattern, Set
 
 import yaml
+from jsonschema import validate
 
 from fixit.common.base import LintConfig
 from fixit.common.utils import LintRuleCollectionT, import_distinct_rules_from_package
 
 
 LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")
+LINT_CONFIG_SCHEMA_NAME: str = "config.schema.json"
 
 # https://gitlab.com/pycqa/flake8/blob/9631dac52aa6ed8a3de9d0983c/src/flake8/defaults.py
 NOQA_INLINE_REGEXP: Pattern[str] = re.compile(
@@ -61,83 +71,32 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
 )
 
 
-LIST_SETTINGS = ["formatter", "block_list_patterns", "block_list_rules", "packages"]
 PATH_SETTINGS = ["repo_root", "fixture_dir"]
-BOOLEAN_SETTINGS = ["use_noqa"]
-NESTED_SETTINGS = ["rule_config"]
 DEFAULT_FORMATTER = ["black", "-"]
-
-
-def _set_list_settings(settings: Dict[str, Any], file_content: Dict[str, Any]) -> None:
-    for list_setting_name in LIST_SETTINGS:
-        if list_setting_name in file_content:
-            if not (
-                isinstance(file_content[list_setting_name], list)
-                and all(isinstance(s, str) for s in file_content[list_setting_name])
-            ):
-                raise TypeError(
-                    f"Expected list of strings for `{list_setting_name}` setting."
-                )
-            settings[list_setting_name] = file_content[list_setting_name]
-
-
-def _set_path_settings(
-    settings: Dict[str, Any], file_content: Dict[str, Any], current_dir: Path
-) -> None:
-    for path_setting_name in PATH_SETTINGS:
-        if path_setting_name in file_content:
-            setting_value = file_content[path_setting_name]
-            if not isinstance(setting_value, str):
-                raise TypeError(f"Expected string for `{path_setting_name}` setting.")
-            abspath: Path = (current_dir / setting_value).resolve()
-        else:
-            abspath: Path = current_dir
-        # Set path setting to absolute path.
-        settings[path_setting_name] = str(abspath)
-
-
-def _set_nested_settings(
-    settings: Dict[str, Any], file_content: Dict[str, Any]
-) -> None:
-    for nested_setting_name in NESTED_SETTINGS:
-        if nested_setting_name in file_content:
-            nested_setting = file_content[nested_setting_name]
-            if not isinstance(nested_setting, dict):
-                raise TypeError(
-                    f"Expected key-value pairs for `{nested_setting_name}` setting."
-                )
-            settings[nested_setting_name] = {}
-            # Verify that each setting is also a mapping
-            for k, v in nested_setting.items():
-                if not isinstance(v, dict):
-                    raise TypeError(
-                        f"Expected key-value pairs for `{v}` setting in {nested_setting_name}."
-                    )
-                settings[nested_setting_name].update({k: v})
-
-
-def _set_boolean_settings(
-    settings: Dict[str, Any], file_content: Dict[str, Any]
-) -> None:
-    for boolean_setting_name in BOOLEAN_SETTINGS:
-        if boolean_setting_name in file_content:
-            setting_value = file_content[boolean_setting_name]
-            if not isinstance(setting_value, bool):
-                raise TypeError(
-                    f"Expected boolean for `{boolean_setting_name}` setting."
-                )
-            settings[boolean_setting_name] = setting_value
 
 
 def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
 ) -> Dict[str, Any]:
-    settings = {}
-    _set_list_settings(settings, file_content)
-    _set_path_settings(settings, file_content, current_dir)
-    _set_nested_settings(settings, file_content)
-    _set_boolean_settings(settings, file_content)
-    return settings
+    # __package__ should never be none (config.py should not be run directly)
+    # But use .get() to make pyre happy
+    pkg = globals().get("__package__")
+    assert pkg, "No package was found, config types not validated."
+    config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
+    # Validates the types and presence of the keys
+    schema = json.loads(config)
+    validate(instance=file_content, schema=schema)
+
+    for path_setting_name in PATH_SETTINGS:
+        if path_setting_name in file_content:
+            setting_value = file_content[path_setting_name]
+            abspath: Path = (current_dir / setting_value).resolve()
+        else:
+            abspath: Path = current_dir
+        # Set path setting to absolute path.
+        file_content[path_setting_name] = str(abspath)
+
+    return file_content
 
 
 @lru_cache()

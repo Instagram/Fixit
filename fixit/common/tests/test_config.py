@@ -3,19 +3,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import itertools
 import os
 from pathlib import Path
 
+from jsonschema.exceptions import ValidationError
 from libcst.testing.utils import UnitTest
 
-from fixit.common.config import (
-    BOOLEAN_SETTINGS,
-    LIST_SETTINGS,
-    NESTED_SETTINGS,
-    PATH_SETTINGS,
-    get_validated_settings,
-)
+from fixit.common.config import get_validated_settings
 
 
 TEST_CONFIG = {
@@ -39,21 +33,40 @@ TEST_CONFIG = {
 
 
 class TestConfig(UnitTest):
-    def test_get_validated_settings(self) -> None:
-        settings = get_validated_settings(TEST_CONFIG, Path("."))
-        settings_options = list(
-            itertools.chain(
-                BOOLEAN_SETTINGS, LIST_SETTINGS, PATH_SETTINGS, NESTED_SETTINGS
-            )
-        )
-        # Assert all the setting keys are present
-        self.assertTrue(all(setting in settings_options for setting in settings.keys()))
-        # Assert everything has been set as expected
-        self.assertEqual(TEST_CONFIG, settings)
+    def test_validated_settings_with_bad_types(self) -> None:
+        bad_config = {"block_list_rules": False}
+        with self.assertRaisesRegex(ValidationError, "False is not of type 'array'"):
+            get_validated_settings(bad_config, Path("."))
 
-    def test_get_validated_settings_raises_type_error(self) -> None:
-        TEST_CONFIG["use_noqa"] = "Yes"  # set the wrong type
-        with self.assertRaisesRegex(
-            TypeError, r"Expected boolean for `use_noqa` setting\."
-        ):
-            get_validated_settings(TEST_CONFIG, Path("."))
+    def test_validated_settings_with_correct_types(self) -> None:
+        config = {"block_list_rules": ["FakeRule"]}
+        settings = get_validated_settings(config, Path("."))
+        self.assertEqual(
+            {"block_list_rules": ["FakeRule"], "fixture_dir": ".", "repo_root": "."},
+            settings,
+        )
+
+    def test_validated_settings_all_keys(self) -> None:
+        self.maxDiff = None
+        config = {
+            "formatter": ["black", "-", "--no-diff"],
+            "packages": ["python.fixit.rules"],
+            "block_list_rules": ["Flake8PseudoLintRule"],
+            "fixture_dir": f"{os.getcwd()}",
+            "repo_root": f"{os.getcwd()}",
+            "rule_config": {
+                "UnusedImportsRule": {
+                    "ignored_unused_modules": [
+                        "__future__",
+                        "__static__",
+                        "__static__.compiler_flags",
+                        "__strict__",
+                    ]
+                },
+            },
+        }
+        settings = get_validated_settings(config, Path("."))
+        self.assertEqual(
+            config,
+            settings,
+        )
