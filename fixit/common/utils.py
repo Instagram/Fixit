@@ -105,6 +105,7 @@ def import_distinct_rules_from_package(
     package: str,
     block_list_rules: List[str] = [],
     seen_names: Optional[Set[str]] = None,
+    allow_list_rules: Optional[List[str]] = None,
 ) -> LintRuleCollectionT:
     # Import all rules from the specified package, omitting rules that appear in the block list.
     # Raises error on repeated rule names.
@@ -129,8 +130,10 @@ def import_distinct_rules_from_package(
                         )
                     # Add all names (even block-listed ones) to the `names` set for duplicate checking.
                     seen_names.add(name)
-                    if name not in block_list_rules:
-                        rules.add(obj)
+                    # For backwards compatibility if `allow_list_rules` is missing fall back to all allowed
+                    if not allow_list_rules or name in allow_list_rules:
+                        if name not in block_list_rules:
+                            rules.add(obj)
             except TypeError:
                 continue
     return rules

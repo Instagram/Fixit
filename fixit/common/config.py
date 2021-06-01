@@ -70,9 +70,8 @@ NOQA_FILE_RULE: Pattern[str] = re.compile(
     + r"(?P<reason>.+)"
 )
 
-
-PATH_SETTINGS = ["repo_root", "fixture_dir"]
 DEFAULT_FORMATTER = ["black", "-"]
+PATH_SETTINGS = ["repo_root", "fixture_dir"]
 
 
 def get_validated_settings(
@@ -140,7 +139,10 @@ def get_rules_from_config() -> LintRuleCollectionT:
     all_names: Set[str] = set()
     for package in lint_config.packages:
         rules_from_pkg = import_distinct_rules_from_package(
-            package, lint_config.block_list_rules, all_names
+            package,
+            lint_config.block_list_rules,
+            all_names,
+            lint_config.allow_list_rules,
         )
         rules.update(rules_from_pkg)
     return rules
