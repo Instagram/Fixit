@@ -7,7 +7,7 @@ import argparse
 import json
 import tempfile
 from pathlib import Path
-from typing import cast
+from typing import List, cast
 
 from libcst.metadata.type_inference_provider import (
     PyreData,
@@ -33,10 +33,10 @@ class RuleTypeError(Exception):
 
 
 class PyreQueryError(Exception):
-    def __init__(self, command: str, message: str) -> None:
+    def __init__(self, command: List[str], message: str) -> None:
         super().__init__(
             "Unable to infer types from temporary file. "
-            + f"Command `{command}` returned with the following message: {message}."
+            + f"Command `{' '.join(command)}` returned with the following message: {message}."
         )
 
 
@@ -50,7 +50,7 @@ def gen_types_for_test_case(source_code: str, dest_path: Path) -> None:
         temp.write(_dedent(source_code))
         temp.seek(0)
 
-        cmd = f'''pyre query "types(path='{temp.name}')"'''
+        cmd = ["pyre", "query", f'''"types(path='{temp.name}')"''']
         stdout, stderr, return_code = run_command(cmd)
         if return_code != 0:
             raise PyreQueryError(cmd, f"{stdout}\n{stderr}")
@@ -72,7 +72,7 @@ def gen_types(rule: CstLintRule, rule_fixture_dir: Path) -> None:
     if hasattr(rule, "VALID") or hasattr(rule, "INVALID"):
         print("Starting pyre server")
 
-        stdout, stderr, return_code = run_command("pyre start")
+        stdout, stderr, return_code = run_command(["pyre", "start"])
         if return_code != 0:
             print(stdout)
             print(stderr)
@@ -86,7 +86,7 @@ def gen_types(rule: CstLintRule, rule_fixture_dir: Path) -> None:
                 for idx, invalid_tc in enumerate(getattr(rule, "INVALID")):
                     path: Path = rule_fixture_dir / f"{class_name}_INVALID_{idx}.json"
                     gen_types_for_test_case(source_code=invalid_tc.code, dest_path=path)
-            run_command("pyre stop")
+            run_command(["pyre", "stop"])
 
 
 def get_fixture_path(

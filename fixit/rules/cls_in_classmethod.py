@@ -22,7 +22,7 @@ CLS = "cls"
 
 class _RenameTransformer(cst.CSTTransformer):
     def __init__(
-        self, names: List[Union[cst.Name, cst.Attribute]], new_name: str
+        self, names: List[Union[cst.Name, cst.BaseString, cst.Attribute]], new_name: str
     ) -> None:
         self.names = names
         self.new_name = new_name
@@ -269,7 +269,7 @@ class UseClsInClassmethodRule(CstLintRule):
             self.report(node)
             return
 
-        refs: List[Union[cst.Name, cst.Attribute]] = []
+        refs: List[Union[cst.Name, cst.Attribute, cst.BaseString]] = []
         assignments = scope[p0_name.value]
         for a in assignments:
             if isinstance(a, Assignment):
