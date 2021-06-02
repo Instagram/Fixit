@@ -6,10 +6,6 @@
 from fixit.common.base import CstLintRule
 
 
-# Dummy rule for integration testing purposes.
+# Dummy rules for integration testing purposes.
 class DummyRule1(CstLintRule):
-    pass
-
-
-class BlockedDummyRule1(CstLintRule):
     pass

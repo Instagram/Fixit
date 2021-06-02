@@ -17,9 +17,10 @@ import re
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Pattern, Set
+from typing import Any, Dict, List, Optional, Pattern, Set
 
 import yaml
+from jsonmerge import Merger
 from jsonschema import validate
 
 from fixit.common.base import LintConfig
@@ -76,15 +77,11 @@ PATH_SETTINGS = ["repo_root", "fixture_dir"]
 
 def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
-) -> Dict[str, Any]:
-    # __package__ should never be none (config.py should not be run directly)
-    # But use .get() to make pyre happy
-    pkg = globals().get("__package__")
-    assert pkg, "No package was found, config types not validated."
-    config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
-    # Validates the types and presence of the keys
-    schema = json.loads(config)
-    validate(instance=file_content, schema=schema)
+) -> Optional[Dict[str, Any]]:
+    schema = _get_config_schema()
+    if schema:
+        # Validates the types and presence of the keys
+        validate(instance=file_content, schema=schema)
 
     for path_setting_name in PATH_SETTINGS:
         if path_setting_name in file_content:
@@ -95,14 +92,26 @@ def get_validated_settings(
         # Set path setting to absolute path.
         file_content[path_setting_name] = str(abspath)
 
+    file_content["inherit"] = file_content.get("inherit", False)
     return file_content
 
 
-@lru_cache()
-def get_lint_config() -> LintConfig:
-    config = {}
+def _get_config_schema() -> Dict[str, Any]:
+    # __package__ should never be none (config.py should not be run directly)
+    # But use .get() to make pyre happy
+    pkg = globals().get("__package__")
+    assert pkg, "No package was found, config types not validated."
+    config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
+    schema = json.loads(config)
+    return schema
 
+
+def _get_configs_to_merge() -> List[Dict[str, Any]]:
+    needs_merge = []
     cwd = Path.cwd()
+
+    # Gather all possible configs from leaf to root
+    # Bail out if inherit = False
     for directory in (cwd, *cwd.parents):
         # Check for config file.
         possible_config = directory / LINT_CONFIG_FILE_NAME
@@ -112,10 +121,39 @@ def get_lint_config() -> LintConfig:
 
             if isinstance(file_content, dict):
                 config = get_validated_settings(file_content, directory)
-                break
+                if not config:
+                    break
+                needs_merge.append(config)
+                if not config["inherit"]:
+                    break
+    return needs_merge
+
+
+def _merge_lint_configs() -> Dict[str, Any]:
+    needs_merge = _get_configs_to_merge()
+    schema = _get_config_schema()
+    if not schema:
+        # Return the lowest leaf config with no merging
+        # This should not happen
+        return needs_merge[0]
+    merger = Merger(schema)
+    # Merge all the inheritable configs from root to leaf
+    merged_config = {}
+    for config in reversed(needs_merge):
+        if not merged_config:
+            merged_config = config
+        else:
+            merged_config = merger.merge(merged_config, config)
+    return merged_config
+
+
+@lru_cache()
+def get_lint_config() -> LintConfig:
+    config = _merge_lint_configs()
 
     # Find formatter executable if there is one.
     formatter_args = config.get("formatter", DEFAULT_FORMATTER)
+    assert isinstance(formatter_args, List)
     exe = distutils.spawn.find_executable(formatter_args[0]) or formatter_args[0]
     formatter_args[0] = os.path.abspath(exe)
     config["formatter"] = formatter_args
@@ -137,12 +175,14 @@ def get_rules_from_config() -> LintRuleCollectionT:
     lint_config = get_lint_config()
     rules: LintRuleCollectionT = set()
     all_names: Set[str] = set()
+    seen_modules: Set[str] = set()
     for package in lint_config.packages:
         rules_from_pkg = import_distinct_rules_from_package(
             package,
             lint_config.block_list_rules,
             all_names,
             lint_config.allow_list_rules,
+            seen_modules
         )
         rules.update(rules_from_pkg)
     return rules

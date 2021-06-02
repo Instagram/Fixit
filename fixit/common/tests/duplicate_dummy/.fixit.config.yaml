@@ -1,0 +1,4 @@
+repo_root: .
+packages:
+- fixit.common.tests.duplicate_dummy
+inherit: False

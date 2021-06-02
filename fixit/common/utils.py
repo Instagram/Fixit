@@ -106,6 +106,7 @@ def import_distinct_rules_from_package(
     block_list_rules: List[str] = [],
     seen_names: Optional[Set[str]] = None,
     allow_list_rules: Optional[List[str]] = None,
+    seen_modules: Optional[Set[str]] = None,
 ) -> LintRuleCollectionT:
     # Import all rules from the specified package, omitting rules that appear in the block list.
     # Raises error on repeated rule names.
@@ -113,7 +114,13 @@ def import_distinct_rules_from_package(
     rules: LintRuleCollectionT = set()
     if seen_names is None:
         seen_names: Set[str] = set()
-    for _module_name, module in import_submodules(package).items():
+    if seen_modules is None:
+        seen_modules: Set[str] = set()
+    for module_name, module in import_submodules(package).items():
+        # Filter out overlapping packages
+        if module_name in seen_modules:
+            continue
+        seen_modules.add(module_name)
         for name in dir(module):
             try:
                 obj = getattr(module, name)

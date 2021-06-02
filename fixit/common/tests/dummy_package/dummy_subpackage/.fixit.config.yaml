@@ -1,0 +1,4 @@
+repo_root: .
+block_list_rules:
+- BlockedDummyRule2
+inherit: True

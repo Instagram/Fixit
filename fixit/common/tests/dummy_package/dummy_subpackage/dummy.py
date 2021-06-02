@@ -7,15 +7,10 @@ from fixit.common.base import CstLintRule
 
 
 # Dummy rules for integration testing purposes.
-class DummyRule1(CstLintRule):
-    pass
-
-
-class DummyRule2(CstLintRule):
-    pass
-
-
 class DummyRule3(CstLintRule):
+    pass
+
+class BlockedDummyRule2(CstLintRule):
     pass
 
 
