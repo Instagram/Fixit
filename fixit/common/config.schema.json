@@ -4,6 +4,13 @@
     "description": "Schema definition for FixIt configuration files",
     "type": "object",
     "properties": {
+        "allow_list_rules": {
+            "description": "A list of rules (whether custom or from Fixit) that should be applied to the repository.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
         "block_list_patterns": {
             "description": "A list of patterns that indicate that a file should not be linted.",
             "type": "array",
