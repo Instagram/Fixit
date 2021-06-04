@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import json
 import os
 import shutil
 from pathlib import Path
@@ -30,9 +31,7 @@ DUMMY_SUBPACKAGE_PATH: Path = (
     Path(__file__).parent / "dummy_package" / "dummy_subpackage"
 )
 DUPLICATE_DUMMY: str = "fixit.common.tests.duplicate_dummy"
-DUPLICATE_DUMMY_PATH: Path = (
-    Path(__file__).parent / "duplicate_dummy"
-)
+DUPLICATE_DUMMY_PATH: Path = Path(__file__).parent / "duplicate_dummy"
 
 # Using dummy config file, test whether the rule import helpers work as expected.
 class ImportsTest(UnitTest):
@@ -63,8 +62,11 @@ class ImportsTest(UnitTest):
         self.assertEqual(expected_rules, {r.__module__ for r in rules})
 
     def test_get_rules_from_config_duplicate(self) -> None:
+        # DUPLICATE_DUMMY_PATH points to the top-level tests package which contains two of the same rule name.
         os.chdir(DUPLICATE_DUMMY_PATH)
-        with self.assertRaisesRegex(DuplicateLintRuleNameError, "Lint rule name DummyRule1 is duplicated\."):
+        with self.assertRaisesRegex(
+            DuplicateLintRuleNameError, r"Lint rule name DummyRule1 is duplicated\."
+        ):
             # We have two dummy lint rules with the same name. Verify this raises an error.
             get_rules_from_config()
 
@@ -98,6 +100,12 @@ class ImportsTest(UnitTest):
             "fixture_dir": f"{os.getcwd()}",
             "repo_root": f"{os.getcwd()}",
             "block_list_rules": ["BlockedDummyRule1", "BlockedDummyRule2"],
+            "allow_list_rules": [
+                "DummyRule1",
+                "DummyRule2",
+                "DummyRule3",
+                "BlockedDummyRule2",
+            ],
             "inherit": True,
             "packages": [
                 "fixit.common.tests.dummy_package",
@@ -107,23 +115,23 @@ class ImportsTest(UnitTest):
         self.assertEqual(expected_config, merged_config)
 
 
-
 class AllowListTest(UnitTest):
     def setUp(self) -> None:
         # We need to change the working directory so that the dummy config file is used.
         self.old_wd = os.getcwd()
-        test_dir = Path(__file__).parent
-        os.chdir(test_dir)
-        next_dir = os.path.join(os.getcwd(), "dummy_package")
-        os.chdir(next_dir)
+        self.test_dir = Path(__file__).parent
+        os.chdir(self.test_dir)
+        self.next_dir = os.path.join(os.getcwd(), "dummy_package")
+        self.sub_dir = os.path.join(self.next_dir, "dummy_subpackage")
+        os.chdir(self.sub_dir)
 
         # We also need to clear the lru_cache for the get_lint_config function between tests.
         getattr(get_lint_config, "cache_clear")()
-        shutil.copyfile(DUMMY_CONFIG_PATH, "test.fixit.config.yaml")
+        shutil.copyfile(DUMMY_CONFIG_PATH, "_.fixit.config.yaml")
 
     def tearDown(self) -> None:
-        shutil.copyfile("test.fixit.config.yaml", DUMMY_CONFIG_PATH)
-        os.remove("test.fixit.config.yaml")
+        shutil.copyfile("_.fixit.config.yaml", DUMMY_CONFIG_PATH)
+        os.remove("_.fixit.config.yaml")
         # Need to change back to original working directory so that we don't mess with other unit tests.
         os.chdir(self.old_wd)
         getattr(get_lint_config, "cache_clear")()
@@ -132,24 +140,6 @@ class AllowListTest(UnitTest):
         allow_block = dedent_with_lstrip(
             """
             allow_list_rules:
-            - DummyRule1
-            - DummyRule2
-            """
-        )
-        with open(DUMMY_CONFIG_PATH, "a") as f:
-            f.write(allow_block)
-        rules = get_rules_from_config()
-
-        # Only the two rules listed as imported
-        self.assertEqual(len(rules), 2)
-        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
-
-    def test_allow_list_rules_block_list_overrides(self) -> None:
-        allow_block = dedent_with_lstrip(
-            """
-            allow_list_rules:
-            - DummyRule1
-            - DummyRule2
             - DummyRule4
             """
         )
@@ -157,15 +147,111 @@ class AllowListTest(UnitTest):
             f.write(allow_block)
         rules = get_rules_from_config()
 
-        # DummyRule4 is still not included because it is in the block_rules_list
-        self.assertEqual(len(rules), 2)
-        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
+        self.assertEqual(len(rules), 4)
+        self.assertIn("DummyRule4", {r.__name__ for r in rules})
 
-    def test_allow_list_rules_empty(self) -> None:
+    def test_allow_list_rules_block_list_overrides(self) -> None:
+        allow_block = dedent_with_lstrip(
+            """
+            allow_list_rules:
+            - BlockedDummyRule1
+            """
+        )
+        with open(DUMMY_CONFIG_PATH, "a") as f:
+            f.write(allow_block)
+        rules = get_rules_from_config()
+        # BlockedDummyRule1 is still not included because it is in the block_rules_list
+        self.assertNotIn("BlockedDummyRule1", {r.__name__ for r in rules})
+        self.assertEqual(len(rules), 3)
+
+    def test_allow_list_rules_empty_subdir(self) -> None:
+        # Empty allow_list_rules at the leaf means only inherited rules are on
         allow_block = "allow_list_rules: []"
         with open(DUMMY_CONFIG_PATH, "a") as f:
             f.write(allow_block)
         rules = get_rules_from_config()
-        # All rules should be imported.
+        self.assertNotIn("DummyRule4", {r.__name__ for r in rules})
         self.assertEqual(len(rules), 3)
-        self.assertTrue(all(r.__module__ == f"{DUMMY_SUBPACKAGE}.dummy" for r in rules))
+
+    def test_allow_list_rules_empty_topdir(self) -> None:
+        # Empty allow_list_rules means all rules are on by default
+        shutil.copyfile(f"../../{DUMMY_CONFIG_PATH}", "../../_.dummy.fixit.config.yaml")
+
+        new_config = {
+            "block_list_rules": ["BlockedDummyRule1"],
+            "allow_list_rules": [],
+            "packages": ["fixit.common.tests.dummy_package"],
+            "repo_root": ".",
+            "inherit": False,  # don't accidentally grab all the rules!
+        }
+        with open(f"../../{DUMMY_CONFIG_PATH}", "w") as f:
+            f.write(json.dumps(new_config))
+        os.chdir(self.test_dir)
+        top_rules = get_rules_from_config()
+        os.chdir(self.sub_dir)
+        getattr(get_lint_config, "cache_clear")()
+        sub_rules = get_rules_from_config()
+        shutil.copyfile("../../_.dummy.fixit.config.yaml", f"../../{DUMMY_CONFIG_PATH}")
+        os.remove("../../_.dummy.fixit.config.yaml")
+        expected_top_rules = {
+            "DummyRule1",
+            "DummyRule2",
+            "DummyRule3",
+            "DummyRule4",
+            "BlockedDummyRule2",
+        }
+        self.assertEqual(expected_top_rules, {r.__name__ for r in top_rules})
+        self.assertEqual(len(top_rules), 5)
+        # A subdir can override an empty allow_list_rules and effectively turn off rules turned on in root
+        expected_sub_rules = {
+            "DummyRule3",
+        }
+        self.assertEqual(expected_sub_rules, {r.__name__ for r in sub_rules})
+        self.assertEqual(len(sub_rules), 1)
+
+    def test_allow_list_rules_missing_subdir(self) -> None:
+        # Missing allow_list_rules at the leaf means only inherited rules are on
+        rules = get_rules_from_config()
+        # All not-blocked rules should be imported.
+        expected_rules = {
+            f"{DUMMY_SUBPACKAGE}.dummy",
+            f"{DUMMY_PACKAGE}.dummy_1",
+            f"{DUMMY_PACKAGE}.dummy_2",
+        }
+        self.assertEqual(expected_rules, {r.__module__ for r in rules})
+        self.assertNotIn("DummyRule4", {r.__name__ for r in rules})
+        self.assertEqual(len(rules), 3)
+
+    def test_allow_list_rules_missing_topdir(self) -> None:
+        # Missing allow_list_rules means all rules are on by default
+        shutil.copyfile(f"../../{DUMMY_CONFIG_PATH}", "../../_.dummy.fixit.config.yaml")
+        new_config = {
+            "block_list_rules": ["BlockedDummyRule1"],
+            "packages": ["fixit.common.tests.dummy_package"],
+            "repo_root": ".",
+            "inherit": False,  # don't accidentally grab all the rules!
+        }
+        with open(f"../../{DUMMY_CONFIG_PATH}", "w") as f:
+            f.write(json.dumps(new_config))
+        os.chdir(self.test_dir)
+        top_rules = get_rules_from_config()
+        getattr(get_lint_config, "cache_clear")()
+        os.chdir(self.sub_dir)
+        sub_rules = get_rules_from_config()
+        shutil.copyfile("../../_.dummy.fixit.config.yaml", f"../../{DUMMY_CONFIG_PATH}")
+        os.remove("../../_.dummy.fixit.config.yaml")
+        expected_top_rules = {
+            "DummyRule1",
+            "DummyRule2",
+            "DummyRule3",
+            "DummyRule4",
+            "BlockedDummyRule2",
+        }
+        self.assertEqual(expected_top_rules, {r.__name__ for r in top_rules})
+        self.assertEqual(len(top_rules), 5)
+        # A subdir can override an empty allow_list_rules and effectively turn off rules turned on in root
+        expected_sub_rules = {
+            "DummyRule3",
+        }
+        self.assertEqual(expected_sub_rules, {r.__name__ for r in sub_rules})
+        self.assertEqual(len(sub_rules), 1)

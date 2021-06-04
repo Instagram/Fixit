@@ -1,8 +1,9 @@
 block_list_rules:
-- DummyRule4
+- BlockedDummyRule1
 packages:
 - fixit.common.tests.dummy_package.dummy_subpackage
 repo_root: .
-block_list_rules:
-- BlockedDummyRule1
 inherit: True
+allow_list_rules:
+- DummyRule3
+- BlockedDummyRule2

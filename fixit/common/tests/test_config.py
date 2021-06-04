@@ -4,27 +4,30 @@
 # LICENSE file in the root directory of this source tree.
 
 
-from functools import wraps
 import json
 import os
-from pathlib import Path
-from typing import Dict, List, Union, Callable, TypeVar, Sequence, Any, Mapping
-from unittest import mock
 import tempfile
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Mapping, Sequence, TypeVar, Union
+from unittest import mock
 
 from jsonschema.exceptions import ValidationError
 from libcst.testing.utils import UnitTest
 
 from fixit.common.config import _merge_lint_configs, get_validated_settings
 
+
 ReturnType = TypeVar("ReturnType")
 
 TEST_CONFIG: Dict[str, Union[Dict[str, Dict[str, List[str]]], List[str], bool, str]] = {
+    "allow_list_rules": [],
     "formatter": ["black", "-", "--no-diff"],
     "packages": ["python.fixit.rules"],
     "block_list_rules": ["Flake8PseudoLintRule"],
     "fixture_dir": f"{os.getcwd()}",
     "repo_root": f"{os.getcwd()}",
+    "use_noqa": False,
     "rule_config": {
         "UnusedImportsRule": {
             "ignored_unused_modules": [
@@ -52,8 +55,9 @@ def with_temp_dir(func: Callable[..., ReturnType]) -> Callable[..., ReturnType]:
 
     return wrapper
 
+
 class TestConfig(UnitTest):
-    def setUp(self):
+    def setUp(self) -> None:
         patcher = mock.patch("fixit.common.config.Path.cwd")
         self.mock_cwd = patcher.start()
         self.addCleanup(self.mock_cwd.stop)
@@ -68,6 +72,7 @@ class TestConfig(UnitTest):
         settings = get_validated_settings(config, Path("."))
         self.assertEqual(
             {
+                "allow_list_rules": [],
                 "block_list_rules": ["FakeRule"],
                 "fixture_dir": ".",
                 "repo_root": ".",
@@ -87,6 +92,7 @@ class TestConfig(UnitTest):
     def test_merge_lint_configs_simple(self, temp_dir: Path, sub_dir: Path) -> None:
         self.mock_cwd.return_value = sub_dir
         test_config_2 = {
+            "allow_list_rules": ["FakeRule"],
             "block_list_rules": ["BlockedRule"],
             "formatter": ["fakeformatter"],
             "use_noqa": True,
@@ -94,6 +100,7 @@ class TestConfig(UnitTest):
         }
         (sub_dir / ".fixit.config.yaml").write_text(json.dumps(test_config_2))
         expected_merged_config = {
+            "allow_list_rules": ["FakeRule"],  # appended
             "formatter": ["black", "-", "--no-diff", "fakeformatter"],  # appended
             "packages": ["python.fixit.rules"],  # inherited
             "block_list_rules": ["Flake8PseudoLintRule", "BlockedRule"],  # appended
@@ -126,6 +133,7 @@ class TestConfig(UnitTest):
         }
         (sub_dir / ".fixit.config.yaml").write_text(json.dumps(test_config_2))
         expected_merged_config = {
+            "allow_list_rules": [],
             "formatter": ["black", "-", "--no-diff"],
             "packages": ["python.fixit.rules"],
             "block_list_rules": ["Flake8PseudoLintRule"],
@@ -142,6 +150,7 @@ class TestConfig(UnitTest):
                 },
                 "TestingRule": {"a_config_setting": True},
             },
+            "use_noqa": False,
             "inherit": True,
         }
         merged_config = _merge_lint_configs()
@@ -160,6 +169,7 @@ class TestConfig(UnitTest):
         }
         (sub_dir / ".fixit.config.yaml").write_text(json.dumps(test_config_2))
         expected_merged_config = {
+            "allow_list_rules": [],
             "formatter": ["black", "-", "--no-diff"],
             "packages": ["python.fixit.rules"],
             "block_list_rules": ["Flake8PseudoLintRule"],
@@ -168,6 +178,7 @@ class TestConfig(UnitTest):
             "rule_config": {
                 "UnusedImportsRule": {"ignored_unused_modules": ["__init__"]}
             },
+            "use_noqa": False,
             "inherit": True,
         }
         merged_config = _merge_lint_configs()
@@ -184,12 +195,8 @@ class TestConfig(UnitTest):
         (sub_dir / ".fixit.config.yaml").write_text(json.dumps(test_config_2))
         merged_config = _merge_lint_configs()
         # Returns the first LintConfig found (the lowest leaf)
-        self.assertEqual(
-            merged_config["block_list_rules"], ["NotMerged"]
-        )
-        self.assertEqual(
-            merged_config["inherit"], True
-        )
+        self.assertEqual(merged_config["block_list_rules"], ["NotMerged"])
+        self.assertEqual(merged_config["inherit"], True)
 
     @with_temp_dir
     def test_merge_lint_configs_inherit_false(
@@ -200,12 +207,8 @@ class TestConfig(UnitTest):
         (sub_dir / ".fixit.config.yaml").write_text(json.dumps(test_config_2))
         merged_config = _merge_lint_configs()
         # Returns the first LintConfig found (the lowest leaf)
-        self.assertEqual(
-            merged_config["block_list_rules"], ["NotMerged"]
-        )
-        self.assertEqual(
-            merged_config["inherit"], False
-        )
+        self.assertEqual(merged_config["block_list_rules"], ["NotMerged"])
+        self.assertEqual(merged_config["inherit"], False)
 
-    def test_inherit_empty_alow_list_rules(self) -> None:
-        pass
+
+# TODO: lisroach think of more tests to add here

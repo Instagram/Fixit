@@ -10,6 +10,7 @@ from fixit.common.base import CstLintRule
 class DummyRule3(CstLintRule):
     pass
 
+
 class BlockedDummyRule2(CstLintRule):
     pass
 

@@ -2,3 +2,6 @@ packages:
 - fixit.common.tests.dummy_package
 repo_root: .
 inherit: False
+allow_list_rules:
+- DummyRule1
+- DummyRule2

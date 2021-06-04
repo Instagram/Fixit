@@ -7,5 +7,5 @@ from fixit.common.base import CstLintRule
 
 
 # Dummy rules for integration testing purposes.
-class DummyRule1(CstLintRule):
+class DummyRule2(CstLintRule):
     pass

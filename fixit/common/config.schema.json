@@ -9,7 +9,8 @@
             "type": "array",
             "items": {
                 "type": "string"
-            }
+            },
+            "mergeStrategy": "append"
         },
         "block_list_patterns": {
             "description": "A list of patterns that indicate that a file should not be linted.",

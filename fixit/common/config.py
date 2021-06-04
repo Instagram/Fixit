@@ -93,6 +93,7 @@ def get_validated_settings(
         file_content[path_setting_name] = str(abspath)
 
     file_content["inherit"] = file_content.get("inherit", False)
+    file_content["allow_list_rules"] = file_content.get("allow_list_rules", [])
     return file_content
 
 
@@ -182,7 +183,7 @@ def get_rules_from_config() -> LintRuleCollectionT:
             lint_config.block_list_rules,
             all_names,
             lint_config.allow_list_rules,
-            seen_modules
+            seen_modules,
         )
         rules.update(rules_from_pkg)
     return rules
