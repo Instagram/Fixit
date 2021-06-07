@@ -60,7 +60,7 @@ class TestConfig(UnitTest):
     def setUp(self) -> None:
         patcher = mock.patch("fixit.common.config.Path.cwd")
         self.mock_cwd = patcher.start()
-        self.addCleanup(self.mock_cwd.stop)
+        self.addCleanup(patcher.stop)
 
     def test_validated_settings_with_bad_types(self) -> None:
         bad_config = {"block_list_rules": False}

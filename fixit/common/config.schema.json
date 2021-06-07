@@ -30,11 +30,13 @@
         },
         "fixture_dir": {
             "description": "The directory in which fixture files required for unit testing are to be found.",
-            "type": "string"
+            "type": "string",
+            "mergeStrategy": "overwrite"
         },
         "use_noqa": {
             "description": "Defaults to False. Use True to support Flake8 lint suppression comment: noqa.",
-            "type": "boolean"
+            "type": "boolean",
+            "mergeStrategy": "overwrite"
         },
         "formatter": {
             "description": "A list of the formatter commands to use after a lint is complete.",
@@ -54,15 +56,18 @@
         },
         "repo_root": {
             "description": "The path to the repository root.",
-            "type": "string"
+            "type": "string",
+            "mergeStrategy": "overwrite"
         },
         "rule_config": {
             "description": "Rule-specific configurations.",
-            "type": "object"
+            "type": "object",
+            "mergeStrategy": "objectMerge"
         },
         "inherit": {
             "description": "Boolean to determine whether this config file will inherit properties from a parent config.",
-            "type": "boolean"
+            "type": "boolean",
+            "mergeStrategy": "overwrite"
         }
     }
 }
