@@ -32,7 +32,7 @@ from fixit.cli.args import (
     get_paths_parser,
     get_rules_parser,
     get_skip_ignore_byte_marker_parser,
-    get_use_ignore_comments_parser,
+    get_skip_ignore_comments_parser,
 )
 from fixit.cli.formatter import LintRuleReportFormatter
 from fixit.cli.full_repo_metadata import (
@@ -55,8 +55,8 @@ runs all lint rules found in the packages specified in `fixit.config.yaml`."""
 PARENTS: List[argparse.ArgumentParser] = [
     get_paths_parser(),
     get_rules_parser(),
-    get_use_ignore_comments_parser(),
     get_skip_ignore_byte_marker_parser(),
+    get_skip_ignore_comments_parser(),
     get_compact_parser(),
     get_multiprocessing_parser(),
     get_metadata_cache_parser(),
