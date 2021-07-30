@@ -1,3 +1,17 @@
+# 0.1.4 - 2021-07-30
+## Updated
+- Fix typo [#163](https://github.com/Instagram/Fixit/pull/163)
+- Refactor ipc_main [#175](https://github.com/Instagram/Fixit/pull/175)
+- Refactor search yaml [#172](https://github.com/Instagram/Fixit/pull/172)
+- Bug fix for UseTypesFromTypingRule [#178](https://github.com/Instagram/Fixit/pull/178)
+- Fix sentinel type error [#187](https://github.com/Instagram/Fixit/pull/187)
+- Autofix docstrings [#190](https://github.com/Instagram/Fixit/pull/190)
+- Fix pyre type-check errors [#196](https://github.com/Instagram/Fixit/pull/196)
+- Add JSON Schema for Fixit configs [#188](https://github.com/Instagram/Fixit/pull/188)
+- Adds allow_list_rules setting for configs [#184](https://github.com/Instagram/Fixit/pull/184)
+- Adds allow_list_rules to schema [#197](https://github.com/Instagram/Fixit/pull/197)
+- Fix run_rules bug [#200](https://github.com/Instagram/Fixit/pull/200)
+
 # 0.1.3 - 2020-12-09
 
 ## New Rules
