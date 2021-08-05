@@ -61,8 +61,15 @@ class GatherSequentialAwaitRule(CstLintRule):
         ),
         Invalid(
             """
-            async def async_check_dict_comprehension():
+            async def async_check_dict_comprehension_value():
                 {_i: await async_foo() for _i in range(0, 2)}
+            """,
+            line=2,
+        ),
+        Invalid(
+            """
+            async def async_check_dict_comprehension_key():
+                {await async_foo(_i): _i for _i in range(0, 2)}
             """,
             line=2,
         ),
@@ -86,5 +93,7 @@ class GatherSequentialAwaitRule(CstLintRule):
         ):
             self.report(node)
 
-        if isinstance(parent, cst.DictComp) and parent.value is node:
+        if isinstance(parent, cst.DictComp) and (
+            parent.value is node or parent.key is node
+        ):
             self.report(node)
