@@ -59,6 +59,20 @@ class GatherSequentialAwaitRule(CstLintRule):
             """,
             line=2,
         ),
+        Invalid(
+            """
+            async def async_check_dict_comprehension_value():
+                {_i: await async_foo() for _i in range(0, 2)}
+            """,
+            line=2,
+        ),
+        Invalid(
+            """
+            async def async_check_dict_comprehension_key():
+                {await async_foo(_i): _i for _i in range(0, 2)}
+            """,
+            line=2,
+        ),
     ]
 
     def should_skip_file(self) -> bool:
@@ -76,5 +90,10 @@ class GatherSequentialAwaitRule(CstLintRule):
         if (
             isinstance(parent, (cst.ListComp, cst.SetComp, cst.GeneratorExp))
             and parent.elt is node
+        ):
+            self.report(node)
+
+        if isinstance(parent, cst.DictComp) and (
+            parent.value is node or parent.key is node
         ):
             self.report(node)
