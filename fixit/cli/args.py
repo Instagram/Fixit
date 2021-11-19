@@ -112,7 +112,9 @@ def get_rules_parser() -> argparse.ArgumentParser:
 def relative_to_repo_root(_path: str) -> Path:
     repo_root = get_lint_config().repo_root
     try:
-        return Path(_path).resolve(strict=True).relative_to(repo_root)
+        path = Path(_path).resolve(strict=True)
+        path.relative_to(repo_root)
+        return path
     except ValueError:
         raise argparse.ArgumentTypeError(
             f"Invalid value {_path}.\n"
