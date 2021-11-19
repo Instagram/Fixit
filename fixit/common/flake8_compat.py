@@ -142,10 +142,10 @@ class Flake8CompatApplication(Flake8BaseApplication):
     def make_formatter(
         self, formatter_class: Optional[Type[Flake8BaseFormatter]] = None
     ) -> None:
+        options = self.options
+        assert options is not None
         # ignores formatter_class if given, we don't support flake8 formatters
-        self.formatter = Flake8CompatAccumulatingFormatter(
-            self.options, self.accumulator
-        )
+        self.formatter = Flake8CompatAccumulatingFormatter(options, self.accumulator)
 
     def report_statistics(self) -> None:
         pass
