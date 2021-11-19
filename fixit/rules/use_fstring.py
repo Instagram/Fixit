@@ -15,7 +15,7 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 USE_FSTRING_SIMPLE_EXPRESSION_MAX_LENGTH = 30
 
 
-def _match_simple_string(node: cst.CSTNode) -> bool:
+def _match_simple_string(node: cst.BaseExpression) -> bool:
     if isinstance(node, cst.SimpleString) and "b" not in node.prefix.lower():
         # SimpleString can be a bytes and fstring don't support bytes
         # This helper is for autofixer and it only handles %s simple cases for now.
@@ -27,8 +27,10 @@ def _match_simple_string(node: cst.CSTNode) -> bool:
     return False
 
 
-def _gen_match_simple_expression(module: cst.Module) -> Callable[[cst.CSTNode], bool]:
-    def _match_simple_expression(node: cst.CSTNode) -> bool:
+def _gen_match_simple_expression(
+    module: cst.Module,
+) -> Callable[[cst.BaseExpression], bool]:
+    def _match_simple_expression(node: cst.BaseExpression) -> bool:
         # either each element in Tuple is simple expression or the entire expression is simple.
         if (
             isinstance(node, cst.Tuple)
