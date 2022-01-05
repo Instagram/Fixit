@@ -5,7 +5,7 @@ git+https://github.com/jimmylai/sphinx.git@slots_type_annotation
 isort>=4.3.20
 jupyter>=1.0.0
 nbsphinx>=0.7.1
-pyre-check==0.0.41
+pyre-check==0.9.9
 sphinx-rtd-theme>=0.5.0
 prompt-toolkit>=2.0.9
 tox>=3.14.5
