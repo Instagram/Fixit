@@ -242,7 +242,6 @@ class ExplicitFrozenDataclassRule(CstLintRule):
                     args = ()
                     func = decorator
 
-                # pyre-fixme[29]: `typing.Union[typing.Callable(tuple.__iter__)[[], typing.Iterator[Variable[_T_co](covariant)]], typing.Callable(typing.Sequence.__iter__)[[], typing.Iterator[cst._nodes.expression.Arg]]]` is not a function.
                 if not any(m.matches(arg.keyword, m.Name("frozen")) for arg in args):
                     new_decorator = cst.Call(
                         func=func,

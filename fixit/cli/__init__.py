@@ -145,8 +145,6 @@ def map_paths(
         # Don't spawn more processes than there are tasks. Multiprocessing is eager and
         # will spawn workers immediately even if there's no work for them to do.
         with multiprocessing.Pool(min(workers, len(tasks))) as pool:
-            # pyre: Pyre doesn't understand something about the typevars used in this
-            # pyre-fixme[6]: function call. I was unable to debug it.
             for result in pool.imap_unordered(_map_paths_worker, tasks):
                 yield result
 
