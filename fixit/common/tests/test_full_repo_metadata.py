@@ -72,6 +72,8 @@ class FullRepoMetadataTest(UnitTest):
         ]
         all_calls = chain.from_iterable([(call.__bool__(), c) for c in calls])
 
+        # pyre-fixme[6]: Expected `Sequence[unittest.mock._Call]` for 1st param but
+        #  got `Iterator[typing.Any]`.
         gen_cache.assert_has_calls(all_calls)
 
     @patch("libcst.metadata.TypeInferenceProvider.gen_cache")

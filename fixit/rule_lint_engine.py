@@ -67,6 +67,7 @@ def lint_file(
     caller.
     """
     # Get settings from the nearest `.fixit.config.yaml` file if necessary.
+    # pyre-fixme[35]: Target cannot be annotated.
     config: LintConfig = config if config is not None else get_lint_config()
 
     if use_ignore_byte_markers and any(
@@ -118,6 +119,7 @@ def lint_file(
     if pseudo_rules:
         psuedo_context = PseudoContext(file_path, source, tokens, ast_tree)
         for pr_cls in pseudo_rules:
+            # pyre-fixme[45]: Cannot instantiate abstract class `PseudoLintRule`.
             reports.extend(pr_cls(psuedo_context).lint_file())
 
     if ignore_info is not None:
@@ -206,5 +208,8 @@ def lint_file_and_apply_patches(
     # `reports` shouldn't contain any fixable reports at this point, so there should be
     # no overlap between `fixed_reports` and `reports`.
     return LintRuleReportsWithAppliedPatches(
+        # pyre-fixme[60]: Concatenation not yet support for multiple variadic
+        #  tuples: `*fixed_reports, *reports`.
+        # pyre-fixme[6]: Expected `str` for 2nd param but got `bytes`.
         reports=(*fixed_reports, *reports), patched_source=source
     )

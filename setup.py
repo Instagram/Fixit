@@ -14,9 +14,11 @@ import setuptools
 # Grab the readme so that our package stays in sync with github.
 this_directory: str = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, "README.rst"), encoding="utf-8") as f:
+    # pyre-fixme[5]: Global expression must be annotated.
     long_description = f.read()
 
 # Grab the version constant so that libcst.tool stays in sync with this package.
+# pyre-fixme[9]: spec has type `ModuleSpec`; used as `Optional[ModuleSpec]`.
 spec: ModuleSpec = importlib.util.spec_from_file_location(
     "version", path.join(this_directory, "fixit/_version.py")
 )

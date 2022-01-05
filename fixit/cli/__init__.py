@@ -77,6 +77,8 @@ def find_files(paths: Iterable[Union[str, Path]]) -> Iterator[str]:
 
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.
+# pyre-fixme[34]: `Variable[_MapPathsOperationResultT]` isn't present in the
+#  function's parameters.
 def _map_paths_worker(args: _MapPathsWorkerArgsT) -> _MapPathsOperationResultT:
     operation, path, config, metadata_caches = args
     return operation(Path(path), config, metadata_caches)
@@ -89,6 +91,8 @@ def map_paths(
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None,
+# pyre-fixme[34]: `Variable[_MapPathsOperationResultT]` isn't present in the
+#  function's parameters.
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
@@ -213,6 +217,7 @@ def run_ipc(
     Returns an IPCResult object.
     """
 
+    # pyre-fixme[35]: Target cannot be annotated.
     paths: Generator[str, None, None] = (
         os.path.join(prefix, p) if prefix else p for p in paths
     )

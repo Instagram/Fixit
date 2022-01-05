@@ -105,12 +105,14 @@ def get_lint_config() -> LintConfig:
     cwd = Path.cwd()
     for directory in (cwd, *cwd.parents):
         # Check for config file.
+        # pyre-fixme[58]: `/` is not supported for operand types `object` and `Path`.
         possible_config = directory / LINT_CONFIG_FILE_NAME
         if possible_config.is_file():
             with open(possible_config, "r") as f:
                 file_content = yaml.safe_load(f.read())
 
             if isinstance(file_content, dict):
+                # pyre-fixme[6]: Expected `Path` for 2nd param but got `object`.
                 config = get_validated_settings(file_content, directory)
                 break
 

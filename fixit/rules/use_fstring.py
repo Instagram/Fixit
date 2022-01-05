@@ -196,6 +196,7 @@ class UseFstringRule(CstLintRule):
                         cst.FormattedStringExpression(
                             expression=cast(
                                 cst.BaseExpression,
+                                # pyre-fixme[16]: `Sequence` has no attribute `visit`.
                                 expressions[i - 1].visit(escape_transformer),
                             )
                         )

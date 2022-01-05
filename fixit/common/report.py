@@ -45,6 +45,7 @@ class BaseLintRuleReport(abc.ABC):
     def __repr__(self) -> str:
         return f"{self.line}:{self.column}: {self.code} {self.message}"
 
+    # pyre-fixme[15]: `__reduce__` overrides method defined in `object` inconsistently.
     def __reduce__(self) -> None:
         raise PicklingError(
             "Lint rule reports are potentially very complex objects. They can contain "
