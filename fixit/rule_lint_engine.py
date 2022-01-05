@@ -211,5 +211,6 @@ def lint_file_and_apply_patches(
         # pyre-fixme[60]: Concatenation not yet support for multiple variadic
         #  tuples: `*fixed_reports, *reports`.
         # pyre-fixme[6]: Expected `str` for 2nd param but got `bytes`.
-        reports=(*fixed_reports, *reports), patched_source=source
+        reports=(*fixed_reports, *reports),
+        patched_source=source,
     )

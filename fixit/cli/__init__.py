@@ -91,8 +91,8 @@ def map_paths(
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None,
-# pyre-fixme[34]: `Variable[_MapPathsOperationResultT]` isn't present in the
-#  function's parameters.
+    # pyre-fixme[34]: `Variable[_MapPathsOperationResultT]` isn't present in the
+    #  function's parameters.
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
