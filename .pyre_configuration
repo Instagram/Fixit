@@ -6,6 +6,7 @@
         ".*/\\.tox/.*"
     ],
     "search_path": [
+        "stubs",
         {"site-package": "libcst"},
         {"site-package": "importlib_resources"},
         {"site-package": "flake8"}
