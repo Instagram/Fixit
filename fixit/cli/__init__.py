@@ -216,9 +216,7 @@ def run_ipc(
     Returns an IPCResult object.
     """
 
-    resolved_paths = (
-        os.path.join(prefix, p) if prefix else p for p in paths
-    )
+    resolved_paths = (os.path.join(prefix, p) if prefix else p for p in paths)
 
     full_repo_metadata_config = opts.full_repo_metadata_config
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
