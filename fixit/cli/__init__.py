@@ -20,7 +20,6 @@ from typing import (
     Callable,
     Collection,
     Dict,
-    Generator,
     Iterable,
     Iterator,
     List,
