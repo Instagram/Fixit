@@ -217,19 +217,18 @@ def run_ipc(
     Returns an IPCResult object.
     """
 
-    # pyre-fixme[35]: Target cannot be annotated.
-    paths: Generator[str, None, None] = (
+    resolved_paths = (
         os.path.join(prefix, p) if prefix else p for p in paths
     )
 
     full_repo_metadata_config = opts.full_repo_metadata_config
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
     if full_repo_metadata_config is not None:
-        metadata_caches = get_repo_caches(paths, full_repo_metadata_config)
+        metadata_caches = get_repo_caches(resolved_paths, full_repo_metadata_config)
 
     results_iter: Iterator[Sequence[str]] = map_paths(
         get_file_lint_result_json,
-        paths,
+        resolved_paths,
         opts,
         workers=workers,
         metadata_caches=metadata_caches,
@@ -240,7 +239,7 @@ def run_ipc(
         for result in results:
             print(result)
 
-    return IPCResult(list(paths))
+    return IPCResult(list(resolved_paths))
 
 
 def ipc_main(opts: LintOpts) -> IPCResult:
