@@ -5,6 +5,11 @@
     "exclude": [
         ".*/\\.tox/.*"
     ],
+    "search_path": [
+        {"site-package": "libcst"},
+        {"site-package": "importlib_resources"},
+        {"site-package": "flake8"}
+    ],
     "workers": 3,
     "strict": true
 }
