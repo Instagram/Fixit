@@ -149,6 +149,7 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
                     )
 
     def _handle_node_with_leading_lines(self, node: cst.CSTNode) -> None:
+        # pyre-fixme[16]: `CSTNode` has no attribute `leading_lines`.
         if hasattr(node, "leading_lines") and getattr(node, "leading_lines"):
             self._handle_emptyline_sequence_attribute(node, "leading_lines")
 

@@ -20,7 +20,6 @@ from typing import (
     Callable,
     Collection,
     Dict,
-    Generator,
     Iterable,
     Iterator,
     List,
@@ -77,6 +76,8 @@ def find_files(paths: Iterable[Union[str, Path]]) -> Iterator[str]:
 
 
 # Multiprocessing can only pass one argument. Wrap `operation` to provide this.
+# pyre-fixme[34]: `Variable[_MapPathsOperationResultT]` isn't present in the
+#  function's parameters.
 def _map_paths_worker(args: _MapPathsWorkerArgsT) -> _MapPathsOperationResultT:
     operation, path, config, metadata_caches = args
     return operation(Path(path), config, metadata_caches)
@@ -89,6 +90,8 @@ def map_paths(
     *,
     workers: Union[int, LintWorkers] = LintWorkers.CPU_COUNT,
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None,
+    # pyre-fixme[34]: `Variable[_MapPathsOperationResultT]` isn't present in the
+    #  function's parameters.
 ) -> Iterator[_MapPathsOperationResultT]:
     """
     Applies the given `operation` to each file path in `paths`.
@@ -145,8 +148,6 @@ def map_paths(
         # Don't spawn more processes than there are tasks. Multiprocessing is eager and
         # will spawn workers immediately even if there's no work for them to do.
         with multiprocessing.Pool(min(workers, len(tasks))) as pool:
-            # pyre: Pyre doesn't understand something about the typevars used in this
-            # pyre-fixme[6]: function call. I was unable to debug it.
             for result in pool.imap_unordered(_map_paths_worker, tasks):
                 yield result
 
@@ -215,18 +216,16 @@ def run_ipc(
     Returns an IPCResult object.
     """
 
-    paths: Generator[str, None, None] = (
-        os.path.join(prefix, p) if prefix else p for p in paths
-    )
+    resolved_paths = (os.path.join(prefix, p) if prefix else p for p in paths)
 
     full_repo_metadata_config = opts.full_repo_metadata_config
     metadata_caches: Optional[Mapping[str, Mapping["ProviderT", object]]] = None
     if full_repo_metadata_config is not None:
-        metadata_caches = get_repo_caches(paths, full_repo_metadata_config)
+        metadata_caches = get_repo_caches(resolved_paths, full_repo_metadata_config)
 
     results_iter: Iterator[Sequence[str]] = map_paths(
         get_file_lint_result_json,
-        paths,
+        resolved_paths,
         opts,
         workers=workers,
         metadata_caches=metadata_caches,
@@ -237,7 +236,7 @@ def run_ipc(
         for result in results:
             print(result)
 
-    return IPCResult(list(paths))
+    return IPCResult(list(resolved_paths))
 
 
 def ipc_main(opts: LintOpts) -> IPCResult:

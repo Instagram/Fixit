@@ -37,11 +37,14 @@ class MetadataCacheErrorHandler(Handler):
                 if exc_type is TimeoutExpired:
                     self.timeout_paths += failed_paths
                 else:
+                    # pyre-fixme[6]: Expected `Type[Exception]` for 1st param but
+                    #  got `Type[BaseException]`.
                     self.other_exceptions[exc_type] += failed_paths
 
 
 def rules_require_metadata_cache(rules: LintRuleCollectionT) -> bool:
     return any(
+        # pyre-fixme[16]: `PseudoLintRule` has no attribute `requires_metadata_caches`.
         issubclass(r, CstLintRule) and getattr(r, "requires_metadata_caches")()
         for r in rules
     )

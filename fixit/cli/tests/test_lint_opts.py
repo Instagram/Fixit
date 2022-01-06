@@ -28,6 +28,8 @@ class FakeLintSuccessReport(LintSuccessReportBase):
     reports: Collection[str]
 
     @staticmethod
+    # pyre-fixme[14]: `create_reports` overrides method defined in
+    #  `LintSuccessReportBase` inconsistently.
     def create_reports(
         path: Path,
         reports: Collection[BaseLintRuleReport],
@@ -44,6 +46,8 @@ class FakeLintFailureReport(LintFailureReportBase):
     reports: Collection[str]
 
     @staticmethod
+    # pyre-fixme[14]: `create_reports` overrides method defined in
+    #  `LintFailureReportBase` inconsistently.
     def create_reports(
         path: Path,
         reports: Collection[BaseLintRuleReport],

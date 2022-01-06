@@ -143,6 +143,7 @@ def _gen_test_methods_for_rule(
         if rule.requires_metadata_caches():
             requires_fixtures = True
         if hasattr(rule, "VALID"):
+            # pyre-fixme[16]: `CstLintRule` has no attribute `VALID`.
             for idx, test_case in enumerate(getattr(rule, "VALID")):
                 name = f"test_VALID_{idx}"
                 valid_tcs[name] = test_case
@@ -151,6 +152,7 @@ def _gen_test_methods_for_rule(
                         fixture_subdir / f"{rule.__name__}_VALID_{idx}.json"
                     )
         if hasattr(rule, "INVALID"):
+            # pyre-fixme[16]: `CstLintRule` has no attribute `INVALID`.
             for idx, test_case in enumerate(getattr(rule, "INVALID")):
                 name = f"test_INVALID_{idx}"
                 invalid_tcs[name] = test_case
@@ -216,6 +218,7 @@ def add_lint_rule_tests_to_module(
     """
     for test_case in _gen_all_test_methods(rules, fixture_dir, rules_package):
         rule_name = test_case.rule.__name__
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_methods_to_add: Dict[str, Callable] = {}
 
         for test_method_name, test_method_data in test_case.test_methods.items():
@@ -229,6 +232,7 @@ def add_lint_rule_tests_to_module(
             ) -> None:
                 return getattr(self, custom_test_method_name)(data, rule, fixture_file)
 
+            # pyre-fixme[16]: Anonymous callable has no attribute `__name__`.
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method
 

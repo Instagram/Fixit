@@ -143,7 +143,7 @@ def apply_fix_operation(
                     updated_source = invoke_formatter(
                         get_lint_config().formatter, updated_source
                     )
-                with open(path, "wb") as f:
+                with open(path, "w") as f:
                     f.write(updated_source)
         else:
             lint_result = get_one_patchable_report_for_path(
@@ -159,7 +159,7 @@ def apply_fix_operation(
             updated_source = lint_result.patched_source
             if updated_source != source:
                 # We don't do any formatting here as it's wasteful. The caller should handle formatting all files at the end.
-                with open(path, "wb") as f:
+                with open(path, "w") as f:
                     f.write(updated_source)
 
                 patched_files_list.append(str(path))

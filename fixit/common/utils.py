@@ -87,6 +87,7 @@ class InvalidTestCase:
 
 def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleType]:
     """Import all submodules of a module, recursively, including subpackages."""
+    # pyre-fixme[35]: Target cannot be annotated.
     package: ModuleType = importlib.import_module(package)
     results = {}
     # pyre-fixme[16]: `ModuleType` has no attribute `__path__`.
@@ -112,6 +113,7 @@ def import_distinct_rules_from_package(
     # Optional parameter `seen_names` accepts set of names that should not occur in this package.
     rules: LintRuleCollectionT = set()
     if seen_names is None:
+        # pyre-fixme[35]: Target cannot be annotated.
         seen_names: Set[str] = set()
     for _module_name, module in import_submodules(package).items():
         for name in dir(module):
