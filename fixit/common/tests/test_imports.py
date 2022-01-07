@@ -5,9 +5,8 @@
 
 import os
 import shutil
+import unittest
 from pathlib import Path
-
-from libcst.testing.utils import UnitTest
 
 from fixit.common.config import get_lint_config, get_rules_from_config
 from fixit.common.utils import (
@@ -24,7 +23,7 @@ DUMMY_SUBPACKAGE: str = "fixit.common.tests.dummy_package.dummy_subpackage"
 DUMMY_CONFIG_PATH: str = ".fixit.config.yaml"
 
 # Using dummy config file, test whether the rule import helpers work as expected.
-class ImportsTest(UnitTest):
+class ImportsTest(unittest.TestCase):
     def setUp(self) -> None:
         # We need to change the working directory so that the dummy config file is used.
         self.old_wd = os.getcwd()
@@ -79,7 +78,7 @@ class ImportsTest(UnitTest):
             imported_rule = find_and_import_rule("DummyRule1000", rules_packages)
 
 
-class AllowListTest(UnitTest):
+class AllowListTest(unittest.TestCase):
     def setUp(self) -> None:
         # We need to change the working directory so that the dummy config file is used.
         self.old_wd = os.getcwd()

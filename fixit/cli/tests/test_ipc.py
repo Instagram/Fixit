@@ -8,9 +8,8 @@ import io
 import json
 import os
 import tempfile
+import unittest
 from typing import Any, Dict
-
-from libcst.testing.utils import UnitTest
 
 from fixit.cli import run_ipc
 from fixit.cli.args import LintWorkers
@@ -25,7 +24,7 @@ EXPECTED_FAILURE_REPORT: Dict[str, Any] = json.loads(
 )
 
 
-class IpcTest(UnitTest):
+class IpcTest(unittest.TestCase):
     def setUp(self) -> None:
         self.opts = generate_mock_lint_opt()
 

@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import unittest
 from collections import defaultdict
 from itertools import chain
 from pathlib import Path
@@ -13,12 +14,11 @@ from unittest.mock import call, MagicMock, patch
 
 from libcst.metadata import TypeInferenceProvider
 from libcst.metadata.base_provider import ProviderT
-from libcst.testing.utils import UnitTest
 
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches
 
 
-class FullRepoMetadataTest(UnitTest):
+class FullRepoMetadataTest(unittest.TestCase):
     DUMMY_PATH = "fake/path.py"
 
     @patch("libcst.metadata.TypeInferenceProvider.gen_cache")

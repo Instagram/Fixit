@@ -3,10 +3,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import unittest
 from pathlib import Path
 
 import libcst as cst
-from libcst.testing.utils import data_provider, UnitTest
+from parameterized import param, parameterized
 
 from fixit import rule_lint_engine
 from fixit.common.base import CstLintRule, LintConfig
@@ -47,63 +48,84 @@ class ParenthesizeAttributeLintRule(CstLintRule):
             )
 
 
-class RuleLintEngineTest(UnitTest):
-    @data_provider(
-        {
-            "good_call": {
-                "source": b"good_call()\n",
-                "use_ignore_byte_markers": False,
-                "use_ignore_comments": False,
-                "expected_report_count": 0,
-                "use_noqa": False,
-            },
-            "bad_call": {
-                "source": b"bad_call()\n",
-                "use_ignore_byte_markers": False,
-                "use_ignore_comments": False,
-                "expected_report_count": 1,
-                "use_noqa": False,
-            },
-            "multiple_bad_calls": {
-                "source": b"bad_call()\nbad_call()\n",
-                "use_ignore_byte_markers": False,
-                "use_ignore_comments": False,
-                "expected_report_count": 2,
-                "use_noqa": False,
-            },
-            "bad_call_generated": {
-                "source": b"'''@gen" + b"erated'''\nbad_call()",
-                "use_ignore_byte_markers": True,
-                "use_ignore_comments": False,
-                "expected_report_count": 0,
-                "use_noqa": False,
-            },
-            "bad_call_noqa": {
-                "source": b"bad_call()  # noqa\n",
-                "use_ignore_byte_markers": False,
-                "use_ignore_comments": True,
-                "expected_report_count": 0,
-                "use_noqa": True,
-            },
-            "bad_call_noqa_mixed": {
-                "source": b"bad_call()  # noqa\nbad_call()  # missing noqa comment\n",
-                "use_ignore_byte_markers": False,
-                "use_ignore_comments": True,
-                "expected_report_count": 1,
-                "use_noqa": True,
-            },
-            "bad_call_noqa_file": {
-                "source": b"# noqa-file: BadCallCstLintRule: Test case\nbad_call()\nbad_call()\n",
-                "use_ignore_byte_markers": False,
-                "use_ignore_comments": True,
-                "expected_report_count": 0,
-                "use_noqa": True,
-            },
-        }
+class RuleLintEngineTest(unittest.TestCase):
+    @parameterized.expand(
+        (
+            param(
+                "good_call",
+                **{
+                    "source": b"good_call()\n",
+                    "use_ignore_byte_markers": False,
+                    "use_ignore_comments": False,
+                    "expected_report_count": 0,
+                    "use_noqa": False,
+                },
+            ),
+            param(
+                "bad_call",
+                **{
+                    "source": b"bad_call()\n",
+                    "use_ignore_byte_markers": False,
+                    "use_ignore_comments": False,
+                    "expected_report_count": 1,
+                    "use_noqa": False,
+                },
+            ),
+            param(
+                "multiple_bad_calls",
+                **{
+                    "source": b"bad_call()\nbad_call()\n",
+                    "use_ignore_byte_markers": False,
+                    "use_ignore_comments": False,
+                    "expected_report_count": 2,
+                    "use_noqa": False,
+                },
+            ),
+            param(
+                "bad_call_generated",
+                **{
+                    "source": b"'''@gen" + b"erated'''\nbad_call()",
+                    "use_ignore_byte_markers": True,
+                    "use_ignore_comments": False,
+                    "expected_report_count": 0,
+                    "use_noqa": False,
+                },
+            ),
+            param(
+                "bad_call_noqa",
+                **{
+                    "source": b"bad_call()  # noqa\n",
+                    "use_ignore_byte_markers": False,
+                    "use_ignore_comments": True,
+                    "expected_report_count": 0,
+                    "use_noqa": True,
+                },
+            ),
+            param(
+                "bad_call_noqa_mixed",
+                **{
+                    "source": b"bad_call()  # noqa\nbad_call()  # missing noqa comment\n",
+                    "use_ignore_byte_markers": False,
+                    "use_ignore_comments": True,
+                    "expected_report_count": 1,
+                    "use_noqa": True,
+                },
+            ),
+            param(
+                "bad_call_noqa_file",
+                **{
+                    "source": b"# noqa-file: BadCallCstLintRule: Test case\nbad_call()\nbad_call()\n",
+                    "use_ignore_byte_markers": False,
+                    "use_ignore_comments": True,
+                    "expected_report_count": 0,
+                    "use_noqa": True,
+                },
+            ),
+        )
     )
     def test_lint_file(
         self,
-        *,
+        _name: str,
         source: bytes,
         use_ignore_byte_markers: bool,
         use_ignore_comments: bool,

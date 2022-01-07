@@ -5,18 +5,20 @@
 
 import ast
 import pickle
+import unittest
 from pathlib import Path
 
 import libcst as cst
-from libcst.testing.utils import data_provider, UnitTest
+from parameterized import param, parameterized
 
 from fixit.common.report import AstLintRuleReport, BaseLintRuleReport, CstLintRuleReport
 
 
-class LintRuleReportTest(UnitTest):
-    @data_provider(
-        {
-            "AstLintRuleReport": [
+class LintRuleReportTest(unittest.TestCase):
+    @parameterized.expand(
+        (
+            (
+                "AstLintRuleReport",
                 AstLintRuleReport(
                     file_path=Path("fake/path.py"),
                     node=ast.parse(""),
@@ -24,9 +26,10 @@ class LintRuleReportTest(UnitTest):
                     message="some message",
                     line=1,
                     column=1,
-                )
-            ],
-            "CstLintRuleReport": [
+                ),
+            ),
+            (
+                "CstLintRuleReport",
                 CstLintRuleReport(
                     file_path=Path("fake/path.py"),
                     node=cst.parse_statement("pass\n"),
@@ -36,10 +39,10 @@ class LintRuleReportTest(UnitTest):
                     column=1,
                     module=cst.MetadataWrapper(cst.parse_module(b"pass\n")),
                     module_bytes=b"pass\n",
-                )
-            ],
-        }
+                ),
+            ),
+        )
     )
-    def test_is_not_pickleable(self, report: BaseLintRuleReport) -> None:
+    def test_is_not_pickleable(self, _name: str, report: BaseLintRuleReport) -> None:
         with self.assertRaises(pickle.PicklingError):
             pickle.dumps(report)

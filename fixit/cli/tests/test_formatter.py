@@ -2,10 +2,10 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+import unittest
 from pathlib import Path
 
 import libcst as cst
-from libcst.testing.utils import UnitTest
 
 from fixit.cli.formatter import format_warning, LintRuleReportFormatter
 from fixit.common.report import BaseLintRuleReport, CstLintRuleReport
@@ -19,7 +19,7 @@ class _ExtendedLintRuleReportFormatter(LintRuleReportFormatter):
         return "<overridden details_raw>"
 
 
-class LintRuleReportFormatterTest(UnitTest):
+class LintRuleReportFormatterTest(unittest.TestCase):
     def setUp(self) -> None:
         self.fake_filepath = Path("fake/path.py")
         self.report = CstLintRuleReport(
@@ -73,7 +73,7 @@ class LintRuleReportFormatterTest(UnitTest):
         )
 
 
-class FormatWarningTest(UnitTest):
+class FormatWarningTest(unittest.TestCase):
     def test_format_warning(self) -> None:
         self.assertEqual(
             format_warning("Some long warning message that should be wrapped.", 20),

@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import subprocess
+import unittest
 from pathlib import Path
 from typing import Collection, Dict, Mapping, Optional, Set, Union
 from unittest.mock import MagicMock, patch
@@ -11,7 +12,6 @@ from unittest.mock import MagicMock, patch
 import libcst as cst
 from libcst.metadata import MetadataWrapper, TypeInferenceProvider
 from libcst.metadata.base_provider import ProviderT
-from libcst.testing.utils import UnitTest
 
 from fixit.cli import LintWorkers, map_paths
 from fixit.common.base import CstLintRule, LintConfig, LintRuleT
@@ -55,7 +55,7 @@ def map_paths_operation(
         return str(e)
 
 
-class TypeInferenceTest(UnitTest):
+class TypeInferenceTest(unittest.TestCase):
     DUMMY_PATH: Path = Path("fake/path.py")
     DUMMY_PATH_2: Path = Path("fake/path_2.py")
 

@@ -2,12 +2,13 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+import unittest
 from pathlib import Path
 from typing import Collection, List, Optional, Type
 
 import libcst as cst
 from libcst.metadata import MetadataWrapper
-from libcst.testing.utils import data_provider, UnitTest
+from parameterized import param, parameterized
 
 from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.comments import CommentInfo
@@ -35,277 +36,319 @@ class UsedRule2(CstLintRule):
 FILE_PATH: Path = Path("fake/path.py")
 
 
-class RemoveUnusedSuppressionsRuleTest(UnitTest):
-    @data_provider(
-        {
-            "used_suppression_one_code_oneline": {
-                "source": dedent_with_lstrip(
-                    """
+class RemoveUnusedSuppressionsRuleTest(unittest.TestCase):
+    @parameterized.expand(
+        (
+            param(
+                "used_suppression_one_code_oneline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule],
-                "rules_without_report": [],
-                "suppressed_line": 2,
-                "expected_unused_suppressions_report_messages": [],
-            },
-            "used_suppression_one_code_oneline_with_reason": {
-                "source": dedent_with_lstrip(
-                    """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule],
+                    "rules_without_report": [],
+                    "suppressed_line": 2,
+                    "expected_unused_suppressions_report_messages": [],
+                },
+            ),
+            param(
+                "used_suppression_one_code_oneline_with_reason",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule: reason blah.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule],
-                "rules_without_report": [],
-                "suppressed_line": 2,
-                "expected_unused_suppressions_report_messages": [],
-            },
-            "used_suppression_one_code_multiline": {
-                "source": dedent_with_lstrip(
-                    """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule],
+                    "rules_without_report": [],
+                    "suppressed_line": 2,
+                    "expected_unused_suppressions_report_messages": [],
+                },
+            ),
+            param(
+                "used_suppression_one_code_multiline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule: reason
                     # lint: reason continued blah
                     # lint: blah blah.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule],
-                "rules_without_report": [],
-                "suppressed_line": 4,
-                "expected_unused_suppressions_report_messages": [],
-            },
-            "used_suppression_many_codes_oneline": {
-                "source": dedent_with_lstrip(
-                    """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule],
+                    "rules_without_report": [],
+                    "suppressed_line": 4,
+                    "expected_unused_suppressions_report_messages": [],
+                },
+            ),
+            param(
+                "used_suppression_many_codes_oneline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule, UsedRule2
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [],
-                "suppressed_line": 2,
-                "expected_unused_suppressions_report_messages": [],
-            },
-            "used_suppression_many_codes_multiline": {
-                "source": dedent_with_lstrip(
-                    """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [],
+                    "suppressed_line": 2,
+                    "expected_unused_suppressions_report_messages": [],
+                },
+            ),
+            param(
+                "used_suppression_many_codes_multiline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule, UsedRule2:
                     # lint: reason blah blah.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [],
-                "suppressed_line": 3,
-                "expected_unused_suppressions_report_messages": [],
-            },
-            "unused_suppression_one_code_oneline": {
-                "source": dedent_with_lstrip(
-                    """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [],
+                    "suppressed_line": 3,
+                    "expected_unused_suppressions_report_messages": [],
+                },
+            ),
+            param(
+                "unused_suppression_one_code_oneline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule: reason blah blah.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule],
-                "rules_without_report": [UsedRule],
-                "suppressed_line": 2,
-                "expected_unused_suppressions_report_messages": [
-                    UNUSED_SUPPRESSION_COMMENT_MESSAGE
-                ],
-                "expected_replacements": [
-                    dedent_with_lstrip(
-                        """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule],
+                    "rules_without_report": [UsedRule],
+                    "suppressed_line": 2,
+                    "expected_unused_suppressions_report_messages": [
+                        UNUSED_SUPPRESSION_COMMENT_MESSAGE
+                    ],
+                    "expected_replacements": [
+                        dedent_with_lstrip(
+                            """
                     foo = bar
                     """
-                    )
-                ],
-            },
-            "unused_suppression_one_code_multiline": {
-                "source": dedent_with_lstrip(
-                    """
+                        )
+                    ],
+                },
+            ),
+            param(
+                "unused_suppression_one_code_multiline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule: reason
                     # lint: reason continued.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule],
-                "rules_without_report": [UsedRule],
-                "suppressed_line": 3,
-                "expected_unused_suppressions_report_messages": [
-                    UNUSED_SUPPRESSION_COMMENT_MESSAGE
-                ],
-                "expected_replacements": [
-                    dedent_with_lstrip(
-                        """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule],
+                    "rules_without_report": [UsedRule],
+                    "suppressed_line": 3,
+                    "expected_unused_suppressions_report_messages": [
+                        UNUSED_SUPPRESSION_COMMENT_MESSAGE
+                    ],
+                    "expected_replacements": [
+                        dedent_with_lstrip(
+                            """
                     foo = bar
                     """
-                    )
-                ],
-            },
-            "unused_suppression_many_codes_oneline": {
-                "source": dedent_with_lstrip(
-                    """
+                        )
+                    ],
+                },
+            ),
+            param(
+                "unused_suppression_many_codes_oneline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule, UsedRule2: reason
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [UsedRule],
-                "suppressed_line": 2,
-                "expected_unused_suppressions_report_messages": [
-                    UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE.format(
-                        lint_codes="UsedRule"
-                    )
-                ],
-                "expected_replacements": [
-                    dedent_with_lstrip(
-                        """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [UsedRule],
+                    "suppressed_line": 2,
+                    "expected_unused_suppressions_report_messages": [
+                        UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE.format(
+                            lint_codes="UsedRule"
+                        )
+                    ],
+                    "expected_replacements": [
+                        dedent_with_lstrip(
+                            """
                 # lint-ignore: UsedRule2: reason
                 foo = bar
                 """
-                    )
-                ],
-            },
-            "unused_suppression_many_codes_multiline": {
-                "source": dedent_with_lstrip(
-                    """
+                        )
+                    ],
+                },
+            ),
+            param(
+                "unused_suppression_many_codes_multiline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule, UsedRule2: reason
                     # lint: reason continued.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [UsedRule],
-                "suppressed_line": 3,
-                "expected_unused_suppressions_report_messages": [
-                    UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE.format(
-                        lint_codes="UsedRule"
-                    )
-                ],
-                "expected_replacements": [
-                    dedent_with_lstrip(
-                        """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [UsedRule],
+                    "suppressed_line": 3,
+                    "expected_unused_suppressions_report_messages": [
+                        UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE.format(
+                            lint_codes="UsedRule"
+                        )
+                    ],
+                    "expected_replacements": [
+                        dedent_with_lstrip(
+                            """
                 # lint-ignore: UsedRule2: reason reason
                 # lint: continued.
                 foo = bar
                 """
-                    )
-                ],
-            },
-            "unused_suppression_many_codes_all_unused": {
-                "source": dedent_with_lstrip(
-                    """
+                        )
+                    ],
+                },
+            ),
+            param(
+                "unused_suppression_many_codes_all_unused",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule, UsedRule2: reason
                     # lint: reason continued.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [UsedRule, UsedRule2],
-                "suppressed_line": 3,
-                "expected_unused_suppressions_report_messages": [
-                    UNUSED_SUPPRESSION_COMMENT_MESSAGE
-                ],
-                "expected_replacements": [
-                    dedent_with_lstrip(
-                        """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [UsedRule, UsedRule2],
+                    "suppressed_line": 3,
+                    "expected_unused_suppressions_report_messages": [
+                        UNUSED_SUPPRESSION_COMMENT_MESSAGE
+                    ],
+                    "expected_replacements": [
+                        dedent_with_lstrip(
+                            """
                         foo = bar
                         """
-                    )
-                ],
-            },
-            "multiple_suppressions": {
-                "source": dedent_with_lstrip(
-                    """
+                        )
+                    ],
+                },
+            ),
+            param(
+                "multiple_suppressions",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule: first reason
                     # lint: first reason continued.
                     # lint-ignore: UsedRule2: second reason
                     # lint: second reason continued.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [UsedRule],
-                "suppressed_line": 5,
-                "expected_unused_suppressions_report_messages": [
-                    UNUSED_SUPPRESSION_COMMENT_MESSAGE
-                ],
-                "expected_replacements": [
-                    dedent_with_lstrip(
-                        """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [UsedRule],
+                    "suppressed_line": 5,
+                    "expected_unused_suppressions_report_messages": [
+                        UNUSED_SUPPRESSION_COMMENT_MESSAGE
+                    ],
+                    "expected_replacements": [
+                        dedent_with_lstrip(
+                            """
                         # lint-ignore: UsedRule2: second reason
                         # lint: second reason continued.
                         foo = bar
                         """
-                    )
-                ],
-            },
-            "multiple_unused_suppressions": {
-                "source": dedent_with_lstrip(
-                    """
+                        )
+                    ],
+                },
+            ),
+            param(
+                "multiple_unused_suppressions",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UsedRule: first reason
                     # lint: first reason continued.
                     # lint-ignore: UsedRule2: second reason
                     # lint: second reason continued.
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [UsedRule, UsedRule2],
-                "suppressed_line": 5,
-                "expected_unused_suppressions_report_messages": [
-                    UNUSED_SUPPRESSION_COMMENT_MESSAGE,
-                    UNUSED_SUPPRESSION_COMMENT_MESSAGE,
-                ],
-                "expected_replacements": [
-                    dedent_with_lstrip(
-                        """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [UsedRule, UsedRule2],
+                    "suppressed_line": 5,
+                    "expected_unused_suppressions_report_messages": [
+                        UNUSED_SUPPRESSION_COMMENT_MESSAGE,
+                        UNUSED_SUPPRESSION_COMMENT_MESSAGE,
+                    ],
+                    "expected_replacements": [
+                        dedent_with_lstrip(
+                            """
                         # lint-ignore: UsedRule2: second reason
                         # lint: second reason continued.
                         foo = bar
                         """
-                    ),
-                    dedent_with_lstrip(
-                        """
+                        ),
+                        dedent_with_lstrip(
+                            """
                         # lint-ignore: UsedRule: first reason
                         # lint: first reason continued.
                         foo = bar
                         """
-                    ),
-                ],
-            },
-            "suppressions_with_unlinted_codes_oneline": {
-                "source": dedent_with_lstrip(
-                    """
+                        ),
+                    ],
+                },
+            ),
+            param(
+                "suppressions_with_unlinted_codes_oneline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UnusedRule
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [],
-                "suppressed_line": 2,
-                "expected_unused_suppressions_report_messages": [],
-            },
-            "suppressions_with_unlinted_codes_multiline": {
-                "source": dedent_with_lstrip(
-                    """
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [],
+                    "suppressed_line": 2,
+                    "expected_unused_suppressions_report_messages": [],
+                },
+            ),
+            param(
+                "suppressions_with_unlinted_codes_multiline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: UnusedRule: reason
                     # lint: reason continued
                     foo = bar
                     """
-                ).encode(),
-                "rules_in_lint_run": [UsedRule, UsedRule2],
-                "rules_without_report": [],
-                "suppressed_line": 3,
-                "expected_unused_suppressions_report_messages": [],
-            },
-        }
+                    ).encode(),
+                    "rules_in_lint_run": [UsedRule, UsedRule2],
+                    "rules_without_report": [],
+                    "suppressed_line": 3,
+                    "expected_unused_suppressions_report_messages": [],
+                },
+            ),
+        )
     )
     def test(
         self,
-        *,
+        _name: str,
         source: bytes,
         rules_in_lint_run: Collection[Type[CstLintRule]],
         rules_without_report: Collection[Type[CstLintRule]],

@@ -3,12 +3,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from libcst.testing.utils import UnitTest
+
+import unittest
 
 from fixit.common.base import _get_code
 
 
-class GetCodeTest(UnitTest):
+class GetCodeTest(unittest.TestCase):
     def test_validate_message_old_code(self) -> None:
         # lint-ignore: UseClassNameAsCodeRule
         self.assertEqual(_get_code("IG00 Old-school message", "SomeClassName"), "IG00")

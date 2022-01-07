@@ -3,12 +3,13 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from libcst.testing.utils import UnitTest
+
+import unittest
 
 from fixit.rules.import_constraints import _ImportConfig
 
 
-class ImportConstraintsRuleConfigTest(UnitTest):
+class ImportConstraintsRuleConfigTest(unittest.TestCase):
     def test_at_least_one_rule(self) -> None:
         # Settings must have at least one rule
         with self.assertRaisesRegex(ValueError, "at least one"):

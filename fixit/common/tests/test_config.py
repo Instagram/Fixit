@@ -4,10 +4,10 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
+import unittest
 from pathlib import Path
 
 from jsonschema.exceptions import ValidationError
-from libcst.testing.utils import UnitTest
 
 from fixit.common.config import get_validated_settings
 
@@ -32,7 +32,7 @@ TEST_CONFIG = {
 }
 
 
-class TestConfig(UnitTest):
+class TestConfig(unittest.TestCase):
     def test_validated_settings_with_bad_types(self) -> None:
         bad_config = {"block_list_rules": False}
         with self.assertRaisesRegex(ValidationError, "False is not of type 'array'"):

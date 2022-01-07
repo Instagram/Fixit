@@ -4,12 +4,13 @@
 # LICENSE file in the root directory of this source tree.
 
 import tokenize
+import unittest
 from io import BytesIO
 from pathlib import Path
 from typing import Container, Iterable, Tuple
 
 import libcst as cst
-from libcst.testing.utils import data_provider, UnitTest
+from parameterized import param, parameterized
 
 from fixit.common.comments import CommentInfo
 from fixit.common.ignores import IgnoreInfo
@@ -18,28 +19,28 @@ from fixit.common.report import CstLintRuleReport
 from fixit.common.utils import dedent_with_lstrip
 
 
-class IgnoreInfoTest(UnitTest):
-    @data_provider(
-        {
-            # A noqa comment can be used without a specified code, which will ignore all
-            # lint errors on that line. This is a bad practice, but we have to support
-            # it for compatibility with existing code. (until we can codemod it away)
-            "noqa_all_legacy": {
-                "source": dedent_with_lstrip(
-                    """
+class IgnoreInfoTest(unittest.TestCase):
+    @parameterized.expand(
+        (
+            param(
+                "noqa_all_legacy",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     fn1()
                     fn2()  # noqa
                     fn3()
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [2],
-            },
-            # When a noqa comment is specified with codes, it should only ignore the
-            # specified codes.
-            "noqa_with_code": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [2],
+                },
+            ),
+            param(
+                "noqa_with_code",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     fn1()  # noqa: IgnoredRule
                     fn2()  # noqa: IgnoredRule: Message
                     fn3()  # noqa: IgnoredRule, Ignored2Rule: Message
@@ -47,13 +48,16 @@ class IgnoreInfoTest(UnitTest):
                     fn5()  # noqa: Ignored1Rule, Ignored2Rule
                     fn6()  # noqa: Ignored1Rule, Ignored2Rule: Message
                     """
-                ),
-                "ignored_code": "Ignored1Rule",
-                "ignored_lines": [4, 5, 6],
-            },
-            "noqa_multiline": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "Ignored1Rule",
+                    "ignored_lines": [4, 5, 6],
+                },
+            ),
+            param(
+                "noqa_multiline",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     fn1(line, \\
                     continuation)  # noqa: IgnoredRule
 
@@ -64,63 +68,81 @@ class IgnoreInfoTest(UnitTest):
                         string
                     ''')  # noqa: IgnoredRule
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [1, 2, 6, 7, 8, 9],
-            },
-            "noqa_file": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [1, 2, 6, 7, 8, 9],
+                },
+            ),
+            param(
+                "noqa_file",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # noqa-file: IgnoredRule: Some reason
                     fn1()
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [1, 2, 3],
-            },
-            "noqa_file_multiple_codes": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [1, 2, 3],
+                },
+            ),
+            param(
+                "noqa_file_multiple_codes",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # noqa-file: IgnoredRule, Ignored1Rule, Ignored2Rule: Some reason
                     fn1()
                     """
-                ),
-                "ignored_code": "Ignored1Rule",
-                "ignored_lines": [1, 2, 3],
-            },
-            "noqa_file_requires_code_and_reason": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "Ignored1Rule",
+                    "ignored_lines": [1, 2, 3],
+                },
+            ),
+            param(
+                "noqa_file_requires_code_and_reason",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # noqa-file
                     # noqa-file: IgnoredRule
                     # Neither of these noqa-files should work because they're incomplete
                     fn1()
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [],
-            },
-            "backwards_compatibility_classname": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [],
+                },
+            ),
+            param(
+                "backwards_compatibility_classname",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     fn1() # noqa: IG00, IgnoredRule
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [1],
-            },
-            "backwards_compatibility_oldcode": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [1],
+                },
+            ),
+            param(
+                "backwards_compatibility_oldcode",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     fn1() # noqa: IG00, IgnoredRule
                     """
-                ),
-                "ignored_code": "IG00",
-                "ignored_lines": [1],
-            },
-            "lint_fixme": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IG00",
+                    "ignored_lines": [1],
+                },
+            ),
+            param(
+                "lint_fixme",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     fn1()
 
                     # lint-fixme: IgnoredRule: Some short reason
@@ -138,13 +160,16 @@ class IgnoreInfoTest(UnitTest):
 
                     fn4()
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [3, 4, 9, 10, 11, 12, 13, 14],
-            },
-            "lint_ignore": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [3, 4, 9, 10, 11, 12, 13, 14],
+                },
+            ),
+            param(
+                "lint_ignore",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     fn1()
 
                     # lint-ignore: IgnoredRule: Some reason
@@ -152,25 +177,27 @@ class IgnoreInfoTest(UnitTest):
 
                     fn3()
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [3, 4],
-            },
-            # A lint-ignore can exist right before an EOF. That's fine. We should ignore
-            # all the way to the EOF.
-            "lint_ignore_eof": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [3, 4],
+                },
+            ),
+            param(
+                "lint_ignore_eof",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: IgnoredRule
                     """
-                ),
-                "ignored_code": "IgnoredRule",
-                "ignored_lines": [1, 2],
-            },
-        }
+                    ),
+                    "ignored_code": "IgnoredRule",
+                    "ignored_lines": [1, 2],
+                },
+            ),
+        )
     )
     def test_ignored_lines(
-        self, *, source: str, ignored_code: str, ignored_lines: Container[int]
+        self, _name: str, source: str, ignored_code: str, ignored_lines: Container[int]
     ) -> None:
         tokens = tuple(tokenize.tokenize(BytesIO(source.encode("utf-8")).readline))
         ignore_info = IgnoreInfo.compute(
@@ -199,105 +226,141 @@ class IgnoreInfoTest(UnitTest):
         #  `Container[int]`.
         self.assertEqual(actual_ignored_lines, list(ignored_lines))
 
-    @data_provider(
-        {
-            "unused_noqa": {
-                "source": "fn()  # noqa",
-                "reports_on_lines": [],
-                "unused_comments": [1],
-            },
-            "used_noqa": {
-                "source": "fn()  # noqa",
-                "reports_on_lines": [(1, "Ignored999Rule")],
-                "unused_comments": [],
-            },
-            "unused_lint_ignore": {
-                "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
-                "reports_on_lines": [],
-                "unused_comments": [1],
-            },
-            "unused_lint_ignore_mutliple_lines": {
-                "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
-                "reports_on_lines": [],
-                "unused_comments": [1],
-            },
-            "used_lint_ignore": {
-                "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
-                "reports_on_lines": [(2, "Ignored999Rule")],
-                "unused_comments": [],
-            },
-            "used_lint_ignore_multiple_lines": {
-                "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
-                "reports_on_lines": [(3, "Ignored999Rule")],
-                "unused_comments": [],
-            },
-            "lint_ignore_is_used_before_noqa": {
-                "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()  # noqa",
-                "reports_on_lines": [(2, "Ignored999Rule")],
-                "unused_comments": [2],
-            },
-            "duplicate_lint_ignores": {
-                "source": "# lint-ignore: Ignored999Rule: First\n# lint-ignore: Ignored999Rule: Second\nfn()",
-                "reports_on_lines": [(3, "Ignored999Rule")],
-                "unused_comments": [2],
-            },
-            "multiple_used_lint_ignores": {
-                "source": dedent_with_lstrip(
-                    """
+    @parameterized.expand(
+        (
+            param(
+                "unused_noqa",
+                **{
+                    "source": "fn()  # noqa",
+                    "reports_on_lines": [],
+                    "unused_comments": [1],
+                },
+            ),
+            param(
+                "used_noqa",
+                **{
+                    "source": "fn()  # noqa",
+                    "reports_on_lines": [(1, "Ignored999Rule")],
+                    "unused_comments": [],
+                },
+            ),
+            param(
+                "unused_lint_ignore",
+                **{
+                    "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
+                    "reports_on_lines": [],
+                    "unused_comments": [1],
+                },
+            ),
+            param(
+                "unused_lint_ignore_mutliple_lines",
+                **{
+                    "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
+                    "reports_on_lines": [],
+                    "unused_comments": [1],
+                },
+            ),
+            param(
+                "used_lint_ignore",
+                **{
+                    "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()",
+                    "reports_on_lines": [(2, "Ignored999Rule")],
+                    "unused_comments": [],
+                },
+            ),
+            param(
+                "used_lint_ignore_multiple_lines",
+                **{
+                    "source": "# lint-ignore: Ignored999Rule: Some\n# lint: reason blah blah blah\nfn()",
+                    "reports_on_lines": [(3, "Ignored999Rule")],
+                    "unused_comments": [],
+                },
+            ),
+            param(
+                "lint_ignore_is_used_before_noqa",
+                **{
+                    "source": "# lint-ignore: Ignored999Rule: Some reason\nfn()  # noqa",
+                    "reports_on_lines": [(2, "Ignored999Rule")],
+                    "unused_comments": [2],
+                },
+            ),
+            param(
+                "duplicate_lint_ignores",
+                **{
+                    "source": "# lint-ignore: Ignored999Rule: First\n# lint-ignore: Ignored999Rule: Second\nfn()",
+                    "reports_on_lines": [(3, "Ignored999Rule")],
+                    "unused_comments": [2],
+                },
+            ),
+            param(
+                "multiple_used_lint_ignores",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: Ignored999Rule: Some
                     # lint: reason blah blah blah
                     # lint-ignore: Ignored1000Rule: Some
                     # lint: other reason blah blah
                     fn()
                     """
-                ),
-                "reports_on_lines": [(5, "Ignored999Rule"), (5, "Ignored1000Rule")],
-                "unused_comments": [],
-            },
-            "multiple_unused_lint_ignores": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "reports_on_lines": [(5, "Ignored999Rule"), (5, "Ignored1000Rule")],
+                    "unused_comments": [],
+                },
+            ),
+            param(
+                "multiple_unused_lint_ignores",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: Ignored999Rule: Some
                     # lint: reason blah blah blah
                     # lint-ignore: Ignored1000Rule: Some
                     # lint: other reason blah blah
                     fn()
                     """
-                ),
-                "reports_on_lines": [],
-                "unused_comments": [1, 3],
-            },
-            "some_unused_lint_ignores": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "reports_on_lines": [],
+                    "unused_comments": [1, 3],
+                },
+            ),
+            param(
+                "some_unused_lint_ignores",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: Ignored999Rule: Some
                     # lint: reason blah blah blah
                     # lint-ignore: Ignored1000Rule: Some
                     # lint: other reason blah blah
                     fn()
                     """
-                ),
-                "reports_on_lines": [(5, "Ignored999Rule")],
-                "unused_comments": [3],
-            },
-            "some_unused_lint_ignores_2": {
-                "source": dedent_with_lstrip(
-                    """
+                    ),
+                    "reports_on_lines": [(5, "Ignored999Rule")],
+                    "unused_comments": [3],
+                },
+            ),
+            param(
+                "some_unused_lint_ignores_2",
+                **{
+                    "source": dedent_with_lstrip(
+                        """
                     # lint-ignore: Ignored999Rule: Some
                     # lint: reason blah blah blah
                     # lint-ignore: Ignored1000Rule: Some
                     # lint: other reason blah blah
                     fn()
                     """
-                ),
-                "reports_on_lines": [(5, "Ignored1000Rule")],
-                "unused_comments": [1],
-            },
-        }
+                    ),
+                    "reports_on_lines": [(5, "Ignored1000Rule")],
+                    "unused_comments": [1],
+                },
+            ),
+        )
     )
     def test_unused_comments(
         self,
-        *,
+        _name: str,
         source: str,
         reports_on_lines: Iterable[Tuple[int, str]],
         unused_comments: Iterable[int],

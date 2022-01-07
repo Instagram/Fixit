@@ -6,10 +6,9 @@
 import ast
 import io
 import tokenize
+import unittest
 from pathlib import Path
 from typing import Iterable
-
-from libcst.testing.utils import UnitTest
 
 from fixit.common.base import LintConfig
 from fixit.common.pseudo_rule import PseudoContext, PseudoLintRule
@@ -23,7 +22,7 @@ DUMMY_LINT_CODE = "DummyLintRule"
 DUMMY_LINT_MESSAGE = "dummy lint message"
 
 
-class PseudoContextTest(UnitTest):
+class PseudoContextTest(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_tokens = tuple(tokenize.tokenize(io.BytesIO(DUMMY_SOURCE).readline))
         self.dummy_ast_tree = ast.parse(DUMMY_SOURCE)
@@ -47,7 +46,7 @@ class PseudoContextTest(UnitTest):
         self.assertIsNot(partial_context.ast_tree, self.dummy_ast_tree)
 
 
-class PseudoLintRuleTest(UnitTest):
+class PseudoLintRuleTest(unittest.TestCase):
     def test_pseudo_lint_rule(self) -> None:
         class DummyLintRuleReport(BaseLintRuleReport):
             pass

@@ -3,12 +3,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import unittest
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast, Collection, List, Optional, Sequence
 
 from libcst import Module
-from libcst.testing.utils import UnitTest
 
 from fixit.cli import LintOpts, map_paths
 from fixit.cli.args import LintWorkers
@@ -87,7 +87,7 @@ def generate_mock_lint_opt(global_list: Optional[List[str]] = None) -> LintOpts:
     )
 
 
-class LintOptsTest(UnitTest):
+class LintOptsTest(unittest.TestCase):
     def setUp(self) -> None:
         self.global_list = []
         self.opts = generate_mock_lint_opt(global_list=self.global_list)

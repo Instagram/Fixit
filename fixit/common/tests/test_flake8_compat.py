@@ -3,9 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import unittest
 from pathlib import Path
-
-from libcst.testing.utils import UnitTest
 
 from fixit.common.base import LintConfig
 from fixit.common.pseudo_rule import PseudoContext
@@ -13,7 +12,7 @@ from fixit.rule_lint_engine import lint_file
 from fixit.rules.flake8_compat import Flake8PseudoLintRule
 
 
-class Flake8PseudoLintRuleTest(UnitTest):
+class Flake8PseudoLintRuleTest(unittest.TestCase):
     def test_lint_file(self) -> None:
         context = PseudoContext(
             file_path=Path("dummy/file/path.py"), source=b"undefined_fn()\n"

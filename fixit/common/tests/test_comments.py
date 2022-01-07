@@ -4,15 +4,14 @@
 # LICENSE file in the root directory of this source tree.
 
 import tokenize
+import unittest
 from io import BytesIO
-
-from libcst.testing.utils import UnitTest
 
 from fixit.common.comments import CommentInfo
 from fixit.common.utils import dedent_with_lstrip
 
 
-class CommentInfoTest(UnitTest):
+class CommentInfoTest(unittest.TestCase):
     def test_comment_info(self) -> None:
         # A comment on a line with no other leading tokens is a "comment on own line".
         # In contrast, trailing comments come after other tokens on the same line.
