@@ -109,10 +109,12 @@ def get_rules_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def relative_to_repo_root(_path: str) -> Path:
+def enforce_relative_to_repo_root(_path: str) -> Path:
     repo_root = get_lint_config().repo_root
     try:
-        return Path(_path).resolve(strict=True).relative_to(repo_root)
+        path = Path(_path).resolve(strict=True)
+        path.relative_to(repo_root)
+        return path
     except ValueError:
         raise argparse.ArgumentTypeError(
             f"Invalid value {_path}.\n"
@@ -126,7 +128,7 @@ def get_paths_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "paths",
         nargs="*",
-        type=relative_to_repo_root,
+        type=enforce_relative_to_repo_root,
         default=(Path(get_lint_config().repo_root),),
         help=(
             "The name of a directory (e.g. media) or file (e.g. media/views.py) "
