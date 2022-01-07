@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Collection, List, Sequence, cast
+from typing import cast, Collection, List, Sequence
 
 import libcst as cst
 from libcst.metadata import ParentNodeProvider, PositionProvider

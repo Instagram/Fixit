@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Collection, List, Optional, Sequence, cast
+from typing import cast, Collection, List, Optional, Sequence
 
 from libcst import Module
 from libcst.testing.utils import UnitTest

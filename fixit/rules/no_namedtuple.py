@@ -6,7 +6,7 @@
 from typing import List, Optional, Sequence, Tuple
 
 import libcst as cst
-from libcst import MaybeSentinel, ensure_type, parse_expression
+from libcst import ensure_type, MaybeSentinel, parse_expression
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid

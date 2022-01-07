@@ -12,9 +12,9 @@ from typing import List
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config, get_rules_from_config
 from fixit.common.utils import (
-    LintRuleNotFoundError,
     find_and_import_rule,
     import_distinct_rules_from_package,
+    LintRuleNotFoundError,
 )
 
 

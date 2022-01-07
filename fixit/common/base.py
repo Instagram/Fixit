@@ -7,7 +7,7 @@ import re
 from abc import ABCMeta
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 import libcst as cst
 from libcst import BatchableCSTVisitor

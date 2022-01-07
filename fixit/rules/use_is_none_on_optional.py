@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, List, Optional, Union, cast
+from typing import cast, Dict, List, Optional, Union
 
 import libcst as cst
 import libcst.matchers as m

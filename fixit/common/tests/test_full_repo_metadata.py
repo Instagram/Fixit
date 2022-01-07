@@ -9,7 +9,7 @@ from itertools import chain
 from pathlib import Path
 from subprocess import TimeoutExpired
 from typing import Dict, Mapping
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import call, MagicMock, patch
 
 from libcst.metadata import TypeInferenceProvider
 from libcst.metadata.base_provider import ProviderT

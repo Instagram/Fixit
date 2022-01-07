@@ -19,9 +19,9 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
+from typing import Iterable, List, Mapping, Optional, TYPE_CHECKING
 
-from libcst import ParserSyntaxError, parse_module
+from libcst import parse_module, ParserSyntaxError
 from libcst.metadata import MetadataWrapper
 
 from fixit.cli import find_files, map_paths

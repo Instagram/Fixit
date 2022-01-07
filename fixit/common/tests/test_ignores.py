@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Container, Iterable, Tuple
 
 import libcst as cst
-from libcst.testing.utils import UnitTest, data_provider
+from libcst.testing.utils import data_provider, UnitTest
 
 from fixit.common.comments import CommentInfo
 from fixit.common.ignores import IgnoreInfo

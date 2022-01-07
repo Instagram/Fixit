@@ -7,7 +7,7 @@ from pathlib import Path
 import libcst as cst
 from libcst.testing.utils import UnitTest
 
-from fixit.cli.formatter import LintRuleReportFormatter, format_warning
+from fixit.cli.formatter import format_warning, LintRuleReportFormatter
 from fixit.common.report import BaseLintRuleReport, CstLintRuleReport
 
 

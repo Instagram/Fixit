@@ -6,7 +6,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain, islice
-from typing import TYPE_CHECKING, Dict, Iterable, Mapping, Optional, Set
+from typing import Dict, Iterable, Mapping, Optional, Set, TYPE_CHECKING
 
 from libcst.metadata import FullRepoManager, TypeInferenceProvider
 

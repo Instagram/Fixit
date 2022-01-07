@@ -5,12 +5,12 @@
 
 from typing import Iterable
 
-from libcst.testing.utils import UnitTest, data_provider
+from libcst.testing.utils import data_provider, UnitTest
 
 from fixit.common.insert_suppressions import (
+    insert_suppressions,
     SuppressionComment,
     SuppressionCommentKind,
-    insert_suppressions,
 )
 from fixit.common.utils import dedent_with_lstrip
 

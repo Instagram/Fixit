@@ -23,7 +23,7 @@ import yaml
 from jsonschema import validate
 
 from fixit.common.base import LintConfig
-from fixit.common.utils import LintRuleCollectionT, import_distinct_rules_from_package
+from fixit.common.utils import import_distinct_rules_from_package, LintRuleCollectionT
 
 
 LINT_CONFIG_FILE_NAME: Path = Path(".fixit.config.yaml")

@@ -16,7 +16,6 @@ import warnings
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Callable,
     Collection,
     Dict,
@@ -28,6 +27,7 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    TYPE_CHECKING,
     TypeVar,
     Union,
 )
@@ -35,7 +35,7 @@ from typing import (
 import libcst as cst
 from libcst.metadata import MetadataWrapper
 
-from fixit.cli.args import LintWorkers, get_multiprocessing_parser
+from fixit.cli.args import get_multiprocessing_parser, LintWorkers
 from fixit.common.base import LintConfig
 from fixit.common.config import get_lint_config
 from fixit.common.full_repo_metadata import FullRepoMetadataConfig, get_repo_caches

@@ -7,7 +7,7 @@
 For backwards compatibility.
 """
 
-from fixit.cli import IPCResult, LintOpts, find_files, ipc_main, map_paths
+from fixit.cli import find_files, ipc_main, IPCResult, LintOpts, map_paths
 
 
 __all__ = ["IPCResult", "LintOpts", "find_files", "ipc_main", "map_paths"]

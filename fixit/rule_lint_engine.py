@@ -7,7 +7,7 @@ import io
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Collection, List, Optional, Sequence, Type, cast
+from typing import cast, Collection, List, Optional, Sequence, Type
 
 import libcst as cst
 from libcst.metadata import MetadataWrapper

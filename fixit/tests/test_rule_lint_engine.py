@@ -6,7 +6,7 @@
 from pathlib import Path
 
 import libcst as cst
-from libcst.testing.utils import UnitTest, data_provider
+from libcst.testing.utils import data_provider, UnitTest
 
 from fixit import rule_lint_engine
 from fixit.common.base import CstLintRule, LintConfig

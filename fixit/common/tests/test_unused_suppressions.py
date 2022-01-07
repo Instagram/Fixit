@@ -7,7 +7,7 @@ from typing import Collection, List, Optional, Type
 
 import libcst as cst
 from libcst.metadata import MetadataWrapper
-from libcst.testing.utils import UnitTest, data_provider
+from libcst.testing.utils import data_provider, UnitTest
 
 from fixit.common.base import CstContext, CstLintRule, LintConfig
 from fixit.common.comments import CommentInfo
@@ -15,10 +15,10 @@ from fixit.common.ignores import IgnoreInfo
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.report import CstLintRuleReport
 from fixit.common.unused_suppressions import (
+    _compose_new_comment,
+    RemoveUnusedSuppressionsRule,
     UNUSED_SUPPRESSION_CODES_IN_COMMENT_MESSAGE,
     UNUSED_SUPPRESSION_COMMENT_MESSAGE,
-    RemoveUnusedSuppressionsRule,
-    _compose_new_comment,
 )
 from fixit.common.utils import dedent_with_lstrip
 from fixit.rule_lint_engine import _get_tokens, _visit_cst_rules_with_context
