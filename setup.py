@@ -3,10 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import importlib.util
-from importlib.machinery import ModuleSpec
-from os import path
-from types import ModuleType
+from os import environ, path
 
 import setuptools
 
@@ -17,23 +14,16 @@ with open(path.join(this_directory, "README.rst"), encoding="utf-8") as f:
     # pyre-fixme[5]: Global expression must be annotated.
     long_description = f.read()
 
-# Grab the version constant so that libcst.tool stays in sync with this package.
-# pyre-fixme[9]: spec has type `ModuleSpec`; used as `Optional[ModuleSpec]`.
-spec: ModuleSpec = importlib.util.spec_from_file_location(
-    "version", path.join(this_directory, "fixit/_version.py")
-)
-version: ModuleType = importlib.util.module_from_spec(spec)
-# pyre-ignore Pyre doesn't know about importlib entirely.
-spec.loader.exec_module(version)
-# pyre-ignore Pyre has no way of knowing that this constant exists.
-FIXIT_VERSION = version.FIXIT_VERSION
+
+def no_local_scheme(version: str) -> str:
+    return ""
+
 
 setuptools.setup(
     name="fixit",
     description="A lint framework that writes better Python code for you.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    version=FIXIT_VERSION,
     url="https://github.com/Instagram/Fixit",
     license="MIT",
     packages=setuptools.find_packages(),
@@ -60,4 +50,12 @@ setuptools.setup(
     zip_safe=False,  # for mypy compatibility https://mypy.readthedocs.io/en/latest/installed_packages.html
     include_package_data=True,
     entry_points={"console_scripts": ["fixit = fixit.cli.main:main"]},
+    use_scm_version={
+        "write_to": "fixit/_version.py",
+        **(
+            {"local_scheme": no_local_scheme}
+            if "FIXIT_NO_LOCAL_SCHEME" in environ
+            else {}
+        ),
+    },
 )

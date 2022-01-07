@@ -10,3 +10,4 @@ sphinx-rtd-theme>=0.5.0
 prompt-toolkit>=2.0.9
 tox>=3.14.5
 diff_cover>=3.0.1
+setuptools_scm>=6.0.1

@@ -14,7 +14,7 @@ import argparse
 import sys
 from typing import List
 
-from fixit._version import FIXIT_VERSION
+from fixit import FIXIT_VERSION
 from fixit.cli import add_new_rule, apply_fix, insert_suppressions, run_rules
 
 
@@ -25,7 +25,12 @@ def main(argv: List[str] = sys.argv[1:]) -> None:
         description="These are common Fixit commands used in various situations:",
     )
 
-    parser.add_argument("--version", action="version", version=FIXIT_VERSION)
+    parser.add_argument(
+        "--version",
+        action="version",
+        # pyre-ignore[16] pyre bug?
+        version=FIXIT_VERSION,
+    )
     parser.set_defaults(subparser_fn=lambda _: parser.print_help())
 
     # Register sub-commands

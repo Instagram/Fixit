@@ -19,3 +19,4 @@ docs/source/rules/
 coverage.xml
 coverage_report.html
 .idea/
+fixit/_version.py

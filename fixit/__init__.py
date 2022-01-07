@@ -8,6 +8,12 @@ from fixit.common.report import CstLintRuleReport
 from fixit.common.testing import add_lint_rule_tests_to_module
 from fixit.common.utils import InvalidTestCase, ValidTestCase
 
+try:
+    # pyre-fixme[21]: Could not find module `fixit._version`.
+    from fixit._version import version as FIXIT_VERSION
+except ImportError:
+    FIXIT_VERSION = "unknown"
+
 
 __all__ = [
     "CstContext",
@@ -17,4 +23,5 @@ __all__ = [
     "InvalidTestCase",
     "CstLintRuleReport",
     "add_lint_rule_tests_to_module",
+    "FIXIT_VERSION",
 ]

@@ -24,15 +24,13 @@
 
 # -- Project information -----------------------------------------------------
 
-from fixit._version import FIXIT_VERSION
-
 
 project = "Fixit"
 copyright = "2020, Facebook"
 author = "Jimmy Lai, Josie Eshkenazi, Tim Hatch, John Reese, Benjamin Woodruff"
 
 # The short X.Y version
-version = FIXIT_VERSION
+version = ""
 # The full version, including alpha/beta/rc tags
 release = ""
 

@@ -179,6 +179,10 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install --upgrade --upgrade-strategy eager build -r requirements.txt -r requirements-dev.txt
+    - name: Disable scmtools local scheme
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      run: >-
+        echo FIXIT_NO_LOCAL_SCHEME=1 >> $GITHUB_ENV
     - name: Build a binary wheel and a source tarball
       run: >-
         python -m
