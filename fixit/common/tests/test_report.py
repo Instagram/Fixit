@@ -8,7 +8,7 @@ import pickle
 from pathlib import Path
 
 import libcst as cst
-from libcst.testing.utils import UnitTest, data_provider
+from libcst.testing.utils import data_provider, UnitTest
 
 from fixit.common.report import AstLintRuleReport, BaseLintRuleReport, CstLintRuleReport
 

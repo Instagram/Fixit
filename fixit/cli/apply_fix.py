@@ -17,15 +17,14 @@ import time
 from dataclasses import dataclass
 from multiprocessing import Manager
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
+from typing import Iterable, List, Mapping, Optional, TYPE_CHECKING
 
-from libcst import ParserSyntaxError, parse_module
+from libcst import parse_module, ParserSyntaxError
 from libcst.codemod._cli import invoke_formatter
 from libcst.metadata import MetadataWrapper
 
 from fixit.cli import find_files, map_paths
 from fixit.cli.args import (
-    LintWorkers,
     get_compact_parser,
     get_metadata_cache_parser,
     get_multiprocessing_parser,
@@ -34,6 +33,7 @@ from fixit.cli.args import (
     get_skip_autoformatter_parser,
     get_skip_ignore_byte_marker_parser,
     get_skip_ignore_comments_parser,
+    LintWorkers,
 )
 from fixit.cli.formatter import LintRuleReportFormatter
 from fixit.cli.full_repo_metadata import (
@@ -45,8 +45,8 @@ from fixit.common.config import get_lint_config
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import LintRuleCollectionT
 from fixit.rule_lint_engine import (
-    LintRuleReportsWithAppliedPatches,
     lint_file_and_apply_patches,
+    LintRuleReportsWithAppliedPatches,
 )
 
 

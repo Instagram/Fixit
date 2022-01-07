@@ -6,7 +6,7 @@
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Type, Union, cast
+from typing import Any, Callable, cast, Dict, Mapping, Optional, Sequence, Type, Union
 
 from libcst.metadata import MetadataWrapper
 
@@ -14,11 +14,11 @@ from fixit.common.base import CstLintRule
 from fixit.common.generate_pyre_fixtures import get_fixture_path
 from fixit.common.report import BaseLintRuleReport
 from fixit.common.utils import (
+    _dedent,
+    gen_type_inference_wrapper,
     InvalidTestCase,
     LintRuleCollectionT,
     ValidTestCase,
-    _dedent,
-    gen_type_inference_wrapper,
 )
 from fixit.rule_lint_engine import lint_file
 

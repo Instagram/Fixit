@@ -17,9 +17,9 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional, Union
+from typing import Iterable, List, Mapping, Optional, TYPE_CHECKING, Union
 
-from libcst import ParserSyntaxError, parse_module
+from libcst import parse_module, ParserSyntaxError
 from libcst.codemod._cli import invoke_formatter
 from libcst.metadata import MetadataWrapper
 
@@ -41,9 +41,9 @@ from fixit.cli.utils import print_red
 from fixit.common.base import LintRuleT
 from fixit.common.config import get_lint_config
 from fixit.common.insert_suppressions import (
+    insert_suppressions,
     SuppressionComment,
     SuppressionCommentKind,
-    insert_suppressions,
 )
 from fixit.common.report import BaseLintRuleReport
 from fixit.rule_lint_engine import lint_file

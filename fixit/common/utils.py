@@ -12,7 +12,7 @@ import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Set, Type, Union, cast
+from typing import cast, Dict, List, Optional, Set, Type, Union
 
 import libcst as cst
 from libcst._add_slots import add_slots

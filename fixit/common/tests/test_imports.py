@@ -11,11 +11,11 @@ from libcst.testing.utils import UnitTest
 
 from fixit.common.config import get_lint_config, get_rules_from_config
 from fixit.common.utils import (
-    DuplicateLintRuleNameError,
-    LintRuleNotFoundError,
     dedent_with_lstrip,
+    DuplicateLintRuleNameError,
     find_and_import_rule,
     import_rule_from_package,
+    LintRuleNotFoundError,
 )
 
 

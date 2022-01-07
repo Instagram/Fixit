@@ -4,9 +4,9 @@
 # LICENSE file in the root directory of this source tree.
 
 from collections import defaultdict
-from logging import Handler, Logger, LogRecord, getLogger
+from logging import getLogger, Handler, Logger, LogRecord
 from subprocess import TimeoutExpired
-from typing import TYPE_CHECKING, DefaultDict, Iterable, List, Mapping, Type
+from typing import DefaultDict, Iterable, List, Mapping, Type, TYPE_CHECKING
 
 from libcst.metadata import TypeInferenceProvider
 

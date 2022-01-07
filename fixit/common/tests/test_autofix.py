@@ -7,7 +7,7 @@ from typing import Callable, Union
 
 import libcst as cst
 from libcst.metadata import CodePosition, MetadataWrapper
-from libcst.testing.utils import UnitTest, data_provider
+from libcst.testing.utils import data_provider, UnitTest
 
 from fixit.common.autofix import LintPatch
 

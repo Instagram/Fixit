@@ -7,7 +7,7 @@ import tokenize
 from io import BytesIO
 from typing import Mapping
 
-from libcst.testing.utils import UnitTest, data_provider
+from libcst.testing.utils import data_provider, UnitTest
 
 from fixit.common.line_mapping import LineMappingInfo
 from fixit.common.utils import dedent_with_lstrip
