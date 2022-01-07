@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 import libcst as cst
-from parameterized import param, parameterized
+from parameterized import parameterized
 
 from fixit.common.report import AstLintRuleReport, BaseLintRuleReport, CstLintRuleReport
 
