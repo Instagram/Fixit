@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Dict, Pattern, Set, Optional
 
 import yaml
+from jsonmerge import Merger
 from jsonschema import validate
 
 from fixit.common.base import LintConfig
@@ -77,13 +78,7 @@ PATH_SETTINGS = ["repo_root", "fixture_dir"]
 def get_validated_settings(
     file_content: Dict[str, Any], current_dir: Path
 ) -> Dict[str, Any]:
-    # __package__ should never be none (config.py should not be run directly)
-    # But use .get() to make pyre happy
-    pkg = globals().get("__package__")
-    assert pkg, "No package was found, config types not validated."
-    config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
-    # Validates the types and presence of the keys
-    schema = json.loads(config)
+    schema = _get_config_schema()
     validate(instance=file_content, schema=schema)
 
     for path_setting_name in PATH_SETTINGS:
@@ -95,26 +90,57 @@ def get_validated_settings(
         # Set path setting to absolute path.
         file_content[path_setting_name] = str(abspath)
 
+    file_content["inherit"] = file_content.get("inherit", False)
+    file_content["allow_list_rules"] = file_content.get("allow_list_rules", [])
+
     return file_content
 
 
 @lru_cache()
+def _get_config_schema() -> Dict[str, Any]:
+    # __package__ should never be none (config.py should not be run directly)
+    # But use .get() to make pyre happy
+    pkg = globals().get("__package__")
+    assert pkg, "No package was found, config types not validated."
+    config = pkg_resources.read_text(pkg, LINT_CONFIG_SCHEMA_NAME)
+    schema = json.loads(config)
+    return schema
+
+CACHE: Dict[Path, LintConfig] = {}
+
 def get_lint_config(path: Optional[Path] = None) -> LintConfig:
+    """
+    Get configuration for linting a given path. If a path is provided we walk up
+    the path and merge configurations along the way until `inherit` is set to `False`.
+    """
+    if path is None:
+        directory = Path.cwd()
+    elif not path.is_dir():
+        directory = path.parent
+    else:
+        directory = path
+
     config = {}
+    merger = Merger(_get_config_schema())
 
-    cwd = path or Path.cwd()
-    for directory in (cwd, *cwd.parents):
-        # Check for config file.
-        # pyre-fixme[58]: `/` is not supported for operand types `object` and `Path`.
-        possible_config = directory / LINT_CONFIG_FILE_NAME
-        if possible_config.is_file():
-            with open(possible_config, "r") as f:
-                file_content = yaml.safe_load(f.read())
+    current = directory
+    while current.parent != current:
+        if current in CACHE:
+            return CACHE[current]
 
-            if isinstance(file_content, dict):
-                # pyre-fixme[6]: Expected `Path` for 2nd param but got `object`.
-                config = get_validated_settings(file_content, directory)
-                break
+        config_path = current / LINT_CONFIG_FILE_NAME
+
+        if config_path.is_file():
+            content = yaml.safe_load(config_path.read_text())
+
+            if isinstance(content, dict):
+                local_config = get_validated_settings(content, current)
+                config = merger.merge(config, local_config)
+                if not local_config["inherit"]:
+                    break
+
+        previous = current
+        current = current.parent
 
     # Find formatter executable if there is one.
     formatter_args = config.get("formatter", DEFAULT_FORMATTER)
@@ -122,8 +148,9 @@ def get_lint_config(path: Optional[Path] = None) -> LintConfig:
     formatter_args[0] = os.path.abspath(exe)
     config["formatter"] = formatter_args
 
-    # Missing settings will be populated with defaults.
-    return LintConfig(**config)
+    result = LintConfig(**config)
+    CACHE[directory] = result
+    return result
 
 
 def gen_config_file() -> None:

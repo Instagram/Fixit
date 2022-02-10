@@ -57,6 +57,7 @@ class LintConfig:
     packages: List[str] = field(default_factory=lambda: DEFAULT_PACKAGES)
     repo_root: str = "."
     rule_config: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    inherit: bool = False
 
 
 class BaseContext:

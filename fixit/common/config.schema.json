@@ -9,51 +9,66 @@
             "type": "array",
             "items": {
                 "type": "string"
-            }
+            },
+            "mergeStrategy": "append"
         },
         "block_list_patterns": {
             "description": "A list of patterns that indicate that a file should not be linted.",
             "type": "array",
             "items": {
                 "type": "string"
-            }
+            },
+            "mergeStrategy": "append"
         },
         "block_list_rules": {
             "description": "A list of rules (whether custom or from Fixit) that should not be applied to the repository.",
             "type": "array",
             "items": {
                 "type": "string"
-            }
+            },
+            "mergeStrategy": "append"
         },
         "fixture_dir": {
             "description": "The directory in which fixture files required for unit testing are to be found.",
-            "type": "string"
+            "type": "string",
+            "mergeStrategy": "overwrite"
         },
         "use_noqa": {
             "description": "Defaults to False. Use True to support Flake8 lint suppression comment: noqa.",
-            "type": "boolean"
+            "type": "boolean",
+            "mergeStrategy": "overwrite"
         },
         "formatter": {
             "description": "A list of the formatter commands to use after a lint is complete.",
             "type": "array",
             "items": {
                 "type": "string"
-            }
+            },
+            "mergeStrategy": "append"
+
         },
         "packages": {
             "description": "The Python packages in which to search for lint rules.",
             "type": "array",
             "items": {
                 "type": "string"
-            }
+            },
+            "mergeStrategy": "append"
         },
         "repo_root": {
             "description": "The path to the repository root.",
-            "type": "string"
+            "type": "string",
+            "mergeStrategy": "overwrite"
         },
         "rule_config": {
             "description": "Rule-specific configurations.",
-            "type": "object"
+            "type": "object",
+            "mergeStrategy": "overwrite"
+        },
+        "inherit": {
+            "description": "Boolean to determine whether this config file will inherit properties from a parent config.",
+            "type": "boolean",
+            "mergeStrategy": "overwrite"
         }
     }
 }
