@@ -1,8 +1,3 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 # Usage:
 #
 #   $ python -m fixit.cli.run_rules --help
@@ -41,6 +36,7 @@ from fixit.cli.full_repo_metadata import (
 )
 from fixit.cli.utils import print_red
 from fixit.common.utils import LintRuleCollectionT
+from fixit.common import config
 from fixit.rule_lint_engine import lint_file
 
 
@@ -79,6 +75,8 @@ def get_formatted_reports_for_path(
     with open(path, "rb") as f:
         source = f.read()
 
+    rules = config.get_rules_for_path(path)
+
     try:
         cst_wrapper = None
         if metadata_cache is not None:
@@ -86,7 +84,7 @@ def get_formatted_reports_for_path(
         raw_reports = lint_file(
             path,
             source,
-            rules=opts.rules,
+            rules=rules,
             use_ignore_byte_markers=opts.use_ignore_byte_markers,
             use_ignore_comments=opts.use_ignore_comments,
             cst_wrapper=cst_wrapper,

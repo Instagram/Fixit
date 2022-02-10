@@ -17,7 +17,7 @@ import re
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Pattern, Set
+from typing import Any, Dict, Pattern, Set, Optional
 
 import yaml
 from jsonschema import validate
@@ -99,10 +99,10 @@ def get_validated_settings(
 
 
 @lru_cache()
-def get_lint_config() -> LintConfig:
+def get_lint_config(path: Optional[Path] = None) -> LintConfig:
     config = {}
 
-    cwd = Path.cwd()
+    cwd = path or Path.cwd()
     for directory in (cwd, *cwd.parents):
         # Check for config file.
         # pyre-fixme[58]: `/` is not supported for operand types `object` and `Path`.
@@ -134,9 +134,9 @@ def gen_config_file() -> None:
         yaml.dump(default_config_dict, cf)
 
 
-def get_rules_from_config() -> LintRuleCollectionT:
+def get_rules_from_config(path: Optional[Path] = None) -> LintRuleCollectionT:
     # Get rules from the packages specified in the lint config file, omitting block-listed rules.
-    lint_config = get_lint_config()
+    lint_config = get_lint_config(path)
     rules: LintRuleCollectionT = set()
     all_names: Set[str] = set()
     for package in lint_config.packages:
@@ -148,3 +148,6 @@ def get_rules_from_config() -> LintRuleCollectionT:
         )
         rules.update(rules_from_pkg)
     return rules
+
+def get_rules_for_path(path: Path) -> LintRuleCollectionT:
+    return get_rules_from_config(path)
