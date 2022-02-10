@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List
 
 from fixit.common.base import LintRuleT
-from fixit.common.config import get_lint_config, get_rules_from_config
+from fixit.common.config import get_lint_config, get_rules_for_path
 from fixit.common.utils import (
     find_and_import_rule,
     import_distinct_rules_from_package,
@@ -104,7 +104,7 @@ def get_rules_parser() -> argparse.ArgumentParser:
         ),
         action=RuleAction,
         dest="rules",
-        default=get_rules_from_config(),
+        default=get_rules_for_path(None),
     )
     return parser
 

@@ -1,0 +1,3 @@
+packages:
+- fixit.common.tests.test_imports_dummy_package_with_duplicate_rule
+repo_root: .

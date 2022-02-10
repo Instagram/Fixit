@@ -1,0 +1,5 @@
+packages:
+- fixit.common.tests.test_imports_dummy_package
+repo_root: .
+allow_list_rules:
+  - DummyRule2

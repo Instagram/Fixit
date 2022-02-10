@@ -104,17 +104,15 @@ def import_submodules(package: str, recursive: bool = True) -> Dict[str, ModuleT
 
 def import_distinct_rules_from_package(
     package: str,
+    seen_names: Set[str],
     block_list_rules: List[str] = [],
-    seen_names: Optional[Set[str]] = None,
     allow_list_rules: Optional[List[str]] = None,
 ) -> LintRuleCollectionT:
     # Import all rules from the specified package, omitting rules that appear in the block list.
     # Raises error on repeated rule names.
     # Optional parameter `seen_names` accepts set of names that should not occur in this package.
     rules: LintRuleCollectionT = set()
-    if seen_names is None:
-        # pyre-fixme[35]: Target cannot be annotated.
-        seen_names: Set[str] = set()
+
     for _module_name, module in import_submodules(package).items():
         for name in dir(module):
             try:

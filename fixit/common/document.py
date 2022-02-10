@@ -12,7 +12,7 @@ from typing import Union
 import yaml
 
 from fixit.common.base import LintConfig, LintRuleT
-from fixit.common.config import get_rules_from_config
+from fixit.common.config import get_rules_for_path
 from fixit.common.utils import (
     DEFAULT_CONFIG,
     DEFAULT_FILENAME,
@@ -128,7 +128,7 @@ def _has_autofix(rule: LintRuleT) -> bool:
 
 def create_rule_doc(directory: Path, to_fold_examples: bool = False) -> None:
     directory.mkdir(exist_ok=True)
-    for rule in get_rules_from_config():
+    for rule in get_rules_for_path(None):
         rule_name = rule.__name__
         with (directory / f"{rule_name}.rst").open("w") as fp:
             fp.write(_add_reference_label(rule_name))

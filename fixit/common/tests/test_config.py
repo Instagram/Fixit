@@ -42,7 +42,7 @@ class TestConfig(UnitTest):
         config = {"block_list_rules": ["FakeRule"]}
         settings = get_validated_settings(config, Path("."))
         self.assertEqual(
-            {"block_list_rules": ["FakeRule"], "fixture_dir": ".", "repo_root": "."},
+            {"allow_list_rules": [], "block_list_rules": ["FakeRule"], "fixture_dir": ".", "inherit": False, "repo_root": "."},
             settings,
         )
 

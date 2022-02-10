@@ -1,0 +1,2 @@
+inherit: True
+block_list_rules: [DummyRule2]

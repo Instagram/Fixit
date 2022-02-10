@@ -161,20 +161,17 @@ def gen_config_file() -> None:
         yaml.dump(default_config_dict, cf)
 
 
-def get_rules_from_config(path: Optional[Path] = None) -> LintRuleCollectionT:
+def get_rules_for_path(path: Optional[Path]) -> LintRuleCollectionT:
     # Get rules from the packages specified in the lint config file, omitting block-listed rules.
     lint_config = get_lint_config(path)
     rules: LintRuleCollectionT = set()
-    all_names: Set[str] = set()
+    seen_names: Set[str] = set()
     for package in lint_config.packages:
         rules_from_pkg = import_distinct_rules_from_package(
             package,
+            seen_names,
             lint_config.block_list_rules,
-            all_names,
             lint_config.allow_list_rules,
         )
         rules.update(rules_from_pkg)
     return rules
-
-def get_rules_for_path(path: Path) -> LintRuleCollectionT:
-    return get_rules_from_config(path)
