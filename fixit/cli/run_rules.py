@@ -35,8 +35,8 @@ from fixit.cli.full_repo_metadata import (
     rules_require_metadata_cache,
 )
 from fixit.cli.utils import print_red
-from fixit.common.utils import LintRuleCollectionT
 from fixit.common import config
+from fixit.common.utils import LintRuleCollectionT
 from fixit.rule_lint_engine import lint_file
 
 

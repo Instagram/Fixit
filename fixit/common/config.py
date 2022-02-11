@@ -17,7 +17,7 @@ import re
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Pattern, Set, Optional
+from typing import Any, Dict, Optional, Pattern, Set
 
 import yaml
 from jsonmerge import Merger
@@ -106,7 +106,9 @@ def _get_config_schema() -> Dict[str, Any]:
     schema = json.loads(config)
     return schema
 
+
 CACHE: Dict[Path, LintConfig] = {}
+
 
 def get_lint_config(path: Optional[Path] = None) -> LintConfig:
     """

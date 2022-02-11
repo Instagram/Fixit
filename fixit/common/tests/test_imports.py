@@ -9,7 +9,11 @@ from pathlib import Path
 
 from libcst.testing.utils import UnitTest
 
-from fixit.common.config import get_lint_config, get_rules_for_path, CACHE as CONFIG_CACHE
+from fixit.common.config import (
+    CACHE as CONFIG_CACHE,
+    get_lint_config,
+    get_rules_for_path,
+)
 from fixit.common.utils import (
     dedent_with_lstrip,
     DuplicateLintRuleNameError,
@@ -22,7 +26,9 @@ from fixit.common.utils import (
 DUMMY_PACKAGE: str = "fixit.common.tests.test_imports_dummy_package"
 DUMMY_PACKAGE_PATH: Path = Path(__file__).parent / "test_imports_dummy_package"
 
-DUPLICATE_DUMMY_PATH: Path = Path(__file__).parent / "test_imports_dummy_package_with_duplicate_rule"
+DUPLICATE_DUMMY_PATH: Path = (
+    Path(__file__).parent / "test_imports_dummy_package_with_duplicate_rule"
+)
 
 # Using dummy config file, test whether the rule import helpers work as expected.
 class ImportsTest(UnitTest):
@@ -37,7 +43,9 @@ class ImportsTest(UnitTest):
 
     def test_get_rules_from_config_with_duplicate(self) -> None:
         with self.assertRaises(DuplicateLintRuleNameError):
-            get_rules_for_path(DUPLICATE_DUMMY_PATH / "subpackage_defining_duplicate_rule" / "dummy.py")
+            get_rules_for_path(
+                DUPLICATE_DUMMY_PATH / "subpackage_defining_duplicate_rule" / "dummy.py"
+            )
 
     def test_import_rule_from_package(self) -> None:
         rules_package = get_lint_config(DUMMY_PACKAGE_PATH).packages
