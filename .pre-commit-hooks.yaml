@@ -1,0 +1,12 @@
+- id: fixit-run-rules
+  name: Fixit - run rules
+  description: This hook runs Fixit lint rules without applying autofixes.
+  entry: fixit run_rules
+  language: python
+  types: [python]
+- id: fixit-apply-fix
+  name: Fixit - run rules and apply autofixes
+  description: This hook runs Fixit lint rules and applies autofixes.
+  entry: fixit apply_fix
+  language: python
+  types: [python]
