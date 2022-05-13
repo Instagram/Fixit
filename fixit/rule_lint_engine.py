@@ -147,7 +147,7 @@ def lint_file(
 @dataclass(frozen=True)
 class LintRuleReportsWithAppliedPatches:
     reports: Collection[BaseLintRuleReport]
-    patched_source: str
+    patched_source: bytes
 
 
 def lint_file_and_apply_patches(
