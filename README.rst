@@ -8,8 +8,8 @@
    :target: https://fixit.readthedocs.io/en/latest/
    :alt: Documentation
 
-.. |codecov-badge| image:: https://codecov.io/gh/Instagram/Fixit/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/Instagram/Fixit/branch/master
+.. |codecov-badge| image:: https://codecov.io/gh/Instagram/Fixit/branch/main/graph/badge.svg
+   :target: https://codecov.io/gh/Instagram/Fixit/branch/main
 
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/fixit.svg
    :target: https://pypi.org/project/fixit
