@@ -19,6 +19,7 @@ test:
 
 .PHONY: lint
 lint:
+	python -m flake8 fixit
 	python -m ufmt check fixit
 
 .PHONY: html
