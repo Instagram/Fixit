@@ -1,8 +1,8 @@
-.. image:: docs/source/_static/logo/logo.svg
+.. image:: docs/_static/logo/logo.svg
    :width: 600 px
    :alt: Fixit
 
-|readthedocs-badge| |codecov-badge| |pypi-badge| |pypi-download|
+|readthedocs-badge| |pypi-badge|
 
 .. |readthedocs-badge| image:: https://readthedocs.org/projects/pip/badge/?version=latest&style=flat
    :target: https://fixit.readthedocs.io/en/latest/
@@ -15,6 +15,6 @@
 
 
 License
-=======
+-------
 
 Fixit is `MIT licensed <LICENSE>`_, as found in the LICENSE file.

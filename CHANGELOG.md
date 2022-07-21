@@ -1,5 +1,7 @@
-# 0.1.4 - 2021-07-30
-## Updated
+# Changelog
+
+## 0.1.4 - 2021-07-30
+### Updated
 - Fix typo [#163](https://github.com/Instagram/Fixit/pull/163)
 - Refactor ipc_main [#175](https://github.com/Instagram/Fixit/pull/175)
 - Refactor search yaml [#172](https://github.com/Instagram/Fixit/pull/172)
@@ -12,32 +14,32 @@
 - Adds allow_list_rules to schema [#197](https://github.com/Instagram/Fixit/pull/197)
 - Fix run_rules bug [#200](https://github.com/Instagram/Fixit/pull/200)
 
-# 0.1.3 - 2020-12-09
+## 0.1.3 - 2020-12-09
 
-## New Rules
+### New Rules
 - Add NoRedundantArgumentsSuperRule [#154](https://github.com/Instagram/Fixit/pull/154)
 - Add ExplicitFrozenDataclassRule [#158](https://github.com/Instagram/Fixit/pull/158)
 - Add UseLintFixmeCommentRule [#161](https://github.com/Instagram/Fixit/pull/161)
 - Add UseAssertInRule [#159](https://github.com/Instagram/Fixit/pull/159)
 
-## Updated
+### Updated
 - await async rule does not account for decorators [#150](https://github.com/Instagram/Fixit/pull/150)
 - Allow glob patterns instead of parent dirs for matching configs [#156](https://github.com/Instagram/Fixit/pull/156)
 
-# 0.1.2 - 2020-10-29
+## 0.1.2 - 2020-10-29
 
-## New Rules
+### New Rules
 - Add SortedAttributesRule [#149](https://github.com/Instagram/Fixit/pull/149)
 
-## Added
+### Added
 - New unified `fixit` CLI [#148](https://github.com/Instagram/Fixit/pull/148)
 
-## Updated
+### Updated
 - Add `use_noqa` configuration to control support of the `noqa` Flake8 suppression comment. Defaults to `False` [#151](https://github.com/Instagram/Fixit/pull/151)
 
-# 0.1.1 - 2020-10-08
+## 0.1.1 - 2020-10-08
 
-## New Rules
+### New Rules
 - Add UseAssertIsNotNoneRule [#144](https://github.com/Instagram/Fixit/pull/144)
 - Add MissingHeaderRule to check copyright header comments [#142](https://github.com/Instagram/Fixit/pull/142)
 - Add NoStringTypeAnnotationRule [#140](https://github.com/Instagram/Fixit/pull/140)
@@ -47,19 +49,19 @@
 - Add NoUnnecessaryFormatStringRule and UseFstringRule [#101](https://github.com/Instagram/Fixit/pull/101)
 - Add NoRedundantLambdaRule. [#112](https://github.com/Instagram/Fixit/pull/112)
 
-## Added
+### Added
 - add_new_rule CLI for adding new rule file [#123](https://github.com/Instagram/Fixit/pull/123), [#131](https://github.com/Instagram/Fixit/pull/131)
 
-## Updated
+### Updated
 - Ensure first lines remain intact with AddMissingHeaderRule [#143](https://github.com/Instagram/Fixit/pull/143)
 - Documentation improvements: [#113](https://github.com/Instagram/Fixit/pull/113), [#117](https://github.com/Instagram/Fixit/pull/117),
 [#118](https://github.com/Instagram/Fixit/pull/118), [#120](https://github.com/Instagram/Fixit/pull/120)
 [#133](https://github.com/Instagram/Fixit/pull/133), [#138](https://github.com/Instagram/Fixit/pull/138)
 - Improve test message [#137](https://github.com/Instagram/Fixit/pull/137)
 
-# 0.1.0 - 2020-09-02
+## 0.1.0 - 2020-09-02
 
-## Added
+### Added
 
  - First public release of Fixit.
  - Python Lint Framework based on LibCST with autofix functionality.

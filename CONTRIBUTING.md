@@ -1,1 +1,3 @@
-See [Contributing to Fixit](docs/source/contributing.rst)
+# Contributing to Fixit
+
+TBD

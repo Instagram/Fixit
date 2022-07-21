@@ -1,0 +1,27 @@
+/* Copyright (c) Meta Platforms, Inc. and affiliates. */
+
+div.meta-logo {
+    // margin-top: 24px;
+    margin: 24px -12px -12px;
+}
+
+div.meta-badges {
+    margin-top: 12px;
+    margin-bottom: 10px;
+}
+
+div.meta-badges a {
+    color: #bbb;
+    text-decoration: none;
+    font-size: 24px;
+    border: none;
+}
+
+div.meta-logo a, div.meta-logo a:hover, div.meta-badges a:hover {
+    color: #777;
+    border: none;
+}
+
+dl.function, dl.attribute, dl.class, dl.method, dl.field-list, dl.data {
+    margin-bottom: 15px;
+}
