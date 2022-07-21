@@ -197,7 +197,7 @@ class InsertSuppressionsTest(UnitTest):
                             "Some really long message that rambles on and on that "
                             + "needs to be wrapped"
                         ),
-                        max_lines=(2 ** 32),
+                        max_lines=(2**32),
                     )
                 ],
                 "code_width": 30,
@@ -230,7 +230,7 @@ class InsertSuppressionsTest(UnitTest):
                             + "\n"
                             + "And this is the last line."
                         ),
-                        max_lines=(2 ** 32),
+                        max_lines=(2**32),
                     )
                 ],
             },

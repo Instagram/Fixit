@@ -1,10 +1,36 @@
-[tool.black]
-target-version = ["py36"]
+[build-system]
+requires = ["flit_core>=3.5,<4"]
+build-backend = "flit_core.buildapi"
 
-[tool.isort]
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-lines_after_imports = 2
-combine_as_imports = true
+[project]
+name = "fixit"
+readme = "README.rst"
+authors = [
+    {name="Jimmy Lai"},
+    {name="John Reese"},
+    {name="Zsolt Dollentstein"},
+    {name="Meta Platforms, Inc"},
+]
+license = {file="LICENSE"}
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
+
+requires-python = ">=3.7"
+dependencies = [
+    "click >= 8.0",
+    "libcst >= 0.3.18",
+    "tomli >= 2.0; python_version < '3.11'",
+]
+
+dynamic = ["description", "version"]
+
+[project.scripts]
+fixit = "fixit.cli:main"
+
+[project.urls]
+Home = "https://fixit.rtfd.io"
+Github = "https://github.com/Instagram/Fixit"
+
+[tool.black]
+target-version = ["py37"]
