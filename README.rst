@@ -13,6 +13,33 @@
    :alt: PYPI
 
 
+Setup
+-----
+
+Install Fixit from PyPI:
+
+```sh
+$ pip install fixit
+```
+
+
+Usage
+-----
+
+See lints and suggested changes for a set of source files:
+
+```sh
+$ fixit lint <paths>
+```
+
+Apply suggested changes on those same files automatically:
+
+```sh
+$ fixit fix <paths>
+```
+
+For more details, see the [user guide](https://fixit.rtfd.io).
+
 
 License
 -------
