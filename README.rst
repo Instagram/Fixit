@@ -18,9 +18,9 @@ Setup
 
 Install Fixit from PyPI:
 
-```sh
-$ pip install fixit
-```
+.. code-block:: console
+
+   $ pip install fixit
 
 
 Usage
@@ -28,17 +28,17 @@ Usage
 
 See lints and suggested changes for a set of source files:
 
-```sh
-$ fixit lint <paths>
-```
+.. code-block:: console
+
+   $ fixit lint <paths>
 
 Apply suggested changes on those same files automatically:
 
-```sh
-$ fixit fix <paths>
-```
+.. code-block:: console
 
-For more details, see the [user guide](https://fixit.rtfd.io).
+   $ fixit fix <paths>
+
+For more details, see the `user guide <https://fixit.rtfd.io>`_.
 
 
 License
