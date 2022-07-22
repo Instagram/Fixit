@@ -19,7 +19,9 @@ from .types import Options
 @click.group()
 @click.pass_context
 @click.version_option(__version__, "--version", "-V", prog_name="fixit")
-@click.option("--debug/--quiet", is_flag=True, default=None, help="Increase decrease verbosity")
+@click.option(
+    "--debug/--quiet", is_flag=True, default=None, help="Increase decrease verbosity"
+)
 @click.option(
     "--config-file",
     "-c",
