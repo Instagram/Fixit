@@ -35,3 +35,6 @@ Github = "https://github.com/Instagram/Fixit"
 
 [tool.black]
 target-version = ["py37"]
+
+[tool.fixit]
+# TODO
