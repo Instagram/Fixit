@@ -2,30 +2,26 @@
 
 ## Setup
 
+To work on Fixit, you'll need to use [Hatch](https://hatch.pypa.io/latest/). We recommend installing it via `pipx install hatch`, but any of [these alternatives will work](https://hatch.pypa.io/latest/install/).
+
 Fixit can be built and tested locally using a clean virtualenv:
 
 ```sh
-$ make venv
-```
-
-Or using [tox](https://tox.wiki):
-
-```sh
-$ pip install tox
+$ hatch shell
 ```
 
 ## Developing
 
-With a virtualenv (as setup above), you can run the test suite and linters:
+To run tests:
 
 ```sh
-$ make test lint
+$ hatch run test
 ```
 
-or do this with tox:
+To run linters:
 
 ```sh
-$ tox -p
+$ hatch run lint:check
 ```
 
 ## Code style
@@ -33,11 +29,5 @@ $ tox -p
 You can ensure your changes are well formatted, and imports are sorted
 
 ```sh
-$ make format
-```
-
-or directly with [µfmt](https://ufmt.omnilib.dev):
-
-```sh
-$ ufmt format fixit
+$ hatch run lint:fix
 ```

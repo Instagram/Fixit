@@ -1,32 +1,28 @@
 
 .venv:
-	python -m venv --clear .venv
+	hatch env prune
+	hatch env create
 
 .PHONY: venv
 venv: .venv
-	.venv/bin/python -m pip install -U pip
-	.venv/bin/python -m pip install -r requirements-dev.txt
-	.venv/bin/python -m pip install -r requirements.txt
-	.venv/bin/python -m pip install -e .
-	@echo "Run \`source .venv/bin/activate\` to activate venv"
+	@echo "Run \`hatch shell\` to create a new shell in the venv or \`source `hatch env find`/bin/activate\` to activate it in the current shell"
 
 .PHONY: format
 format:
-	python -m ufmt format fixit
+	hatch run lint:fix
 
 .PHONY: test
 test:
-	python -m fixit.tests
+	hatch run test
 
 .PHONY: lint
 lint:
-	python -m flake8 fixit
-	python -m ufmt check fixit
+	hatch run lint:check
 
 .PHONY: html
 html: docs/*
-	sphinx-build -a -b html docs html
+	hatch run docs:build
 
 .PHONY: distclean
 distclean:
-	rm -rf .venv
+	hatch env prune
