@@ -3,13 +3,27 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import logging
 from pathlib import Path
 from typing import Generator, Iterable, List
 
 import trailrunner
 
 from .config import generate_config
-from .types import Config, FileContent, Result
+from .types import Config, FileContent, LintViolation, Result
+from .engine import collect_rules, collect_violations
+
+logger = logging.getLogger(__name__)
+
+
+def _make_result(path: Path, violations: Iterable[LintViolation]) -> Iterable[Result]:
+    try:
+        for violation in violations:
+            yield Result(path, violation)
+    except Exception as error:
+        # TODO: this is not the right place to catch errors
+        logger.debug("Exception while linting", exc_info=error)
+        yield Result(path, violation=None, error=error)
 
 
 def fixit_bytes(
@@ -21,8 +35,8 @@ def fixit_bytes(
     """
     Lint raw bytes content representing a single path, using the given configuration.
     """
-    if False:  # force a generator until this gets implemented
-        yield Result()
+    rules = collect_rules(config)
+    yield from _make_result(path, collect_violations(content, rules))
 
 
 def fixit_file(
@@ -40,7 +54,8 @@ def fixit_file(
         yield from fixit_bytes(path, content, config=config)
 
     except Exception as error:
-        yield Result(path, error=error)
+        logger.debug("Exception while fixit_file", exc_info=error)
+        yield Result(path, violation=None, error=error)
 
 
 def fixit_paths(

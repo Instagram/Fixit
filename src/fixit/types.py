@@ -6,6 +6,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+from libcst.metadata import CodeRange
+from libcst._add_slots import add_slots
 
 FileContent = bytes
 
@@ -29,6 +31,15 @@ class Config:
     path: Path
 
 
+@add_slots
+@dataclass(frozen=True)
+class LintViolation:
+    rule_name: str
+    range: CodeRange
+    message: str
+    autofixable: bool
+
+
 @dataclass
 class Result:
     """
@@ -36,4 +47,5 @@ class Result:
     """
 
     path: Path
+    violation: Optional[LintViolation]
     error: Optional[Exception] = None
