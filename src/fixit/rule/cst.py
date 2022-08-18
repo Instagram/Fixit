@@ -1,5 +1,24 @@
+from collections import defaultdict
+from contextlib import contextmanager
 from dataclasses import replace
-from typing import ClassVar, Collection, Iterable, List, Optional, Set, TypeVar, Union
+import functools
+import logging
+import time
+from typing import (
+    Callable,
+    ClassVar,
+    Collection,
+    ContextManager,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    TypeVar,
+    Union,
+)
 from libcst import (
     BatchableCSTVisitor,
     CSTNode,
@@ -16,25 +35,49 @@ from libcst.metadata import (
 )
 
 from fixit.types import LintViolation, FileContent
-from . import LintRule, LintRunner
+from . import LintRule, LintRunner, TimingsHook
+
+
+VisitorMethod = Callable[[CSTNode], None]
+VisitHook = Callable[[str], ContextManager]
+
+logger = logging.getLogger(__name__)
 
 
 class CSTLintRunner(LintRunner["CSTLintRule"]):
-    @classmethod
     def collect_violations(
-        cls, source: FileContent, rules: Collection["CSTLintRule"]
+        self,
+        source: FileContent,
+        rules: Collection["CSTLintRule"],
+        timings_hook: Optional[TimingsHook] = None,
     ) -> Iterable[LintViolation]:
+        @contextmanager
+        def visit_hook(name: str) -> Iterator[None]:
+            start = time.perf_counter()
+            try:
+                yield
+            finally:
+                duration_us = int(1000 * 1000 * (time.perf_counter() - start))
+                logger.debug(f"PERF: {name} took {duration_us} µs")
+                self.timings[name] += duration_us
+
+        for rule in rules:
+            rule._visit_hook = visit_hook
+
         mod = MetadataWrapper(parse_module(source), unsafe_skip_copy=True)
         mod.visit_batched(rules)
         for rule in rules:
             for violation in rule._violations:
                 yield violation
+        if timings_hook:
+            timings_hook(self.timings)
 
 
 class CSTLintRule(LintRule, BatchableCSTVisitor):
     METADATA_DEPENDENCIES: ClassVar[Collection[ProviderT]] = (PositionProvider,)
 
     _runner = CSTLintRunner
+    _visit_hook: Optional[VisitHook] = None
 
     def report(
         self,
@@ -64,6 +107,22 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
                 autofixable=bool(replacement),
             )
         )
+
+    def get_visitors(self) -> Mapping[str, VisitorMethod]:
+        def _wrap(name: str, func: VisitorMethod) -> VisitorMethod:
+            @functools.wraps(func)
+            def wrapper(node: CSTNode) -> None:
+                if self._visit_hook:
+                    with self._visit_hook(name):
+                        return func(node)
+                return func(node)
+
+            return wrapper
+
+        return {
+            name: _wrap(f"{type(self).__name__}.{name}", visitor)
+            for (name, visitor) in super().get_visitors().items()
+        }
 
 
 CstLintRule = CSTLintRule
