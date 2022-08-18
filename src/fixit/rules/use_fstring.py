@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import re
-from typing import Callable, List, Optional, cast
+from typing import Callable, cast, List, Optional
 
 import libcst as cst
 import libcst.matchers as m

@@ -1,22 +1,23 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from collections import defaultdict
 
 from typing import (
-    ClassVar,
-    Dict,
     Callable,
+    ClassVar,
     Collection,
+    Dict,
+    Generic,
     Iterable,
     List,
     Optional,
     Set,
-    TypeVar,
     Type,
-    Generic,
+    TypeVar,
 )
-from collections import defaultdict
 
-from fixit.types import LintViolation, FileContent
+from fixit.types import FileContent, LintViolation
 
 
 Timings = Dict[str, int]

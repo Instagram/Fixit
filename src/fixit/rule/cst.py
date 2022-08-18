@@ -1,9 +1,9 @@
-from collections import defaultdict
-from contextlib import contextmanager
-from dataclasses import replace
 import functools
 import logging
 import time
+from collections import defaultdict
+from contextlib import contextmanager
+from dataclasses import replace
 from typing import (
     Callable,
     ClassVar,
@@ -19,22 +19,23 @@ from typing import (
     TypeVar,
     Union,
 )
+
 from libcst import (
     BatchableCSTVisitor,
     CSTNode,
-    RemovalSentinel,
     FlattenSentinel,
     parse_module,
+    RemovalSentinel,
 )
 from libcst.metadata import (
+    CodePosition,
     CodeRange,
+    MetadataWrapper,
     PositionProvider,
     ProviderT,
-    CodePosition,
-    MetadataWrapper,
 )
 
-from fixit.types import LintViolation, FileContent
+from fixit.types import FileContent, LintViolation
 from . import LintRule, LintRunner, TimingsHook
 
 

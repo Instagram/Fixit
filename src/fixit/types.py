@@ -6,8 +6,9 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
-from libcst.metadata import CodeRange
+
 from libcst._add_slots import add_slots
+from libcst.metadata import CodeRange
 
 FileContent = bytes
 

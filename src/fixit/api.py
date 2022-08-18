@@ -10,8 +10,8 @@ from typing import Generator, Iterable, List
 import trailrunner
 
 from .config import generate_config
-from .types import Config, FileContent, LintViolation, Result
 from .engine import collect_rules, collect_violations
+from .types import Config, FileContent, LintViolation, Result
 
 logger = logging.getLogger(__name__)
 

@@ -12,8 +12,8 @@ At some point, they may start to ignore lint suggestions, even the important one
 
 We'd like to help developers move faster by **auto-fixing** lint violations.
 The first challenge is that most tools analyze source code using
-`AST <https://docs.python.org/3/library/ast.html>`_ which doesn't preserve formatting 
-information (comments, whitespaces, etc) and so it is hard for them to suggest 
+`AST <https://docs.python.org/3/library/ast.html>`_ which doesn't preserve formatting
+information (comments, whitespaces, etc) and so it is hard for them to suggest
 high-quality autofixes.
 We built `LibCST <https://github.com/Instagram/LibCST>`_ to make parsing and modifying
 source code as a Concrete Syntax Tree easy. Fixit rules take advantage of LibCST APIs
@@ -24,7 +24,7 @@ Learning from building a Flake8 plugin
 
 Many of our old lint rules are implemented in a monolithic single-file
 `Flake8 plugin <https://flake8.pycqa.org/en/latest/plugin-development/index.html>`_.
-This offered a lot of flexibility and helped facilitate a shared structure for the 
+This offered a lot of flexibility and helped facilitate a shared structure for the
 rules, but it led to severe performance and reliability problems:
 
 - Rules were highly coupled, with a significant amount of shared state and helper functions.
@@ -45,15 +45,15 @@ Design Principles
 =================
 When designing Fixit, we used the following list of principles.
 
-- **Autofix.** Lint rules should provide autofix whenever possible to help developers 
-  write better code faster. The autofix can run as a codemod on an existing codebase to 
+- **Autofix.** Lint rules should provide autofix whenever possible to help developers
+  write better code faster. The autofix can run as a codemod on an existing codebase to
   avoid introducing lots of lint violations when adding a new lint rule.
-- **Modular.** A lint rule is a standalone class which keeps its own logic and states 
-  from other rules. That makes developing a lint rule simple and less likely to break 
+- **Modular.** A lint rule is a standalone class which keeps its own logic and states
+  from other rules. That makes developing a lint rule simple and less likely to break
   others.
 - **Fast.** All lint rules are applied during a single traversal of the syntax tree and
   reuse shared metadata to provide lint suggestions fast.
-- **Configurable.** Each lint rule is configurable in the config file. That makes lint 
+- **Configurable.** Each lint rule is configurable in the config file. That makes lint
   rules highly customizable. When a lint rule is disabled, it doesn't run at all.
 - **Testable.** Testing a lint rule is as simple as providing code examples. These
   are also used as documentation to help developers understand the line rule.
