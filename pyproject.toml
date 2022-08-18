@@ -8,7 +8,7 @@ readme = "README.rst"
 authors = [
     {name="Jimmy Lai"},
     {name="John Reese"},
-    {name="Zsolt Dollentstein"},
+    {name="Zsolt Dollenstein"},
     {name="Meta Platforms, Inc"},
 ]
 license = {file="LICENSE"}
