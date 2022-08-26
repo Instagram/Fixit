@@ -2,14 +2,7 @@ from collections import defaultdict
 from typing import Collection, Dict, Iterable, List, Type
 
 from .rule import LintRule, LintRunner
-from .types import Config, FileContent, LintViolation
-
-
-def collect_rules(config: Config) -> Collection[LintRule]:
-    # TODO
-    from fixit.rules.use_fstring import UseFstringRule
-
-    return [UseFstringRule()]
+from .types import FileContent, LintViolation
 
 
 def collect_violations(

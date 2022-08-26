@@ -9,8 +9,8 @@ from typing import Generator, Iterable, List
 
 import trailrunner
 
-from .config import generate_config
-from .engine import collect_rules, collect_violations
+from .config import collect_rules, generate_config
+from .engine import collect_violations
 from .types import Config, FileContent, LintViolation, Result
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def fixit_bytes(
     """
     Lint raw bytes content representing a single path, using the given configuration.
     """
-    rules = collect_rules(config)
+    rules = collect_rules(config.enable, config.disable)
     yield from _make_result(path, collect_violations(content, rules))
 
 

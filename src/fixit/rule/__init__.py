@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractclassmethod, abstractmethod
 from collections import defaultdict
 
 from typing import (
@@ -24,9 +24,11 @@ Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
 
 
-class LintRule:
+class LintRule(ABC):
     TAGS: Set[str] = set()
     _violations: List[LintViolation] = []
+
+    # TODO: this should be an abstract class property
     _runner: ClassVar[Type[LintRunner]]
 
 
