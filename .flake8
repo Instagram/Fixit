@@ -1,5 +1,5 @@
 [flake8]
-exclude = fixit/legacy/
+exclude = src/fixit/legacy/
 ignore =
     # mccabe complexity
     C901
