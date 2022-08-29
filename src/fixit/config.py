@@ -8,7 +8,7 @@ import inspect
 import logging
 import pkgutil
 from pathlib import Path
-from typing import Collection, Iterable, List
+from typing import Collection, Iterable, List, Optional
 
 from fixit.rule import LintRule
 
@@ -88,3 +88,42 @@ def generate_config(path: Path) -> Config:
         enable=["fixit.rules"],
         disable=[],
     )
+
+
+def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
+    """
+    Given a file path, locate all relevant config files in priority order.
+
+    Walking upward from target path, creates a list of candidate paths that exist
+    on disk, ordered from nearest/highest priority to further/lowest priority.
+
+    If root is given, only return configs between path and root, ignoring any paths
+    outside of root, even if they would contain relevant configs. If given, root must
+    contain path.
+
+    Returns a list of config paths in priority order, from highest priority to lowest.
+    """
+    results: List[Path] = []
+
+    if not path.is_dir():
+        path = path.parent
+
+    root = root.resolve() if root is not None else path.root
+    path.relative_to(root)  # enforce path being inside root
+
+    while True:
+        candidates = (
+            path / "fixit.toml",
+            path / "pyproject.toml",
+        )
+
+        for candidate in candidates:
+            if candidate.is_file():
+                results.append(candidate)
+
+        if path == root or path == path.parent:
+            break
+
+        path = path.parent
+
+    return results
