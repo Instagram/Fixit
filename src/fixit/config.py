@@ -12,7 +12,12 @@ from typing import Collection, Iterable, List, Optional
 
 from fixit.rule import LintRule
 
-from .types import Config
+from .types import Config, RawConfig
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 log = logging.getLogger(__name__)
 
@@ -127,3 +132,29 @@ def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
         path = path.parent
 
     return results
+
+
+def read_configs(paths: List[Path]) -> List[RawConfig]:
+    """
+    Read config data for each path given, and return their raw toml config values.
+
+    Skips any path with no — or empty — `tool.fixit` section.
+    Stops early at any config with `root = true`.
+
+    Maintains the same order as given in paths, minus any skipped files.
+    """
+    configs: List[RawConfig] = []
+
+    for path in paths:
+        content = path.read_text()
+        data = tomllib.loads(content)
+        fixit_data = data.get("tool", {}).get("fixit", {})
+
+        if fixit_data:
+            config = RawConfig(path=path, data=fixit_data)
+            configs.append(config)
+
+            if config.data.get("root", False):
+                break
+
+    return configs

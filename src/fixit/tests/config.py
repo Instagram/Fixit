@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from .. import config
+from ..types import RawConfig
 
 
 class ConfigTest(TestCase):
@@ -20,7 +21,7 @@ class ConfigTest(TestCase):
         self.inner.mkdir(parents=True)
 
         (self.tdp / "pyproject.toml").write_text("[tool.fixit]\nroot = true\n")
-        (self.outer / "fixit.toml").write_text("[tool.fixit]\n")
+        (self.outer / "fixit.toml").write_text("[tool.fixit]\nfake = 'hello'\n")
         (self.inner / "pyproject.toml").write_text("[tool.fuzzball]\n")
         (self.inner / "fixit.toml").write_text("[tool.fixit]\nroot = true\n")
 
@@ -85,4 +86,37 @@ class ConfigTest(TestCase):
         ):
             with self.subTest(name):
                 actual = config.locate_configs(path, root)
+                self.assertListEqual(expected, actual)
+
+    def test_read_configs(self):
+        # in-out priority order
+        innerA = self.inner / "fixit.toml"
+        innerB = self.inner / "pyproject.toml"
+        outer = self.outer / "fixit.toml"
+        top = self.tdp / "pyproject.toml"
+
+        for name, paths, expected in (
+            (
+                "inner",
+                [innerA, innerB, outer, top],
+                [RawConfig(innerA, {"root": True})],
+            ),
+            (
+                "inner partial",
+                [innerB, outer, top],
+                [RawConfig(outer, {"fake": "hello"}), RawConfig(top, {"root": True})],
+            ),
+            (
+                "outer",
+                [outer, top],
+                [RawConfig(outer, {"fake": "hello"}), RawConfig(top, {"root": True})],
+            ),
+            (
+                "top",
+                [top],
+                [RawConfig(top, {"root": True})],
+            ),
+        ):
+            with self.subTest(name):
+                actual = config.read_configs(paths)
                 self.assertListEqual(expected, actual)
