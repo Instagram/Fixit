@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -30,8 +30,12 @@ class Config:
     """
 
     path: Path
-    enable: List[str]
-    disable: List[str]
+    root: Path
+
+    enable: List[str] = field(default_factory=lambda: ["fixit.rules"])
+    disable: List[str] = field(default_factory=list)
+
+    greeting: str = "hello"
 
 
 @dataclass

@@ -8,7 +8,7 @@ import inspect
 import logging
 import pkgutil
 from pathlib import Path
-from typing import Collection, Iterable, List, Optional
+from typing import Any, Collection, Dict, Iterable, List, Optional
 
 from fixit.rule import LintRule
 
@@ -82,19 +82,6 @@ def collect_rules(
     return ret
 
 
-def generate_config(path: Path) -> Config:
-    """
-    Given a file path, walk upwards looking for and applying cascading configs
-    """
-    path = path.resolve()
-
-    return Config(
-        path=path,
-        enable=["fixit.rules"],
-        disable=[],
-    )
-
-
 def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
     """
     Given a file path, locate all relevant config files in priority order.
@@ -158,3 +145,44 @@ def read_configs(paths: List[Path]) -> List[RawConfig]:
                 break
 
     return configs
+
+
+def merge_configs(
+    path: Path, raw_configs: List[RawConfig], root: Optional[Path] = None
+) -> Config:
+    """
+    Given multiple raw configs, merge them in priority order.
+
+    Assumes raw_configs are given in order from highest to lowest priority.
+    """
+    kwargs: Dict[str, Any] = {
+        "root": None,
+    }
+
+    for config in reversed(raw_configs):
+        if kwargs["root"] is None:
+            kwargs["root"] = config.path.parent
+
+        # TODO: more than simple overrides
+        # TODO: validate keys/values
+        for key, value in config.data.items():
+            if key == "root" and value:
+                kwargs["root"] = config.path.parent
+            else:
+                kwargs[key] = value
+
+    kwargs["path"] = path
+    kwargs["root"] = kwargs["root"] or Path(path.anchor)
+
+    return Config(**kwargs)
+
+
+def generate_config(path: Path, root: Optional[Path] = None) -> Config:
+    """
+    Given a file path, walk upwards looking for and applying cascading configs
+    """
+    path = path.resolve()
+
+    config_paths = locate_configs(path, root=root)
+    raw_configs = read_configs(config_paths)
+    return merge_configs(path, raw_configs, root=root)
