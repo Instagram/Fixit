@@ -1,7 +1,6 @@
 import functools
 import logging
 import time
-from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import replace
 from typing import (
@@ -9,14 +8,10 @@ from typing import (
     ClassVar,
     Collection,
     ContextManager,
-    Dict,
     Iterable,
     Iterator,
-    List,
     Mapping,
     Optional,
-    Set,
-    TypeVar,
     Union,
 )
 
