@@ -232,6 +232,10 @@ class UseClsInClassmethodRule(CstLintRule):
             for decorator in node.decorators
         ):
             return  # If it's not a @classmethod, we are not interested.
+
+        repl: Union[
+            cst.CSTNode, cst.RemovalSentinel, cst.FlattenSentinel[cst.FunctionDef]
+        ]
         if not node.params.params:
             # No params, but there must be the 'cls' param.
             # Note that pyre[47] already catches this, but we also generate

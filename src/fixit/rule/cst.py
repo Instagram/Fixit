@@ -12,6 +12,7 @@ from typing import (
     Iterator,
     Mapping,
     Optional,
+    Tuple,
     Union,
 )
 
@@ -122,3 +123,11 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
 
 
 CstLintRule = CSTLintRule
+
+
+def InvalidTestCase(*args, **kwargs) -> str:
+    return "TODO"
+
+
+def ValidTestCase(*args, **kwargs) -> str:
+    return "TODO"

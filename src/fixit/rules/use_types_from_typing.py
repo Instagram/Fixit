@@ -8,12 +8,7 @@ from typing import Set
 import libcst
 from libcst.metadata import QualifiedNameProvider, ScopeProvider
 
-from fixit import (
-    CstContext,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
@@ -117,8 +112,8 @@ class UseTypesFromTypingRule(CstLintRule):
         ),
     ]
 
-    def __init__(self, context: CstContext) -> None:
-        super().__init__(context)
+    def __init__(self) -> None:
+        super().__init__()
         self.annotation_counter: int = 0
 
     def visit_Annotation(self, node: libcst.Annotation) -> None:

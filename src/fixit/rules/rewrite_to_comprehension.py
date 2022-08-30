@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import Optional, Union
+
 import libcst as cst
 import libcst.matchers as m
 
@@ -104,6 +106,7 @@ class RewriteToComprehensionRule(CstLintRule):
         ):
             call_name = cst.ensure_type(node.func, cst.Name).value
 
+            exp: Union[cst.GeneratorExp, cst.ListComp]
             if m.matches(node.args[0].value, m.GeneratorExp()):
                 exp = cst.ensure_type(node.args[0].value, cst.GeneratorExp)
                 message_formatter = UNNECESSARY_GENERATOR
@@ -111,7 +114,7 @@ class RewriteToComprehensionRule(CstLintRule):
                 exp = cst.ensure_type(node.args[0].value, cst.ListComp)
                 message_formatter = UNNECESSARY_LIST_COMPREHENSION
 
-            replacement = None
+            replacement: Optional[Union[cst.Call, cst.BaseComp]] = None
             if call_name == "list":
                 replacement = node.deep_replace(
                     node, cst.ListComp(elt=exp.elt, for_in=exp.for_in)
@@ -140,7 +143,7 @@ class RewriteToComprehensionRule(CstLintRule):
                     node,
                     # pyre-fixme[6]: Expected `BaseAssignTargetExpression` for 1st
                     #  param but got `BaseExpression`.
-                    cst.DictComp(key=key, value=value, for_in=exp.for_in),
+                    cst.DictComp(key=key, value=value, for_in=exp.for_in),  # type: ignore
                 )
 
             self.report(

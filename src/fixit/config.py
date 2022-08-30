@@ -50,7 +50,9 @@ def collect_rules(
 
     def _walk(obj: object, name: str) -> Iterable[LintRule]:
         if inspect.isclass(obj) and issubclass(obj, LintRule):
-            # TODO: filter out base classes like CSTLintRule
+            if getattr(obj, "__name__", None) in {"CSTLintRule"}:
+                # TODO: better way to filter out base classes like CSTLintRule
+                return
             log.debug(f"Found lint rule {obj}")
             # mypy can't figure out what's happening here
             yield obj()  # type: ignore

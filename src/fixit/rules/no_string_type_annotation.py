@@ -9,12 +9,7 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.metadata import QualifiedNameProvider
 
-from fixit import (
-    CstContext,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class NoStringTypeAnnotationRule(CstLintRule):
@@ -240,8 +235,8 @@ class NoStringTypeAnnotationRule(CstLintRule):
         ),
     ]
 
-    def __init__(self, context: CstContext) -> None:
-        super().__init__(context)
+    def __init__(self) -> None:
+        super().__init__()
         self.in_annotation: Set[cst.Annotation] = set()
         self.in_literal: Set[cst.Subscript] = set()
         self.has_future_annotations_import = False
@@ -280,7 +275,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
                         ),
                     )
                 ),
-                metadata_resolver=self.context.wrapper,
+                metadata_resolver=self,
             ):
                 self.in_literal.add(node)
 
@@ -297,8 +292,5 @@ class NoStringTypeAnnotationRule(CstLintRule):
             # This is not allowed past Python3.7 since it's no longer necessary.
             self.report(
                 node,
-                replacement=cst.parse_expression(
-                    node.evaluated_value,
-                    config=self.context.wrapper.module.config_for_parsing,
-                ),
+                replacement=cst.parse_expression(node.evaluated_value),
             )

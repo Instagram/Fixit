@@ -9,12 +9,7 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
-from fixit import (
-    CstContext,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 _ISINSTANCE = QualifiedName(
@@ -98,8 +93,8 @@ class CollapseIsinstanceChecksRule(CstLintRule):
         ),
     ]
 
-    def __init__(self, context: CstContext) -> None:
-        super().__init__(context)
+    def __init__(self) -> None:
+        super().__init__()
         self.seen_boolean_operations: Set[cst.BooleanOperation] = set()
 
     def visit_BooleanOperation(self, node: cst.BooleanOperation) -> None:
@@ -147,7 +142,7 @@ class CollapseIsinstanceChecksRule(CstLintRule):
     ) -> Tuple[
         List[cst.BaseExpression], Dict[cst.BaseExpression, List[cst.BaseExpression]]
     ]:
-        targets = {}
+        targets: Dict[cst.BaseExpression, List[cst.BaseExpression]] = {}
         operands = []
 
         for operand in stack:

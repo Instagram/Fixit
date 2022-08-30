@@ -245,7 +245,7 @@ class ExplicitFrozenDataclassRule(CstLintRule):
                 # pyre-fixme[6]: Expected `Union[cst._maybe_sentinel.MaybeSentinel,
                 #  cst._nodes.base.CSTNode, cst._removal_sentinel.RemovalSentinel]` for
                 #  1st param but got `Optional[cst._nodes.expression.Name]`.
-                if not any(m.matches(arg.keyword, m.Name("frozen")) for arg in args):
+                if not any(m.matches(arg.keyword, m.Name("frozen")) for arg in args):  # type: ignore
                     new_decorator = cst.Call(
                         func=func,
                         args=list(args)

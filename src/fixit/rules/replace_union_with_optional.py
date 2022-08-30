@@ -6,12 +6,7 @@
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import (
-    CstContext,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class ReplaceUnionWithOptionalRule(CstLintRule):
@@ -89,9 +84,6 @@ class ReplaceUnionWithOptionalRule(CstLintRule):
             """,
         ),
     ]
-
-    def __init__(self, context: CstContext) -> None:
-        super().__init__(context)
 
     def leave_Annotation(self, original_node: cst.Annotation) -> None:
         if self.contains_union_with_none(original_node):
