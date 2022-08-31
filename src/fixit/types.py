@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from libcst._add_slots import add_slots
 from libcst.metadata import CodeRange
@@ -30,6 +30,8 @@ class Config:
     """
 
     path: Path
+    enable: List[str]
+    disable: List[str]
 
 
 @add_slots

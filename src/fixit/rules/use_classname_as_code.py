@@ -9,12 +9,7 @@ from typing import cast
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import (
-    CstContext,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class UseClassNameAsCodeRule(CstLintRule):
@@ -80,8 +75,8 @@ class UseClassNameAsCodeRule(CstLintRule):
         ),
     ]
 
-    def __init__(self, context: CstContext) -> None:
-        super().__init__(context)
+    def __init__(self) -> None:
+        super().__init__()
         self.inside_invalid_call: bool = False
 
     def visit_SimpleString(self, node: cst.SimpleString) -> None:

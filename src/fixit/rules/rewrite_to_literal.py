@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import Sequence, Union
+
 import libcst as cst
 import libcst.matchers as m
 
@@ -88,16 +90,21 @@ class RewriteToLiteralRule(CstLintRule):
 
             # If this is a empty call, it's an Unnecessary Call where we rewrite the call
             # to literal, except set().
+            elements: Sequence[cst.BaseElement]
             if not exp.args:
                 elements = []
                 message_formatter = UNNCESSARY_CALL
             else:
                 arg = exp.args[0].value
-                elements = cst.ensure_type(
-                    arg, cst.List if isinstance(arg, cst.List) else cst.Tuple
-                ).elements
+                if isinstance(arg, cst.List):
+                    elements = arg.elements
+                elif isinstance(arg, cst.Tuple):
+                    elements = arg.elements
+                else:
+                    raise ValueError(f"Unexpected {type(arg)}")
                 message_formatter = UNNECESSARY_LITERAL
 
+            new_node: cst.CSTNode
             if call_name == "tuple":
                 new_node = cst.Tuple(elements=elements)
             elif call_name == "list":
@@ -123,12 +130,12 @@ class RewriteToLiteralRule(CstLintRule):
                     elements=[
                         (
                             lambda val: cst.DictElement(
-                                val.elements[0].value, val.elements[1].value
+                                val.elements[0].value, val.elements[1].value  # type: ignore
                             )
                         )(
                             cst.ensure_type(
                                 ele.value,
-                                cst.Tuple
+                                cst.Tuple  # type: ignore
                                 if isinstance(ele.value, cst.Tuple)
                                 else cst.List,
                             )

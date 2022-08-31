@@ -8,12 +8,7 @@ from typing import List, Union
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import (
-    CstContext,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 class NoRedundantArgumentsSuperRule(CstLintRule):
@@ -120,8 +115,8 @@ class NoRedundantArgumentsSuperRule(CstLintRule):
         ),
     ]
 
-    def __init__(self, context: CstContext) -> None:
-        super().__init__(context)
+    def __init__(self) -> None:
+        super().__init__()
         self.current_classes: List[str] = []
 
     def visit_ClassDef(self, node: cst.ClassDef) -> None:
@@ -144,7 +139,7 @@ class NoRedundantArgumentsSuperRule(CstLintRule):
             self.report(original_node, replacement=original_node.with_changes(args=()))
 
     def _build_arg_class_matcher(self) -> Union[m.Attribute, m.Name]:
-        matcher = m.Name(value=self.current_classes[0])
+        matcher: Union[m.Name, m.Attribute] = m.Name(value=self.current_classes[0])
 
         # For nested classes, we need to match attributes, so we can target
         # `super(Foo.InnerFoo, self)` for example.

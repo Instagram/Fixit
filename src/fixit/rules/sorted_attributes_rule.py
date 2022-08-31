@@ -101,7 +101,7 @@ class SortedAttributesRule(CstLintRule):
                 continue
 
         sorted_assign_lines = sorted(
-            assign_lines, key=lambda line: line.body[0].targets[0].target.value
+            assign_lines, key=lambda line: line.body[0].targets[0].target.value  # type: ignore
         )
         if sorted_assign_lines == assign_lines:
             return
