@@ -27,6 +27,9 @@ jobs:
       - name: Install
         run: |
           pip install -U pip hatch
+          hatch env create
+          hatch env create lint
+          hatch env create docs
       - name: Test
         run: |
           hatch run test
