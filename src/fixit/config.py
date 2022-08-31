@@ -64,12 +64,12 @@ def collect_rules(
                     continue
                 yield from _walk(importlib.import_module(fqname), fqname)
         elif inspect.ismodule(obj):
-            for local_name, obj in inspect.getmembers(obj, inspect.isclass):
+            for local_name, subobj in inspect.getmembers(obj, inspect.isclass):
                 fqname = f"{name}.{local_name}"
                 if fqname in disables:
                     log.debug(f"Lint rule discovery for {fqname} is blocked")
                     continue
-                yield from _walk(obj, fqname)
+                yield from _walk(subobj, fqname)
 
     ret: List[LintRule] = []
     for pkg in enables:
