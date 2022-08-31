@@ -26,7 +26,9 @@ TimingsHook = Callable[[Timings], None]
 
 class LintRule(ABC):
     TAGS: Set[str] = set()
-    _violations: List[LintViolation] = []
+
+    def __init__(self) -> None:
+        self._violations: List[LintViolation] = []
 
     # TODO: this should be an abstract class property
     _runner: ClassVar[Type[LintRunner]]
