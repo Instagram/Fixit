@@ -12,7 +12,6 @@ from typing import (
     Iterator,
     Mapping,
     Optional,
-    Tuple,
     Union,
 )
 
