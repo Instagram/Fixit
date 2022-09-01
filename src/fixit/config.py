@@ -7,6 +7,7 @@ import importlib
 import inspect
 import logging
 import pkgutil
+import sys
 from pathlib import Path
 from typing import Any, Collection, Dict, Iterable, List, Optional
 
@@ -14,9 +15,9 @@ from fixit.rule import LintRule
 
 from .types import Config, RawConfig
 
-try:
+if sys.version_info >= (3, 11):
     import tomllib
-except ImportError:
+else:
     import tomli as tomllib
 
 log = logging.getLogger(__name__)
@@ -89,9 +90,9 @@ def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
     Walking upward from target path, creates a list of candidate paths that exist
     on disk, ordered from nearest/highest priority to further/lowest priority.
 
-    If root is given, only return configs between path and root, ignoring any paths
-    outside of root, even if they would contain relevant configs. If given, root must
-    contain path.
+    If root is given, only return configs between path and root (inclusive), ignoring
+    any paths outside of root, even if they would contain relevant configs.
+    If given, root must contain path.
 
     Returns a list of config paths in priority order, from highest priority to lowest.
     """
@@ -100,7 +101,7 @@ def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
     if not path.is_dir():
         path = path.parent
 
-    root = root.resolve() if root is not None else path.root
+    root = root.resolve() if root is not None else Path(path.anchor)
     path.relative_to(root)  # enforce path being inside root
 
     while True:
