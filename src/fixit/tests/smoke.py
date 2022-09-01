@@ -18,3 +18,8 @@ class SmokeTest(TestCase):
     def test_cli_version(self):
         result = self.runner.invoke(main, ["--version"])
         self.assertRegex(result.stdout, rf"fixit, version {__version__}")
+
+    def test_this_file_is_clean(self) -> None:
+        result = self.runner.invoke(main, ["lint", __file__])
+        self.assertEqual(result.output, "")
+        self.assertEqual(result.exit_code, 0)
