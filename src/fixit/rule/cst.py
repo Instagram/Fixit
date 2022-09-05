@@ -108,13 +108,13 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
         If `message` is not provided, ``self.MESSAGE`` will be used as a violation
         message. If neither of them are available, this method raises `ValueError`.
 
-        The optional `position` parameter can override the location where the violation
-        is reported. By default, the entire span of `node` is used. It `position` is a
-        `CodePosition`, the rest of the line after that position is marked.
+        The optional `position` parameter can override the location where the
+        violation is reported. By default, the entire span of `node` is used. If
+        `position` is a `CodePosition`, only a single character is marked.
 
-        The optional `replacement` parameter can be used to provide an auto-fix for this
-        lint violation. Replacing `node` with `replacement` should make the lint
-        violation go away.
+        The optional `replacement` parameter can be used to provide an auto-fix for
+        this lint violation. Replacing `node` with `replacement` should make the
+        lint violation go away.
         """
         rule_name = type(self).__name__
         if not message:
