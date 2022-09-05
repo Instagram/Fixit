@@ -14,6 +14,7 @@ format:
 .PHONY: test
 test:
 	hatch run test
+	hatch run typecheck
 
 .PHONY: lint
 lint:

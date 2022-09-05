@@ -7,12 +7,18 @@ import importlib
 import inspect
 import logging
 import pkgutil
+import sys
 from pathlib import Path
-from typing import Collection, Iterable, List
+from typing import Any, Collection, Dict, Iterable, List, Optional
 
 from fixit.rule import LintRule
 
-from .types import Config
+from .types import Config, RawConfig
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 log = logging.getLogger(__name__)
 
@@ -77,14 +83,107 @@ def collect_rules(
     return ret
 
 
-def generate_config(path: Path) -> Config:
+def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
+    """
+    Given a file path, locate all relevant config files in priority order.
+
+    Walking upward from target path, creates a list of candidate paths that exist
+    on disk, ordered from nearest/highest priority to further/lowest priority.
+
+    If root is given, only return configs between path and root (inclusive), ignoring
+    any paths outside of root, even if they would contain relevant configs.
+    If given, root must contain path.
+
+    Returns a list of config paths in priority order, from highest priority to lowest.
+    """
+    results: List[Path] = []
+
+    if not path.is_dir():
+        path = path.parent
+
+    root = root.resolve() if root is not None else Path(path.anchor)
+    path.relative_to(root)  # enforce path being inside root
+
+    while True:
+        candidates = (
+            path / "fixit.toml",
+            path / "pyproject.toml",
+        )
+
+        for candidate in candidates:
+            if candidate.is_file():
+                results.append(candidate)
+
+        if path == root or path == path.parent:
+            break
+
+        path = path.parent
+
+    return results
+
+
+def read_configs(paths: List[Path]) -> List[RawConfig]:
+    """
+    Read config data for each path given, and return their raw toml config values.
+
+    Skips any path with no — or empty — `tool.fixit` section.
+    Stops early at any config with `root = true`.
+
+    Maintains the same order as given in paths, minus any skipped files.
+    """
+    configs: List[RawConfig] = []
+
+    for path in paths:
+        content = path.read_text()
+        data = tomllib.loads(content)
+        fixit_data = data.get("tool", {}).get("fixit", {})
+
+        if fixit_data:
+            config = RawConfig(path=path, data=fixit_data)
+            configs.append(config)
+
+            if config.data.get("root", False):
+                break
+
+    return configs
+
+
+def merge_configs(
+    path: Path, raw_configs: List[RawConfig], root: Optional[Path] = None
+) -> Config:
+    """
+    Given multiple raw configs, merge them in priority order.
+
+    Assumes raw_configs are given in order from highest to lowest priority.
+    """
+    kwargs: Dict[str, Any] = {
+        "root": None,
+    }
+
+    for config in reversed(raw_configs):
+        if kwargs["root"] is None:
+            kwargs["root"] = config.path.parent
+
+        # TODO: more than simple overrides
+        # TODO: validate keys/values
+        for key, value in config.data.items():
+            if key == "root" and value:
+                kwargs["root"] = config.path.parent
+            else:
+                kwargs[key] = value
+
+    kwargs["path"] = path
+    kwargs["root"] = kwargs["root"] or Path(path.anchor)
+
+    return Config(**kwargs)
+
+
+def generate_config(path: Path, root: Optional[Path] = None) -> Config:
     """
     Given a file path, walk upwards looking for and applying cascading configs
     """
     path = path.resolve()
 
-    return Config(
-        path=path,
-        enable=["fixit.rules"],
-        disable=[],
-    )
+    config_paths = locate_configs(path, root=root)
+    raw_configs = read_configs(config_paths)
+    return merge_configs(path, raw_configs, root=root)
