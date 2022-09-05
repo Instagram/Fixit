@@ -47,6 +47,13 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
         rules: Collection["CSTLintRule"],
         timings_hook: Optional[TimingsHook] = None,
     ) -> Iterable[LintViolation]:
+        """Run multiple `CSTLintRule`s and yield any lint violations.
+
+        The optional `timings_hook` parameter will be called (if provided) after all
+        lint rules have finished running, passing in a dictionary of
+        ``RuleName.visit_function_name`` -> ``duration in microseconds``.
+        """
+
         @contextmanager
         def visit_hook(name: str) -> Iterator[None]:
             start = time.perf_counter()
@@ -70,6 +77,13 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
 
 
 class CSTLintRule(LintRule, BatchableCSTVisitor):
+    """Lint rule implemented using LibCST.
+
+    To build a new lint rule, subclass this and `Implement a CST visitor
+    <https://libcst.readthedocs.io/en/latest/tutorial.html#Build-Visitor-or-Transformer>`_.
+    When a lint rule violation should be reported, use the :meth:`report` method.
+    """
+
     METADATA_DEPENDENCIES: ClassVar[Collection[ProviderT]] = (PositionProvider,)
 
     _runner = CSTLintRunner
@@ -83,6 +97,20 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
         position: Optional[Union[CodePosition, CodeRange]] = None,
         replacement: Optional[Union[CSTNode, RemovalSentinel, FlattenSentinel]] = None,
     ) -> None:
+        """
+        Report a lint rule violation.
+
+        If `message` is not provided, ``self.MESSAGE`` will be used as a violation
+        message. If neither of them are available, this method raises `ValueError`.
+
+        The optional `position` parameter can override the location where the
+        violation is reported. By default, the entire span of `node` is used. It
+        `position` is a `CodePosition`, only a single character is marked.
+
+        The optional `replacement` parameter can be used to provide an auto-fix for
+        this lint violation. Replacing `node` with `replacement` should make the
+        lint violation go away.
+        """
         rule_name = type(self).__name__
         if not message:
             # backwards compat with Fixit 1.0 api
@@ -122,6 +150,7 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
 
 
 CstLintRule = CSTLintRule
+"""Backwards-compatible name for ``CSTLintRule``"""
 
 
 def InvalidTestCase(*args, **kwargs) -> str:
