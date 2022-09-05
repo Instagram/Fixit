@@ -4,5 +4,5 @@
 # LICENSE file in the root directory of this source tree.
 
 from .config import ConfigTest
-from .rule.cst import RunnerTest
+from .rule.cst import RuleTest, RunnerTest
 from .smoke import SmokeTest
