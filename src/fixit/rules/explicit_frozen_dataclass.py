@@ -8,7 +8,13 @@ import libcst.matchers as m
 from libcst._nodes.whitespace import SimpleWhitespace
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import (
+    CodePosition,
+    CodeRange,
+    CstLintRule,
+    InvalidTestCase as Invalid,
+    ValidTestCase as Valid,
+)
 
 
 class ExplicitFrozenDataclassRule(CstLintRule):
@@ -71,7 +77,6 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @another_unrelated_decorator
             class Cls: pass
             """,
-            line=3,
             expected_replacement="""
             from dataclasses import dataclass
             @some_unrelated_decorator
@@ -79,6 +84,7 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @another_unrelated_decorator
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(3, 0), end=CodePosition(3, 10)),
         ),
         Invalid(
             """
@@ -86,12 +92,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dataclass()  # called as a function, no kwargs
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             from dataclasses import dataclass
             @dataclass(frozen=True)  # called as a function, no kwargs
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 12)),
         ),
         Invalid(
             """
@@ -99,12 +105,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dataclass(other_kwarg=False)
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             from dataclasses import dataclass
             @dataclass(other_kwarg=False, frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 29)),
         ),
         Invalid(
             """
@@ -112,12 +118,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dataclasses.dataclass
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             import dataclasses
             @dataclasses.dataclass(frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 22)),
         ),
         Invalid(
             """
@@ -125,12 +131,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dataclasses.dataclass()
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             import dataclasses
             @dataclasses.dataclass(frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 24)),
         ),
         Invalid(
             """
@@ -138,12 +144,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dataclasses.dataclass(other_kwarg=False)
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             import dataclasses
             @dataclasses.dataclass(other_kwarg=False, frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 41)),
         ),
         Invalid(
             """
@@ -151,12 +157,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dc
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             from dataclasses import dataclass as dc
             @dc(frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 3)),
         ),
         Invalid(
             """
@@ -164,12 +170,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dc()
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             from dataclasses import dataclass as dc
             @dc(frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 5)),
         ),
         Invalid(
             """
@@ -177,12 +183,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dc(other_kwarg=False)
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             from dataclasses import dataclass as dc
             @dc(other_kwarg=False, frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 22)),
         ),
         Invalid(
             """
@@ -190,12 +196,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dc.dataclass
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             import dataclasses as dc
             @dc.dataclass(frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 13)),
         ),
         Invalid(
             """
@@ -203,12 +209,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dc.dataclass()
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             import dataclasses as dc
             @dc.dataclass(frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 15)),
         ),
         Invalid(
             """
@@ -216,12 +222,12 @@ class ExplicitFrozenDataclassRule(CstLintRule):
             @dc.dataclass(other_kwarg=False)
             class Cls: pass
             """,
-            line=2,
             expected_replacement="""
             import dataclasses as dc
             @dc.dataclass(other_kwarg=False, frozen=True)
             class Cls: pass
             """,
+            range=CodeRange(start=CodePosition(2, 0), end=CodePosition(2, 32)),
         ),
     ]
 

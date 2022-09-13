@@ -9,15 +9,7 @@ from typing import Callable, cast, List, Optional
 import libcst as cst
 import libcst.matchers as m
 
-from fixit.rule.cst import CstLintRule
-
-
-def Invalid(*args, **kwargs) -> str:
-    return "TODO"
-
-
-def Valid(*args, **kwargs) -> str:
-    return "TODO"
+from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
 
 
 USE_FSTRING_SIMPLE_EXPRESSION_MAX_LENGTH = 30

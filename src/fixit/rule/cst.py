@@ -155,12 +155,3 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
 
 
 CstLintRule = CSTLintRule
-"""Backwards-compatible name for ``CSTLintRule``"""
-
-
-def InvalidTestCase(*args, **kwargs) -> str:
-    return "TODO"
-
-
-def ValidTestCase(*args, **kwargs) -> str:
-    return "TODO"

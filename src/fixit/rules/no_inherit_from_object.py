@@ -6,7 +6,13 @@
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import (
+    CodePosition,
+    CodeRange,
+    CstLintRule,
+    InvalidTestCase as Invalid,
+    ValidTestCase as Valid,
+)
 
 
 class NoInheritFromObjectRule(CstLintRule):
@@ -29,21 +35,19 @@ class NoInheritFromObjectRule(CstLintRule):
             """
             class B(object):
                 pass""",
-            line=1,
-            column=1,
             expected_replacement="""
                 class B:
                     pass""",
+            range=CodeRange(start=CodePosition(1, 0), end=CodePosition(2, 8)),
         ),
         Invalid(
             """
             class B(object, A):
                 pass""",
-            line=1,
-            column=1,
             expected_replacement="""
                 class B(A):
                     pass""",
+            range=CodeRange(start=CodePosition(1, 0), end=CodePosition(2, 8)),
         ),
     ]
 

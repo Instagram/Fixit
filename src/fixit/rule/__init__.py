@@ -20,7 +20,10 @@ from typing import (
     Set,
     Type,
     TypeVar,
+    Union,
 )
+
+from fixit.testing import InvalidTestCase, ValidTestCase
 
 from fixit.types import FileContent, LintViolation
 
@@ -35,8 +38,11 @@ class LintRule(ABC):  # noqa: B024
     def __init__(self) -> None:
         self._violations: List[LintViolation] = []
 
-    # TODO: this should be an abstract class property
+    # TODO: these should be an abstract class property
     _runner: ClassVar[Type[LintRunner]]
+
+    VALID: ClassVar[List[Union[str, ValidTestCase]]]
+    INVALID: ClassVar[List[Union[str, InvalidTestCase]]]
 
 
 SomeRule = TypeVar("SomeRule", bound=LintRule)

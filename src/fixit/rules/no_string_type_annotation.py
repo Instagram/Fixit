@@ -9,7 +9,13 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.metadata import QualifiedNameProvider
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import (
+    CodePosition,
+    CodeRange,
+    CstLintRule,
+    InvalidTestCase as Invalid,
+    ValidTestCase as Valid,
+)
 
 
 class NoStringTypeAnnotationRule(CstLintRule):
@@ -97,7 +103,6 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> "Class":
                 return Class()
             """,
-            line=5,
             expected_replacement="""
             from __future__ import annotations
 
@@ -106,6 +111,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> Class:
                 return Class()
             """,
+            range=CodeRange(start=CodePosition(5, 13), end=CodePosition(5, 20)),
         ),
         Invalid(
             """
@@ -116,7 +122,6 @@ class NoStringTypeAnnotationRule(CstLintRule):
             async def foo() -> "Class":
                 return await Class()
             """,
-            line=5,
             expected_replacement="""
             from __future__ import annotations
 
@@ -125,6 +130,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
             async def foo() -> Class:
                 return await Class()
             """,
+            range=CodeRange(start=CodePosition(5, 19), end=CodePosition(5, 26)),
         ),
         Invalid(
             """
@@ -136,7 +142,6 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> typing.Type["Class"]:
                 return Class
             """,
-            line=6,
             expected_replacement="""
             from __future__ import annotations
 
@@ -146,6 +151,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> typing.Type[Class]:
                 return Class
             """,
+            range=CodeRange(start=CodePosition(6, 25), end=CodePosition(6, 32)),
         ),
         Invalid(
             """
@@ -158,7 +164,6 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> Optional[typing.Type["Class"]]:
                 return Class if func() else None
             """,
-            line=7,
             expected_replacement="""
             from __future__ import annotations
 
@@ -169,6 +174,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> Optional[typing.Type[Class]]:
                 return Class if func() else None
             """,
+            range=CodeRange(start=CodePosition(7, 34), end=CodePosition(7, 41)),
         ),
         Invalid(
             """
@@ -181,7 +187,6 @@ class NoStringTypeAnnotationRule(CstLintRule):
 
             foo(Class())
             """,
-            line=5,
             expected_replacement="""
             from __future__ import annotations
 
@@ -192,6 +197,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
 
             foo(Class())
             """,
+            range=CodeRange(start=CodePosition(5, 13), end=CodePosition(5, 20)),
         ),
         Invalid(
             """
@@ -201,7 +207,6 @@ class NoStringTypeAnnotationRule(CstLintRule):
 
             module_var: "Class" = Class()
             """,
-            line=5,
             expected_replacement="""
             from __future__ import annotations
 
@@ -209,6 +214,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
 
             module_var: Class = Class()
             """,
+            range=CodeRange(start=CodePosition(5, 12), end=CodePosition(5, 19)),
         ),
         Invalid(
             """
@@ -221,7 +227,6 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> typing.Tuple[Literal["a", "b"], "Class"]:
                 return Class()
             """,
-            line=7,
             expected_replacement="""
             from __future__ import annotations
 
@@ -232,8 +237,11 @@ class NoStringTypeAnnotationRule(CstLintRule):
             def foo() -> typing.Tuple[Literal["a", "b"], Class]:
                 return Class()
             """,
+            range=CodeRange(start=CodePosition(7, 45), end=CodePosition(7, 52)),
         ),
     ]
+
+    METADATA_DEPENDENCIES = (QualifiedNameProvider,)
 
     def __init__(self) -> None:
         super().__init__()
