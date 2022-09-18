@@ -9,13 +9,11 @@ Linting framework built on LibCST, with automatic fixes
 
 __version__ = "0.2.0"
 
-from libcst.metadata import CodePosition, CodeRange
-
 from .api import fixit_bytes, fixit_file, fixit_paths
 from .rule import LintRule
 from .rule.cst import CSTLintRule, CstLintRule
 from .testing import InvalidTestCase, ValidTestCase
-from .types import Config, FileContent, Result
+from .types import Config, FileContent, Result, CodeRange, CodePosition
 
 __all__ = [
     "__version__",

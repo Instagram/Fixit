@@ -8,12 +8,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from libcst._add_slots import add_slots
-from libcst.metadata import CodeRange
+from libcst.metadata import CodePosition as CSTCodePosition, CodeRange as CSTCodeRange
 
 FileContent = bytes
 RuleOptionTypes = (str, int, float)
 RuleOptions = Dict[str, Union[str, int, float]]
 RuleOptionsTable = Dict[str, RuleOptions]
+CodeRange = CSTCodeRange
+CodePosition = CSTCodePosition
 
 
 def is_sequence(value: Any) -> bool:

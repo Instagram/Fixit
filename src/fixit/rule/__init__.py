@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractclassmethod, abstractmethod
+from abc import ABC, abstractmethod
 from collections import defaultdict
+
+from dataclasses import dataclass
 
 from typing import (
     Callable,
@@ -23,13 +25,24 @@ from typing import (
     Union,
 )
 
-from fixit.testing import InvalidTestCase, ValidTestCase
-
-from fixit.types import FileContent, LintViolation
+from fixit.types import CodeRange, FileContent, LintViolation
 
 
 Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
+
+
+@dataclass(frozen=True)
+class InvalidTestCase:
+    code: str
+    range: Optional[CodeRange] = None
+    expected_message: Optional[str] = None
+    expected_replacement: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class ValidTestCase:
+    code: str
 
 
 class LintRule(ABC):  # noqa: B024
@@ -62,4 +75,11 @@ class LintRunner(ABC, Generic[SomeRule]):
         pass
 
 
-__all__ = ["LintRule", "LintRunner", "Timings", "TimingsHook"]
+__all__ = [
+    "LintRule",
+    "LintRunner",
+    "Timings",
+    "TimingsHook",
+    "InvalidTestCase",
+    "ValidTestCase",
+]

@@ -20,21 +20,8 @@ from typing import (
     Union,
 )
 
-from fixit import CodeRange
-from fixit.rule import LintRule
-
-
-@dataclass(frozen=True)
-class InvalidTestCase:
-    code: str
-    range: Optional[CodeRange] = None
-    expected_message: Optional[str] = None
-    expected_replacement: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class ValidTestCase:
-    code: str
+from fixit.types import CodeRange
+from fixit.rule import LintRule, InvalidTestCase, ValidTestCase
 
 
 def _dedent(src: str) -> str:
