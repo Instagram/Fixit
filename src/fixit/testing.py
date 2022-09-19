@@ -20,8 +20,7 @@ from typing import (
     Union,
 )
 
-from fixit.types import CodeRange
-from fixit.rule import LintRule, InvalidTestCase, ValidTestCase
+from fixit.rule import InvalidTestCase, LintRule, ValidTestCase
 
 
 def _dedent(src: str) -> str:

@@ -13,7 +13,7 @@ from .api import fixit_bytes, fixit_file, fixit_paths
 from .rule import LintRule
 from .rule.cst import CSTLintRule, CstLintRule
 from .testing import InvalidTestCase, ValidTestCase
-from .types import Config, FileContent, Result, CodeRange, CodePosition
+from .types import CodePosition, CodeRange, Config, FileContent, Result
 
 __all__ = [
     "__version__",
