@@ -6,6 +6,7 @@
 import logging
 from pathlib import Path
 from typing import Generator, Iterable, List
+import traceback
 
 import trailrunner
 
@@ -23,7 +24,8 @@ def _make_result(path: Path, violations: Iterable[LintViolation]) -> Iterable[Re
     except Exception as error:
         # TODO: this is not the right place to catch errors
         logger.debug("Exception while linting", exc_info=error)
-        yield Result(path, violation=None, error=error)
+        tb = traceback.format_exc()
+        yield Result(path, violation=None, error=error, traceback=tb)
 
 
 def fixit_bytes(
@@ -55,7 +57,8 @@ def fixit_file(
 
     except Exception as error:
         logger.debug("Exception while fixit_file", exc_info=error)
-        yield Result(path, violation=None, error=error)
+        tb = traceback.format_exc()
+        yield Result(path, violation=None, error=error, traceback=tb)
 
 
 def fixit_paths(

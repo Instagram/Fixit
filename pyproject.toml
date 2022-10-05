@@ -90,4 +90,5 @@ build = [
 ]
 
 [tool.fixit]
-# TODO
+enable = ["fixit.rules"]
+disable = ["fixit.test.foo", "fixit.test.bar"]
