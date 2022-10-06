@@ -34,6 +34,7 @@ class ConfigTest(TestCase):
                 path = "other"
                 enable = ["other.stuff"]
                 disable = ["main.rules"]
+                options = {"other.stuff.Whatever"={key="value"}}
                 """
             )
         )
@@ -170,6 +171,9 @@ class ConfigTest(TestCase):
                                     "path": "other",
                                     "enable": ["other.stuff"],
                                     "disable": ["main.rules"],
+                                    "options": {
+                                        "other.stuff.Whatever": {"key": "value"}
+                                    },
                                 },
                             ],
                         },
@@ -194,6 +198,9 @@ class ConfigTest(TestCase):
                                     "path": "other",
                                     "enable": ["other.stuff"],
                                     "disable": ["main.rules"],
+                                    "options": {
+                                        "other.stuff.Whatever": {"key": "value"}
+                                    },
                                 },
                             ],
                         },
@@ -215,6 +222,9 @@ class ConfigTest(TestCase):
                                     "path": "other",
                                     "enable": ["other.stuff"],
                                     "disable": ["main.rules"],
+                                    "options": {
+                                        "other.stuff.Whatever": {"key": "value"}
+                                    },
                                 },
                             ],
                         },
@@ -315,6 +325,18 @@ class ConfigTest(TestCase):
                     enable=[".localrules"],
                     disable=["main.rules"],
                 ),
+            ),
+            (
+                "other",
+                self.tdp / "other" / "foo.py",
+                None,
+                Config(
+                    path=self.tdp / "other" / "foo.py",
+                    root=self.tdp,
+                    enable=["more.rules", "other.stuff"],
+                    disable=["main.rules", "main.rules.SomethingSpecific"],
+                    options={"other.stuff.Whatever": {"key": "value"}},
+                )
             ),
             (
                 "root",

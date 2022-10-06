@@ -26,6 +26,7 @@ classifiers = [
 requires-python = ">=3.7"
 dependencies = [
     "click >= 8.0",
+    "frozendict >= 2.1.0",
     "libcst >= 0.3.18",
     "tomli >= 2.0; python_version < '3.11'",
     "trailrunner >= 1.2",
@@ -70,7 +71,7 @@ features = ["dev"]
 
 [tool.hatch.envs.default.scripts]
 test = "python -m fixit.tests"
-typecheck = "mypy src/fixit"
+typecheck = "mypy --install-types --non-interactive src/fixit"
 
 [tool.hatch.envs.lint.scripts]
 check = [

@@ -11,6 +11,7 @@ from libcst._add_slots import add_slots
 from libcst.metadata import CodeRange
 
 FileContent = bytes
+RuleConfigTypes = (str, int, float)
 RuleConfig = Dict[str, Union[str, int, float]]
 RuleConfigs = Dict[str, RuleConfig]
 
@@ -40,9 +41,9 @@ class Config:
 
     enable: List[str] = field(default_factory=lambda: ["fixit.rules"])
     disable: List[str] = field(default_factory=list)
+    options: RuleConfigs = field(default_factory=dict)
 
     local_paths: List[str] = field(default_factory=list)
-    rule_configs: RuleConfigs = field(default_factory=dict)
 
     def __post_init__(self):
         self.path = self.path.resolve()

@@ -21,9 +21,16 @@ from typing import (
     Set,
 )
 
-from fixit.rule import LintRule
+from frozendict import frozendict  # type: ignore[attr-defined]
 
-from .types import Config, is_sequence, RawConfig, RuleConfig, RuleConfigs
+from .rule import LintRule
+from .types import (
+    Config,
+    is_sequence,
+    RawConfig,
+    RuleConfigs,
+    RuleConfigTypes,
+)
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -181,6 +188,34 @@ def get_sequence(
     return value
 
 
+def get_options(
+    config: RawConfig, key: str, *, data: Optional[Dict[str, Any]] = None
+) -> RuleConfigs:
+    if data:
+        mapping = data.pop(key, {})
+    else:
+        mapping = config.data.pop(key, {})
+
+    if not isinstance(mapping, Mapping):
+        raise ConfigError(
+            f"{key!r} must be mapping of values, got {type(key)}", config=config
+        )
+
+    rule_configs: RuleConfigs = {}
+    for rule_name, rule_config in mapping.items():
+        rule_configs[rule_name] = {}
+        for key, value in rule_config.items():
+            if not isinstance(value, RuleConfigTypes):
+                raise ConfigError(
+                    f"{key!r} must be one of {RuleConfigTypes}, got {type(value)}",
+                    config=config,
+                )
+
+            rule_configs[rule_name][key] = value
+
+    return rule_configs
+
+
 def merge_configs(
     path: Path, raw_configs: List[RawConfig], root: Optional[Path] = None
 ) -> Config:
@@ -193,13 +228,14 @@ def merge_configs(
     enable_rules: Set[str] = set()
     disable_rules: Set[str] = set()
     local_paths: List[Path] = []
-    rule_configs: RuleConfigs = {}
+    rule_options: RuleConfigs = {}
 
     def process_subpath(
         subpath: Path,
         *,
         enable: Sequence[str] = (),
         disable: Sequence[str] = (),
+        options: RuleConfigs = frozendict(),
     ):
         subpath = subpath.resolve()
         if not path.is_relative_to(subpath):
@@ -218,6 +254,9 @@ def merge_configs(
             enable_rules.discard(rule)
             disable_rules.add(rule)
 
+        if options:
+            rule_options.update(options)
+
     for config in reversed(raw_configs):
         if root is None:
             root = config.path.parent
@@ -226,10 +265,12 @@ def merge_configs(
         if data.pop("root", False):
             root = config.path.parent
 
-        enable = get_sequence(config, "enable")
-        disable = get_sequence(config, "disable")
-
-        process_subpath(config.path.parent, enable=enable, disable=disable)
+        process_subpath(
+            config.path.parent,
+            enable=get_sequence(config, "enable"),
+            disable=get_sequence(config, "disable"),
+            options=get_options(config, "options"),
+        )
 
         for override in get_sequence(config, "overrides"):
             if not isinstance(override, dict):
@@ -242,9 +283,12 @@ def merge_configs(
                 )
 
             subpath = config.path.parent / subpath
-            enable = get_sequence(config, "enable", data=override)
-            disable = get_sequence(config, "disable", data=override)
-            process_subpath(subpath, enable=enable, disable=disable)
+            process_subpath(
+                subpath,
+                enable=get_sequence(config, "enable", data=override),
+                disable=get_sequence(config, "disable", data=override),
+                options=get_options(config, "options", data=override),
+            )
 
         for key in data.keys():
             log.warning("unknown configuration option %r", key)
@@ -254,6 +298,7 @@ def merge_configs(
         root=root or Path(path.anchor),
         enable=sorted(enable_rules) or ["fixit.rules"],
         disable=sorted(disable_rules),
+        options=rule_options,
     )
 
 
