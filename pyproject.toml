@@ -72,8 +72,6 @@ features = ["dev"]
 test = "python -m fixit.tests"
 typecheck = "mypy src/fixit"
 
-[tool.hatch.envs.lint]
-detached = true
 [tool.hatch.envs.lint.scripts]
 check = [
     "flake8 src/fixit",
