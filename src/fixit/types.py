@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from libcst._add_slots import add_slots
 from libcst.metadata import CodeRange
@@ -76,5 +76,4 @@ class Result:
 
     path: Path
     violation: Optional[LintViolation]
-    error: Optional[Exception] = None
-    traceback: Optional[str] = None
+    error: Optional[Tuple[Exception, str]] = None

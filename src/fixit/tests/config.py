@@ -336,7 +336,7 @@ class ConfigTest(TestCase):
                     enable=["more.rules", "other.stuff"],
                     disable=["main.rules", "main.rules.SomethingSpecific"],
                     options={"other.stuff.Whatever": {"key": "value"}},
-                )
+                ),
             ),
             (
                 "root",

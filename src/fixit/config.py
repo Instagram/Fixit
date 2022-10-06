@@ -21,16 +21,8 @@ from typing import (
     Set,
 )
 
-from frozendict import frozendict  # type: ignore[attr-defined]
-
 from .rule import LintRule
-from .types import (
-    Config,
-    is_sequence,
-    RawConfig,
-    RuleConfigs,
-    RuleConfigTypes,
-)
+from .types import Config, is_sequence, RawConfig, RuleConfigs, RuleConfigTypes
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -235,11 +227,10 @@ def merge_configs(
         *,
         enable: Sequence[str] = (),
         disable: Sequence[str] = (),
-        options: RuleConfigs = frozendict(),
+        options: Optional[RuleConfigs] = None,
     ):
         subpath = subpath.resolve()
         if not path.is_relative_to(subpath):
-            print(f"ignoring {subpath}")
             return
 
         for rule in enable:
