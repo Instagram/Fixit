@@ -13,6 +13,10 @@
    :alt: PYPI
 
 
+**Fixit is currently being rebuilt for better performance and configurability.**
+You most likely want the [stable branch](https://github.com/Instagram/Fixit/tree/0.x).
+
+
 Setup
 -----
 
