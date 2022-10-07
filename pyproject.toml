@@ -76,6 +76,7 @@ typecheck = "mypy src/fixit"
 check = [
     "flake8 src/fixit",
     "ufmt check src/fixit",
+    "{root}/check_copyright.sh",
 ]
 fix = [
     "ufmt format src/fixit",
