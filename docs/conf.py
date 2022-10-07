@@ -25,7 +25,7 @@
 import datetime
 
 project = "Fixit"
-copyright = f"{datetime.date.today().year}, Meta Platforms, Inc. and affiliates"
+copyright = f" Copyright © Meta Platforms, Inc. and affiliates"
 author = ""
 
 
