@@ -20,6 +20,12 @@ Fixit: advanced linting framework
 
 .. toctree::
     :hidden:
+    :maxdepth: 2
+
+    proposals
+
+.. toctree::
+    :hidden:
     :maxdepth: 1
 
     changelog
