@@ -29,7 +29,7 @@ Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
 
 
-class LintRule(ABC):
+class LintRule(ABC):  # noqa: B024
     TAGS: Set[str] = set()
 
     def __init__(self) -> None:
