@@ -9,11 +9,20 @@ import logging
 import pkgutil
 import sys
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Optional
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+)
 
-from fixit.rule import LintRule
-
-from .types import Config, RawConfig
+from .rule import LintRule
+from .types import Config, is_sequence, RawConfig, RuleOptionsTable, RuleOptionTypes
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -21,6 +30,12 @@ else:
     import tomli as tomllib
 
 log = logging.getLogger(__name__)
+
+
+class ConfigError(ValueError):
+    def __init__(self, msg: str, config: RawConfig):
+        super().__init__(msg)
+        self.config = config
 
 
 def collect_rules(
@@ -134,6 +149,7 @@ def read_configs(paths: List[Path]) -> List[RawConfig]:
     configs: List[RawConfig] = []
 
     for path in paths:
+        path = path.resolve()
         content = path.read_text()
         data = tomllib.loads(content)
         fixit_data = data.get("tool", {}).get("fixit", {})
@@ -148,6 +164,50 @@ def read_configs(paths: List[Path]) -> List[RawConfig]:
     return configs
 
 
+def get_sequence(
+    config: RawConfig, key: str, *, data: Optional[Dict[str, Any]] = None
+) -> Sequence[str]:
+    if data:
+        value = data.pop(key, ())
+    else:
+        value = config.data.pop(key, ())
+
+    if not is_sequence(value):
+        raise ConfigError(
+            f"{key!r} must be array of values, got {type(key)}", config=config
+        )
+
+    return value
+
+
+def get_options(
+    config: RawConfig, key: str, *, data: Optional[Dict[str, Any]] = None
+) -> RuleOptionsTable:
+    if data:
+        mapping = data.pop(key, {})
+    else:
+        mapping = config.data.pop(key, {})
+
+    if not isinstance(mapping, Mapping):
+        raise ConfigError(
+            f"{key!r} must be mapping of values, got {type(key)}", config=config
+        )
+
+    rule_configs: RuleOptionsTable = {}
+    for rule_name, rule_config in mapping.items():
+        rule_configs[rule_name] = {}
+        for key, value in rule_config.items():
+            if not isinstance(value, RuleOptionTypes):
+                raise ConfigError(
+                    f"{key!r} must be one of {RuleOptionTypes}, got {type(value)}",
+                    config=config,
+                )
+
+            rule_configs[rule_name][key] = value
+
+    return rule_configs
+
+
 def merge_configs(
     path: Path, raw_configs: List[RawConfig], root: Optional[Path] = None
 ) -> Config:
@@ -156,26 +216,83 @@ def merge_configs(
 
     Assumes raw_configs are given in order from highest to lowest priority.
     """
-    kwargs: Dict[str, Any] = {
-        "root": None,
-    }
+
+    enable_rules: Set[str] = set()
+    disable_rules: Set[str] = set()
+    local_paths: List[Path] = []
+    rule_options: RuleOptionsTable = {}
+
+    def process_subpath(
+        subpath: Path,
+        *,
+        enable: Sequence[str] = (),
+        disable: Sequence[str] = (),
+        options: Optional[RuleOptionsTable] = None,
+    ):
+        subpath = subpath.resolve()
+        try:
+            path.relative_to(subpath)
+        except ValueError:  # not relative to subpath
+            return
+
+        for rule in enable:
+            if rule.startswith("."):
+                if not local_paths or local_paths[0] != subpath:
+                    local_paths.insert(0, subpath)
+
+            enable_rules.add(rule)
+            disable_rules.discard(rule)
+
+        for rule in disable:
+            enable_rules.discard(rule)
+            disable_rules.add(rule)
+
+        if options:
+            rule_options.update(options)
 
     for config in reversed(raw_configs):
-        if kwargs["root"] is None:
-            kwargs["root"] = config.path.parent
+        if root is None:
+            root = config.path.parent
 
-        # TODO: more than simple overrides
-        # TODO: validate keys/values
-        for key, value in config.data.items():
-            if key == "root" and value:
-                kwargs["root"] = config.path.parent
-            else:
-                kwargs[key] = value
+        data = config.data
+        if data.pop("root", False):
+            root = config.path.parent
 
-    kwargs["path"] = path
-    kwargs["root"] = kwargs["root"] or Path(path.anchor)
+        process_subpath(
+            config.path.parent,
+            enable=get_sequence(config, "enable"),
+            disable=get_sequence(config, "disable"),
+            options=get_options(config, "options"),
+        )
 
-    return Config(**kwargs)
+        for override in get_sequence(config, "overrides"):
+            if not isinstance(override, dict):
+                raise ConfigError("'overrides' requires array of tables", config=config)
+
+            subpath = override.get("path", None)
+            if not subpath:
+                raise ConfigError(
+                    "'overrides' table requires 'path' value", config=config
+                )
+
+            subpath = config.path.parent / subpath
+            process_subpath(
+                subpath,
+                enable=get_sequence(config, "enable", data=override),
+                disable=get_sequence(config, "disable", data=override),
+                options=get_options(config, "options", data=override),
+            )
+
+        for key in data.keys():
+            log.warning("unknown configuration option %r", key)
+
+    return Config(
+        path=path,
+        root=root or Path(path.anchor),
+        enable=sorted(enable_rules) or ["fixit.rules"],
+        disable=sorted(disable_rules),
+        options=rule_options,
+    )
 
 
 def generate_config(path: Path, root: Optional[Path] = None) -> Config:
@@ -183,6 +300,9 @@ def generate_config(path: Path, root: Optional[Path] = None) -> Config:
     Given a file path, walk upwards looking for and applying cascading configs
     """
     path = path.resolve()
+
+    if root is not None:
+        root = root.resolve()
 
     config_paths = locate_configs(path, root=root)
     raw_configs = read_configs(config_paths)

@@ -5,12 +5,19 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from libcst._add_slots import add_slots
 from libcst.metadata import CodeRange
 
 FileContent = bytes
+RuleOptionTypes = (str, int, float)
+RuleOptions = Dict[str, Union[str, int, float]]
+RuleOptionsTable = Dict[str, RuleOptions]
+
+
+def is_sequence(value: Any) -> bool:
+    return isinstance(value, Sequence) and not isinstance(value, (str, bytes))
 
 
 @dataclass
@@ -34,14 +41,22 @@ class Config:
 
     enable: List[str] = field(default_factory=lambda: ["fixit.rules"])
     disable: List[str] = field(default_factory=list)
+    options: RuleOptionsTable = field(default_factory=dict)
 
-    greeting: str = "hello"
+    local_paths: List[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.path = self.path.resolve()
+        self.root = self.root.resolve()
 
 
 @dataclass
 class RawConfig:
     path: Path
     data: Dict[str, Any]
+
+    def __post_init__(self):
+        self.path = self.path.resolve()
 
 
 @add_slots
@@ -61,4 +76,4 @@ class Result:
 
     path: Path
     violation: Optional[LintViolation]
-    error: Optional[Exception] = None
+    error: Optional[Tuple[Exception, str]] = None

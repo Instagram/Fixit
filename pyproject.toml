@@ -70,7 +70,7 @@ features = ["dev"]
 
 [tool.hatch.envs.default.scripts]
 test = "python -m fixit.tests"
-typecheck = "mypy src/fixit"
+typecheck = "mypy --install-types --non-interactive src/fixit"
 
 [tool.hatch.envs.lint.scripts]
 check = [
@@ -90,4 +90,5 @@ build = [
 ]
 
 [tool.fixit]
-# TODO
+enable = ["fixit.rules"]
+disable = ["fixit.test.foo", "fixit.test.bar"]

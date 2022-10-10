@@ -27,6 +27,14 @@ class ConfigTest(TestCase):
                 """
                 [tool.fixit]
                 root = true
+                enable = ["main.rules", "more.rules"]
+                disable = ["main.rules.SomethingSpecific"]
+
+                [[tool.fixit.overrides]]
+                path = "other"
+                enable = ["other.stuff"]
+                disable = ["main.rules"]
+                options = {"other.stuff.Whatever"={key="value"}}
                 """
             )
         )
@@ -34,7 +42,8 @@ class ConfigTest(TestCase):
             dedent(
                 """
                 [tool.fixit]
-                greeting = "big hello"
+                enable = [".localrules"]
+                disable = ["main.rules"]
                 """
             )
         )
@@ -42,6 +51,7 @@ class ConfigTest(TestCase):
             dedent(
                 """
                 [tool.fuzzball]
+                something = "whatever"
                 """
             )
         )
@@ -50,7 +60,9 @@ class ConfigTest(TestCase):
                 """
                 [tool.fixit]
                 root = true
-                greeting = "i robot"
+                enable = ["fake8", "make8"]
+                disable = ["foo.bar"]
+                unknown = "hello"
                 """
             )
         )
@@ -129,28 +141,95 @@ class ConfigTest(TestCase):
             (
                 "inner",
                 [innerA, innerB, outer, top],
-                [RawConfig(innerA, {"greeting": "i robot", "root": True})],
+                [
+                    RawConfig(
+                        innerA,
+                        {
+                            "root": True,
+                            "enable": ["fake8", "make8"],
+                            "disable": ["foo.bar"],
+                            "unknown": "hello",
+                        },
+                    )
+                ],
             ),
             (
                 "inner partial",
                 [innerB, outer, top],
                 [
-                    RawConfig(outer, {"greeting": "big hello"}),
-                    RawConfig(top, {"root": True}),
+                    RawConfig(
+                        outer, {"enable": [".localrules"], "disable": ["main.rules"]}
+                    ),
+                    RawConfig(
+                        top,
+                        {
+                            "root": True,
+                            "enable": ["main.rules", "more.rules"],
+                            "disable": ["main.rules.SomethingSpecific"],
+                            "overrides": [
+                                {
+                                    "path": "other",
+                                    "enable": ["other.stuff"],
+                                    "disable": ["main.rules"],
+                                    "options": {
+                                        "other.stuff.Whatever": {"key": "value"}
+                                    },
+                                },
+                            ],
+                        },
+                    ),
                 ],
             ),
             (
                 "outer",
                 [outer, top],
                 [
-                    RawConfig(outer, {"greeting": "big hello"}),
-                    RawConfig(top, {"root": True}),
+                    RawConfig(
+                        outer, {"enable": [".localrules"], "disable": ["main.rules"]}
+                    ),
+                    RawConfig(
+                        top,
+                        {
+                            "root": True,
+                            "enable": ["main.rules", "more.rules"],
+                            "disable": ["main.rules.SomethingSpecific"],
+                            "overrides": [
+                                {
+                                    "path": "other",
+                                    "enable": ["other.stuff"],
+                                    "disable": ["main.rules"],
+                                    "options": {
+                                        "other.stuff.Whatever": {"key": "value"}
+                                    },
+                                },
+                            ],
+                        },
+                    ),
                 ],
             ),
             (
                 "top",
                 [top],
-                [RawConfig(top, {"root": True})],
+                [
+                    RawConfig(
+                        top,
+                        {
+                            "root": True,
+                            "enable": ["main.rules", "more.rules"],
+                            "disable": ["main.rules.SomethingSpecific"],
+                            "overrides": [
+                                {
+                                    "path": "other",
+                                    "enable": ["other.stuff"],
+                                    "disable": ["main.rules"],
+                                    "options": {
+                                        "other.stuff.Whatever": {"key": "value"}
+                                    },
+                                },
+                            ],
+                        },
+                    ),
+                ],
             ),
         ):
             with self.subTest(name):
@@ -158,36 +237,54 @@ class ConfigTest(TestCase):
                 self.assertListEqual(expected, actual)
 
     def test_merge_configs(self):
-        target = Path("foo.py")
+        root = self.tdp
+        target = root / "a" / "b" / "c" / "foo.py"
 
         for name, raw_configs, expected in (
-            ("empty", [], Config(path=target, root=Path(target.anchor))),
+            (
+                "empty",
+                [],
+                Config(path=target, root=Path(target.anchor), enable=["fixit.rules"]),
+            ),
             (
                 "single",
                 [
-                    RawConfig(Path("fixit.toml"), {"greeting": "howdy"}),
+                    RawConfig(
+                        (root / "fixit.toml"),
+                        {"enable": ["foo", "bar"], "disable": ["bar"]},
+                    ),
                 ],
-                Config(path=target, root=Path("."), greeting="howdy"),
+                Config(path=target, root=root, enable=["foo"], disable=["bar"]),
             ),
             (
                 "without root",
                 [
-                    RawConfig(Path("a/b/c/fixit.toml"), {"greeting": "wonderful"}),
-                    RawConfig(Path("a/b/fixit.toml"), {"greeting": "test"}),
-                    RawConfig(Path("a/fixit.toml"), {}),
+                    RawConfig((root / "a/b/c/fixit.toml"), {"enable": ["foo"]}),
+                    RawConfig(
+                        (root / "a/b/fixit.toml"),
+                        {"enable": ["bar"], "disable": ["foo"]},
+                    ),
+                    RawConfig((root / "a/fixit.toml"), {"enable": ["foo"]}),
                 ],
-                Config(path=target, root=Path("a"), greeting="wonderful"),
+                Config(path=target, root=(root / "a"), enable=["bar", "foo"]),
             ),
             (
                 "with root",
                 [
-                    RawConfig(Path("a/b/c/fixit.toml"), {"greeting": "wonderful"}),
                     RawConfig(
-                        Path("a/b/fixit.toml"), {"greeting": "test", "root": True}
+                        (root / "a/b/c/fixit.toml"),
+                        {"enable": ["foo"], "root": True},
                     ),
-                    RawConfig(Path("a/fixit.toml"), {}),
+                    RawConfig(
+                        (root / "a/b/fixit.toml"),
+                        {},
+                    ),
+                    RawConfig(
+                        (root / "a/fixit.toml"),
+                        {},
+                    ),
                 ],
-                Config(path=target, root=Path("a/b"), greeting="wonderful"),
+                Config(path=target, root=(root / "a/b/c"), enable=["foo"]),
             ),
         ):
             with self.subTest(name):
@@ -200,27 +297,57 @@ class ConfigTest(TestCase):
                 "inner",
                 self.inner / "foo.py",
                 None,
-                Config(path=self.inner / "foo.py", root=self.inner, greeting="i robot"),
+                Config(
+                    path=self.inner / "foo.py",
+                    root=self.inner,
+                    enable=["fake8", "make8"],
+                    disable=["foo.bar"],
+                ),
             ),
             (
-                "outer without root",
+                "outer",
                 self.outer / "foo.py",
                 None,
-                Config(path=self.outer / "foo.py", root=self.tdp, greeting="big hello"),
+                Config(
+                    path=self.outer / "foo.py",
+                    root=self.tdp,
+                    enable=[".localrules", "more.rules"],
+                    disable=["main.rules", "main.rules.SomethingSpecific"],
+                ),
             ),
             (
                 "outer with root",
                 self.outer / "foo.py",
                 self.outer,
                 Config(
-                    path=self.outer / "foo.py", root=self.outer, greeting="big hello"
+                    path=self.outer / "foo.py",
+                    root=self.outer,
+                    enable=[".localrules"],
+                    disable=["main.rules"],
+                ),
+            ),
+            (
+                "other",
+                self.tdp / "other" / "foo.py",
+                None,
+                Config(
+                    path=self.tdp / "other" / "foo.py",
+                    root=self.tdp,
+                    enable=["more.rules", "other.stuff"],
+                    disable=["main.rules", "main.rules.SomethingSpecific"],
+                    options={"other.stuff.Whatever": {"key": "value"}},
                 ),
             ),
             (
                 "root",
                 self.tdp / "foo.py",
                 None,
-                Config(path=self.tdp / "foo.py", root=self.tdp, greeting="hello"),
+                Config(
+                    path=self.tdp / "foo.py",
+                    root=self.tdp,
+                    enable=["main.rules", "more.rules"],
+                    disable=["main.rules.SomethingSpecific"],
+                ),
             ),
         ):
             with self.subTest(name):

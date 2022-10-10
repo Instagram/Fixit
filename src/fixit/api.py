@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import traceback
 from pathlib import Path
 from typing import Generator, Iterable, List
 
@@ -23,7 +24,7 @@ def _make_result(path: Path, violations: Iterable[LintViolation]) -> Iterable[Re
     except Exception as error:
         # TODO: this is not the right place to catch errors
         logger.debug("Exception while linting", exc_info=error)
-        yield Result(path, violation=None, error=error)
+        yield Result(path, violation=None, error=(error, traceback.format_exc()))
 
 
 def fixit_bytes(
@@ -55,7 +56,7 @@ def fixit_file(
 
     except Exception as error:
         logger.debug("Exception while fixit_file", exc_info=error)
-        yield Result(path, violation=None, error=error)
+        yield Result(path, violation=None, error=(error, traceback.format_exc()))
 
 
 def fixit_paths(
