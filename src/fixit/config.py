@@ -22,7 +22,7 @@ from typing import (
 )
 
 from .rule import LintRule
-from .types import Config, is_sequence, RawConfig, RuleConfigs, RuleConfigTypes
+from .types import Config, is_sequence, RawConfig, RuleOptionsTable, RuleOptionTypes
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -182,7 +182,7 @@ def get_sequence(
 
 def get_options(
     config: RawConfig, key: str, *, data: Optional[Dict[str, Any]] = None
-) -> RuleConfigs:
+) -> RuleOptionsTable:
     if data:
         mapping = data.pop(key, {})
     else:
@@ -193,13 +193,13 @@ def get_options(
             f"{key!r} must be mapping of values, got {type(key)}", config=config
         )
 
-    rule_configs: RuleConfigs = {}
+    rule_configs: RuleOptionsTable = {}
     for rule_name, rule_config in mapping.items():
         rule_configs[rule_name] = {}
         for key, value in rule_config.items():
-            if not isinstance(value, RuleConfigTypes):
+            if not isinstance(value, RuleOptionTypes):
                 raise ConfigError(
-                    f"{key!r} must be one of {RuleConfigTypes}, got {type(value)}",
+                    f"{key!r} must be one of {RuleOptionTypes}, got {type(value)}",
                     config=config,
                 )
 
@@ -220,14 +220,14 @@ def merge_configs(
     enable_rules: Set[str] = set()
     disable_rules: Set[str] = set()
     local_paths: List[Path] = []
-    rule_options: RuleConfigs = {}
+    rule_options: RuleOptionsTable = {}
 
     def process_subpath(
         subpath: Path,
         *,
         enable: Sequence[str] = (),
         disable: Sequence[str] = (),
-        options: Optional[RuleConfigs] = None,
+        options: Optional[RuleOptionsTable] = None,
     ):
         subpath = subpath.resolve()
         try:

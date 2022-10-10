@@ -11,9 +11,9 @@ from libcst._add_slots import add_slots
 from libcst.metadata import CodeRange
 
 FileContent = bytes
-RuleConfigTypes = (str, int, float)
-RuleConfig = Dict[str, Union[str, int, float]]
-RuleConfigs = Dict[str, RuleConfig]
+RuleOptionTypes = (str, int, float)
+RuleOptions = Dict[str, Union[str, int, float]]
+RuleOptionsTable = Dict[str, RuleOptions]
 
 
 def is_sequence(value: Any) -> bool:
@@ -41,7 +41,7 @@ class Config:
 
     enable: List[str] = field(default_factory=lambda: ["fixit.rules"])
     disable: List[str] = field(default_factory=list)
-    options: RuleConfigs = field(default_factory=dict)
+    options: RuleOptionsTable = field(default_factory=dict)
 
     local_paths: List[str] = field(default_factory=list)
 
