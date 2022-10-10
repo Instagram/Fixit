@@ -230,7 +230,9 @@ def merge_configs(
         options: Optional[RuleConfigs] = None,
     ):
         subpath = subpath.resolve()
-        if not path.is_relative_to(subpath):
+        try:
+            path.relative_to(subpath)
+        except ValueError:  # not relative to subpath
             return
 
         for rule in enable:
