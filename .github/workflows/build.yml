@@ -26,19 +26,19 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install
         run: |
-          pip install -U pip hatch
-          hatch env create
-          hatch env create lint
-          hatch env create docs
+          python -m pip install -U pip hatch
+          python -m hatch env create
+          python -m hatch env create lint
+          python -m hatch env create docs
       - name: Test
         run: |
-          hatch run test
+          python -m hatch run test
       - name: Lint
         run: |
-          hatch run lint:check
+          python -m hatch run lint:check
       - name: Typecheck
         run: |
-          hatch run typecheck
+          python -m hatch run typecheck
       - name: Docs
         run: |
-          hatch run docs:build
+          python -m hatch run docs:build
