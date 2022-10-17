@@ -6,7 +6,13 @@
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import (
+    CodePosition,
+    CodeRange,
+    CstLintRule,
+    InvalidTestCase as Invalid,
+    ValidTestCase as Valid,
+)
 
 
 class NoRedundantFStringRule(CstLintRule):
@@ -29,23 +35,23 @@ class NoRedundantFStringRule(CstLintRule):
     INVALID = [
         Invalid(
             'bad: str = f"bad" + "bad"',
-            line=1,
             expected_replacement='bad: str = "bad" + "bad"',
+            range=CodeRange(start=CodePosition(1, 11), end=CodePosition(1, 17)),
         ),
         Invalid(
             "bad: str = f'bad'",
-            line=1,
             expected_replacement="bad: str = 'bad'",
+            range=CodeRange(start=CodePosition(1, 11), end=CodePosition(1, 17)),
         ),
         Invalid(
             "bad: str = rf'bad\t+'",
-            line=1,
             expected_replacement="bad: str = r'bad\t+'",
+            range=CodeRange(start=CodePosition(1, 11), end=CodePosition(1, 20)),
         ),
         Invalid(
             'bad: str = f"no args but messing up {{ braces }}"',
-            line=1,
             expected_replacement='bad: str = "no args but messing up { braces }"',
+            range=CodeRange(start=CodePosition(1, 11), end=CodePosition(1, 49)),
         ),
     ]
 

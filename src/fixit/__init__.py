@@ -11,10 +11,23 @@ __version__ = "0.2.0"
 
 from .api import fixit_bytes, fixit_file, fixit_paths
 from .rule import LintRule
-from .rule.cst import CSTLintRule, CstLintRule, InvalidTestCase, ValidTestCase
-from .types import Config, FileContent, Result
-
+from .rule.cst import CSTLintRule, CstLintRule
+from .testing import InvalidTestCase, ValidTestCase
+from .types import CodePosition, CodeRange, Config, FileContent, Result
 
 __all__ = [
     "__version__",
+    "fixit_bytes",
+    "fixit_file",
+    "fixit_paths",
+    "LintRule",
+    "CSTLintRule",
+    "CstLintRule",
+    "InvalidTestCase",
+    "ValidTestCase",
+    "Config",
+    "FileContent",
+    "Result",
+    "CodeRange",
+    "CodePosition",
 ]

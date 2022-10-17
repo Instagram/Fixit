@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractclassmethod, abstractmethod
+from abc import ABC, abstractmethod
 from collections import defaultdict
+
+from dataclasses import dataclass
 
 from typing import (
     Callable,
@@ -20,13 +22,27 @@ from typing import (
     Set,
     Type,
     TypeVar,
+    Union,
 )
 
-from fixit.types import FileContent, LintViolation
+from fixit.types import CodeRange, FileContent, LintViolation
 
 
 Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
+
+
+@dataclass(frozen=True)
+class InvalidTestCase:
+    code: str
+    range: Optional[CodeRange] = None
+    expected_message: Optional[str] = None
+    expected_replacement: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class ValidTestCase:
+    code: str
 
 
 class LintRule(ABC):  # noqa: B024
@@ -35,8 +51,11 @@ class LintRule(ABC):  # noqa: B024
     def __init__(self) -> None:
         self._violations: List[LintViolation] = []
 
-    # TODO: this should be an abstract class property
+    # TODO: these should be an abstract class property
     _runner: ClassVar[Type[LintRunner]]
+
+    VALID: ClassVar[List[Union[str, ValidTestCase]]]
+    INVALID: ClassVar[List[Union[str, InvalidTestCase]]]
 
 
 SomeRule = TypeVar("SomeRule", bound=LintRule)
@@ -56,4 +75,11 @@ class LintRunner(ABC, Generic[SomeRule]):
         pass
 
 
-__all__ = ["LintRule", "LintRunner", "Timings", "TimingsHook"]
+__all__ = [
+    "LintRule",
+    "LintRunner",
+    "Timings",
+    "TimingsHook",
+    "InvalidTestCase",
+    "ValidTestCase",
+]
