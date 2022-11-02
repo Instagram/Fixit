@@ -53,7 +53,7 @@ Implementation
 --------------
 
 When gathering enabled/disabled rules from configuration, Fixit currently
-just records the module name (fqdn) and does set operations when merging
+just records the module name (qualname) and does set operations when merging
 configs/overrides. In order to differentiate and manage local rules correctly,
 without affecting the behavior of merging/overrides, one possible option is to
 replace the simple string with a tuple of path and module.
@@ -92,6 +92,12 @@ Once loaded, local modules and rules can be handled and traversed the same as
 for global rules, though the logic for filtering out disabled local rules may
 require more nuance.
 
+---
+
+Long term, we almost certainly need a custom loader, to prevent potential
+conflicts between local namespaces. For example, project1 and project2 both
+referece a local ``.rules`` module, which would clash in ``sys.modules``.
+
 
 Limitations
 -----------
@@ -100,6 +106,10 @@ For simplicity of implementation, it makes sense to disallow local rules from
 outside of the configuration file's parent directory. In other words,
 ``project/subdir/fixit.toml`` can not reference local rules from
 ``project/other/rules.py``.
+
+Enabling (or disabling) local rules with more than one preceding period,
+such as ``..rules``, is not supported, and should be rejected during config
+validation.
 
 To apply rules from a different subdirectory to another subdirectory,
 a configuration located in a common parent can use
