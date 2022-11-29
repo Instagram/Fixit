@@ -45,7 +45,7 @@ to global rules:
 
     [[tool.fixit.overrides]]
     path = "project1"
-    disable = [".rules.PickyRule"]
+    disable = [".rules:PickyRule"]
     enable = [".project1.rules"]
 
 
@@ -92,11 +92,18 @@ Once loaded, local modules and rules can be handled and traversed the same as
 for global rules, though the logic for filtering out disabled local rules may
 require more nuance.
 
----
-
 Long term, we almost certainly need a custom loader, to prevent potential
 conflicts between local namespaces. For example, project1 and project2 both
 referece a local ``.rules`` module, which would clash in ``sys.modules``.
+
+Before a final public release, the following considerations must be handled:
+
+- Importing multiple local rules with the same local path and/or module name,
+  or names that conflict with system modules. Eg, two different configs
+  specifying ``".local.rules"``, or loading a module named ``".sys"``.
+
+- Relative imports from within local rules modules, such also
+  ``from .foo import Bar`` or worse ``from ..foo import Bar``.
 
 
 Limitations
