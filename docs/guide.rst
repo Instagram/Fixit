@@ -83,6 +83,8 @@ table name are required for correctly specifying options:
     answer = 42
 
 
+.. _overrides:
+
 ``[[tool.fixit.overrides]]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
