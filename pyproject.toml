@@ -6,10 +6,10 @@ build-backend = "hatchling.build"
 name = "fixit"
 readme = "README.rst"
 authors = [
-    {name="Jimmy Lai"},
-    {name="John Reese"},
-    {name="Zsolt Dollenstein"},
     {name="Meta Platforms, Inc"},
+    {name="Amethyst Reese"},
+    {name="Jimmy Lai"},
+    {name="Zsolt Dollenstein"},
 ]
 license = {file="LICENSE"}
 classifiers = [
