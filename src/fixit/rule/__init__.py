@@ -25,7 +25,7 @@ from typing import (
     Union,
 )
 
-from fixit.types import CodeRange, FileContent, LintViolation
+from fixit.ftypes import CodeRange, FileContent, LintViolation
 
 
 Timings = Dict[str, int]

@@ -10,7 +10,7 @@ from textwrap import dedent
 from unittest import TestCase
 
 from .. import config
-from ..types import Config, RawConfig
+from ..ftypes import Config, RawConfig
 
 
 class ConfigTest(TestCase):

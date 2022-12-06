@@ -13,7 +13,7 @@ import click
 from fixit import __version__
 
 from .api import fixit_paths
-from .types import Options
+from .ftypes import Options
 
 
 @click.group()

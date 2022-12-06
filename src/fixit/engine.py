@@ -6,8 +6,9 @@
 from collections import defaultdict
 from typing import Collection, Dict, Iterable, List, Type
 
+from .ftypes import FileContent, LintViolation
+
 from .rule import LintRule, LintRunner
-from .types import FileContent, LintViolation
 
 
 def collect_violations(

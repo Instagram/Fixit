@@ -12,7 +12,7 @@ import trailrunner
 
 from .config import collect_rules, generate_config
 from .engine import collect_violations
-from .types import Config, FileContent, LintViolation, Result
+from .ftypes import Config, FileContent, LintViolation, Result
 
 logger = logging.getLogger(__name__)
 
