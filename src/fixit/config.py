@@ -8,7 +8,9 @@ import inspect
 import logging
 import pkgutil
 import sys
+from dataclasses import replace
 from pathlib import Path
+from types import ModuleType
 from typing import (
     Any,
     Collection,
@@ -19,10 +21,21 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Type,
 )
 
-from .ftypes import Config, is_sequence, RawConfig, RuleOptionsTable, RuleOptionTypes
+from .ftypes import (
+    Config,
+    is_collection,
+    is_sequence,
+    QualifiedRule,
+    QualifiedRuleRegex,
+    RawConfig,
+    RuleOptionsTable,
+    RuleOptionTypes,
+)
 from .rule import LintRule
+from .rule.cst import CSTLintRule
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -39,63 +52,73 @@ class ConfigError(ValueError):
 
 
 def collect_rules(
-    enables: Collection[str], disables: Collection[str]
+    enables: Collection[QualifiedRule], disables: Collection[QualifiedRule]
 ) -> Collection[LintRule]:
     """
     Import and return rules specified by `enables` and `disables`.
     """
 
-    def _collect(fqname: str) -> Iterable[LintRule]:
-        parts = fqname.split(".")
-        name = parts.pop(0)
-        mod = importlib.import_module(name)
-        while parts:
-            if hasattr(mod, parts[0]):
-                break
-            name = f"{name}.{parts.pop(0)}"
-            if name in disables:
-                log.debug(f"Lint rule discovery for {name} is blocked")
+    def is_rule(obj: object) -> bool:
+        return (
+            inspect.isclass(obj)
+            and issubclass(obj, LintRule)
+            and obj not in (LintRule, CSTLintRule)
+        )
+
+    def _collect(rule: QualifiedRule) -> Iterable[Type[LintRule]]:
+        try:
+            if rule.local:
+                # TODO: handle local imports correctly
                 return
-            mod = importlib.import_module(name)
+            else:
+                module = importlib.import_module(rule.module)
+            module_rules = _walk(module)
 
-        obj: object = mod
-        while parts:
-            local_name = parts.pop(0)
-            name = f"{name}.{local_name}"
-            if name in disables:
-                log.debug(f"Lint rule discovery for {name} is blocked")
-                return
-            obj = getattr(obj, local_name)
+            if rule.name:
+                if value := module_rules.get(rule.name, None):
+                    if issubclass(value, LintRule):
+                        yield value
+                    elif is_collection(value):
+                        for v in value:
+                            if issubclass(v, LintRule):
+                                yield v
+                    else:
+                        log.warning("don't know what to do with {value!r}")
+                else:
+                    log.warning(f"{rule.name!r} not found in {module_rules}")
+                    pass  # TODO: error maybe? ¯\_(ツ)_/¯
 
-        yield from _walk(obj, name)
+            else:
+                for name in sorted(module_rules.keys()):
+                    yield module_rules[name]
 
-    def _walk(obj: object, name: str) -> Iterable[LintRule]:
-        if inspect.isclass(obj) and issubclass(obj, LintRule):
-            if getattr(obj, "__name__", None) in {"CSTLintRule"}:
-                # TODO: better way to filter out base classes like CSTLintRule
-                return
-            log.debug(f"Found lint rule {obj}")
-            # mypy can't figure out what's happening here
-            yield obj()  # type: ignore
-        elif inspect.ismodule(obj) and hasattr(obj, "__path__"):
-            for _, local_name, _ in pkgutil.iter_modules(obj.__path__):
-                fqname = f"{obj.__name__}.{local_name}"
-                if fqname in disables:
-                    log.debug("Lint rule discovery for {fqname} is blocked")
-                    continue
-                yield from _walk(importlib.import_module(fqname), fqname)
-        elif inspect.ismodule(obj):
-            for local_name, subobj in inspect.getmembers(obj, inspect.isclass):
-                fqname = f"{name}.{local_name}"
-                if fqname in disables:
-                    log.debug(f"Lint rule discovery for {fqname} is blocked")
-                    continue
-                yield from _walk(subobj, fqname)
+        except ImportError:
+            log.warning(f"could not import rule(s) {rule}")
 
-    ret: List[LintRule] = []
-    for pkg in enables:
-        ret.extend(_collect(pkg))
-    return ret
+    def _walk(module: ModuleType) -> Dict[str, Type[LintRule]]:
+        rules: Dict[str, Type[LintRule]] = {}
+
+        members = inspect.getmembers(module, is_rule)
+        rules.update(members)
+
+        if hasattr(module, "__path__"):
+            for _, module_name, is_pkg in pkgutil.iter_modules(module.__path__):
+                if not is_pkg:  # do not recurse to sub-packages
+                    mod = importlib.import_module(f".{module_name}", module.__name__)
+                    rules.update(_walk(mod))
+
+        return rules
+
+    final_rules: Set[Type[LintRule]] = set()
+    for qualified_rule in enables:
+        matched_rules = list(_collect(qualified_rule))
+        final_rules.update(matched_rules)
+
+    for qualified_rule in disables:
+        matched_rules = list(_collect(qualified_rule))
+        final_rules.difference_update(matched_rules)
+
+    return [R() for R in final_rules]
 
 
 def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
@@ -217,9 +240,9 @@ def merge_configs(
     Assumes raw_configs are given in order from highest to lowest priority.
     """
 
-    enable_rules: Set[str] = set()
-    disable_rules: Set[str] = set()
-    local_paths: List[Path] = []
+    config: RawConfig
+    enable_rules: Set[QualifiedRule] = set()
+    disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
 
     def process_subpath(
@@ -236,16 +259,27 @@ def merge_configs(
             return
 
         for rule in enable:
-            if rule.startswith("."):
-                if not local_paths or local_paths[0] != subpath:
-                    local_paths.insert(0, subpath)
+            if not (match := QualifiedRuleRegex.match(rule)):
+                raise ConfigError(f"invalid rule name {rule!r}", config=config)
 
-            enable_rules.add(rule)
-            disable_rules.discard(rule)
+            group = match.groupdict()
+            qual_rule = QualifiedRule(module=group["module"], name=group["name"], local=group["local"])  # type: ignore
+
+            if qual_rule.local:
+                qual_rule = replace(qual_rule, root=subpath)
+
+            enable_rules.add(qual_rule)
+            disable_rules.discard(qual_rule)
 
         for rule in disable:
-            enable_rules.discard(rule)
-            disable_rules.add(rule)
+            if not (match := QualifiedRuleRegex.match(rule)):
+                raise ConfigError(f"invalid rule name {rule!r}", config=config)
+
+            group = match.groupdict()
+            qual_rule = QualifiedRule(module=group["module"], name=group["name"], local=group["local"])  # type: ignore
+
+            enable_rules.discard(qual_rule)
+            disable_rules.add(qual_rule)
 
         if options:
             rule_options.update(options)
@@ -289,7 +323,7 @@ def merge_configs(
     return Config(
         path=path,
         root=root or Path(path.anchor),
-        enable=sorted(enable_rules) or ["fixit.rules"],
+        enable=sorted(enable_rules) or [QualifiedRule("fixit.rules")],
         disable=sorted(disable_rules),
         options=rule_options,
     )

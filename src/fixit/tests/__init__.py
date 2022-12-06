@@ -4,13 +4,15 @@
 # LICENSE file in the root directory of this source tree.
 
 from fixit.config import collect_rules
+from fixit.ftypes import QualifiedRule
 
 from fixit.testing import add_lint_rule_tests_to_module
 from .config import ConfigTest
+from .ftypes import TypesTest
 from .rule.cst import RuleTest, RunnerTest
 from .smoke import SmokeTest
 
 add_lint_rule_tests_to_module(
     globals(),
-    collect_rules(enables=["fixit.rules"], disables=[]),
+    collect_rules(enables=[QualifiedRule("fixit.rules")], disables=[]),
 )

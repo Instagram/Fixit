@@ -13,6 +13,7 @@ import click
 from fixit import __version__
 
 from .api import fixit_paths
+from .config import collect_rules, generate_config
 from .ftypes import Options
 
 
@@ -70,3 +71,25 @@ def fix(
     lint and autofix one or more files and return results
     """
     ctx.fail("not implemented yet")
+
+
+@main.command()
+@click.pass_context
+@click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
+def debug(ctx: click.Context, paths: Iterable[Path]):
+    """
+    print debug info for each path
+    """
+    try:
+        from rich import print as pprint
+    except ImportError:
+        from pprint import pprint  # type: ignore
+
+    for path in paths:
+        path = path.resolve()
+        config = generate_config(path)
+        rules = collect_rules(config.enable, config.disable)
+
+        pprint(">>> ", path)
+        pprint(config)
+        pprint(rules)

@@ -10,10 +10,12 @@ from textwrap import dedent
 from unittest import TestCase
 
 from .. import config
-from ..ftypes import Config, RawConfig
+from ..ftypes import Config, QualifiedRule, RawConfig
 
 
 class ConfigTest(TestCase):
+    maxDiff = None
+
     def setUp(self):
         self.td = TemporaryDirectory()
         self.tdp = Path(self.td.name).resolve()
@@ -244,7 +246,11 @@ class ConfigTest(TestCase):
             (
                 "empty",
                 [],
-                Config(path=target, root=Path(target.anchor), enable=["fixit.rules"]),
+                Config(
+                    path=target,
+                    root=Path(target.anchor),
+                    enable=[QualifiedRule("fixit.rules")],
+                ),
             ),
             (
                 "single",
@@ -254,7 +260,12 @@ class ConfigTest(TestCase):
                         {"enable": ["foo", "bar"], "disable": ["bar"]},
                     ),
                 ],
-                Config(path=target, root=root, enable=["foo"], disable=["bar"]),
+                Config(
+                    path=target,
+                    root=root,
+                    enable=[QualifiedRule("foo")],
+                    disable=[QualifiedRule("bar")],
+                ),
             ),
             (
                 "without root",
@@ -266,7 +277,11 @@ class ConfigTest(TestCase):
                     ),
                     RawConfig((root / "a/fixit.toml"), {"enable": ["foo"]}),
                 ],
-                Config(path=target, root=(root / "a"), enable=["bar", "foo"]),
+                Config(
+                    path=target,
+                    root=(root / "a"),
+                    enable=[QualifiedRule("bar"), QualifiedRule("foo")],
+                ),
             ),
             (
                 "with root",
@@ -284,7 +299,9 @@ class ConfigTest(TestCase):
                         {},
                     ),
                 ],
-                Config(path=target, root=(root / "a/b/c"), enable=["foo"]),
+                Config(
+                    path=target, root=(root / "a/b/c"), enable=[QualifiedRule("foo")]
+                ),
             ),
         ):
             with self.subTest(name):
@@ -300,8 +317,8 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.inner / "foo.py",
                     root=self.inner,
-                    enable=["fake8", "make8"],
-                    disable=["foo.bar"],
+                    enable=[QualifiedRule("fake8"), QualifiedRule("make8")],
+                    disable=[QualifiedRule("foo.bar")],
                 ),
             ),
             (
@@ -311,8 +328,14 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.outer / "foo.py",
                     root=self.tdp,
-                    enable=[".localrules", "more.rules"],
-                    disable=["main.rules", "main.rules.SomethingSpecific"],
+                    enable=[
+                        QualifiedRule("localrules", local=".", root=self.outer),
+                        QualifiedRule("more.rules"),
+                    ],
+                    disable=[
+                        QualifiedRule("main.rules"),
+                        QualifiedRule("main.rules.SomethingSpecific"),
+                    ],
                 ),
             ),
             (
@@ -322,8 +345,8 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.outer / "foo.py",
                     root=self.outer,
-                    enable=[".localrules"],
-                    disable=["main.rules"],
+                    enable=[QualifiedRule("localrules", local=".", root=self.outer)],
+                    disable=[QualifiedRule("main.rules")],
                 ),
             ),
             (
@@ -333,8 +356,11 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.tdp / "other" / "foo.py",
                     root=self.tdp,
-                    enable=["more.rules", "other.stuff"],
-                    disable=["main.rules", "main.rules.SomethingSpecific"],
+                    enable=[QualifiedRule("more.rules"), QualifiedRule("other.stuff")],
+                    disable=[
+                        QualifiedRule("main.rules"),
+                        QualifiedRule("main.rules.SomethingSpecific"),
+                    ],
                     options={"other.stuff.Whatever": {"key": "value"}},
                 ),
             ),
@@ -345,8 +371,8 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.tdp / "foo.py",
                     root=self.tdp,
-                    enable=["main.rules", "more.rules"],
-                    disable=["main.rules.SomethingSpecific"],
+                    enable=[QualifiedRule("main.rules"), QualifiedRule("more.rules")],
+                    disable=[QualifiedRule("main.rules.SomethingSpecific")],
                 ),
             ),
         ):
