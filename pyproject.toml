@@ -75,6 +75,7 @@ typecheck = "mypy --install-types --non-interactive src/fixit"
 [tool.hatch.envs.lint.scripts]
 check = [
     "flake8 src/fixit",
+    "fixit lint src/fixit",
     "ufmt check src/fixit",
     "{root}/check_copyright.sh",
 ]
@@ -91,4 +92,7 @@ build = [
 
 [tool.fixit]
 enable = ["fixit.rules"]
-disable = ["fixit.test.foo", "fixit.test.bar"]
+disable = [
+    "fixit.rules:ExplicitFrozenDataclassRule",
+    "fixit.rules:UseLintFixmeCommentRule",
+]
