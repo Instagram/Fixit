@@ -38,7 +38,7 @@ def is_collection(value: Any) -> bool:
     return isinstance(value, Iterable) and not isinstance(value, (str, bytes))
 
 
-@dataclass(slots=True, frozen=True, order=True)
+@dataclass(frozen=True, order=True)
 class QualifiedRule:
     module: str
     name: Optional[str] = None

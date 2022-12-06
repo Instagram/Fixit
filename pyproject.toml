@@ -6,10 +6,10 @@ build-backend = "hatchling.build"
 name = "fixit"
 readme = "README.rst"
 authors = [
-    {name="Jimmy Lai"},
-    {name="John Reese"},
-    {name="Zsolt Dollenstein"},
     {name="Meta Platforms, Inc"},
+    {name="Amethyst Reese"},
+    {name="Jimmy Lai"},
+    {name="Zsolt Dollenstein"},
 ]
 license = {file="LICENSE"}
 classifiers = [
@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "click >= 8.0",
     "libcst >= 0.3.18",
@@ -44,6 +44,7 @@ dev = [
     "flake8 == 4.0.1",
     "flake8-bugbear == 22.9.23",
     "mypy == 0.981",
+    "rich == 12.6.0",
     "ufmt == 2.0.1",
     "usort == 1.0.5",
 ]
