@@ -35,7 +35,7 @@ from libcst.metadata import (
     ProviderT,
 )
 
-from fixit.types import FileContent, LintViolation
+from fixit.ftypes import FileContent, LintViolation
 from . import LintRule, LintRunner, TimingsHook
 
 

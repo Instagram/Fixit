@@ -21,8 +21,8 @@ from typing import (
     Set,
 )
 
+from .ftypes import Config, is_sequence, RawConfig, RuleOptionsTable, RuleOptionTypes
 from .rule import LintRule
-from .types import Config, is_sequence, RawConfig, RuleOptionsTable, RuleOptionTypes
 
 if sys.version_info >= (3, 11):
     import tomllib

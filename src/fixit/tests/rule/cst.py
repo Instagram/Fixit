@@ -9,8 +9,9 @@ from unittest.mock import MagicMock
 import libcst as cst
 from libcst.metadata import CodePosition, CodeRange
 
+from fixit.ftypes import LintViolation
+
 from fixit.rule.cst import CSTLintRule, CSTLintRunner
-from fixit.types import LintViolation
 
 
 class NoopRule(CSTLintRule):
