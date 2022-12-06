@@ -10,7 +10,9 @@ set -eu
 die() { echo "$1"; exit 1; }
 
 while read filename; do \
-  grep -q "^# Copyright (c) Meta Platforms, Inc. and affiliates." "$filename" ||
-    die "Missing copyright in $filename"
+    if [ -f "$filename" ]; then
+        grep -q "^# Copyright (c) Meta Platforms, Inc. and affiliates." "$filename" ||
+            die "Missing copyright in $filename"
+    fi
 done < <( git ls-tree -r --name-only HEAD | grep "\(.py\|\.sh\)$" )
 
