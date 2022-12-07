@@ -6,10 +6,12 @@
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, TypeVar, Union
 
 from libcst._add_slots import add_slots
 from libcst.metadata import CodePosition as CSTCodePosition, CodeRange as CSTCodeRange
+
+T = TypeVar("T")
 
 FileContent = bytes
 RuleOptionTypes = (str, int, float)

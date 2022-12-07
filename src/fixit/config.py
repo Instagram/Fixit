@@ -33,6 +33,7 @@ from .ftypes import (
     RawConfig,
     RuleOptionsTable,
     RuleOptionTypes,
+    T,
 )
 from .rule import LintRule
 from .rule.cst import CSTLintRule
@@ -51,6 +52,12 @@ class ConfigError(ValueError):
         self.config = config
 
 
+class CollectionError(RuntimeError):
+    def __init__(self, msg: str, rule: QualifiedRule):
+        super().__init__(msg)
+        self.rule = rule
+
+
 def collect_rules(
     enables: Collection[QualifiedRule], disables: Collection[QualifiedRule]
 ) -> Collection[LintRule]:
@@ -58,7 +65,7 @@ def collect_rules(
     Import and return rules specified by `enables` and `disables`.
     """
 
-    def is_rule(obj: object) -> bool:
+    def is_rule(obj: Type[T]) -> bool:
         return (
             inspect.isclass(obj)
             and issubclass(obj, LintRule)
@@ -69,6 +76,7 @@ def collect_rules(
         try:
             if rule.local:
                 # TODO: handle local imports correctly
+                log.warning(f"Local rule {rule} not yet supported")
                 return
             else:
                 module = importlib.import_module(rule.module)
@@ -85,15 +93,14 @@ def collect_rules(
                     else:
                         log.warning("don't know what to do with {value!r}")
                 else:
-                    log.warning(f"{rule.name!r} not found in {module_rules}")
-                    pass  # TODO: error maybe? ¯\_(ツ)_/¯
+                    raise CollectionError(f"could not find rule {rule}", rule)
 
             else:
                 for name in sorted(module_rules.keys()):
                     yield module_rules[name]
 
-        except ImportError:
-            log.warning(f"could not import rule(s) {rule}")
+        except ImportError as e:
+            raise CollectionError(f"could not import rule(s) {rule}", rule) from e
 
     def _walk(module: ModuleType) -> Dict[str, Type[LintRule]]:
         rules: Dict[str, Type[LintRule]] = {}

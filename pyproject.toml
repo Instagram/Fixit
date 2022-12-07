@@ -44,9 +44,11 @@ dev = [
     "flake8 == 4.0.1",
     "flake8-bugbear == 22.9.23",
     "mypy == 0.981",
-    "rich == 12.6.0",
     "ufmt == 2.0.1",
     "usort == 1.0.5",
+]
+pretty = [
+    "rich >= 12.6.0",
 ]
 
 [project.scripts]
@@ -67,7 +69,7 @@ source = "vcs"
 version-file = "src/fixit/__version__.py"
 
 [tool.hatch.envs.default]
-features = ["dev"]
+features = ["dev", "pretty"]
 
 [tool.hatch.envs.default.scripts]
 test = "python -m fixit.tests"
@@ -92,4 +94,4 @@ build = [
 
 [tool.fixit]
 enable = ["fixit.rules"]
-disable = ["fixit.test.foo", "fixit.test.bar"]
+disable = []
