@@ -78,6 +78,7 @@ typecheck = "mypy --install-types --non-interactive src/fixit"
 [tool.hatch.envs.lint.scripts]
 check = [
     "flake8 src/fixit",
+    "fixit lint src/fixit",
     "ufmt check src/fixit",
     "{root}/check_copyright.sh",
 ]
@@ -94,4 +95,9 @@ build = [
 
 [tool.fixit]
 enable = ["fixit.rules"]
-disable = []
+disable = [
+    # We don't want everything to be frozen or have to set frozen=False
+    "fixit.rules:ExplicitFrozenDataclassRule",
+    # We need noqa for compat with flake8 until we jettison flake8
+    "fixit.rules:UseLintFixmeCommentRule",
+]
