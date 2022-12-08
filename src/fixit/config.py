@@ -8,6 +8,7 @@ import inspect
 import logging
 import pkgutil
 import sys
+from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 from types import ModuleType
@@ -16,6 +17,7 @@ from typing import (
     Collection,
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -58,6 +60,133 @@ class CollectionError(RuntimeError):
         self.rule = rule
 
 
+def is_rule(obj: Type[T]) -> bool:
+    """
+    Returns True if class is a concrete subclass of LintRule
+    """
+    return (
+        inspect.isclass(obj)
+        and issubclass(obj, LintRule)
+        and obj not in (LintRule, CSTLintRule)
+    )
+
+
+@contextmanager
+def local_rule_loader(rule: QualifiedRule) -> Iterator[None]:
+    """
+    Allows importing local rules from arbitrary paths as submodules of fixit.local
+
+    Imports ``fixit.local``, a "reserved" package within the fixit namespace, and
+    overrides the module's path and import spec to come from the root of the specified
+    local rule. Relative imports within the local namespace should work correctly,
+    though may cause collisions if parent-relative imports (``..foo``) are used.
+
+    When the context exits, this removes all members of the ``fixit.local`` namespace
+    from the global ``sys.modules`` dictionary, allowing subsequent imports of further
+    local rules.
+
+    This allows importlib to find local names within the fake ``fixit.local`` namespace,
+    even if they come from arbitrary places on disk, or would otherwise have namespace
+    conflicts if loaded normally using a munged ``sys.path``.
+    """
+    try:
+        import fixit.local
+
+        assert hasattr(fixit.local, "__path__")
+        assert fixit.local.__spec__ is not None
+        assert rule.root is not None
+
+        orig_spec = fixit.local.__spec__
+        fixit.local.__path__ = [rule.root.as_posix()]
+        fixit.local.__spec__ = importlib.machinery.ModuleSpec(
+            name="fixit.local",
+            loader=orig_spec.loader,
+            origin=(rule.root / "__init__.py").as_posix(),
+            is_package=True,
+        )
+
+        yield
+
+    finally:
+        for key in list(sys.modules):
+            if key.startswith("fixit.local"):
+                sys.modules.pop(key, None)
+
+
+def find_rules(rule: QualifiedRule) -> Iterable[Type[LintRule]]:
+    """
+    Import the rule's qualified module name and return a list of collected rule classes.
+
+    Imports the module by qualified name (eg ``foo.bar`` or ``.local.rules``), and
+    then walks that module to find all lint rules.
+
+    If a specific rule name is given, returns only the lint rule matching that name;
+    otherwise returns the entire list of found rules.
+    """
+    try:
+        if rule.local:
+            with local_rule_loader(rule):
+                module = importlib.import_module(rule.module, "fixit.local")
+                module_rules = walk_module(module)
+        else:
+            module = importlib.import_module(rule.module)
+            module_rules = walk_module(module)
+
+        if rule.name:
+            if value := module_rules.get(rule.name, None):
+                if issubclass(value, LintRule):
+                    yield value
+                elif is_collection(value):
+                    for v in value:
+                        if issubclass(v, LintRule):
+                            yield v
+                else:
+                    log.warning("don't know what to do with {value!r}")
+            elif rule.local:
+                raise CollectionError(
+                    f"could not find rule {rule} in {rule.root}", rule
+                )
+            else:
+                raise CollectionError(f"could not find rule {rule}", rule)
+
+        else:
+            for name in sorted(module_rules.keys()):
+                yield module_rules[name]
+
+    except ImportError as e:
+        if rule.local:
+            raise CollectionError(
+                f"could not import rule(s) {rule} from {rule.root}", rule
+            ) from e
+        else:
+            raise CollectionError(f"could not import rule(s) {rule}", rule) from e
+
+
+def walk_module(module: ModuleType) -> Dict[str, Type[LintRule]]:
+    """
+    Given a module object, return a mapping of all rule names to classes.
+
+    Looks at all objects of the module, and collects lint rules that match the
+    :func:`is_rule` predicate.
+
+    If the original module is a package (eg, ``foo.__init__``), also loads all
+    modules from that package (ignoring sub-packages), and includes their rules in
+    the final results.
+    """
+    rules: Dict[str, Type[LintRule]] = {}
+
+    members = inspect.getmembers(module, is_rule)
+    rules.update(members)
+
+    if hasattr(module, "__path__"):
+        for _, module_name, is_pkg in pkgutil.iter_modules(module.__path__):
+            if not is_pkg:  # do not recurse to sub-packages
+                mod = importlib.import_module(f".{module_name}", module.__name__)
+                rules.update(walk_module(mod))
+
+    return rules
+
+
 def collect_rules(
     enables: Collection[QualifiedRule], disables: Collection[QualifiedRule]
 ) -> Collection[LintRule]:
@@ -65,64 +194,13 @@ def collect_rules(
     Import and return rules specified by `enables` and `disables`.
     """
 
-    def is_rule(obj: Type[T]) -> bool:
-        return (
-            inspect.isclass(obj)
-            and issubclass(obj, LintRule)
-            and obj not in (LintRule, CSTLintRule)
-        )
-
-    def _collect(rule: QualifiedRule) -> Iterable[Type[LintRule]]:
-        try:
-            if rule.local:
-                # TODO: handle local imports correctly
-                log.warning(f"Local rule {rule} not yet supported")
-                return
-            else:
-                module = importlib.import_module(rule.module)
-            module_rules = _walk(module)
-
-            if rule.name:
-                if value := module_rules.get(rule.name, None):
-                    if issubclass(value, LintRule):
-                        yield value
-                    elif is_collection(value):
-                        for v in value:
-                            if issubclass(v, LintRule):
-                                yield v
-                    else:
-                        log.warning("don't know what to do with {value!r}")
-                else:
-                    raise CollectionError(f"could not find rule {rule}", rule)
-
-            else:
-                for name in sorted(module_rules.keys()):
-                    yield module_rules[name]
-
-        except ImportError as e:
-            raise CollectionError(f"could not import rule(s) {rule}", rule) from e
-
-    def _walk(module: ModuleType) -> Dict[str, Type[LintRule]]:
-        rules: Dict[str, Type[LintRule]] = {}
-
-        members = inspect.getmembers(module, is_rule)
-        rules.update(members)
-
-        if hasattr(module, "__path__"):
-            for _, module_name, is_pkg in pkgutil.iter_modules(module.__path__):
-                if not is_pkg:  # do not recurse to sub-packages
-                    mod = importlib.import_module(f".{module_name}", module.__name__)
-                    rules.update(_walk(mod))
-
-        return rules
-
     final_rules: Set[Type[LintRule]] = set()
     for qualified_rule in enables:
-        matched_rules = list(_collect(qualified_rule))
+        matched_rules = list(find_rules(qualified_rule))
         final_rules.update(matched_rules)
 
     for qualified_rule in disables:
-        matched_rules = list(_collect(qualified_rule))
+        matched_rules = list(find_rules(qualified_rule))
         final_rules.difference_update(matched_rules)
 
     return [R() for R in final_rules]
