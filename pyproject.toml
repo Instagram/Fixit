@@ -77,13 +77,13 @@ typecheck = "mypy --install-types --non-interactive src/fixit"
 
 [tool.hatch.envs.lint.scripts]
 check = [
-    "flake8 src/fixit scripts",
-    "fixit lint src/fixit scripts",
-    "ufmt check src/fixit scripts",
+    "flake8 src/fixit scripts local",
+    "fixit lint src/fixit scripts local",
+    "ufmt check src/fixit scripts local",
     "{root}/check_copyright.sh",
 ]
 fix = [
-    "ufmt format src/fixit scripts",
+    "ufmt format src/fixit scripts local",
 ]
 
 [tool.hatch.envs.docs]
@@ -94,7 +94,10 @@ build = [
 ]
 
 [tool.fixit]
-enable = ["fixit.rules"]
+enable = [
+    "fixit.rules",
+    ".local:FixitCopyrightRule",
+]
 disable = [
     # We don't want everything to be frozen or have to set frozen=False
     "fixit.rules:ExplicitFrozenDataclassRule",
