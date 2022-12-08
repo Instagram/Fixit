@@ -77,13 +77,13 @@ typecheck = "mypy --install-types --non-interactive src/fixit"
 
 [tool.hatch.envs.lint.scripts]
 check = [
-    "flake8 src/fixit",
-    "fixit lint src/fixit",
-    "ufmt check src/fixit",
+    "flake8 src/fixit scripts",
+    "fixit lint src/fixit scripts",
+    "ufmt check src/fixit scripts",
     "{root}/check_copyright.sh",
 ]
 fix = [
-    "ufmt format src/fixit",
+    "ufmt format src/fixit scripts",
 ]
 
 [tool.hatch.envs.docs]

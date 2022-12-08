@@ -4,7 +4,7 @@
 import functools
 import sys
 from argparse import ArgumentParser
-from typing import Collection, List, Optional
+from typing import Collection, Optional
 
 from libcst import Arg, BaseExpression, Call, matchers as m, Name, parse_expression
 from libcst.codemod import (
