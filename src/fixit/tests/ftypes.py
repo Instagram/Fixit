@@ -20,9 +20,9 @@ class TypesTest(TestCase):
             ("foo", {"local": None, "module": "foo", "name": None}),
             ("foo.bar", {"local": None, "module": "foo.bar", "name": None}),
             ("foo.bar:Baz", {"local": None, "module": "foo.bar", "name": "Baz"}),
-            (".foo", {"local": ".", "module": "foo", "name": None}),
-            (".foo.bar", {"local": ".", "module": "foo.bar", "name": None}),
-            (".foo.bar:Baz", {"local": ".", "module": "foo.bar", "name": "Baz"}),
+            (".foo", {"local": ".", "module": ".foo", "name": None}),
+            (".foo.bar", {"local": ".", "module": ".foo.bar", "name": None}),
+            (".foo.bar:Baz", {"local": ".", "module": ".foo.bar", "name": "Baz"}),
             ("..foo", None),
         ):
             with self.subTest(value):
@@ -48,9 +48,9 @@ class TypesTest(TestCase):
                 ftypes.QualifiedRule("foo"),
                 ftypes.QualifiedRule("foo.bar"),
                 ftypes.QualifiedRule("foo.bar", "Baz"),
-                ftypes.QualifiedRule("foo", local="."),
-                ftypes.QualifiedRule("foo.bar", local="."),
-                ftypes.QualifiedRule("foo.bar", "Baz", local="."),
+                ftypes.QualifiedRule(".foo", local="."),
+                ftypes.QualifiedRule(".foo.bar", local="."),
+                ftypes.QualifiedRule(".foo.bar", "Baz", local="."),
             },
             valid,
         )

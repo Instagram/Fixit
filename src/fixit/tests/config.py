@@ -329,7 +329,7 @@ class ConfigTest(TestCase):
                     path=self.outer / "foo.py",
                     root=self.tdp,
                     enable=[
-                        QualifiedRule("localrules", local=".", root=self.outer),
+                        QualifiedRule(".localrules", local=".", root=self.outer),
                         QualifiedRule("more.rules"),
                     ],
                     disable=[
@@ -345,7 +345,7 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.outer / "foo.py",
                     root=self.outer,
-                    enable=[QualifiedRule("localrules", local=".", root=self.outer)],
+                    enable=[QualifiedRule(".localrules", local=".", root=self.outer)],
                     disable=[QualifiedRule("main.rules")],
                 ),
             ),

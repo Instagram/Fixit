@@ -23,8 +23,10 @@ CodePosition = CSTCodePosition
 QualifiedRuleRegex = re.compile(
     r"""
     ^
-    (?P<local>\.)?
-    (?P<module>[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*)
+    (?P<module>
+        (?P<local>\.)?
+        [a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*
+    )
     (?::(?P<name>[a-zA-Z0-9_]+))?
     $
     """,
@@ -40,19 +42,20 @@ def is_collection(value: Any) -> bool:
     return isinstance(value, Iterable) and not isinstance(value, (str, bytes))
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True)
 class QualifiedRule:
     module: str
     name: Optional[str] = None
     local: Optional[str] = None
-    root: Optional[Path] = field(default=None, hash=False, compare=False, repr=False)
+    root: Optional[Path] = field(default=None, hash=False, compare=False)
 
     def __str__(self) -> str:
-        return (
-            ("." if self.local else "")
-            + self.module
-            + (f":{self.name}" if self.name else "")
-        )
+        return self.module + (f":{self.name}" if self.name else "")
+
+    def __lt__(self, other: object) -> bool:
+        if isinstance(other, QualifiedRule):
+            return str(self) < str(other)
+        return NotImplemented
 
 
 @dataclass
