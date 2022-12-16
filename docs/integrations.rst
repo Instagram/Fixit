@@ -1,8 +1,8 @@
 Integrations
 ============
 
-Version control integration (pre-commit)
-----------------------------------------
+pre-commit
+----------
 
 Fixit can be included as a hook for `pre-commit <https://pre-commit.com>`__.
 
