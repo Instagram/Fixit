@@ -1,0 +1,12 @@
+- id: fixit-lint
+  name: Fixit - lint
+  description: This hook shows Fixit lints and suggested changes without applying autofixes.
+  entry: fixit lint
+  language: python
+  types: [python]
+- id: fixit-fix
+  name: Fixit - lint and apply autofixes
+  description: This hook shows Fixit lints and applies suggested changes.
+  entry: fixit fix
+  language: python
+  types: [python]

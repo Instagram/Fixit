@@ -16,6 +16,7 @@ Fixit: advanced linting framework
     :maxdepth: 2
 
     guide
+    integrations
     api
 
 .. toctree::
