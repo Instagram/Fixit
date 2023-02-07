@@ -115,3 +115,13 @@ class Result:
     path: Path
     violation: Optional[LintViolation]
     error: Optional[Tuple[Exception, str]] = None
+
+    def __str__(self):
+        if self.violation:
+            rule_name = self.violation.rule_name
+            start_line = self.violation.range.start.line
+            start_col = self.violation.range.start.column
+            message = self.violation.message
+        else:
+            rule_name, start_line, start_col, message = None, None, None, None
+        return f"{self.path}@{start_line}:{start_col} {rule_name}: {message}"
