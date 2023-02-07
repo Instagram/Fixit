@@ -57,7 +57,7 @@ def lint(
     lint one or more paths and return suggestions
     """
     for result in fixit_paths(paths):
-        print(result)
+        click.secho(result, fg="red")
 
 
 @main.command()
