@@ -8,6 +8,8 @@ import traceback
 from pathlib import Path
 from typing import Generator, Iterable, List
 
+import click
+
 import trailrunner
 
 from .config import collect_rules, generate_config
@@ -15,6 +17,27 @@ from .engine import collect_violations
 from .ftypes import Config, FileContent, LintViolation, Result
 
 logger = logging.getLogger(__name__)
+
+
+def print_result(result: Result, debug: bool) -> None:
+    path = result.path
+    if result.violation:
+        rule_name = result.violation.rule_name
+        start_line = result.violation.range.start.line
+        start_col = result.violation.range.start.column
+        message = result.violation.message
+        click.secho(
+            f"{path}@{start_line}:{start_col} {rule_name}: {message}", fg="yellow"
+        )
+    else:
+        # An exception occurred while processing a file
+        if result.error:
+            error = result.error[0]
+            traceback_info = result.error[1]
+            if debug:
+                click.secho(f"{error}: {traceback_info}", fg="red")
+            else:
+                click.secho(f"{error}", fg="red")
 
 
 def _make_result(path: Path, violations: Iterable[LintViolation]) -> Iterable[Result]:

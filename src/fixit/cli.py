@@ -12,7 +12,7 @@ import click
 
 from fixit import __version__
 
-from .api import fixit_paths
+from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config
 from .ftypes import Options
 
@@ -57,7 +57,7 @@ def lint(
     lint one or more paths and return suggestions
     """
     for result in fixit_paths(paths):
-        click.secho(result, fg="red")
+        print_result(result, ctx.obj.debug)
 
 
 @main.command()
