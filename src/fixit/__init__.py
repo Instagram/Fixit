@@ -9,7 +9,7 @@ Linting framework built on LibCST, with automatic fixes
 
 __version__ = "0.2.0"
 
-from .api import fixit_bytes, fixit_file, fixit_paths
+from .api import fixit_bytes, fixit_file, fixit_paths, print_result
 from .ftypes import CodePosition, CodeRange, Config, FileContent, Result
 from .rule import LintRule
 from .rule.cst import CSTLintRule, CstLintRule
@@ -20,6 +20,7 @@ __all__ = [
     "fixit_bytes",
     "fixit_file",
     "fixit_paths",
+    "print_result",
     "LintRule",
     "CSTLintRule",
     "CstLintRule",
