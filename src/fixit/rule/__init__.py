@@ -7,9 +7,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
-
 from dataclasses import dataclass
-
+from pathlib import Path
 from typing import (
     Callable,
     ClassVar,
@@ -25,7 +24,7 @@ from typing import (
     Union,
 )
 
-from fixit.ftypes import CodeRange, FileContent, LintViolation
+from fixit.ftypes import CodeRange, FileContent, LintViolation, Config
 
 
 Timings = Dict[str, int]
@@ -70,6 +69,7 @@ class LintRunner(ABC, Generic[SomeRule]):
         self,
         source: FileContent,
         rules: Collection[SomeRule],
+        config: Config,
         timings_hook: Optional[TimingsHook] = None,
     ) -> Iterable[LintViolation]:
         pass
