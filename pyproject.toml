@@ -43,7 +43,7 @@ dev = [
     "black == 22.10.0",
     "flake8 == 4.0.1",
     "flake8-bugbear == 22.9.23",
-    "mypy == 0.981",
+    "mypy == 1.0.1",
     "ufmt == 2.0.1",
     "usort == 1.0.5",
 ]
