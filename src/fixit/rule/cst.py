@@ -73,7 +73,7 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
                 logger.debug(f"PERF: {name} took {duration_us} µs")
                 self.timings[name] += duration_us
 
-        metadata_cache: Optional[Mapping[ProviderT, object]] = None
+        metadata_cache: Mapping[ProviderT, object] = {}
         needs_repo_manager: Set[ProviderT] = set()
 
         for rule in rules:
@@ -90,7 +90,6 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
             repo_manager.resolve_cache()
             metadata_cache = repo_manager.get_cache_for_path(config.path.as_posix())
 
-        print(f"{metadata_cache = !r}")
         mod = MetadataWrapper(
             parse_module(source), unsafe_skip_copy=True, cache=metadata_cache
         )

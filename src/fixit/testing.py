@@ -20,6 +20,7 @@ from typing import (
     Union,
 )
 
+from fixit.ftypes import Config
 from fixit.rule import InvalidTestCase, LintRule, ValidTestCase
 
 
@@ -78,9 +79,10 @@ class LintRuleTestCase(unittest.TestCase):
         test_case: Union[ValidTestCase, InvalidTestCase],
         rule: LintRule,
     ) -> None:
+        config = Config()
         runner = rule._runner()
         reports = list(
-            runner.collect_violations(_dedent(test_case.code).encode(), [rule])
+            runner.collect_violations(_dedent(test_case.code).encode(), [rule], config)
         )
 
         if isinstance(test_case, ValidTestCase):
