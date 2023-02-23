@@ -24,12 +24,10 @@ def _match(name, metadata: Collection[QualifiedName]) -> bool:
 
 
 def match_qualified_name(name: str):
-
     return m.MatchMetadataIfTrue(QualifiedNameProvider, functools.partial(_match, name))
 
 
 class MigrateRuleToFixit2(VisitorBasedCodemodCommand):
-
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
 
     @m.call_if_inside(
