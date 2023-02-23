@@ -78,8 +78,10 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
 
         for rule in rules:
             rule._visit_hook = visit_hook
-            if FullyQualifiedNameProvider in rule.METADATA_DEPENDENCIES:
-                needs_repo_manager.add(FullyQualifiedNameProvider)
+            for provider in rule.get_inherited_dependencies():
+                if provider.gen_cache is not None:
+                    # TODO: find a better way to declare this requirement in LibCST
+                    needs_repo_manager.add(provider)
 
         if needs_repo_manager:
             repo_manager = FullRepoManager(
