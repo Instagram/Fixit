@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Optional, Set
+from typing import Optional, List
 
 import libcst as cst
 import libcst.matchers as m
@@ -24,9 +24,9 @@ class PyreMetadataRule(CstLintRule):
 
     MESSAGE = "Something something pyre"
 
-    VALID = []
+    VALID: List[Valid] = []
 
-    INVALID = []
+    INVALID: List[Invalid] = []
 
     METADATA_DEPENDENCIES = (
         # TypeInferenceProvider,
@@ -37,8 +37,9 @@ class PyreMetadataRule(CstLintRule):
         super().__init__()
 
     def visit_Attribute(self, node: cst.Attribute) -> Optional[bool]:
-        print(node)
-        print(self.get_metadata(FullyQualifiedNameProvider, node))
+        pass
+        # print(node)
+        # print(self.get_metadata(FullyQualifiedNameProvider, node))
 
     def visit_Name(self, node: cst.Name) -> Optional[bool]:
         pass
