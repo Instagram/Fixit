@@ -4,10 +4,9 @@
 # LICENSE file in the root directory of this source tree.
 
 from collections import defaultdict
-from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Type
 
-from .ftypes import FileContent, LintViolation, Config
+from .ftypes import Config, FileContent, LintViolation
 
 from .rule import LintRule, LintRunner
 

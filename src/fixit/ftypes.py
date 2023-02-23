@@ -74,8 +74,8 @@ class Config:
     Materialized configuration valid for processing a single file
     """
 
-    path: Path
-    root: Path
+    path: Path = field(default_factory=Path)
+    root: Path = field(default_factory=Path.cwd)
 
     enable: List[QualifiedRule] = field(
         default_factory=lambda: [QualifiedRule("fixit.rules")]
