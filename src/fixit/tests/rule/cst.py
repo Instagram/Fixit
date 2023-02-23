@@ -9,8 +9,7 @@ from unittest.mock import MagicMock
 import libcst as cst
 from libcst.metadata import CodePosition, CodeRange
 
-from fixit.ftypes import LintViolation
-
+from fixit.ftypes import Config, LintViolation
 from fixit.rule.cst import CSTLintRule, CSTLintRunner
 
 
@@ -32,18 +31,18 @@ class RunnerTest(TestCase):
         self.runner = CSTLintRunner()
 
     def test_no_rules(self) -> None:
-        violations = self.runner.collect_violations(b"pass", [])
+        violations = self.runner.collect_violations(b"pass", [], Config())
         self.assertEqual(list(violations), [])
 
     def test_noop_rule(self) -> None:
         rule = NoopRule()
-        violations = self.runner.collect_violations(b"pass", [rule])
+        violations = self.runner.collect_violations(b"pass", [rule], Config())
         self.assertEqual(list(violations), [])
         self.assertTrue(rule.called)
 
     def test_timing(self) -> None:
         rule = NoopRule()
-        for _ in self.runner.collect_violations(b"pass", [rule]):
+        for _ in self.runner.collect_violations(b"pass", [rule], Config()):
             pass  # exhaust the generator
         self.assertIn("NoopRule.visit_Module", self.runner.timings)
         self.assertIn("NoopRule.leave_Module", self.runner.timings)
@@ -53,7 +52,7 @@ class RunnerTest(TestCase):
         rule = NoopRule()
         hook = MagicMock()
         for i, _ in enumerate(
-            self.runner.collect_violations(b"pass", [rule], timings_hook=hook)
+            self.runner.collect_violations(b"pass", [rule], Config(), timings_hook=hook)
         ):
             if i <= 1:
                 # only called at the end
@@ -83,7 +82,7 @@ class RuleTest(TestCase):
         self.rules = [ExerciseReportRule()]
 
     def test_pass_happy(self) -> None:
-        violations = list(self.runner.collect_violations(b"pass", self.rules))
+        violations = list(self.runner.collect_violations(b"pass", self.rules, Config()))
         self.assertEqual(
             violations,
             [
@@ -97,7 +96,7 @@ class RuleTest(TestCase):
         )
 
     def test_ellipsis_position_override(self) -> None:
-        violations = list(self.runner.collect_violations(b"...", self.rules))
+        violations = list(self.runner.collect_violations(b"...", self.rules, Config()))
         self.assertEqual(
             violations,
             [
@@ -111,6 +110,8 @@ class RuleTest(TestCase):
         )
 
     def test_del_no_message(self) -> None:
-        violations = list(self.runner.collect_violations(b"del foo", self.rules))
+        violations = list(
+            self.runner.collect_violations(b"del foo", self.rules, Config())
+        )
         self.assertEqual(len(violations), 1)
         self.assertEqual(violations[0].message, "message on the class")

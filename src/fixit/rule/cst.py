@@ -17,6 +17,7 @@ from typing import (
     Iterator,
     Mapping,
     Optional,
+    Set,
     Union,
 )
 
@@ -30,12 +31,14 @@ from libcst import (
 from libcst.metadata import (
     CodePosition,
     CodeRange,
+    FullRepoManager,
+    FullyQualifiedNameProvider,
     MetadataWrapper,
     PositionProvider,
     ProviderT,
 )
 
-from fixit.ftypes import FileContent, LintViolation
+from fixit.ftypes import Config, FileContent, LintViolation
 from . import LintRule, LintRunner, TimingsHook
 
 
@@ -50,6 +53,7 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
         self,
         source: FileContent,
         rules: Collection["CSTLintRule"],
+        config: Config,
         timings_hook: Optional[TimingsHook] = None,
     ) -> Iterable[LintViolation]:
         """Run multiple `CSTLintRule`s and yield any lint violations.
@@ -69,10 +73,28 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
                 logger.debug(f"PERF: {name} took {duration_us} µs")
                 self.timings[name] += duration_us
 
+        metadata_cache: Mapping[ProviderT, object] = {}
+        needs_repo_manager: Set[ProviderT] = set()
+
         for rule in rules:
             rule._visit_hook = visit_hook
+            for provider in rule.get_inherited_dependencies():
+                if provider.gen_cache is not None:
+                    # TODO: find a better way to declare this requirement in LibCST
+                    needs_repo_manager.add(provider)
 
-        mod = MetadataWrapper(parse_module(source), unsafe_skip_copy=True)
+        if needs_repo_manager:
+            repo_manager = FullRepoManager(
+                repo_root_dir=config.root.as_posix(),
+                paths=[config.path.as_posix()],
+                providers={FullyQualifiedNameProvider},
+            )
+            repo_manager.resolve_cache()
+            metadata_cache = repo_manager.get_cache_for_path(config.path.as_posix())
+
+        mod = MetadataWrapper(
+            parse_module(source), unsafe_skip_copy=True, cache=metadata_cache
+        )
         mod.visit_batched(rules)
         for rule in rules:
             for violation in rule._violations:

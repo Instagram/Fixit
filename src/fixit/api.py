@@ -61,7 +61,7 @@ def fixit_bytes(
     Lint raw bytes content representing a single path, using the given configuration.
     """
     rules = collect_rules(config.enable, config.disable)
-    yield from _make_result(path, collect_violations(content, rules))
+    yield from _make_result(path, collect_violations(content, rules, config))
 
 
 def fixit_file(
