@@ -79,7 +79,6 @@ class RewriteToLiteralRule(CstLintRule):
             node,
             m.Call(func=m.Name("tuple") | m.Name("list") | m.Name("dict"), args=[]),
         ):
-
             pairs_matcher = m.ZeroOrMore(
                 m.Element(m.Tuple(elements=[m.DoNotCare(), m.DoNotCare()]))
                 | m.Element(m.List(elements=[m.DoNotCare(), m.DoNotCare()]))
