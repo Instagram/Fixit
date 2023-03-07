@@ -31,7 +31,7 @@ def tracked_files() -> Iterable[Path]:
 def main():
     error = False
     for path in tracked_files():
-        content = path.read_text()
+        content = path.read_text("utf-8")
         if EXPECTED_HEADER not in content:
             print(f"Missing or incomplete copyright in {path}")
             error = True
