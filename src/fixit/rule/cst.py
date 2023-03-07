@@ -93,7 +93,9 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
             metadata_cache = repo_manager.get_cache_for_path(config.path.as_posix())
 
         mod = MetadataWrapper(
-            parse_module(source), unsafe_skip_copy=True, cache=metadata_cache
+            parse_module(source, path=config.path),
+            unsafe_skip_copy=True,
+            cache=metadata_cache,
         )
         mod.visit_batched(rules)
         for rule in rules:
