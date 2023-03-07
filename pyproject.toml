@@ -80,7 +80,7 @@ check = [
     "flake8 src/fixit scripts",
     "fixit lint src/fixit scripts",
     "ufmt check src/fixit scripts",
-    "{root}/check_copyright.sh",
+    "python scripts/check_copyright.py",
 ]
 fix = [
     "ufmt format src/fixit scripts",
