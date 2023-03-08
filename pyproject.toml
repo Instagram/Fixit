@@ -72,7 +72,7 @@ version-file = "src/fixit/__version__.py"
 features = ["dev", "pretty"]
 
 [tool.hatch.envs.default.scripts]
-test = "python -m fixit.tests"
+test = "python3 -m fixit.tests"
 typecheck = "mypy --install-types --non-interactive src/fixit"
 
 [tool.hatch.envs.lint.scripts]
