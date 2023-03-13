@@ -32,7 +32,6 @@ from libcst.metadata import (
     CodePosition,
     CodeRange,
     FullRepoManager,
-    FullyQualifiedNameProvider,
     MetadataWrapper,
     PositionProvider,
     ProviderT,
