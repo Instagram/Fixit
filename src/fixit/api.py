@@ -36,9 +36,9 @@ def print_result(result: Result, debug: bool = False) -> None:
         # An exception occurred while processing a file
         error, tb = result.error
         if debug:
-            click.secho(f"{error}: {tb}", fg="red")
+            click.secho(f"{path}: {error}: {tb}", fg="red")
         else:
-            click.secho(f"{error}", fg="red")
+            click.secho(f"{path}: {error}", fg="red")
 
 
 def _make_result(path: Path, violations: Iterable[LintViolation]) -> Iterable[Result]:
