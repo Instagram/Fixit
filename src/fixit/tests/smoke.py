@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from click.testing import CliRunner
@@ -30,3 +31,35 @@ class SmokeTest(TestCase):
         result = self.runner.invoke(main, ["lint", project_dir], catch_exceptions=False)
         self.assertEqual(result.output, "")
         self.assertEqual(result.exit_code, 0)
+
+    def test_directory_with_violations(self) -> None:
+        with TemporaryDirectory() as td:
+            tdp = Path(td).resolve()
+            (tdp / "clean.py").write_text("name = 'Kirby'\nprint(f'hello {name}')")
+            (tdp / "dirty.py").write_text("name = 'Kirby'\nprint('hello %s' % name)\n")
+
+            result = self.runner.invoke(main, ["lint", td])
+            self.assertIn("dirty.py@2:6 UseFstringRule:", result.output)
+            self.assertEqual(result.exit_code, 1)
+
+    def test_directory_with_errors(self) -> None:
+        with TemporaryDirectory() as td:
+            tdp = Path(td).resolve()
+            (tdp / "clean.py").write_text("name = 'Kirby'\nprint(f'hello {name}')")
+            (tdp / "broken.py").write_text("print)\n")
+
+            result = self.runner.invoke(main, ["lint", td])
+            self.assertIn("broken.py: Syntax Error @ 1:6.", result.output)
+            self.assertEqual(result.exit_code, 2)
+
+    def test_directory_with_violations_and_errors(self) -> None:
+        with TemporaryDirectory() as td:
+            tdp = Path(td).resolve()
+            (tdp / "clean.py").write_text("name = 'Kirby'\nprint(f'hello {name}')")
+            (tdp / "dirty.py").write_text("name = 'Kirby'\nprint('hello %s' % name)\n")
+            (tdp / "broken.py").write_text("print)\n")
+
+            result = self.runner.invoke(main, ["lint", td])
+            self.assertIn("dirty.py@2:6 UseFstringRule:", result.output)
+            self.assertIn("broken.py: Syntax Error @ 1:6.", result.output)
+            self.assertEqual(result.exit_code, 3)
