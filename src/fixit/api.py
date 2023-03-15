@@ -83,6 +83,14 @@ def fixit_file(
         yield Result(path, violation=None, error=(error, traceback.format_exc()))
 
 
+def _fixit_file_wrapper(path: Path) -> List[Result]:
+    """
+    Wrapper because generators can't be pickled or used directly via multiprocessing
+    TODO: replace this with some sort of queue or whatever
+    """
+    return list(fixit_file(path))
+
+
 def fixit_paths(
     paths: Iterable[Path],
 ) -> Generator[Result, None, None]:
@@ -96,5 +104,8 @@ def fixit_paths(
     for path in paths:
         expanded_paths.extend(trailrunner.walk(path))
 
-    for path in expanded_paths:
-        yield from fixit_file(path)
+    if len(expanded_paths) == 1:
+        yield from fixit_file(expanded_paths[0])
+    else:
+        for _, results in trailrunner.run_iter(expanded_paths, _fixit_file_wrapper):
+            yield from results
