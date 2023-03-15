@@ -107,5 +107,5 @@ def fixit_paths(
     if len(expanded_paths) == 1:
         yield from fixit_file(expanded_paths[0])
     else:
-        for path, results in trailrunner.run_iter(expanded_paths, _fixit_file_wrapper):
+        for _, results in trailrunner.run_iter(expanded_paths, _fixit_file_wrapper):
             yield from results
