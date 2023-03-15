@@ -56,14 +56,8 @@ def lint(
     """
     lint one or more paths and return suggestions
     """
-    exit_code = 0
     for result in fixit_paths(paths):
-        if result.violation:
-            exit_code |= 1
-        if result.error:
-            exit_code |= 2
         print_result(result, ctx.obj.debug)
-    ctx.exit(exit_code)
 
 
 @main.command()
