@@ -6,7 +6,18 @@
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypedDict,
+    TypeVar,
+    Union,
+)
 
 from libcst._add_slots import add_slots
 from libcst.metadata import CodePosition as CSTCodePosition, CodeRange as CSTCodeRange
@@ -32,6 +43,12 @@ QualifiedRuleRegex = re.compile(
     """,
     re.VERBOSE,
 )
+
+
+class QualifiedRuleRegexResult(TypedDict):
+    module: str
+    name: Optional[str]
+    local: Optional[str]
 
 
 def is_sequence(value: Any) -> bool:

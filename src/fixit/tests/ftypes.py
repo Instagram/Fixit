@@ -3,14 +3,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Set
+from typing import cast, Set
 from unittest import TestCase
 
 from .. import ftypes
 
 
 class TypesTest(TestCase):
-    def test_qualified_rule(self):
+    def test_qualified_rule(self) -> None:
         valid: Set[ftypes.QualifiedRule] = set()
 
         for value, expected in (
@@ -28,10 +28,12 @@ class TypesTest(TestCase):
             with self.subTest(value):
                 match = ftypes.QualifiedRuleRegex.match(value)
                 if expected is not None:
-                    self.assertIsNotNone(match, f"{value!r} should match QualifiedRule")
+                    if match is None:
+                        self.fail(f"{value!r} should match QualifiedRule")
                     self.assertEqual(expected, match.groupdict())
 
-                    rule = ftypes.QualifiedRule(**match.groupdict())
+                    kwargs = cast(ftypes.QualifiedRuleRegexResult, match.groupdict())
+                    rule = ftypes.QualifiedRule(**kwargs)
                     self.assertEqual(expected["local"], rule.local)
                     self.assertEqual(expected["module"], rule.module)
                     self.assertEqual(expected["name"], rule.name)
