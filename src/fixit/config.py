@@ -45,6 +45,7 @@ if sys.version_info >= (3, 11):
 else:
     import tomli as tomllib
 
+FIXIT_CONFIG_FILENAMES = ("fixit.toml", ".fixit.toml", "pyproject.toml")
 FIXIT_LOCAL_MODULE = "fixit.local"
 
 log = logging.getLogger(__name__)
@@ -230,11 +231,7 @@ def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
     path.relative_to(root)  # enforce path being inside root
 
     while True:
-        candidates = (
-            path / "fixit.toml",
-            path / "pyproject.toml",
-        )
-
+        candidates = (path / filename for filename in FIXIT_CONFIG_FILENAMES)
         for candidate in candidates:
             if candidate.is_file():
                 results.append(candidate)
