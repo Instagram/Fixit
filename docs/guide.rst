@@ -6,10 +6,10 @@ Configuration
 
 Fixit uses `TOML format <https://toml.io>`_ for configuration, and supports
 hierarchical, cascading configuration. Fixit will read values from both the
-standardized ``pyproject.toml`` file as well as a separate ``fixit.toml`` file,
-with values from the latter taking precendence over the former, and values from
-files "nearer" to those being linted taking precedence over values from files
-"further" away.
+standardized ``pyproject.toml`` file as well as a separate ``.fixit.toml`` or
+``fixit.toml`` file, with values from the latter taking precendence over the
+former, and values from files "nearer" to those being linted taking precedence
+over values from files "further" away.
 
 When determining the configuration to use for a given path, Fixit will continue
 looking upward in the filesystem until it reaches either the root of the
