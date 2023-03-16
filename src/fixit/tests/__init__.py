@@ -16,3 +16,7 @@ add_lint_rule_tests_to_module(
     globals(),
     collect_rules(enables=[QualifiedRule("fixit.rules")], disables=[]),
 )
+add_lint_rule_tests_to_module(
+    globals(),
+    collect_rules(enables=[QualifiedRule("fixit.rules.pyflakes")], disables=[]),
+)
