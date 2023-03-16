@@ -40,7 +40,7 @@ class ConfigTest(TestCase):
                 """
             )
         )
-        (self.outer / "fixit.toml").write_text(
+        (self.outer / ".fixit.toml").write_text(
             dedent(
                 """
                 [tool.fixit]
@@ -80,13 +80,13 @@ class ConfigTest(TestCase):
                 "outer",
                 self.outer,
                 None,
-                [self.outer / "fixit.toml", self.tdp / "pyproject.toml"],
+                [self.outer / ".fixit.toml", self.tdp / "pyproject.toml"],
             ),
             (
                 "outer file",
                 self.outer / "frob.py",
                 None,
-                [self.outer / "fixit.toml", self.tdp / "pyproject.toml"],
+                [self.outer / ".fixit.toml", self.tdp / "pyproject.toml"],
             ),
             (
                 "inner",
@@ -95,7 +95,7 @@ class ConfigTest(TestCase):
                 [
                     self.inner / "fixit.toml",
                     self.inner / "pyproject.toml",
-                    self.outer / "fixit.toml",
+                    self.outer / ".fixit.toml",
                     self.tdp / "pyproject.toml",
                 ],
             ),
@@ -106,11 +106,11 @@ class ConfigTest(TestCase):
                 [
                     self.inner / "fixit.toml",
                     self.inner / "pyproject.toml",
-                    self.outer / "fixit.toml",
+                    self.outer / ".fixit.toml",
                     self.tdp / "pyproject.toml",
                 ],
             ),
-            ("outer from outer", self.outer, self.outer, [self.outer / "fixit.toml"]),
+            ("outer from outer", self.outer, self.outer, [self.outer / ".fixit.toml"]),
             (
                 "inner from outer",
                 self.inner,
@@ -118,7 +118,7 @@ class ConfigTest(TestCase):
                 [
                     self.inner / "fixit.toml",
                     self.inner / "pyproject.toml",
-                    self.outer / "fixit.toml",
+                    self.outer / ".fixit.toml",
                 ],
             ),
             (
@@ -136,7 +136,7 @@ class ConfigTest(TestCase):
         # in-out priority order
         innerA = self.inner / "fixit.toml"
         innerB = self.inner / "pyproject.toml"
-        outer = self.outer / "fixit.toml"
+        outer = self.outer / ".fixit.toml"
         top = self.tdp / "pyproject.toml"
 
         for name, paths, expected in (
