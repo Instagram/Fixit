@@ -32,7 +32,6 @@ from libcst.metadata import (
     CodePosition,
     CodeRange,
     FullRepoManager,
-    FullyQualifiedNameProvider,
     MetadataWrapper,
     PositionProvider,
     ProviderT,
@@ -87,7 +86,7 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
             repo_manager = FullRepoManager(
                 repo_root_dir=config.root.as_posix(),
                 paths=[config.path.as_posix()],
-                providers={FullyQualifiedNameProvider},
+                providers=needs_repo_manager,
             )
             repo_manager.resolve_cache()
             metadata_cache = repo_manager.get_cache_for_path(config.path.as_posix())
