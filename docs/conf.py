@@ -57,8 +57,6 @@ autodoc_member_order = "groupwise"
 highlight_language = "python3"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "pathspec": ("https://python-path-specification.readthedocs.io/en/latest/", None),
-    "stdlib_list": ("https://python-stdlib-list.readthedocs.io/en/latest/", None),
 }
 master_doc = "index"
 
