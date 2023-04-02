@@ -29,13 +29,13 @@ class ConfigTest(TestCase):
                 """
                 [tool.fixit]
                 root = true
-                enable = ["main.rules", "more.rules"]
-                disable = ["main.rules.SomethingSpecific"]
+                enable = ["more.rules"]
+                disable = ["fixit.rules.SomethingSpecific"]
 
                 [[tool.fixit.overrides]]
                 path = "other"
                 enable = ["other.stuff"]
-                disable = ["main.rules"]
+                disable = ["fixit.rules"]
                 options = {"other.stuff.Whatever"={key="value"}}
                 """
             )
@@ -45,7 +45,7 @@ class ConfigTest(TestCase):
                 """
                 [tool.fixit]
                 enable = [".localrules"]
-                disable = ["main.rules"]
+                disable = ["fixit.rules"]
                 """
             )
         )
@@ -160,19 +160,19 @@ class ConfigTest(TestCase):
                 [innerB, outer, top],
                 [
                     RawConfig(
-                        outer, {"enable": [".localrules"], "disable": ["main.rules"]}
+                        outer, {"enable": [".localrules"], "disable": ["fixit.rules"]}
                     ),
                     RawConfig(
                         top,
                         {
                             "root": True,
-                            "enable": ["main.rules", "more.rules"],
-                            "disable": ["main.rules.SomethingSpecific"],
+                            "enable": ["more.rules"],
+                            "disable": ["fixit.rules.SomethingSpecific"],
                             "overrides": [
                                 {
                                     "path": "other",
                                     "enable": ["other.stuff"],
-                                    "disable": ["main.rules"],
+                                    "disable": ["fixit.rules"],
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
@@ -187,19 +187,19 @@ class ConfigTest(TestCase):
                 [outer, top],
                 [
                     RawConfig(
-                        outer, {"enable": [".localrules"], "disable": ["main.rules"]}
+                        outer, {"enable": [".localrules"], "disable": ["fixit.rules"]}
                     ),
                     RawConfig(
                         top,
                         {
                             "root": True,
-                            "enable": ["main.rules", "more.rules"],
-                            "disable": ["main.rules.SomethingSpecific"],
+                            "enable": ["more.rules"],
+                            "disable": ["fixit.rules.SomethingSpecific"],
                             "overrides": [
                                 {
                                     "path": "other",
                                     "enable": ["other.stuff"],
-                                    "disable": ["main.rules"],
+                                    "disable": ["fixit.rules"],
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
@@ -217,13 +217,13 @@ class ConfigTest(TestCase):
                         top,
                         {
                             "root": True,
-                            "enable": ["main.rules", "more.rules"],
-                            "disable": ["main.rules.SomethingSpecific"],
+                            "enable": ["more.rules"],
+                            "disable": ["fixit.rules.SomethingSpecific"],
                             "overrides": [
                                 {
                                     "path": "other",
                                     "enable": ["other.stuff"],
-                                    "disable": ["main.rules"],
+                                    "disable": ["fixit.rules"],
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
@@ -263,7 +263,7 @@ class ConfigTest(TestCase):
                 Config(
                     path=target,
                     root=root,
-                    enable=[QualifiedRule("foo")],
+                    enable=[QualifiedRule("fixit.rules"), QualifiedRule("foo")],
                     disable=[QualifiedRule("bar")],
                 ),
             ),
@@ -280,7 +280,11 @@ class ConfigTest(TestCase):
                 Config(
                     path=target,
                     root=(root / "a"),
-                    enable=[QualifiedRule("bar"), QualifiedRule("foo")],
+                    enable=[
+                        QualifiedRule("bar"),
+                        QualifiedRule("fixit.rules"),
+                        QualifiedRule("foo"),
+                    ],
                 ),
             ),
             (
@@ -300,7 +304,9 @@ class ConfigTest(TestCase):
                     ),
                 ],
                 Config(
-                    path=target, root=(root / "a/b/c"), enable=[QualifiedRule("foo")]
+                    path=target,
+                    root=(root / "a/b/c"),
+                    enable=[QualifiedRule("fixit.rules"), QualifiedRule("foo")],
                 ),
             ),
         ):
@@ -317,7 +323,11 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.inner / "foo.py",
                     root=self.inner,
-                    enable=[QualifiedRule("fake8"), QualifiedRule("make8")],
+                    enable=[
+                        QualifiedRule("fake8"),
+                        QualifiedRule("fixit.rules"),
+                        QualifiedRule("make8"),
+                    ],
                     disable=[QualifiedRule("foo.bar")],
                 ),
             ),
@@ -333,8 +343,8 @@ class ConfigTest(TestCase):
                         QualifiedRule("more.rules"),
                     ],
                     disable=[
-                        QualifiedRule("main.rules"),
-                        QualifiedRule("main.rules.SomethingSpecific"),
+                        QualifiedRule("fixit.rules"),
+                        QualifiedRule("fixit.rules.SomethingSpecific"),
                     ],
                 ),
             ),
@@ -346,7 +356,7 @@ class ConfigTest(TestCase):
                     path=self.outer / "foo.py",
                     root=self.outer,
                     enable=[QualifiedRule(".localrules", local=".", root=self.outer)],
-                    disable=[QualifiedRule("main.rules")],
+                    disable=[QualifiedRule("fixit.rules")],
                 ),
             ),
             (
@@ -358,8 +368,8 @@ class ConfigTest(TestCase):
                     root=self.tdp,
                     enable=[QualifiedRule("more.rules"), QualifiedRule("other.stuff")],
                     disable=[
-                        QualifiedRule("main.rules"),
-                        QualifiedRule("main.rules.SomethingSpecific"),
+                        QualifiedRule("fixit.rules"),
+                        QualifiedRule("fixit.rules.SomethingSpecific"),
                     ],
                     options={"other.stuff.Whatever": {"key": "value"}},
                 ),
@@ -371,8 +381,8 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.tdp / "foo.py",
                     root=self.tdp,
-                    enable=[QualifiedRule("main.rules"), QualifiedRule("more.rules")],
-                    disable=[QualifiedRule("main.rules.SomethingSpecific")],
+                    enable=[QualifiedRule("fixit.rules"), QualifiedRule("more.rules")],
+                    disable=[QualifiedRule("fixit.rules.SomethingSpecific")],
                 ),
             ),
         ):

@@ -325,7 +325,7 @@ def merge_configs(
     """
 
     config: RawConfig
-    enable_rules: Set[QualifiedRule] = set()
+    enable_rules: Set[QualifiedRule] = {QualifiedRule("fixit.rules")}
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
 
@@ -407,7 +407,7 @@ def merge_configs(
     return Config(
         path=path,
         root=root or Path(path.anchor),
-        enable=sorted(enable_rules) or [QualifiedRule("fixit.rules")],
+        enable=sorted(enable_rules),
         disable=sorted(disable_rules),
         options=rule_options,
     )
