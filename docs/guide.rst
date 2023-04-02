@@ -1,6 +1,9 @@
 User Guide
 ==========
 
+.. include:: quickstart.rst
+
+
 Configuration
 -------------
 
@@ -106,3 +109,6 @@ defining the subpath it applies to, along with any values from the tables above:
     [[tool.fixit.overrides]]
     path = "fizz/buzz"
     enable = ["plugin.SomethingNeat"]
+
+
+.. include:: rules.rst

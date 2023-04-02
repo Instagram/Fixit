@@ -3,8 +3,20 @@ API Reference
 
 .. module:: fixit
 
-Simple API
+
+Lint rules
 ----------
+
+.. autoclass:: CSTLintRule
+.. autoclass:: ValidTestCase
+.. autoclass:: InvalidTestCase
+.. 
+
+Frontend
+--------
+
+Simple API
+^^^^^^^^^^
 
 .. autofunction:: fixit_paths
 .. autofunction:: fixit_file
@@ -14,7 +26,7 @@ Simple API
 
 
 Advanced API
-------------
+^^^^^^^^^^^^
 
 .. autofunction:: fixit_bytes
 

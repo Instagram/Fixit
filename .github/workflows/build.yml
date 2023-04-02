@@ -42,3 +42,5 @@ jobs:
       - name: Docs
         run: |
           python -m hatch run docs:build
+      - name: Generated changes
+        run: git diff --exit-code

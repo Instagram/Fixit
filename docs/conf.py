@@ -46,7 +46,11 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = [
+    # included in other docs
+    "rules.rst",
+    "quickstart.rst",
+]
 
 autodoc_default_options = {
     "members": True,
@@ -57,6 +61,7 @@ autodoc_member_order = "groupwise"
 highlight_language = "python3"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
+    "libcst": ("https://libcst.rtfd.io/en/latest", None),
 }
 master_doc = "index"
 
@@ -68,7 +73,7 @@ master_doc = "index"
 html_theme = "alabaster"
 html_theme_options = {
     "logo": "logo/logo.svg",
-    "description": "Linting framework",
+    "description": "Advanced linting framework",
     "fixed_sidebar": True,
     "badge_branch": "master",
     "github_button": False,

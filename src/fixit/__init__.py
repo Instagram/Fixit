@@ -7,8 +7,7 @@
 Linting framework built on LibCST, with automatic fixes
 """
 
-__version__ = "0.2.0"
-
+from .__version__ import __version__
 from .api import fixit_bytes, fixit_file, fixit_paths, print_result
 from .ftypes import CodePosition, CodeRange, Config, FileContent, Result
 from .rule import LintRule
