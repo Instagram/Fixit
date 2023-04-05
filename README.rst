@@ -2,7 +2,7 @@
    :width: 600 px
    :alt: Fixit
 
-|readthedocs-badge| |pypi-badge|
+|readthedocs-badge| |pypi-badge| |changelog-badge| |license-badge|
 
 .. |readthedocs-badge| image:: https://readthedocs.org/projects/pip/badge/?version=latest&style=flat
    :target: https://fixit.readthedocs.io/en/latest/
@@ -10,38 +10,33 @@
 
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/fixit.svg
    :target: https://pypi.org/project/fixit
-   :alt: PYPI
+   :alt: PyPI
+
+.. |changelog-badge| image:: https://img.shields.io/badge/change-log-blue.svg
+   :target: https://fixit.readthedocs.io/en/latest/changelog.html
+   :alt: Changelog
+
+.. |license-badge| image:: https://img.shields.io/pypi/l/fixit.svg
+   :target: https://github.com/instagram/fixit/blob/main/LICENSE
+   :alt: MIT License
+
+Fixit provides a highly configurable linting framework with support for
+autofixes, custom "local" lint rules, and hierarchical configuration, built
+on `LibCST <https://libcst.rtfd.io>`_.
+
+Fixit makes it quick and easy to write new lint rules and offer suggested
+changes for any errors found, which can then be accepted automatically,
+or presented to the user for consideration.
 
 
 **Fixit is currently being rebuilt for better performance and configurability.**
-You most likely want to see the `stable docs <https://fixit.rtfd.io>`_
+If you are using Fixit 0.1.4 or older, take a look at the
+`stable docs <https://fixit.rtfd.io/en/stable>`_
 or the `stable branch <https://github.com/Instagram/Fixit/tree/0.x>`_.
 
 
-Setup
------
-
-Install Fixit from PyPI:
-
-.. code-block:: console
-
-   $ pip install fixit
-
-
-Usage
------
-
-See lints and suggested changes for a set of source files:
-
-.. code-block:: console
-
-   $ fixit lint <paths>
-
-Apply suggested changes on those same files automatically:
-
-.. code-block:: console
-
-   $ fixit fix <paths>
+.. include:: guide/quickstart.rst
+.. include:: docs/quickstart.rst
 
 For more details, see the `user guide <https://fixit.rtfd.io>`_.
 

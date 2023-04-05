@@ -22,6 +22,9 @@ div.meta-logo a, div.meta-logo a:hover, div.meta-badges a:hover {
     border: none;
 }
 
+dl.class, dl.function {
+    margin-top: 30px;
+}
 dl.function, dl.attribute, dl.class, dl.method, dl.field-list, dl.data {
     margin-bottom: 15px;
 }

@@ -85,10 +85,10 @@ class UseFstringRule(CstLintRule):
         3: result = a_long_function_call() + b_another_long_function_call()
         f"this is the answer: {result}"
 
-        Line 1 is more readable than line 2. Ideally, we’d like developers to manually fix this case to line 3
+        Line 1 is more readable than line 2. Ideally, we'd like developers to manually fix this case to line 3
 
     2. only %s placeholders are linted against for now. We leave it as future work to support other placeholders.
-        For example, %d raises TypeError for non-numeric objects, whereas f“{x:d}” raises ValueError.
+        For example, %d raises TypeError for non-numeric objects, whereas f"{x:d}" raises ValueError.
         This discrepancy in the type of exception raised could potentially break the logic in the code where the exception is handled
     """
 

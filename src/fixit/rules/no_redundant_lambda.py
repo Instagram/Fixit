@@ -12,14 +12,16 @@ from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Vali
 
 UNNECESSARY_LAMBDA: str = (
     "The lambda that is wrapping {function} is redundant. "
-    + "It can unwrapped safely and used purely."
+    "It can unwrapped safely and used purely."
 )
 
 
 class NoRedundantLambdaRule(CstLintRule):
-    """A lamba function which has a single objective of
+    """
+    A lamba function which has a single objective of
     passing all it is arguments to another callable can
-    be safely replaced by that callable."""
+    be safely replaced by that callable.
+    """
 
     VALID = [
         Valid("lambda x: foo(y)"),

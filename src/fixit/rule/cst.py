@@ -15,6 +15,7 @@ from typing import (
     ContextManager,
     Iterable,
     Iterator,
+    List,
     Mapping,
     Optional,
     Set,
@@ -38,7 +39,7 @@ from libcst.metadata import (
 )
 
 from fixit.ftypes import Config, FileContent, LintViolation
-from . import LintRule, LintRunner, TimingsHook
+from . import InvalidTestCase, LintRule, LintRunner, TimingsHook
 
 
 VisitorMethod = Callable[[CSTNode], None]
@@ -103,7 +104,8 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
 
 
 class CSTLintRule(LintRule, BatchableCSTVisitor):
-    """Lint rule implemented using LibCST.
+    """
+    Lint rule implemented using LibCST.
 
     To build a new lint rule, subclass this and `Implement a CST visitor
     <https://libcst.readthedocs.io/en/latest/tutorial.html#Build-Visitor-or-Transformer>`_.
@@ -173,6 +175,21 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
             name: _wrap(f"{type(self).__name__}.{name}", visitor)
             for (name, visitor) in super().get_visitors().items()
         }
+
+    AUTOFIX = False  # set by __subclass_init__
+    """
+    Whether the lint rule contains an autofix.
+
+    Set to ``True`` automatically when :attr:`INVALID` contains at least one
+    test case that provides an expected replacment.
+    """
+
+    def __init_subclass__(cls) -> None:
+        invalid: List[Union[str, InvalidTestCase]] = getattr(cls, "INVALID", [])
+        for case in invalid:
+            if isinstance(case, InvalidTestCase) and case.expected_replacement:
+                cls.AUTOFIX = True
+                return
 
 
 CstLintRule = CSTLintRule
