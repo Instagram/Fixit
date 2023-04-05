@@ -4,10 +4,8 @@
 # LICENSE file in the root directory of this source tree.
 
 from pathlib import Path
-from textwrap import dedent, fill, indent
-from typing import Type
+from textwrap import dedent, indent
 
-from fixit import CSTLintRule
 from fixit.config import find_rules
 from fixit.ftypes import QualifiedRule
 
