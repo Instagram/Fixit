@@ -16,7 +16,7 @@ RULES_DOC = Path(__file__).parent.parent / "docs" / "guide" / "builtins.rst"
 PAGE_TPL = Template(
     r"""
 ..
-   THIS FILE IS GENERATED — DO NOT EDIT BY HAND!
+   THIS FILE IS GENERATED - DO NOT EDIT BY HAND!
    Run `make html` or `scripts/document_rules.py` to regenerate this file.
 
 .. module:: fixit.rules
@@ -64,6 +64,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
 {{ redent(case.expected_replacement, "            ") }}
+
 {% endif %}
 {% endfor %}
 {% endfor %}

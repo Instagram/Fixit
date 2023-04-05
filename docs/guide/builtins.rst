@@ -1,6 +1,6 @@
 
 ..
-   THIS FILE IS GENERATED — DO NOT EDIT BY HAND!
+   THIS FILE IS GENERATED - DO NOT EDIT BY HAND!
    Run `make html` or `scripts/document_rules.py` to regenerate this file.
 
 .. module:: fixit.rules
@@ -150,12 +150,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             isinstance(x, (y, z))
+
         .. code:: python
 
             isinstance(x, y) or isinstance(x, z) or isinstance(x, q)
 
             # suggested fix
             isinstance(x, (y, z, q))
+
 .. class:: ComparePrimitivesByEqualRule
 
     Enforces the use of ``==`` and ``!=`` in comparisons to primitives rather than ``is`` and ``is not``.
@@ -187,12 +189,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             a == 1
+
         .. code:: python
 
             a is '1'
 
             # suggested fix
             a == '1'
+
 .. class:: CompareSingletonPrimitivesByIsRule
 
     Enforces the use of `is` and `is not` in comparisons to singleton primitives (None, True, False) rather than == and !=.
@@ -224,12 +228,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             x is not True
+
         .. code:: python
 
             x != False
 
             # suggested fix
             x is not False
+
 .. class:: ExplicitFrozenDataclassRule
 
     Encourages the use of frozen dataclass objects by telling users to specify the
@@ -274,6 +280,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             @dataclass(frozen=True)  # not called as a function
             @another_unrelated_decorator
             class Cls: pass
+
         .. code:: python
 
             from dataclasses import dataclass
@@ -284,6 +291,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             from dataclasses import dataclass
             @dataclass(frozen=True)  # called as a function, no kwargs
             class Cls: pass
+
 .. class:: NoAssertEqualsRule
 
     Discourages use of ``assertEquals`` as it is deprecated (see https://docs.python.org/2/library/unittest.html#deprecated-aliases
@@ -312,6 +320,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             self.assertEqual(a, b)
+
 .. class:: NoAssertTrueForComparisonsRule
 
     Finds incorrect use of ``assertTrue`` when the intention is to compare two values.
@@ -344,12 +353,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             self.assertEqual(a, 3)
+
         .. code:: python
 
             self.assertTrue(hash(s[:4]), 0x1234)
 
             # suggested fix
             self.assertEqual(hash(s[:4]), 0x1234)
+
 .. class:: NoInheritFromObjectRule
 
     In Python 3, a class is inherited from ``object`` by default.
@@ -383,6 +394,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             # suggested fix
             class B:
                 pass
+
         .. code:: python
 
             class B(object, A):
@@ -391,6 +403,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             # suggested fix
             class B(A):
                 pass
+
 .. class:: NoNamedTupleRule
 
     Enforce the use of ``dataclasses.dataclass`` decorator instead of ``NamedTuple`` for cleaner customization and
@@ -434,6 +447,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             @dataclass(frozen=True)
             class Foo:
                 pass
+
         .. code:: python
 
             from typing import NamedTuple as NT
@@ -447,6 +461,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             @dataclass(frozen=True)
             class Foo:
                 pass
+
 .. class:: NoRedundantArgumentsSuperRule
 
     Remove redundant arguments when using super for readability.
@@ -484,6 +499,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             class Foo(Bar):
                 def foo(self, bar):
                     super().foo(bar)
+
         .. code:: python
 
             class Foo(Bar):
@@ -496,6 +512,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
                 @classmethod
                 def foo(cls, bar):
                     super().foo(bar)
+
 .. class:: NoRedundantFStringRule
 
     Remove redundant f-string without placeholders.
@@ -525,12 +542,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             bad: str = "bad" + "bad"
+
         .. code:: python
 
             bad: str = f'bad'
 
             # suggested fix
             bad: str = 'bad'
+
 .. class:: NoRedundantLambdaRule
 
     A lamba function which has a single objective of
@@ -559,12 +578,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             self.func
+
         .. code:: python
 
             lambda x: foo(x)
 
             # suggested fix
             foo
+
 .. class:: NoRedundantListComprehensionRule
 
     A derivative of flake8-comprehensions's C407 rule.
@@ -591,12 +612,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             any(val for val in iterable)
+
         .. code:: python
 
             all([val for val in iterable])
 
             # suggested fix
             all(val for val in iterable)
+
 .. class:: NoStaticIfConditionRule
 
     Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
@@ -676,6 +699,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             def foo() -> Class:
                 return Class()
+
         .. code:: python
 
             from __future__ import annotations
@@ -692,6 +716,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             async def foo() -> Class:
                 return await Class()
+
 .. class:: ReplaceUnionWithOptionalRule
 
     Enforces the use of ``Optional[T]`` over ``Union[T, None]`` and ``Union[None, T]``.
@@ -732,6 +757,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             from typing import Optional
             def func() -> Optional[Dict[str, int]]:
                 pass
+
 .. class:: RewriteToComprehensionRule
 
     A derivative of flake8-comprehensions's C400-C402 and C403-C404.
@@ -763,12 +789,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             [val for val in iterable]
+
         .. code:: python
 
             list(val for row in matrix for val in row)
 
             # suggested fix
             [val for row in matrix for val in row]
+
 .. class:: RewriteToLiteralRule
 
     A derivative of flake8-comprehensions' C405-C406 and C409-C410. It's
@@ -797,12 +825,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             (1, 2)
+
         .. code:: python
 
             tuple((1, 2))
 
             # suggested fix
             (1, 2)
+
 .. class:: SortedAttributesRule
 
     Ever wanted to sort a bunch of class attributes alphabetically?
@@ -866,6 +896,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
                 @classmethod
                 def get_foo(cls) -> str:
                     return "some random thing"
+
 .. class:: UseAssertInRule
 
     Discourages use of ``assertTrue(x in y)`` and ``assertFalse(x in y)``
@@ -898,12 +929,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             self.assertIn(a, b)
+
         .. code:: python
 
             self.assertTrue(f() in b)
 
             # suggested fix
             self.assertIn(f(), b)
+
 .. class:: UseAssertIsNotNoneRule
 
     Discourages use of ``assertTrue(x is not None)`` and ``assertFalse(x is not None)`` as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).
@@ -936,12 +969,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             self.assertIsNotNone(a)
+
         .. code:: python
 
             self.assertTrue(not x is None)
 
             # suggested fix
             self.assertIsNotNone(x)
+
 .. class:: UseClassNameAsCodeRule
 
     Meta lint rule which checks that codes of lint rules are migrated to new format in lint rule class definitions.
@@ -973,6 +1008,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             MESSAGE = "Message"
+
         .. code:: python
 
             from fixit.common.base import CstLintRule
@@ -992,6 +1028,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
                         code="",
                         )
                 ]
+
 .. class:: UseClsInClassmethodRule
 
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
@@ -1036,6 +1073,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
                 @classmethod
                 def cm(cls):
                     pass
+
         .. code:: python
 
             class foo:
@@ -1050,6 +1088,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
                 @classmethod
                 def cm(cls):
                     return cls
+
 .. class:: UseFstringRule
 
     Encourages the use of f-string instead of %-formatting or .format() for high code quality and efficiency.
@@ -1064,10 +1103,10 @@ unless explicitly listed in the :attr:`disable` configuration option.
         3: result = a_long_function_call() + b_another_long_function_call()
         f"this is the answer: {result}"
 
-        Line 1 is more readable than line 2. Ideally, we’d like developers to manually fix this case to line 3
+        Line 1 is more readable than line 2. Ideally, we'd like developers to manually fix this case to line 3
 
     2. only %s placeholders are linted against for now. We leave it as future work to support other placeholders.
-        For example, %d raises TypeError for non-numeric objects, whereas f“{x:d}” raises ValueError.
+        For example, %d raises TypeError for non-numeric objects, whereas f"{x:d}" raises ValueError.
         This discrepancy in the type of exception raised could potentially break the logic in the code where the exception is handled
     
 
@@ -1098,6 +1137,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             f"{'hi'}"
+
 .. class:: UseLintFixmeCommentRule
 
     To silence a lint warning, use ``lint-fixme`` (when plans to fix the issue later) or ``lint-ignore``
@@ -1169,6 +1209,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
             from typing import List
             def whatever(list: List[str]) -> None:
                 pass
+
         .. code:: python
 
             def function(list: list[str]) -> None:
