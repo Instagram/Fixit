@@ -4,16 +4,16 @@ API Reference
 .. module:: fixit
 
 
-Lint rules
+Lint Rules
 ----------
 
 .. autoclass:: CSTLintRule
 .. autoclass:: ValidTestCase
 .. autoclass:: InvalidTestCase
-.. 
 
-Frontend
---------
+
+Frontends
+---------
 
 Simple API
 ^^^^^^^^^^
@@ -22,6 +22,9 @@ Simple API
 .. autofunction:: fixit_file
 .. autofunction:: print_result
 
+.. autoclass:: CodePosition
+.. autoclass:: CodeRange
+.. autoclass:: LintViolation
 .. autoclass:: Result
 
 

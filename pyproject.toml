@@ -69,6 +69,13 @@ source = "vcs"
 [tool.hatch.build.hooks.vcs]
 version-file = "src/fixit/__version__.py"
 
+[tool.hatch.build]
+exclude = [
+    "/.github",
+    "/examples",
+    "/legacy",
+]
+
 [tool.hatch.envs.all]
 features = ["dev", "docs", "pretty"]
 

@@ -1,0 +1,4 @@
+[tool.fixit]
+enable = [
+    ".rules.hollywood",
+]

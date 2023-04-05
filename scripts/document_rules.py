@@ -13,14 +13,18 @@ from fixit.ftypes import QualifiedRule
 
 from jinja2 import Template
 
-RULES_DOC = Path(__file__).parent.parent / "docs" / "rules.rst"
+RULES_DOC = Path(__file__).parent.parent / "docs" / "guide" / "builtins.rst"
 
 PAGE_TPL = Template(
     r"""
+..
+   THIS FILE IS GENERATED — DO NOT EDIT BY HAND!
+   Run `make html` or `scripts/document_rules.py` to regenerate this file.
+
 .. module:: fixit.rules
 
-Builtin Rules
--------------
+Built-in Rules
+--------------
 
 These rules are all part of the :mod:`fixit.rules` package, and are enabled by default
 unless explicitly listed in the :attr:`disable` configuration option.

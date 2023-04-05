@@ -35,7 +35,7 @@ If you are using Fixit 0.1.4 or older, take a look at the
 or the `stable branch <https://github.com/Instagram/Fixit/tree/0.x>`_.
 
 
-.. include:: quickstart.rst
+.. include:: guide/quickstart.rst
 .. include:: docs/quickstart.rst
 
 For more details, see the `user guide <https://fixit.rtfd.io>`_.

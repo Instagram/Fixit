@@ -1,8 +1,12 @@
 
+..
+   THIS FILE IS GENERATED — DO NOT EDIT BY HAND!
+   Run `make html` or `scripts/document_rules.py` to regenerate this file.
+
 .. module:: fixit.rules
 
-Builtin Rules
--------------
+Built-in Rules
+--------------
 
 These rules are all part of the :mod:`fixit.rules` package, and are enabled by default
 unless explicitly listed in the :attr:`disable` configuration option.

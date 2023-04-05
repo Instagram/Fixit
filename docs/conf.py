@@ -48,8 +48,7 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
     # included in other docs
-    "rules.rst",
-    "quickstart.rst",
+    "guide/*.rst"
 ]
 
 autodoc_default_options = {
@@ -58,7 +57,7 @@ autodoc_default_options = {
 }
 autodoc_member_order = "groupwise"
 
-highlight_language = "python3"
+# highlight_language = "python3"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "libcst": ("https://libcst.rtfd.io/en/latest", None),

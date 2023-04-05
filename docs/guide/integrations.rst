@@ -1,12 +1,14 @@
 Integrations
-============
+------------
 
 pre-commit
-----------
+^^^^^^^^^^
 
-Fixit can be included as a hook for `pre-commit <https://pre-commit.com>`__.
+Fixit can be included as a hook for `pre-commit <https://pre-commit.com>`_.
 
-Once you `install it <https://pre-commit.com/#installation>`__, you can add Fixit's pre-commit hook to the ``.pre-commit-config.yaml`` file in your repository.
+Once you `install it <https://pre-commit.com/#installation>`_, you can add
+Fixit's pre-commit hook to the ``.pre-commit-config.yaml`` file in
+your repository.
 
 - To run lint rules on commit, add:
 
@@ -28,4 +30,5 @@ Once you `install it <https://pre-commit.com/#installation>`__, you can add Fixi
         hooks:
           - id: fixit-fix
 
-To read more about how you can customize your pre-commit configuration, see the `pre-commit docs <https://pre-commit.com/#pre-commit-configyaml---hooks>`__.
+To read more about how you can customize your pre-commit configuration,
+see the `pre-commit docs <https://pre-commit.com/#pre-commit-configyaml---hooks>`__.
