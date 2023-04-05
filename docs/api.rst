@@ -8,6 +8,7 @@ Lint Rules
 ----------
 
 .. autoclass:: CSTLintRule
+    :inherited-members: BatchableCSTVisitor
 .. autoclass:: ValidTestCase
 .. autoclass:: InvalidTestCase
 

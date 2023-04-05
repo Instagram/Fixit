@@ -104,7 +104,8 @@ class CSTLintRunner(LintRunner["CSTLintRule"]):
 
 
 class CSTLintRule(LintRule, BatchableCSTVisitor):
-    """Lint rule implemented using LibCST.
+    """
+    Lint rule implemented using LibCST.
 
     To build a new lint rule, subclass this and `Implement a CST visitor
     <https://libcst.readthedocs.io/en/latest/tutorial.html#Build-Visitor-or-Transformer>`_.
@@ -176,6 +177,12 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
         }
 
     AUTOFIX = False  # set by __subclass_init__
+    """
+    Whether the lint rule contains an autofix.
+
+    Set to ``True`` automatically when :attr:`INVALID` contains at least one
+    test case that provides an expected replacment.
+    """
 
     def __init_subclass__(cls) -> None:
         invalid: List[Union[str, InvalidTestCase]] = getattr(cls, "INVALID", [])
