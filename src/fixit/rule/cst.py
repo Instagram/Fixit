@@ -14,6 +14,7 @@ from typing import (
     Collection,
     ContextManager,
     Iterable,
+    List,
     Iterator,
     Mapping,
     Optional,
@@ -38,7 +39,7 @@ from libcst.metadata import (
 )
 
 from fixit.ftypes import Config, FileContent, LintViolation
-from . import LintRule, LintRunner, TimingsHook
+from . import InvalidTestCase, LintRule, LintRunner, TimingsHook
 
 
 VisitorMethod = Callable[[CSTNode], None]
@@ -173,6 +174,15 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
             name: _wrap(f"{type(self).__name__}.{name}", visitor)
             for (name, visitor) in super().get_visitors().items()
         }
+
+    AUTOFIX = False  # set by __subclass_init__
+
+    def __init_subclass__(cls) -> None:
+        invalid: List[Union[str, InvalidTestCase]] = getattr(cls, "INVALID", [])
+        for case in invalid:
+            if isinstance(case, InvalidTestCase) and case.expected_replacement:
+                cls.AUTOFIX = True
+                return
 
 
 CstLintRule = CSTLintRule

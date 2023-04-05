@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from pathlib import Path
-from textwrap import dedent, fill as wrap, indent
+from textwrap import dedent, fill, indent
 from typing import Type
 
 from fixit import CSTLintRule
@@ -37,11 +37,46 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: {{ rule.__name__ }}
 {{ rule.__doc__ }}
 
+{% if rule.MESSAGE %}
+    .. attribute:: MESSAGE
+
+{{ indent(rule.MESSAGE, "        ") }}
+{% endif %}
+{% if rule.AUTOFIX %}
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+{% endif %}
+
+    .. attribute:: VALID
+
+{% for case in rule.VALID[:2] %}
+        .. code:: python
+
+{{ redent(case.code, "            ") }}
+{% endfor %}
+
+    .. attribute:: INVALID
+
+{% for case in rule.INVALID[:2] %}
+        .. code:: python
+
+{{ redent(case.code, "            ") }}
+{% if case.expected_replacement %}
+
+            # suggested fix
+{{ redent(case.expected_replacement, "            ") }}
+{% endif %}
+{% endfor %}
 {% endfor %}
     """,
     trim_blocks=True,
     lstrip_blocks=True,
 )
+
+
+def redent(value: str, prefix: str = "") -> str:
+    return indent(dedent(value).strip("\n"), prefix)
 
 
 def main() -> None:
@@ -52,11 +87,11 @@ def main() -> None:
         PAGE_TPL.render(
             dedent=dedent,
             indent=indent,
+            redent=redent,
             hasattr=hasattr,
             len=len,
             repr=repr,
             rules=rules,
-            wrap=wrap,
         )
     )
 
