@@ -32,6 +32,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 - :class:`SortedAttributesRule`
 - :class:`UseAssertInRule`
 - :class:`UseAssertIsNotNoneRule`
+- :class:`UseAsyncSleepInAsyncDefRule`
 - :class:`UseClassNameAsCodeRule`
 - :class:`UseClsInClassmethodRule`
 - :class:`UseFstringRule`
@@ -976,6 +977,55 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             # suggested fix
             self.assertIsNotNone(x)
+
+.. class:: UseAsyncSleepInAsyncDefRule
+
+    Detect if asyncio.sleep is used in an async function
+    
+
+    .. attribute:: MESSAGE
+
+        Use asyncio.sleep in async function
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            import time
+            def func():
+                time.sleep(1)
+        .. code:: python
+
+            from time import sleep
+            def func():
+                sleep(1)
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            import time
+            async def func():
+                time.sleep(1)
+
+            # suggested fix
+            import time
+            async def func():
+                asyncio.sleep(1)
+
+        .. code:: python
+
+            from time import sleep
+            async def func():
+                sleep(1)
+
+            # suggested fix
+            from time import sleep
+            async def func():
+                asyncio.sleep(1)
 
 .. class:: UseClassNameAsCodeRule
 
