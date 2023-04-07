@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
+    ContextManager,
     Dict,
     Iterable,
     List,
@@ -19,17 +21,41 @@ from typing import (
     Union,
 )
 
+from libcst import CSTNode, FlattenSentinel, RemovalSentinel
 from libcst._add_slots import add_slots
-from libcst.metadata import CodePosition as CSTCodePosition, CodeRange as CSTCodeRange
+from libcst.metadata import CodePosition as CodePosition, CodeRange as CodeRange
 
 T = TypeVar("T")
+
+CodeRange
+CodePosition
 
 FileContent = bytes
 RuleOptionTypes = (str, int, float)
 RuleOptions = Dict[str, Union[str, int, float]]
 RuleOptionsTable = Dict[str, RuleOptions]
-CodeRange = CSTCodeRange
-CodePosition = CSTCodePosition
+
+NodeReplacement = Union[CSTNode, FlattenSentinel, RemovalSentinel]
+
+Timings = Dict[str, int]
+TimingsHook = Callable[[Timings], None]
+
+VisitorMethod = Callable[[CSTNode], None]
+VisitHook = Callable[[str], ContextManager]
+
+
+@dataclass(frozen=True)
+class InvalidTestCase:
+    code: str
+    range: Optional[CodeRange] = None
+    expected_message: Optional[str] = None
+    expected_replacement: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class ValidTestCase:
+    code: str
+
 
 QualifiedRuleRegex = re.compile(
     r"""
@@ -88,7 +114,7 @@ class Options:
 @dataclass
 class Config:
     """
-    Materialized configuration valid for processing a single file
+    Materialized configuration valid for processing a single file.
     """
 
     path: Path = field(default_factory=Path)
@@ -117,16 +143,29 @@ class RawConfig:
 @add_slots
 @dataclass(frozen=True)
 class LintViolation:
+    """
+    An individual lint error, with an optional replacement and expected diff.
+    """
+
     rule_name: str
     range: CodeRange
     message: str
-    autofixable: bool
+    node: CSTNode
+    replacement: Optional[NodeReplacement]
+    diff: str = ""
+
+    @property
+    def autofixable(self) -> bool:
+        """
+        Whether the violation includes a suggested replacement.
+        """
+        return bool(self.replacement)
 
 
 @dataclass
 class Result:
     """
-    A single lint result for a given file and lint rule
+    A single lint result for a given file and lint rule.
     """
 
     path: Path

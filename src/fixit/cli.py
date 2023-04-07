@@ -48,9 +48,11 @@ def main(
 
 @main.command()
 @click.pass_context
+@click.option("--diff", is_flag=True, help="Show diff of suggested changes")
 @click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
 def lint(
     ctx: click.Context,
+    diff: bool,
     paths: Iterable[Path],
 ):
     """
@@ -62,7 +64,7 @@ def lint(
             exit_code |= 1
         if result.error:
             exit_code |= 2
-        print_result(result, ctx.obj.debug)
+        print_result(result, show_diff=diff)
     ctx.exit(exit_code)
 
 
@@ -76,7 +78,10 @@ def fix(
     """
     lint and autofix one or more files and return results
     """
-    ctx.fail("not implemented yet")
+    exit_code = 0
+    for result in fixit_paths(paths, autofix=True):
+        print_result(result, show_diff=True)
+    ctx.exit(exit_code)
 
 
 @main.command()

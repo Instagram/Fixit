@@ -3,22 +3,111 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import logging
+import time
 from collections import defaultdict
-from typing import Collection, Dict, Iterable, List, Type
+from contextlib import contextmanager
+from dataclasses import replace
+from pathlib import Path
+from typing import Collection, Iterable, Iterator, Mapping, Optional, Set
 
-from .ftypes import Config, FileContent, LintViolation
+from libcst import Module, parse_module
+from libcst.metadata import FullRepoManager, MetadataWrapper, ProviderT
+from moreorless import unified_diff
 
-from .rule import LintRule, LintRunner
+from .ftypes import Config, FileContent, LintViolation, Timings, TimingsHook
+from .rule import LintRule
+
+LOG = logging.getLogger(__name__)
 
 
-def collect_violations(
-    source: FileContent, rules: Collection[LintRule], config: Config
-) -> Iterable[LintViolation]:
-    # partition rules by LintRunner:
-    rules_by_runner: Dict[Type[LintRunner], List[LintRule]] = defaultdict(lambda: [])
-    for rule in rules:
-        rules_by_runner[rule._runner].append(rule)
+class LintRunner:
+    def __init__(self, path: Path, source: FileContent) -> None:
+        self.path = path
+        self.source = source
+        self.module: Module = parse_module(source)
+        self.timings: Timings = defaultdict(lambda: 0)
 
-    for runner_cls, rules in rules_by_runner.items():
-        runner = runner_cls()
-        yield from runner.collect_violations(source, rules, config)
+    def collect_violations(
+        self,
+        rules: Collection[LintRule],
+        config: Config,
+        timings_hook: Optional[TimingsHook] = None,
+    ) -> Iterable[LintViolation]:
+        """Run multiple `LintRule`s and yield any lint violations.
+
+        The optional `timings_hook` parameter will be called (if provided) after all
+        lint rules have finished running, passing in a dictionary of
+        ``RuleName.visit_function_name`` -> ``duration in microseconds``.
+        """
+
+        @contextmanager
+        def visit_hook(name: str) -> Iterator[None]:
+            start = time.perf_counter()
+            try:
+                yield
+            finally:
+                duration_us = int(1000 * 1000 * (time.perf_counter() - start))
+                LOG.debug(f"PERF: {name} took {duration_us} µs")
+                self.timings[name] += duration_us
+
+        metadata_cache: Mapping[ProviderT, object] = {}
+        needs_repo_manager: Set[ProviderT] = set()
+
+        for rule in rules:
+            rule._visit_hook = visit_hook
+            for provider in rule.get_inherited_dependencies():
+                if provider.gen_cache is not None:
+                    # TODO: find a better way to declare this requirement in LibCST
+                    needs_repo_manager.add(provider)
+
+        if needs_repo_manager:
+            repo_manager = FullRepoManager(
+                repo_root_dir=config.root.as_posix(),
+                paths=[config.path.as_posix()],
+                providers=needs_repo_manager,
+            )
+            repo_manager.resolve_cache()
+            metadata_cache = repo_manager.get_cache_for_path(config.path.as_posix())
+
+        wrapper = MetadataWrapper(
+            self.module, unsafe_skip_copy=True, cache=metadata_cache
+        )
+        wrapper.visit_batched(rules)
+        count = 0
+        for rule in rules:
+            for violation in rule._violations:
+                count += 1
+
+                if violation.replacement:
+                    orig = self.module.code
+                    mod = self.module.deep_replace(  # type:ignore # LibCST#906
+                        violation.node, violation.replacement
+                    )
+                    assert isinstance(mod, Module)
+                    change = mod.code
+
+                    diff = unified_diff(
+                        orig,
+                        change,
+                        self.path.name,
+                        n=1,
+                    )
+                    violation = replace(violation, diff=diff)
+
+                yield violation
+        if timings_hook:
+            timings_hook(self.timings)
+
+        return count
+
+    def apply_replacements(self, violations: Collection[LintViolation]) -> FileContent:
+        """
+        Apply any autofixes to the module, and return the resulting source code.
+        """
+        for violation in violations:
+            if violation.replacement:
+                self.module = self.module.deep_replace(
+                    violation.node, violation.replacement  # type:ignore # LibCST#906
+                )
+        return self.module.bytes

@@ -9,9 +9,16 @@ Linting framework built on LibCST, with automatic fixes
 
 from .__version__ import __version__
 from .api import fixit_bytes, fixit_file, fixit_paths, print_result
-from .ftypes import CodePosition, CodeRange, Config, FileContent, LintViolation, Result
-from .rule import LintRule
-from .rule.cst import CSTLintRule, CstLintRule
+from .ftypes import (
+    CodePosition,
+    CodeRange,
+    Config,
+    FileContent,
+    LintViolation,
+    QualifiedRule,
+    Result,
+)
+from .rule import CSTLintRule, CstLintRule, LintRule
 from .testing import InvalidTestCase, ValidTestCase
 
 __all__ = [
@@ -20,13 +27,15 @@ __all__ = [
     "fixit_file",
     "fixit_paths",
     "print_result",
-    "LintRule",
     "CSTLintRule",
     "CstLintRule",
+    "LintRule",
+    "LintViolation",
     "InvalidTestCase",
     "ValidTestCase",
     "Config",
     "FileContent",
+    "QualifiedRule",
     "Result",
     "CodeRange",
     "CodePosition",

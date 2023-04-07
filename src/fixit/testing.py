@@ -20,8 +20,11 @@ from typing import (
     Union,
 )
 
-from fixit.ftypes import Config
-from fixit.rule import InvalidTestCase, LintRule, ValidTestCase
+from moreorless import unified_diff
+
+from .engine import LintRunner
+from .ftypes import Config
+from .rule import InvalidTestCase, LintRule, ValidTestCase
 
 
 def _dedent(src: str) -> str:
@@ -80,10 +83,12 @@ class LintRuleTestCase(unittest.TestCase):
         rule: LintRule,
     ) -> None:
         config = Config()
-        runner = rule._runner()
-        reports = list(
-            runner.collect_violations(_dedent(test_case.code).encode(), [rule], config)
+        path = Path(
+            "valid.py" if isinstance(test_case, ValidTestCase) else "invalid.py"
         )
+        source_code = _dedent(test_case.code)
+        runner = LintRunner(path, source_code.encode())
+        reports = list(runner.collect_violations([rule], config))
 
         if isinstance(test_case, ValidTestCase):
             self.assertEqual(
@@ -116,7 +121,17 @@ class LintRuleTestCase(unittest.TestCase):
         if test_case.expected_message is not None:
             self.assertEqual(test_case.expected_message, report.message)
 
-        # validate_patch(report, test_case)
+        if test_case.expected_replacement:
+            # make sure we produced expected final code
+            expected_code = _dedent(test_case.expected_replacement)
+            modified_code = runner.apply_replacements([report]).decode()
+            self.assertMultiLineEqual(expected_code, modified_code)
+
+            # make sure we generated a reasonable diff
+            expected_diff = unified_diff(
+                source_code, expected_code, filename=path.name, n=1
+            )
+            self.assertEqual(expected_diff, report.diff)
 
 
 def _gen_test_methods_for_rule(
