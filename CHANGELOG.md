@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.0.0a1 - 2023-04-07
+
+### Alpha Release
+
+This is an alpha release of a major rework of Fixit. There are many breaking
+API changes since the `0.1.4` release – existing users should wait for a stable
+release before upgrading.
+
+Please see the new [User Guide][] for an overview of the new version.
+A migration guide is planned, but not yet available.
+
+[User Guide]: https://fixit.rtfd.io/en/latest/guide.html
+
+### Major Changes
+
+- Hierarchical configuration via TOML format
+- Support for in-repo custom lint rules relative to project configuration
+- Simplified CLI binary with subcommands to check for errors and apply fixes
+- Interactive review and application of autofixes
+- Dedicated API for integration with alternate frontends
+- Overhauled documentation, with quick start guide
+- Integration with pre-commit
+
+
 ## 0.1.4 - 2021-07-30
 ### Updated
 - Fix typo [#163](https://github.com/Instagram/Fixit/pull/163)
