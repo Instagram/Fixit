@@ -3,6 +3,12 @@ Fixit: linting framework with auto-fixes
 
 .. include:: ../README.rst
     :start-line: 4
+    :end-before: .. QUICKSTART
+
+.. include:: guide/quickstart.rst
+
+.. include:: ../README.rst
+    :start-after: .. QUICKSTART
 
 
 .. toctree::

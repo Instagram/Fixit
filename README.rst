@@ -38,13 +38,11 @@ lint rules.** If you are using Fixit 0.1.4 or older, take a look at the
 `legacy documentation <https://fixit.rtfd.io/en/v0.1.4/>`_
 or the `stable branch <https://github.com/Instagram/Fixit/tree/0.x>`_.
 
-
-.. include:: guide/quickstart.rst
-.. include:: docs/guide/quickstart.rst
-
 For more details, see the `user guide`__.
 
 .. __: https://fixit.rtfd.io/en/latest/guide.html
+
+.. QUICKSTART
 
 
 License
