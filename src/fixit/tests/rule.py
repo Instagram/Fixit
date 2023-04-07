@@ -3,17 +3,19 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import MagicMock
 
 import libcst as cst
 from libcst.metadata import CodePosition, CodeRange
 
-from fixit.ftypes import Config, LintViolation
-from fixit.rule.cst import CSTLintRule, CSTLintRunner
+from ..engine import LintRunner
+from ..ftypes import Config, LintViolation
+from ..rule import LintRule
 
 
-class NoopRule(CSTLintRule):
+class NoopRule(LintRule):
     def __init__(self) -> None:
         super().__init__()
         self.called = False
@@ -28,21 +30,21 @@ class NoopRule(CSTLintRule):
 
 class RunnerTest(TestCase):
     def setUp(self) -> None:
-        self.runner = CSTLintRunner()
+        self.runner = LintRunner(Path("fake.py"), b"pass")
 
     def test_no_rules(self) -> None:
-        violations = self.runner.collect_violations(b"pass", [], Config())
+        violations = self.runner.collect_violations([], Config())
         self.assertEqual(list(violations), [])
 
     def test_noop_rule(self) -> None:
         rule = NoopRule()
-        violations = self.runner.collect_violations(b"pass", [rule], Config())
+        violations = self.runner.collect_violations([rule], Config())
         self.assertEqual(list(violations), [])
         self.assertTrue(rule.called)
 
     def test_timing(self) -> None:
         rule = NoopRule()
-        for _ in self.runner.collect_violations(b"pass", [rule], Config()):
+        for _ in self.runner.collect_violations([rule], Config()):
             pass  # exhaust the generator
         self.assertIn("NoopRule.visit_Module", self.runner.timings)
         self.assertIn("NoopRule.leave_Module", self.runner.timings)
@@ -52,7 +54,7 @@ class RunnerTest(TestCase):
         rule = NoopRule()
         hook = MagicMock()
         for i, _ in enumerate(
-            self.runner.collect_violations(b"pass", [rule], Config(), timings_hook=hook)
+            self.runner.collect_violations([rule], Config(), timings_hook=hook)
         ):
             if i <= 1:
                 # only called at the end
@@ -60,7 +62,7 @@ class RunnerTest(TestCase):
         hook.assert_called_once()
 
 
-class ExerciseReportRule(CSTLintRule):
+class ExerciseReportRule(LintRule):
     MESSAGE = "message on the class"
 
     def visit_Pass(self, node: cst.Pass) -> bool:
@@ -78,40 +80,40 @@ class ExerciseReportRule(CSTLintRule):
 
 class RuleTest(TestCase):
     def setUp(self) -> None:
-        self.runner = CSTLintRunner()
         self.rules = [ExerciseReportRule()]
 
     def test_pass_happy(self) -> None:
-        violations = list(self.runner.collect_violations(b"pass", self.rules, Config()))
+        runner = LintRunner(Path("fake.py"), b"pass")
+        (violation,) = list(runner.collect_violations(self.rules, Config()))
+        self.assertIsInstance(violation.node, cst.Pass)
         self.assertEqual(
-            violations,
-            [
-                LintViolation(
-                    "ExerciseReportRule",
-                    CodeRange(start=CodePosition(1, 0), end=CodePosition(1, 4)),
-                    "I pass",
-                    False,
-                )
-            ],
+            violation,
+            LintViolation(
+                "ExerciseReportRule",
+                CodeRange(start=CodePosition(1, 0), end=CodePosition(1, 4)),
+                "I pass",
+                violation.node,
+                None,
+            ),
         )
 
     def test_ellipsis_position_override(self) -> None:
-        violations = list(self.runner.collect_violations(b"...", self.rules, Config()))
+        runner = LintRunner(Path("fake.py"), b"...")
+        (violation,) = list(runner.collect_violations(self.rules, Config()))
+        self.assertIsInstance(violation.node, cst.Ellipsis)
         self.assertEqual(
-            violations,
-            [
-                LintViolation(
-                    "ExerciseReportRule",
-                    CodeRange(start=CodePosition(1, 1), end=CodePosition(2, 0)),
-                    "I ellipse",
-                    False,
-                )
-            ],
+            violation,
+            LintViolation(
+                "ExerciseReportRule",
+                CodeRange(start=CodePosition(1, 1), end=CodePosition(2, 0)),
+                "I ellipse",
+                violation.node,
+                None,
+            ),
         )
 
     def test_del_no_message(self) -> None:
-        violations = list(
-            self.runner.collect_violations(b"del foo", self.rules, Config())
-        )
+        runner = LintRunner(Path("fake.py"), b"del foo")
+        violations = list(runner.collect_violations(self.rules, Config()))
         self.assertEqual(len(violations), 1)
         self.assertEqual(violations[0].message, "message on the class")

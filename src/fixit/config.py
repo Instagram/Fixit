@@ -38,7 +38,6 @@ from .ftypes import (
     T,
 )
 from .rule import LintRule
-from .rule.cst import CSTLintRule
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -67,11 +66,7 @@ def is_rule(obj: Type[T]) -> bool:
     """
     Returns True if class is a concrete subclass of LintRule
     """
-    return (
-        inspect.isclass(obj)
-        and issubclass(obj, LintRule)
-        and obj not in (LintRule, CSTLintRule)
-    )
+    return inspect.isclass(obj) and issubclass(obj, LintRule) and obj is not LintRule
 
 
 @contextmanager

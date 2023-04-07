@@ -9,7 +9,7 @@ from fixit.ftypes import QualifiedRule
 from fixit.testing import add_lint_rule_tests_to_module
 from .config import ConfigTest
 from .ftypes import TypesTest
-from .rule.cst import RuleTest, RunnerTest
+from .rule import RuleTest, RunnerTest
 from .smoke import SmokeTest
 
 add_lint_rule_tests_to_module(

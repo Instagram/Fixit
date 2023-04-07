@@ -3,107 +3,26 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from __future__ import annotations
+
 import functools
-import logging
-import time
-from contextlib import contextmanager
 from dataclasses import replace
-from typing import (
-    Callable,
-    ClassVar,
-    Collection,
-    ContextManager,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    Union,
+from typing import ClassVar, Collection, List, Mapping, Optional, Set, Union
+
+from libcst import BatchableCSTVisitor, CSTNode
+from libcst.metadata import CodePosition, CodeRange, PositionProvider, ProviderT
+
+from .ftypes import (
+    InvalidTestCase,
+    LintViolation,
+    NodeReplacement,
+    ValidTestCase,
+    VisitHook,
+    VisitorMethod,
 )
 
-from libcst import (
-    BatchableCSTVisitor,
-    CSTNode,
-    FlattenSentinel,
-    parse_module,
-    RemovalSentinel,
-)
-from libcst.metadata import (
-    CodePosition,
-    CodeRange,
-    FullRepoManager,
-    MetadataWrapper,
-    PositionProvider,
-    ProviderT,
-)
 
-from fixit.ftypes import Config, FileContent, LintViolation
-from . import InvalidTestCase, LintRule, LintRunner, TimingsHook
-
-
-VisitorMethod = Callable[[CSTNode], None]
-VisitHook = Callable[[str], ContextManager]
-
-logger = logging.getLogger(__name__)
-
-
-class CSTLintRunner(LintRunner["CSTLintRule"]):
-    def collect_violations(
-        self,
-        source: FileContent,
-        rules: Collection["CSTLintRule"],
-        config: Config,
-        timings_hook: Optional[TimingsHook] = None,
-    ) -> Iterable[LintViolation]:
-        """Run multiple `CSTLintRule`s and yield any lint violations.
-
-        The optional `timings_hook` parameter will be called (if provided) after all
-        lint rules have finished running, passing in a dictionary of
-        ``RuleName.visit_function_name`` -> ``duration in microseconds``.
-        """
-
-        @contextmanager
-        def visit_hook(name: str) -> Iterator[None]:
-            start = time.perf_counter()
-            try:
-                yield
-            finally:
-                duration_us = int(1000 * 1000 * (time.perf_counter() - start))
-                logger.debug(f"PERF: {name} took {duration_us} µs")
-                self.timings[name] += duration_us
-
-        metadata_cache: Mapping[ProviderT, object] = {}
-        needs_repo_manager: Set[ProviderT] = set()
-
-        for rule in rules:
-            rule._visit_hook = visit_hook
-            for provider in rule.get_inherited_dependencies():
-                if provider.gen_cache is not None:
-                    # TODO: find a better way to declare this requirement in LibCST
-                    needs_repo_manager.add(provider)
-
-        if needs_repo_manager:
-            repo_manager = FullRepoManager(
-                repo_root_dir=config.root.as_posix(),
-                paths=[config.path.as_posix()],
-                providers=needs_repo_manager,
-            )
-            repo_manager.resolve_cache()
-            metadata_cache = repo_manager.get_cache_for_path(config.path.as_posix())
-
-        mod = MetadataWrapper(
-            parse_module(source), unsafe_skip_copy=True, cache=metadata_cache
-        )
-        mod.visit_batched(rules)
-        for rule in rules:
-            for violation in rule._violations:
-                yield violation
-        if timings_hook:
-            timings_hook(self.timings)
-
-
-class CSTLintRule(LintRule, BatchableCSTVisitor):
+class LintRule(BatchableCSTVisitor):
     """
     Lint rule implemented using LibCST.
 
@@ -114,7 +33,18 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
 
     METADATA_DEPENDENCIES: ClassVar[Collection[ProviderT]] = (PositionProvider,)
 
-    _runner = CSTLintRunner
+    TAGS: Set[str] = set()
+    "Arbitrary classification tags for use in configuration/selection"
+
+    VALID: ClassVar[List[Union[str, ValidTestCase]]]
+    "Test cases that should produce no errors/reports"
+
+    INVALID: ClassVar[List[Union[str, InvalidTestCase]]]
+    "Test cases that are expected to produce errors, with optional replacements"
+
+    def __init__(self) -> None:
+        self._violations: List[LintViolation] = []
+
     _visit_hook: Optional[VisitHook] = None
 
     def report(
@@ -123,7 +53,7 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
         message: Optional[str] = None,
         *,
         position: Optional[Union[CodePosition, CodeRange]] = None,
-        replacement: Optional[Union[CSTNode, RemovalSentinel, FlattenSentinel]] = None,
+        replacement: Optional[NodeReplacement] = None,
     ) -> None:
         """
         Report a lint rule violation.
@@ -156,7 +86,8 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
                 rule_name,
                 range=position,
                 message=message,
-                autofixable=bool(replacement),
+                node=node,
+                replacement=replacement,
             )
         )
 
@@ -192,4 +123,6 @@ class CSTLintRule(LintRule, BatchableCSTVisitor):
                 return
 
 
-CstLintRule = CSTLintRule
+# DEPRECATED: remove before stable 2.0 release
+CstLintRule = LintRule
+CSTLintRule = LintRule

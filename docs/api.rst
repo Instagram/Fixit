@@ -7,8 +7,7 @@ API Reference
 Lint Rules
 ----------
 
-.. autoclass:: CSTLintRule
-    :inherited-members: BatchableCSTVisitor
+.. autoclass:: LintRule
 .. autoclass:: ValidTestCase
 .. autoclass:: InvalidTestCase
 
@@ -23,8 +22,6 @@ Simple API
 .. autofunction:: fixit_file
 .. autofunction:: print_result
 
-.. autoclass:: CodePosition
-.. autoclass:: CodeRange
 .. autoclass:: LintViolation
 .. autoclass:: Result
 
@@ -32,6 +29,10 @@ Simple API
 Advanced API
 ^^^^^^^^^^^^
 
+.. autoclass:: fixit.ftypes.FileContent
+
 .. autofunction:: fixit_bytes
+.. autofunction:: fixit.util.capture
 
 .. autoclass:: Config
+.. autoclass:: QualifiedRule

@@ -56,6 +56,8 @@ autodoc_default_options = {
     "undoc-members": True,
 }
 autodoc_member_order = "groupwise"
+autodoc_typehints = "description"
+autodoc_typehints_format = "short"
 
 # highlight_language = "python3"
 intersphinx_mapping = {
