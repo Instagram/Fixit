@@ -26,17 +26,18 @@ See lints and suggested changes for a set of source files:
 
 .. code-block:: console
 
-    $ fixit lint <paths>
+    $ fixit lint <path>
 
 Apply suggested changes on those same files automatically:
 
 .. code-block:: console
 
-    $ fixit fix <paths>
+    $ fixit fix <path>
 
 If given directories, Fixit will automatically recurse them, finding any files
 with the ``.py`` extension, while obeying your repo's global ``.gitignore``.
 
+See the :ref:`Command Reference <commands>` for more details.
 
 Example
 ^^^^^^^
@@ -67,17 +68,17 @@ Fixit makes it easy to write and enable new lint rules, directly in your
 existing codebase alongside the code they will be linting.
 
 Lint rules in Fixit are built on top of `LibCST <https://libcst.rtfd.io>`_ 
-using a :class:`~fixit.CSTLintRule` to combine visitors and tests together
+using a :class:`~fixit.LintRule` to combine visitors and tests together
 in a single unit. A (very) simple rule looks like this:
 
 .. code:: python
 
     # teambread/rules/hollywood.py
 
-    from fixit import CSTLintRule, InvalidTestCase, ValidTestCase
+    from fixit import LintRule, InvalidTestCase, ValidTestCase
     import libcst
 
-    class HollywoodNameRule(CSTLintRule):
+    class HollywoodNameRule(LintRule):
         # clean code samples
         VALID = [
             ValidTestCase('name = "Susan"'),
@@ -142,5 +143,33 @@ Once enabled, Fixit can run that new lint rule against the codebase:
 
 .. code:: console
 
-    $ fixit lint teambread/sourdough/baker.py
-    sourdough/baker.py@2:7 HollywoodNameRule: It's underproved!
+    $ fixit lint --diff sourdough/baker.py
+    sourdough/baker.py@7:11 HollywoodNameRule: It's underproved! (has autofix)
+    --- a/baker.py
+    +++ b/baker.py
+    @@ -6,3 +6,3 @@
+    def main():
+    -    name = "Paul"
+    +    name = "Mary"
+        print(f"hello {name}")
+    🛠️  1 file checked, 1 file with errors, 1 auto-fix available 🛠️
+    [1]
+
+Note that the ``lint`` command only shows lint errors (and suggested changes).
+The ``fix`` command will apply these suggested changes to the codebase:
+
+.. code:: console
+
+    $ fixit fix --automatic sourdough/baker.py
+    sourdough/baker.py@7:11 HollywoodNameRule: It's underproved! (has autofix)
+    🛠️  1 file checked, 1 file with errors, 1 auto-fix available, 1 fix applied 🛠️
+
+By default, the ``fix`` command will interactively prompt the user for each
+suggested change available, which the user can then accept or decline.
+
+Now that the suggested changes have been applied, the codebase is clean:
+
+.. code:: console
+
+    $ fixit lint sourdough/baker.py
+    🧼 1 file clean 🧼

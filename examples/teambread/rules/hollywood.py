@@ -3,10 +3,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from fixit import CSTLintRule, InvalidTestCase, ValidTestCase
+from fixit import LintRule, InvalidTestCase, ValidTestCase
 import libcst
 
-class HollywoodNameRule(CSTLintRule):
+class HollywoodNameRule(LintRule):
     # clean code samples
     VALID = [
         ValidTestCase('name = "Susan"'),

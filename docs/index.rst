@@ -1,5 +1,5 @@
-Fixit: advanced linting framework
-=================================
+Fixit: linting framework with auto-fixes
+========================================
 
 .. include:: ../README.rst
     :start-line: 4

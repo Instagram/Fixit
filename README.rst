@@ -21,7 +21,7 @@
    :alt: MIT License
 
 Fixit provides a highly configurable linting framework with support for
-autofixes, custom "local" lint rules, and hierarchical configuration, built
+auto-fixes, custom "local" lint rules, and hierarchical configuration, built
 on `LibCST <https://libcst.rtfd.io>`_.
 
 Fixit makes it quick and easy to write new lint rules and offer suggested
@@ -29,19 +29,23 @@ changes for any errors found, which can then be accepted automatically,
 or presented to the user for consideration.
 
 
-**Fixit is currently being rebuilt for better performance and configurability.**
-If you are using Fixit 0.1.4 or older, take a look at the
-`stable docs <https://fixit.rtfd.io/en/stable>`_
+**Fixit has been rebuilt for better configuration and support for custom
+lint rules.** If you are using Fixit 0.1.4 or older, take a look at the
+`legacy documentation <https://fixit.rtfd.io/en/v0.1.4/>`_
 or the `stable branch <https://github.com/Instagram/Fixit/tree/0.x>`_.
 
 
 .. include:: guide/quickstart.rst
-.. include:: docs/quickstart.rst
+.. include:: docs/guide/quickstart.rst
 
-For more details, see the `user guide <https://fixit.rtfd.io>`_.
+For more details, see the `user guide`__.
+
+.. __: https://fixit.rtfd.io/en/latest/guide.html
 
 
 License
 -------
 
-Fixit is `MIT licensed <LICENSE>`_, as found in the LICENSE file.
+Fixit is `MIT licensed`__, as found in the LICENSE file.
+
+.. __: https://github.com/Instagram/Fixit/blob/main/LICENSE
