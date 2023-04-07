@@ -2,7 +2,7 @@
    :width: 600 px
    :alt: Fixit
 
-|readthedocs-badge| |pypi-badge| |changelog-badge| |license-badge|
+|readthedocs-badge| |pypi-badge| |changelog-badge| |roadmap-badge| |license-badge|
 
 .. |readthedocs-badge| image:: https://readthedocs.org/projects/pip/badge/?version=latest&style=flat
    :target: https://fixit.readthedocs.io/en/latest/
@@ -15,6 +15,10 @@
 .. |changelog-badge| image:: https://img.shields.io/badge/change-log-blue.svg
    :target: https://fixit.readthedocs.io/en/latest/changelog.html
    :alt: Changelog
+
+.. |roadmap-badge| image:: https://img.shields.io/badge/road-map-9cf.svg
+   :target: https://github.com/Instagram/Fixit/milestones
+   :alt: Project Roadmap
 
 .. |license-badge| image:: https://img.shields.io/pypi/l/fixit.svg
    :target: https://github.com/instagram/fixit/blob/main/LICENSE
