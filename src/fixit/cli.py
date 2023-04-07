@@ -6,7 +6,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Iterable, Optional, Set
+from typing import Optional, Sequence, Set
 
 import click
 
@@ -80,11 +80,14 @@ def main(
 def lint(
     ctx: click.Context,
     diff: bool,
-    paths: Iterable[Path],
+    paths: Sequence[Path],
 ):
     """
     lint one or more paths and return suggestions
     """
+    if not paths:
+        paths = [Path.cwd()]
+
     exit_code = 0
     visited: Set[Path] = set()
     dirty: Set[Path] = set()
@@ -120,11 +123,14 @@ def fix(
     ctx: click.Context,
     interactive: bool,
     diff: bool,
-    paths: Iterable[Path],
+    paths: Sequence[Path],
 ):
     """
     lint and autofix one or more files and return results
     """
+    if not paths:
+        paths = [Path.cwd()]
+
     autofix = not interactive
     exit_code = 0
 
@@ -159,11 +165,14 @@ def fix(
 
 @main.command()
 @click.pass_context
-@click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
-def debug(ctx: click.Context, paths: Iterable[Path]):
+@click.argument("paths", nargs=-1, type=click.Path(exists=True, path_type=Path))
+def debug(ctx: click.Context, paths: Sequence[Path]):
     """
-    print debug info for each path
+    print materialized configuration for paths
     """
+    if not paths:
+        paths = [Path.cwd()]
+
     try:
         from rich import print as pprint
     except ImportError:
