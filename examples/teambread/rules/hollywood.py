@@ -18,4 +18,5 @@ class HollywoodNameRule(CSTLintRule):
 
     def visit_SimpleString(self, node: libcst.SimpleString) -> None:
         if node.value in ('"Paul"', "'Paul'"):
-            self.report(node, "It's underproved!")
+            new_node = libcst.SimpleString('"Mary"')
+            self.report(node, "It's underproved!", replacement=new_node)
