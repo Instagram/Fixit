@@ -23,12 +23,13 @@ class SmokeTest(TestCase):
         self.assertIn(expected, result.stdout)
 
     def test_this_file_is_clean(self) -> None:
-        result = self.runner.invoke(main, ["lint", __file__], catch_exceptions=False)
+        path = Path(__file__).resolve().as_posix()
+        result = self.runner.invoke(main, ["lint", path], catch_exceptions=False)
         self.assertEqual(result.output, "")
         self.assertEqual(result.exit_code, 0)
 
     def test_this_project_is_clean(self) -> None:
-        project_dir = Path(__file__).parent.parent.as_posix()
+        project_dir = Path(__file__).resolve().parent.parent.as_posix()
         result = self.runner.invoke(main, ["lint", project_dir], catch_exceptions=False)
         self.assertEqual(result.output, "")
         self.assertEqual(result.exit_code, 0)
