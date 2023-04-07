@@ -20,12 +20,14 @@ from .ftypes import Config, FileContent, LintViolation, Result
 LOG = logging.getLogger(__name__)
 
 
-def print_result(result: Result, show_diff: bool = False) -> None:
+def print_result(result: Result, show_diff: bool = False) -> int:
     """
     Print linting results in a simple format designed for human eyes.
 
     Setting ``show_diff=True`` will output autofixes or suggested changes in unified
     diff format, using ANSI colors when possible.
+
+    Returns ``True`` if the result is "dirty" - either a lint error or exception.
     """
     path = result.path
     try:
@@ -41,17 +43,22 @@ def print_result(result: Result, show_diff: bool = False) -> None:
         if result.violation.autofixable:
             message += " (has autofix)"
         click.secho(
-            f"{path}@{start_line}:{start_col} {rule_name}: {message}",
-            fg="white" if result.violation.autofixable else "yellow",
+            f"{path}@{start_line}:{start_col} {rule_name}: {message}", fg="yellow"
         )
         if show_diff and result.violation.diff:
             echo_color_precomputed_diff(result.violation.diff)
+        return True
 
     elif result.error:
         # An exception occurred while processing a file
         error, tb = result.error
         click.secho(f"{path}: EXCEPTION: {error}", fg="red")
         click.echo(tb.strip())
+        return True
+
+    else:
+        LOG.debug("%s: clean", path)
+        return False
 
 
 def fixit_bytes(
@@ -64,7 +71,8 @@ def fixit_bytes(
     """
     Lint raw bytes content representing a single path, using the given configuration.
 
-    Yields :class:`Result` objects for each lint error or exception found.
+    Yields :class:`Result` objects for each lint error or exception found, or a single
+    empty result if the file is clean.
     Returns the final :class:`FileContent` including any fixes applied.
 
     Use :func:`capture` to more easily capture return value after iterating through
@@ -79,10 +87,15 @@ def fixit_bytes(
         runner = LintRunner(path, content)
         pending_fixes: List[LintViolation] = []
 
+        clean = True
         for violation in runner.collect_violations(rules, config):
+            clean = False
             fix = yield Result(path, violation)
             if fix or autofix:
                 pending_fixes.append(violation)
+
+        if clean:
+            yield Result(path, violation=None)
 
         if pending_fixes:
             updated = runner.apply_replacements(pending_fixes)
@@ -100,7 +113,7 @@ def fixit_file(
     path: Path,
     *,
     autofix: bool = False,
-) -> Generator[Result, None, None]:
+) -> Generator[Result, bool, None]:
     """
     Lint a single file on disk, detecting and generating appropriate configuration.
 
@@ -108,7 +121,8 @@ def fixit_file(
     Reads file from disk as raw bytes, and uses :func:`fixit_bytes` to lint and apply
     any fixes to the content. Writes content back to disk if changes are detected.
 
-    Yields :class:`Result` objects for each lint error or exception found.
+    Yields :class:`Result` objects for each lint error or exception found, or a single
+    empty result if the file is clean.
     See :func:`fixit_bytes` for semantics.
     """
     path = path.resolve()
@@ -139,7 +153,8 @@ def fixit_paths(
     paths: Iterable[Path],
     *,
     autofix: bool = False,
-) -> Generator[Result, None, None]:
+    parallel: bool = True,
+) -> Generator[Result, bool, None]:
     """
     Lint multiple files or directories, recursively expanding each path.
 
@@ -147,14 +162,15 @@ def fixit_paths(
     files. Lints each file found using :func:`fixit_file`, using a process pool when
     more than one file is being linted.
 
-    Yields :class:`Result` objects for each lint error or exception found.
+    Yields :class:`Result` objects for each path, lint error, or exception found.
     See :func:`fixit_bytes` for semantics.
 
     .. note::
 
-        Currently does not support applying individual fixes, due to limitations in the
-        multiprocessing method in use. Setting ``autofix=True`` will still apply all
-        fixes automatically during linting.
+        Currently does not support applying individual fixes when ``parallel=True``,
+        due to limitations in the multiprocessing method in use.
+        Setting ``parallel=False`` will enable interactive fixes.
+        Setting ``autofix=True`` will always apply fixes automatically during linting.
     """
     if not paths:
         return
@@ -163,8 +179,9 @@ def fixit_paths(
     for path in paths:
         expanded_paths.extend(trailrunner.walk(path))
 
-    if len(expanded_paths) == 1:
-        yield from fixit_file(expanded_paths[0], autofix=autofix)
+    if len(expanded_paths) == 1 or not parallel:
+        for path in expanded_paths:
+            yield from fixit_file(path, autofix=autofix)
     else:
         fn = partial(_fixit_file_wrapper, autofix=autofix)
         for _, results in trailrunner.run_iter(expanded_paths, fn):

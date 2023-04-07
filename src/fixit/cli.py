@@ -6,7 +6,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Set
 
 import click
 
@@ -15,6 +15,33 @@ from fixit import __version__
 from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config
 from .ftypes import Options
+from .util import capture
+
+
+def splash(
+    visited: Set[Path], dirty: Set[Path], autofixes: int = 0, fixed: int = 0
+) -> None:
+    def f(v: int) -> str:
+        return "file" if v == 1 else "files"
+
+    if dirty:
+        reports = [
+            click.style(f"{len(visited)} {f(len(visited))} checked"),
+            click.style(
+                f"{len(dirty)} {f(len(dirty))} with errors", fg="yellow", bold=True
+            ),
+        ]
+        if autofixes:
+            word = "fix" if autofixes == 1 else "fixes"
+            reports += [click.style(f"{autofixes} auto-{word} available", bold=True)]
+        if fixed:
+            word = "fix" if fixed == 1 else "fixes"
+            reports += [click.style(f"{fixed} {word} applied", bold=True)]
+
+        message = ", ".join(reports)
+        click.secho(f"🛠️  {message} 🛠️", err=True)
+    else:
+        click.secho(f"🧼 {len(visited)} {f(len(visited))} clean 🧼", err=True)
 
 
 @click.group()
@@ -48,7 +75,7 @@ def main(
 
 @main.command()
 @click.pass_context
-@click.option("--diff", is_flag=True, help="Show diff of suggested changes")
+@click.option("--diff", "-d", is_flag=True, help="Show diff of suggested changes")
 @click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
 def lint(
     ctx: click.Context,
@@ -59,28 +86,74 @@ def lint(
     lint one or more paths and return suggestions
     """
     exit_code = 0
+    visited: Set[Path] = set()
+    dirty: Set[Path] = set()
+    autofixes = 0
     for result in fixit_paths(paths):
-        if result.violation:
-            exit_code |= 1
-        if result.error:
-            exit_code |= 2
-        print_result(result, show_diff=diff)
+        visited.add(result.path)
+
+        if print_result(result, show_diff=diff):
+            dirty.add(result.path)
+            if result.violation:
+                exit_code |= 1
+                if result.violation.autofixable:
+                    autofixes += 1
+            if result.error:
+                exit_code |= 2
+
+    splash(visited, dirty, autofixes)
     ctx.exit(exit_code)
 
 
 @main.command()
 @click.pass_context
+@click.option(
+    "--interactive/--automatic",
+    "-i/-a",
+    is_flag=True,
+    default=True,
+    help="how to apply fixes; interactive by default",
+)
+@click.option("--diff", "-d", is_flag=True, help="show diff even with --automatic")
 @click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
 def fix(
     ctx: click.Context,
+    interactive: bool,
+    diff: bool,
     paths: Iterable[Path],
 ):
     """
     lint and autofix one or more files and return results
     """
+    autofix = not interactive
     exit_code = 0
-    for result in fixit_paths(paths, autofix=True):
-        print_result(result, show_diff=True)
+
+    visited: Set[Path] = set()
+    dirty: Set[Path] = set()
+    autofixes = 0
+    fixed = 0
+
+    # TODO: make this parallel
+    generator = capture(fixit_paths(paths, autofix=autofix, parallel=False))
+    for result in generator:
+        visited.add(result.path)
+        if print_result(result, show_diff=interactive or diff):
+            dirty.add(result.path)
+            if autofix and result.violation and result.violation.autofixable:
+                autofixes += 1
+                fixed += 1
+        if interactive and result.violation and result.violation.autofixable:
+            autofixes += 1
+            answer = click.prompt(
+                "Apply autofix?", default="y", type=click.Choice("ynq", False)
+            )
+            if answer == "y":
+                generator.respond(True)
+                fixed += 1
+            elif answer == "q":
+                break
+
+    splash(visited, dirty, autofixes, fixed)
     ctx.exit(exit_code)
 
 
