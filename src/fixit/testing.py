@@ -13,6 +13,7 @@ from typing import (
     Callable,
     Collection,
     Dict,
+    List,
     Mapping,
     Optional,
     Sequence,
@@ -223,6 +224,7 @@ def add_lint_rule_tests_to_module(
         raise NotImplementedError("fixtures are not implemented in tests yet")
     if fixture_dir is None:
         fixture_dir = Path("")
+    test_case_classes: List[Type[unittest.TestCase]] = []
     for test_case in _gen_all_test_methods(rules, fixture_dir, rules_package):
         rule_name = type(test_case.rule).__name__
         test_methods_to_add: Dict[str, Callable] = {}
@@ -244,4 +246,14 @@ def add_lint_rule_tests_to_module(
             test_methods_to_add[test_method_name] = test_method
 
         test_case_class = type(rule_name, (test_case_type,), test_methods_to_add)
+        test_case_classes.append(test_case_class)
         module_attrs[rule_name] = test_case_class
+
+    # Rewrite the module for each generated test case to match the location calling
+    # this function. This enables better integration with test case discovery methods
+    # that depend on listing test cases separately from running them.
+    if "__package__" in module_attrs:
+        test_module = module_attrs.get("__package__")
+        assert isinstance(test_module, str)
+        for test_case_class in test_case_classes:
+            test_case_class.__module__ = test_module
