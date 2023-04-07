@@ -83,6 +83,7 @@ html_theme_options = {
     "show_powered_by": False,
     "sidebar_collapse": False,
     "extra_nav_links": {
+        "Project Roadmap": "https://github.com/Instagram/Fixit/milestones",
         "Report Issues": "https://github.com/Instagram/Fixit/issues",
     },
 }
