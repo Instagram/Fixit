@@ -32,7 +32,7 @@ Advanced API
 .. autoclass:: fixit.ftypes.FileContent
 
 .. autofunction:: fixit_bytes
-.. autofunction:: fixit.util.capture
+.. autoclass:: fixit.util.capture
 
 .. autoclass:: Config
 .. autoclass:: QualifiedRule
