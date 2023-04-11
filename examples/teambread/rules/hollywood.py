@@ -10,10 +10,12 @@ class HollywoodNameRule(LintRule):
     # clean code samples
     VALID = [
         ValidTestCase('name = "Susan"'),
+        ValidTestCase("print('Terry')"),
     ]
     # code that triggers this rule
     INVALID = [
-        InvalidTestCase('name = "Paul"'),
+        InvalidTestCase('name = "Paul"', expected_replacement='name = "Mary"'),
+        InvalidTestCase("print('Paul')", expected_replacement='print("Mary")'),
     ]
 
     def visit_SimpleString(self, node: libcst.SimpleString) -> None:

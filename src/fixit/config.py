@@ -9,7 +9,6 @@ import logging
 import pkgutil
 import sys
 from contextlib import contextmanager
-from dataclasses import replace
 from pathlib import Path
 from types import ModuleType
 from typing import (
@@ -51,7 +50,7 @@ log = logging.getLogger(__name__)
 
 
 class ConfigError(ValueError):
-    def __init__(self, msg: str, config: RawConfig):
+    def __init__(self, msg: str, config: Optional[RawConfig] = None):
         super().__init__(msg)
         self.config = config
 
@@ -310,6 +309,26 @@ def get_options(
     return rule_configs
 
 
+def parse_rule(
+    rule: str, root: Path, config: Optional[RawConfig] = None
+) -> QualifiedRule:
+    """
+    Given a raw rule string, parse and return a QualifiedRule object
+    """
+    if not (match := QualifiedRuleRegex.match(rule)):
+        raise ConfigError(f"invalid rule name {rule!r}", config=config)
+
+    group = match.groupdict()
+    module = group["module"]
+    name = group["name"]
+    local = group["local"]
+
+    if local:
+        return QualifiedRule(module, name, local, root)
+    else:
+        return QualifiedRule(module, name)
+
+
 def merge_configs(
     path: Path, raw_configs: List[RawConfig], root: Optional[Path] = None
 ) -> Config:
@@ -338,25 +357,12 @@ def merge_configs(
             return
 
         for rule in enable:
-            if not (match := QualifiedRuleRegex.match(rule)):
-                raise ConfigError(f"invalid rule name {rule!r}", config=config)
-
-            group = match.groupdict()
-            qual_rule = QualifiedRule(module=group["module"], name=group["name"], local=group["local"])  # type: ignore
-
-            if qual_rule.local:
-                qual_rule = replace(qual_rule, root=subpath)
-
+            qual_rule = parse_rule(rule, subpath, config)
             enable_rules.add(qual_rule)
             disable_rules.discard(qual_rule)
 
         for rule in disable:
-            if not (match := QualifiedRuleRegex.match(rule)):
-                raise ConfigError(f"invalid rule name {rule!r}", config=config)
-
-            group = match.groupdict()
-            qual_rule = QualifiedRule(module=group["module"], name=group["name"], local=group["local"])  # type: ignore
-
+            qual_rule = parse_rule(rule, subpath, config)
             enable_rules.discard(qual_rule)
             disable_rules.add(qual_rule)
 

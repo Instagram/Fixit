@@ -5,6 +5,7 @@
 
 import logging
 import sys
+import unittest
 from pathlib import Path
 from typing import Optional, Sequence, Set
 
@@ -13,8 +14,9 @@ import click
 from fixit import __version__
 
 from .api import fixit_paths, print_result
-from .config import collect_rules, generate_config
+from .config import collect_rules, generate_config, parse_rule
 from .ftypes import Options
+from .testing import generate_lint_rule_test_cases
 from .util import capture
 
 
@@ -161,6 +163,28 @@ def fix(
 
     splash(visited, dirty, autofixes, fixed)
     ctx.exit(exit_code)
+
+
+@main.command()
+@click.pass_context
+@click.argument("rules", nargs=-1, required=True, type=str)
+def test(ctx: click.Context, rules: Sequence[str]):
+    """
+    test lint rules and their VALID/INVALID cases
+    """
+    qual_rules = [parse_rule(rule, Path.cwd().resolve()) for rule in rules]
+    lint_rules = collect_rules(enables=qual_rules, disables=())
+    test_cases = generate_lint_rule_test_cases(lint_rules)
+
+    test_suite = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    for test_case in test_cases:
+        test_suite.addTest(loader.loadTestsFromTestCase(test_case))
+
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(test_suite)
+    if not result.wasSuccessful():
+        ctx.exit(1)
 
 
 @main.command()
