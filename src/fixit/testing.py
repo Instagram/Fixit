@@ -8,18 +8,7 @@ import textwrap
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Collection, Dict, List, Mapping, Sequence, Type, Union
 
 from moreorless import unified_diff
 
@@ -135,9 +124,7 @@ class LintRuleTestCase(unittest.TestCase):
             self.assertEqual(expected_diff, report.diff)
 
 
-def _gen_test_methods_for_rule(
-    rule: LintRule, fixture_dir: Path, rules_package: str
-) -> TestCasePrecursor:
+def gen_test_methods_for_rule(rule: LintRule) -> TestCasePrecursor:
     """
     Aggregates all of the cases inside a single LintRule's VALID and INVALID
     attributes and maps them to altered names with a `test_` prefix so that 'unittest'
@@ -171,9 +158,7 @@ def _gen_test_methods_for_rule(
     )
 
 
-def _gen_all_test_methods(
-    rules: Collection[LintRule], fixture_dir: Path, rules_package: str
-) -> Sequence[TestCasePrecursor]:
+def gen_all_test_methods(rules: Collection[LintRule]) -> Sequence[TestCasePrecursor]:
     """
     Converts all passed-in lint rules to type `TestCasePrecursor` to ease further TestCase
     creation later on.
@@ -182,20 +167,41 @@ def _gen_all_test_methods(
     for rule in rules:
         if not isinstance(rule, LintRule):
             continue
-        test_cases_for_rule = _gen_test_methods_for_rule(
-            rule, fixture_dir, rules_package
-        )
+        test_cases_for_rule = gen_test_methods_for_rule(rule)
         cases.append(test_cases_for_rule)
     return cases
 
 
-def add_lint_rule_tests_to_module(
-    module_attrs: Dict[str, Any],
+def generate_lint_rule_test_cases(
     rules: Collection[LintRule],
-    test_case_type: Type[unittest.TestCase] = LintRuleTestCase,
-    custom_test_method_name: str = "_test_method",
-    fixture_dir: Optional[Path] = None,
-    rules_package: str = "",
+) -> List[Type[unittest.TestCase]]:
+    test_case_classes: List[Type[unittest.TestCase]] = []
+    for test_case in gen_all_test_methods(rules):
+        rule_name = type(test_case.rule).__name__
+        test_methods_to_add: Dict[str, Callable] = {}
+
+        for test_method_name, test_method_data in test_case.test_methods.items():
+
+            def test_method(
+                self: LintRuleTestCase,
+                data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
+                rule: LintRule = test_case.rule,
+            ) -> None:
+                # instantiate a new rule for every test
+                rule_ty = type(rule)
+                return self._test_method(data, rule_ty())
+
+            test_method.__name__ = test_method_name
+            test_methods_to_add[test_method_name] = test_method
+
+        test_case_class = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
+        test_case_classes.append(test_case_class)
+
+    return test_case_classes
+
+
+def add_lint_rule_tests_to_module(
+    module_attrs: Dict[str, Any], rules: Collection[LintRule]
 ) -> None:
     """
     Generates classes inheriting from `unittest.TestCase` from the data available in `rules` and adds these to module_attrs.
@@ -220,34 +226,9 @@ def add_lint_rule_tests_to_module(
     The structure of the fixture directory is automatically assumed to mirror the structure of the rules package, eg: `<rules_package>.submodule.module.rule_class` should
     have fixture files in `<fixture_dir>/submodule/module/rule_class/`.
     """
-    if fixture_dir is not None or rules_package:
-        raise NotImplementedError("fixtures are not implemented in tests yet")
-    if fixture_dir is None:
-        fixture_dir = Path("")
-    test_case_classes: List[Type[unittest.TestCase]] = []
-    for test_case in _gen_all_test_methods(rules, fixture_dir, rules_package):
-        rule_name = type(test_case.rule).__name__
-        test_methods_to_add: Dict[str, Callable] = {}
-
-        for test_method_name, test_method_data in test_case.test_methods.items():
-            fixture_file = test_case.fixture_paths.get(test_method_name)
-
-            def test_method(
-                self: Type[unittest.TestCase],
-                data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
-                rule: LintRule = test_case.rule,
-                fixture_file: Optional[Path] = fixture_file,
-            ) -> None:
-                # instantiate a new rule for every test
-                rule_ty = type(rule)
-                return getattr(self, custom_test_method_name)(data, rule_ty())
-
-            test_method.__name__ = test_method_name
-            test_methods_to_add[test_method_name] = test_method
-
-        test_case_class = type(rule_name, (test_case_type,), test_methods_to_add)
-        test_case_classes.append(test_case_class)
-        module_attrs[rule_name] = test_case_class
+    test_case_classes = generate_lint_rule_test_cases(rules)
+    for test_case_class in test_case_classes:
+        module_attrs[test_case_class.__name__] = test_case_class
 
     # Rewrite the module for each generated test case to match the location calling
     # this function. This enables better integration with test case discovery methods
