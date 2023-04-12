@@ -94,7 +94,7 @@ by mapping the fully-qualified rule name to a dictionary of key/value pairs:
 .. code-block:: toml
 
     [tool.fixit.options]
-    "fixit.rules.ExampleRule" = {greeting = "hello world"}
+    "fixit.rules:ExampleRule" = {greeting = "hello world"}
 
 Alternatively, for rules with a large number of options, the rule name can
 be included in the table name for easier usage. Note that the quotes in the
@@ -102,7 +102,7 @@ table name are required for correctly specifying options:
 
 .. code-block:: toml
 
-    [tool.fixit.options."fixit.rules.ExampleRule"]
+    [tool.fixit.options."fixit.rules:ExampleRule"]
     greeting = "hello world"
     answer = 42
 
@@ -121,12 +121,12 @@ defining the subpath it applies to, along with any values from the tables above:
 
     [[tool.fixit.overrides]]
     path = "foo/bar"
-    disable = ["fixit.rules.ExampleRule"]
+    disable = ["fixit.rules:ExampleRule"]
 
     [[tool.fixit.overrides.options]]
     # applies to the above override path only
-    "fixit.rules.Story" = {closing = "goodnight moon"}
+    "fixit.rules:Story" = {closing = "goodnight moon"}
 
     [[tool.fixit.overrides]]
     path = "fizz/buzz"
-    enable = ["plugin.SomethingNeat"]
+    enable = ["plugin:SomethingNeat"]
