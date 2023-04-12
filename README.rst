@@ -33,7 +33,7 @@ changes for any errors found, which can then be accepted automatically,
 or presented to the user for consideration.
 
 
-**Fixit has been rebuilt for better configuration and support for custom
+**Fixit 2.0 has been rebuilt for better configuration and support for custom
 lint rules.** If you are using Fixit 0.1.4 or older, take a look at the
 `legacy documentation <https://fixit.rtfd.io/en/v0.1.4/>`_
 or the `stable branch <https://github.com/Instagram/Fixit/tree/0.x>`_.

@@ -44,10 +44,33 @@ The main configuration table.
     List of modules or individual rules to enable when linting files covered
     by this configuration.
 
+    Rules bundled with Fixit, or available in the environment's site-packages,
+    can be referenced as a group by their fully-qualified package name, or
+    individually by adding a colon and the rule name:
+
+    .. code-block:: toml
+
+        enable = [
+            "fixit.rules",  # all lint rules in this package (non-recursive)
+            "fixit.rules:UseFstringRule",  # single lint rule by name
+        ]
+
+    Local rules, available only in the repo being linted, can be referenced by
+    their locally-qualified package names, as if they were being imported from
+    a Python module *relative to the configuration file specifying the rule*:
+
+    .. code-block:: toml
+
+        # teambread/fixit.toml
+        enable = [
+            ".rules",  # all rules in teambread/rules/ (non-recursive)
+            ".rules.hollywood",  # all rules in teambread/rules/hollywood.py
+            ".rules:HollywoodNameRule",  # single lint rule by name
+        ]
+
     Overrides disabled rules from any configuration further up the hierarchy.
 
-    If no rules are explicitly enabled, Fixit will enable the ``fixit.rules``
-    module by default.
+    Fixit will enable the built-in :mod:`fixit.rules` lint rules by default.
 
 .. attribute:: disable
     :type: list[str]
@@ -58,6 +81,8 @@ The main configuration table.
 
     Overrides enabled rules from this file, as well any configuration files
     further up the hierarchy.
+
+    See :attr:`enable` for details on referencing lint rules.
 
 
 ``[tool.fixit.options]``
