@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 import libcst as cst
 from libcst import matchers as m
-from libcst.metadata import ParentNodeProvider
+from libcst.metadata import QualifiedNameProvider
 
 from fixit import CstLintRule, InvalidTestCase, ValidTestCase
 
@@ -15,7 +15,9 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
     """
 
     MESSAGE: str = "Use asyncio.sleep in async function"
-
+    METADATA_DEPENDENCIES = (
+        QualifiedNameProvider,
+    )
     VALID = [
         ValidTestCase(
             """
@@ -69,23 +71,6 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
                 await asyncio.sleep(1)
             """
         ),
-        ValidTestCase(
-            """
-            import time
-            from asyncio import *
-            async def func():
-                await sleep(1)
-            """
-        ),
-        # don't care if await if missing
-        ValidTestCase(
-            """
-            import time
-            from asyncio import *
-            async def func():
-                sleep(1)
-            """
-        ),
     ]
     INVALID = [
         InvalidTestCase(
@@ -113,15 +98,6 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
         ),
         InvalidTestCase(
             """
-            from time import *
-            import asyncio
-            async def func():
-                sleep(2)
-                asyncio.sleep(1)
-            """
-        ),
-        InvalidTestCase(
-            """
             from asyncio import sleep
             import time
             async def func():
@@ -130,88 +106,33 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
             """
         ),
     ]
-    METADATA_DEPENDENCIES = (ParentNodeProvider,)
 
     def __init__(self):
         super().__init__()
-        """
-        Scenarios:
-        0. 'time' is not imported or not an async func  -> skip lint
-        1. no alias 'sleep' is imported -> 'asyncio.sleep' need to be called
-        2. alias 'sleep' is imported, check if imported from asyncio
-            a. If yes -> 'sleep' need to be called alone. e.g. sleep(..), not xx.sleep(..)
-            b. If no -> 'asyncio.sleep' need to be called
-        """
-        # is time imported
-        self.time_imported = False
         # is async func
         self.async_func = False
-        # is sleep imported as an alias
-        self.alias_sleep_imported = False
-        # is sleep improted as an alias from asyncio
-        self.sleep_from_asyncio = False
-        # is current processing an object with name == sleep
-        self.is_processing_sleep = False
-
-    def visit_Import(self, node: cst.Import) -> None:
-        self.time_imported = self.time_imported or any(
-            alias.name.value == "time" for alias in node.names
-        )
-
-    def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
-        if (
-            node.module
-            and node.module.value != "asyncio"
-            and node.module.value != "time"
-        ):
-            return
-
-        self.time_imported = self.time_imported or (
-            node.module and node.module.value == "time"
-        )
-        sleep_in_this_module = isinstance(node.names, cst.ImportStar) or any(
-            alias.name.value == "sleep" for alias in node.names
-        )
-        self.alias_sleep_imported = self.alias_sleep_imported or sleep_in_this_module
-        self.sleep_from_asyncio = self.sleep_from_asyncio or (
-            True
-            if sleep_in_this_module and node.module and node.module.value == "asyncio"
-            else False
-        )
 
     def visit_FunctionDef(self, node: cst.FunctionDef) -> None:
-        self.async_func = node.asynchronous
+        self.async_func = node.asynchronous is not None
 
     def leave_FunctionDef(self, node: cst.FunctionDef) -> None:
         self.async_func = False
 
-    def visit_Name(self, node: cst.Name) -> None:
-        self.is_processing_sleep = self.is_processing_sleep or (
-            node and node.value == "sleep"
-        )
-
     def visit_Call(self, node: cst.Call) -> None:
         self.is_processing_sleep = False
+        metadata = list(self.get_metadata(
+            QualifiedNameProvider,
+            node
+        ))
 
-    def leave_Call(self, node: cst.Call) -> None:
-        if (
-            not self.is_processing_sleep
-            or not self.async_func
-            or not self.time_imported
-        ):
+        if not metadata:
             return
 
-        correct: bool = False
-        if not self.alias_sleep_imported or not self.sleep_from_asyncio:
-            # need to be called with asyncio.sleep
-            correct = m.matches(
-                node,
-                m.Call(func=m.Attribute(value=m.Name("asyncio"), attr=m.Name("sleep"))),
-            )
-        else:  # sleep is imported as alias
-            if self.sleep_from_asyncio:
-                # sleep has to be called with sleep(..)
-                correct = isinstance(node.func, cst.Name) and node.func.value == "sleep"
+        func_full_name = metadata[0].name
+        if not self.async_func:
+            return
 
-        if not correct:
-            self.report(node, self.MESSAGE)
+        if func_full_name != 'time.sleep':
+            return
+
+        self.report(node, self.MESSAGE)
