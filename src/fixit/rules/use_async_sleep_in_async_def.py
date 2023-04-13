@@ -3,7 +3,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 import libcst as cst
-from libcst import matchers as m
 from libcst.metadata import QualifiedNameProvider
 
 from fixit import CstLintRule, InvalidTestCase, ValidTestCase
@@ -15,9 +14,7 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
     """
 
     MESSAGE: str = "Use asyncio.sleep in async function"
-    METADATA_DEPENDENCIES = (
-        QualifiedNameProvider,
-    )
+    METADATA_DEPENDENCIES = (QualifiedNameProvider,)
     VALID = [
         ValidTestCase(
             """
@@ -120,10 +117,7 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
 
     def visit_Call(self, node: cst.Call) -> None:
         self.is_processing_sleep = False
-        metadata = list(self.get_metadata(
-            QualifiedNameProvider,
-            node
-        ))
+        metadata = list(self.get_metadata(QualifiedNameProvider, node))
 
         if not metadata:
             return
@@ -132,7 +126,7 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
         if not self.async_func:
             return
 
-        if func_full_name != 'time.sleep':
+        if func_full_name != "time.sleep":
             return
 
         self.report(node, self.MESSAGE)
