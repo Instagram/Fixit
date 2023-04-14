@@ -48,14 +48,6 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
             """
             import time
             import asyncio
-            async def func():
-                await asyncio.sleep(1)
-            """
-        ),
-        ValidTestCase(
-            """
-            import time
-            import asyncio
             def func():
                 time.sleep(1)
             """
@@ -66,6 +58,22 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
             import asyncio
             async def func():
                 await asyncio.sleep(1)
+            """
+        ),
+        ValidTestCase(
+            """
+            import time
+            import asyncio
+            async def func():
+                fut = asyncio.sleep(1)
+                await fut
+            """
+        ),
+        ValidTestCase(
+            """
+            import something
+            async def func():
+                something.sleep(3)
             """
         ),
     ]
@@ -116,16 +124,14 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
         self.async_func = False
 
     def visit_Call(self, node: cst.Call) -> None:
-        self.is_processing_sleep = False
-        metadata = list(self.get_metadata(QualifiedNameProvider, node))
+        if not self.async_func:
+            return
 
+        metadata = list(self.get_metadata(QualifiedNameProvider, node))
         if not metadata:
             return
 
         func_full_name = metadata[0].name
-        if not self.async_func:
-            return
-
         if func_full_name != "time.sleep":
             return
 
