@@ -239,13 +239,14 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
 .. class:: DeprecatedUnittestAssertsRule
 
-    Discourages the use of various deprecated unittest.TestCase functions - https://docs.python.org/3/library/unittest.html#deprecated-aliases
+    Discourages the use of various deprecated unittest.TestCase functions
+
+    See https://docs.python.org/3/library/unittest.html#deprecated-aliases
     
 
     .. attribute:: MESSAGE
 
-        "You are using a deprecated TestCase method.
-        See https://docs.python.org/3/library/unittest.html#deprecated-aliases and https://bugs.python.org/issue9424.
+        {deprecated} is deprecated, use {replacement} instead
     .. attribute:: AUTOFIX
         :type: Yes
 
