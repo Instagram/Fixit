@@ -54,10 +54,6 @@ class DeprecatedUnittestAssertsRule(CstLintRule):
         ),
         Invalid(
             "self.assertRaisesRegexp(exception, regex)",
-            expected_replacement="self.assertNotRegex(text, regex)",
-        ),
-        Invalid(
-            "self.assertRaisesRegexp(exception, regex)",
             expected_replacement="self.assertRaisesRegex(exception, regex)",
         ),
     ]
