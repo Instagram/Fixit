@@ -15,8 +15,8 @@ unless explicitly listed in the :attr:`disable` configuration option.
 - :class:`CollapseIsinstanceChecksRule`
 - :class:`ComparePrimitivesByEqualRule`
 - :class:`CompareSingletonPrimitivesByIsRule`
+- :class:`DeprecatedUnittestAssertsRule`
 - :class:`ExplicitFrozenDataclassRule`
-- :class:`NoAssertEqualsRule`
 - :class:`NoAssertTrueForComparisonsRule`
 - :class:`NoInheritFromObjectRule`
 - :class:`NoNamedTupleRule`
@@ -237,6 +237,45 @@ unless explicitly listed in the :attr:`disable` configuration option.
             # suggested fix
             x is not False
 
+.. class:: DeprecatedUnittestAssertsRule
+
+    Discourages the use of various deprecated unittest.TestCase functions
+
+    See https://docs.python.org/3/library/unittest.html#deprecated-aliases
+    
+
+    .. attribute:: MESSAGE
+
+        {deprecated} is deprecated, use {replacement} instead
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            self.assertEqual(a, b)
+        .. code:: python
+
+            self.assertNotEqual(a, b)
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            self.assertEquals(a, b)
+
+            # suggested fix
+            self.assertEqual(a, b)
+
+        .. code:: python
+
+            self.assertNotEquals(a, b)
+
+            # suggested fix
+            self.assertNotEqual(a, b)
+
 .. class:: ExplicitFrozenDataclassRule
 
     Encourages the use of frozen dataclass objects by telling users to specify the
@@ -292,35 +331,6 @@ unless explicitly listed in the :attr:`disable` configuration option.
             from dataclasses import dataclass
             @dataclass(frozen=True)  # called as a function, no kwargs
             class Cls: pass
-
-.. class:: NoAssertEqualsRule
-
-    Discourages use of ``assertEquals`` as it is deprecated (see https://docs.python.org/2/library/unittest.html#deprecated-aliases
-    and https://bugs.python.org/issue9424). Use the standardized ``assertEqual`` instead.
-    
-
-    .. attribute:: MESSAGE
-
-        "assertEquals" is deprecated, use "assertEqual" instead.
-        See https://docs.python.org/2/library/unittest.html#deprecated-aliases and https://bugs.python.org/issue9424.
-    .. attribute:: AUTOFIX
-        :type: Yes
-
-
-    .. attribute:: VALID
-
-        .. code:: python
-
-            self.assertEqual(a, b)
-
-    .. attribute:: INVALID
-
-        .. code:: python
-
-            self.assertEquals(a, b)
-
-            # suggested fix
-            self.assertEqual(a, b)
 
 .. class:: NoAssertTrueForComparisonsRule
 
