@@ -114,3 +114,7 @@ disable = [
     # We need noqa for compat with flake8 until we jettison flake8
     "fixit.rules:UseLintFixmeCommentRule",
 ]
+
+[[tool.fixit.overrides]]
+path = "examples"
+enable = [".examples.noop"]
