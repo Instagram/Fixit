@@ -34,7 +34,7 @@ class ConfigTest(TestCase):
 
                 [[tool.fixit.overrides]]
                 path = "other"
-                enable = ["other.stuff"]
+                enable = ["other.stuff", ".globalrules"]
                 disable = ["fixit.rules"]
                 options = {"other.stuff.Whatever"={key="value"}}
                 """
@@ -171,7 +171,7 @@ class ConfigTest(TestCase):
                             "overrides": [
                                 {
                                     "path": "other",
-                                    "enable": ["other.stuff"],
+                                    "enable": ["other.stuff", ".globalrules"],
                                     "disable": ["fixit.rules"],
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
@@ -198,7 +198,7 @@ class ConfigTest(TestCase):
                             "overrides": [
                                 {
                                     "path": "other",
-                                    "enable": ["other.stuff"],
+                                    "enable": ["other.stuff", ".globalrules"],
                                     "disable": ["fixit.rules"],
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
@@ -222,7 +222,7 @@ class ConfigTest(TestCase):
                             "overrides": [
                                 {
                                     "path": "other",
-                                    "enable": ["other.stuff"],
+                                    "enable": ["other.stuff", ".globalrules"],
                                     "disable": ["fixit.rules"],
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
@@ -366,7 +366,11 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.tdp / "other" / "foo.py",
                     root=self.tdp,
-                    enable=[QualifiedRule("more.rules"), QualifiedRule("other.stuff")],
+                    enable=[
+                        QualifiedRule(".globalrules", local=".", root=self.tdp),
+                        QualifiedRule("more.rules"),
+                        QualifiedRule("other.stuff"),
+                    ],
                     disable=[
                         QualifiedRule("fixit.rules"),
                         QualifiedRule("fixit.rules.SomethingSpecific"),

@@ -356,13 +356,14 @@ def merge_configs(
         except ValueError:  # not relative to subpath
             return
 
+        config_dir = config.path.parent
         for rule in enable:
-            qual_rule = parse_rule(rule, subpath, config)
+            qual_rule = parse_rule(rule, config_dir, config)
             enable_rules.add(qual_rule)
             disable_rules.discard(qual_rule)
 
         for rule in disable:
-            qual_rule = parse_rule(rule, subpath, config)
+            qual_rule = parse_rule(rule, config_dir, config)
             enable_rules.discard(qual_rule)
             disable_rules.add(qual_rule)
 
