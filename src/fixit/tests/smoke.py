@@ -3,8 +3,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from collections import defaultdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from textwrap import dedent
 from unittest import TestCase
 
 from click.testing import CliRunner
@@ -65,3 +67,79 @@ class SmokeTest(TestCase):
             self.assertIn("dirty.py@2:6 UseFstringRule:", result.output)
             self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.output)
             self.assertEqual(result.exit_code, 3)
+
+    def test_directory_with_autofixes(self) -> None:
+        with TemporaryDirectory() as td:
+            tdp = Path(td).resolve()
+            clean = tdp / "clean.py"
+            clean.write_text(
+                dedent(
+                    """
+                    GLOBAL = 'hello'
+
+                    def foo():
+                        value = 'test'
+                        if value is False:
+                            pass
+                    """
+                )
+            )
+            single = tdp / "single.py"
+            single.write_text(
+                dedent(
+                    """
+                    GLOBAL = f'hello'
+
+                    def foo():
+                        value = 'test'
+                        if value is False:
+                            pass
+                    """
+                )
+            )
+            multi = tdp / "multi.py"
+            multi.write_text(
+                dedent(
+                    """
+                    GLOBAL = f'hello'
+
+                    def foo():
+                        value = f'test'
+                        if value == False:
+                            pass
+                    """
+                )
+            )
+
+            expected = clean.read_text()
+
+            result = self.runner.invoke(main, ["fix", "--automatic", td])
+            errors = defaultdict(list)
+            for line in result.output.splitlines():
+                fn, _, error = line.partition("@")
+                short, _, _ = error.partition(": ")
+                errors[Path(fn)].append(short)
+
+            with self.subTest("clean"):
+                self.assertListEqual([], errors[clean])
+                self.assertEqual(expected, clean.read_text())
+
+            with self.subTest("single fix"):
+                self.assertListEqual(
+                    [
+                        "2:9 NoRedundantFStringRule",
+                    ],
+                    sorted(errors[single]),
+                )
+                self.assertEqual(expected, single.read_text())
+
+            with self.subTest("multiple fixes"):
+                self.assertListEqual(
+                    [
+                        "2:9 NoRedundantFStringRule",
+                        "5:12 NoRedundantFStringRule",
+                        "6:7 CompareSingletonPrimitivesByIsRule",
+                    ],
+                    sorted(errors[multi]),
+                )
+                self.assertEqual(expected, multi.read_text())
