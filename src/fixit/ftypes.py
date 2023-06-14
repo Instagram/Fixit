@@ -21,7 +21,7 @@ from typing import (
     Union,
 )
 
-from libcst import CSTNode, FlattenSentinel, RemovalSentinel
+from libcst import CSTNode, CSTNodeT, FlattenSentinel, RemovalSentinel
 from libcst._add_slots import add_slots
 from libcst.metadata import CodePosition as CodePosition, CodeRange as CodeRange
 
@@ -35,7 +35,7 @@ RuleOptionTypes = (str, int, float)
 RuleOptions = Dict[str, Union[str, int, float]]
 RuleOptionsTable = Dict[str, RuleOptions]
 
-NodeReplacement = Union[CSTNode, FlattenSentinel, RemovalSentinel]
+NodeReplacement = Union[CSTNodeT, FlattenSentinel[CSTNodeT], RemovalSentinel]
 
 Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]

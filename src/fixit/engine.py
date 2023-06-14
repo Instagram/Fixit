@@ -11,11 +11,11 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Collection, Iterable, Iterator, Mapping, Optional, Set
 
-from libcst import Module, parse_module
+from libcst import CSTNode, CSTTransformer, Module, parse_module
 from libcst.metadata import FullRepoManager, MetadataWrapper, ProviderT
 from moreorless import unified_diff
 
-from .ftypes import Config, FileContent, LintViolation, Timings, TimingsHook
+from .ftypes import Config, FileContent, LintViolation, Timings, TimingsHook, NodeReplacement
 from .rule import LintRule
 
 LOG = logging.getLogger(__name__)
@@ -105,9 +105,18 @@ class LintRunner:
         """
         Apply any autofixes to the module, and return the resulting source code.
         """
-        for violation in violations:
-            if violation.replacement:
-                self.module = self.module.deep_replace(
-                    violation.node, violation.replacement  # type:ignore # LibCST#906
-                )
-        return self.module.bytes
+        replacements = {v.node: v.replacement for v in violations if v.replacement}
+
+        class ReplacementTransformer(CSTTransformer):
+            def on_visit(self, node: CSTNode) -> bool:
+                # don't visit children if we're going to replace the parent anyways
+                return node not in replacements
+
+            def on_leave(self, node: CSTNode, updated: CSTNode) -> NodeReplacement:
+                if node in replacements:
+                    new = replacements[node]
+                    return new
+                return updated
+
+        updated = self.module.visit(ReplacementTransformer())
+        return updated.bytes
