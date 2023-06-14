@@ -2,6 +2,7 @@
 .venv:
 	hatch env prune
 	hatch env create
+	ln -sf "$(hatch env find all)" .venv
 
 .PHONY: venv
 venv: .venv
