@@ -1,12 +1,10 @@
 
-.venv:
-	hatch env prune
-	hatch env create
-	ln -sf "$(hatch env find all)" .venv
-
 .PHONY: venv
-venv: .venv
-	@echo "Run \`hatch shell\` to create a new shell in the venv or \`source `hatch env find`/bin/activate\` to activate it in the current shell"
+venv:
+	hatch env remove all
+	hatch env create all
+	ln -sf "$$(hatch env find all)" .venv
+	@echo "Run \`source .venv/bin/activate\` to activate virtualenv"
 
 .PHONY: format
 format:
@@ -28,3 +26,4 @@ html: docs/*
 .PHONY: distclean
 distclean:
 	hatch env prune
+	rm -f .venv
