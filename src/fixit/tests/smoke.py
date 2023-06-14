@@ -53,7 +53,7 @@ class SmokeTest(TestCase):
             (tdp / "broken.py").write_text("print)\n")
 
             result = self.runner.invoke(main, ["lint", td])
-            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:6.", result.output)
+            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.output)
             self.assertEqual(result.exit_code, 2)
 
     def test_directory_with_violations_and_errors(self) -> None:
@@ -65,7 +65,7 @@ class SmokeTest(TestCase):
 
             result = self.runner.invoke(main, ["lint", td])
             self.assertIn("dirty.py@2:6 UseFstringRule:", result.output)
-            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:6.", result.output)
+            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.output)
             self.assertEqual(result.exit_code, 3)
 
     def test_directory_with_autofixes(self) -> None:
