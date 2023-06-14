@@ -298,7 +298,7 @@ class NoStringTypeAnnotationRule(CstLintRule):
             return
         if self.in_annotation and not self.in_literal:
             # This is not allowed past Python3.7 since it's no longer necessary.
-            self.report(
-                node,
-                replacement=cst.parse_expression(node.evaluated_value),
-            )
+            value = node.evaluated_value
+            if isinstance(value, bytes):
+                value = value.decode("utf-8")
+            self.report(node, replacement=cst.parse_expression(value))
