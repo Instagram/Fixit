@@ -1223,13 +1223,16 @@ unless explicitly listed in the :attr:`disable` configuration option.
             )
 .. class:: UseTypesFromTypingRule
 
-    Enforces the use of types from the ``typing`` module in type annotations in place of ``builtins.{builtin_type}``
-    since the type system doesn't recognize the latter as a valid type.
+    Enforces the use of types from the ``typing`` module in type annotations in place
+    of ``builtins.{builtin_type}`` since the type system doesn't recognize the latter
+    as a valid type before Python ``3.10``.
     
 
     .. attribute:: AUTOFIX
         :type: Yes
 
+    .. attribute:: PYTHON_VERSION
+        :type: '< 3.10'
 
     .. attribute:: VALID
 

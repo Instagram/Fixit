@@ -15,7 +15,7 @@ from moreorless.click import echo_color_precomputed_diff
 
 from .config import collect_rules, generate_config
 from .engine import LintRunner
-from .ftypes import Config, FileContent, LintViolation, Result
+from .ftypes import Config, FileContent, LintViolation, Options, Result
 
 LOG = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ def fixit_bytes(
     automatically, even if ``False`` is sent back to the generator.
     """
     try:
-        rules = collect_rules(config.enable, config.disable)
+        rules = collect_rules(config)
         runner = LintRunner(path, content)
         pending_fixes: List[LintViolation] = []
 
@@ -113,6 +113,7 @@ def fixit_file(
     path: Path,
     *,
     autofix: bool = False,
+    options: Optional[Options] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint a single file on disk, detecting and generating appropriate configuration.
@@ -129,7 +130,7 @@ def fixit_file(
 
     try:
         content: FileContent = path.read_bytes()
-        config = generate_config(path)
+        config = generate_config(path, options=options)
 
         updated = yield from fixit_bytes(path, content, config=config, autofix=autofix)
         if updated and updated != content:
@@ -141,18 +142,21 @@ def fixit_file(
         yield Result(path, violation=None, error=(error, traceback.format_exc()))
 
 
-def _fixit_file_wrapper(path: Path, *, autofix: bool = False) -> List[Result]:
+def _fixit_file_wrapper(
+    path: Path, *, autofix: bool = False, options: Optional[Options] = None
+) -> List[Result]:
     """
     Wrapper because generators can't be pickled or used directly via multiprocessing
     TODO: replace this with some sort of queue or whatever
     """
-    return list(fixit_file(path, autofix=autofix))
+    return list(fixit_file(path, autofix=autofix, options=options))
 
 
 def fixit_paths(
     paths: Iterable[Path],
     *,
     autofix: bool = False,
+    options: Optional[Options] = None,
     parallel: bool = True,
 ) -> Generator[Result, bool, None]:
     """
@@ -181,8 +185,8 @@ def fixit_paths(
 
     if len(expanded_paths) == 1 or not parallel:
         for path in expanded_paths:
-            yield from fixit_file(path, autofix=autofix)
+            yield from fixit_file(path, autofix=autofix, options=options)
     else:
-        fn = partial(_fixit_file_wrapper, autofix=autofix)
+        fn = partial(_fixit_file_wrapper, autofix=autofix, options=options)
         for _, results in trailrunner.run_iter(expanded_paths, fn):
             yield from results

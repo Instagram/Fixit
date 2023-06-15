@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import platform
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,6 +26,8 @@ from libcst import CSTNode, CSTNodeT, FlattenSentinel, RemovalSentinel
 from libcst._add_slots import add_slots
 from libcst.metadata import CodePosition as CodePosition, CodeRange as CodeRange
 
+from packaging.version import Version
+
 T = TypeVar("T")
 
 CodeRange
@@ -42,6 +45,8 @@ TimingsHook = Callable[[Timings], None]
 
 VisitorMethod = Callable[[CSTNode], None]
 VisitHook = Callable[[str], ContextManager]
+
+Version
 
 
 @dataclass(frozen=True)
@@ -125,6 +130,9 @@ class Config:
     )
     disable: List[QualifiedRule] = field(default_factory=list)
     options: RuleOptionsTable = field(default_factory=dict)
+
+    # filtering criteria
+    python_version: Optional[Version] = Version(platform.python_version())
 
     def __post_init__(self):
         self.path = self.path.resolve()

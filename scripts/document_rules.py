@@ -45,6 +45,10 @@ unless explicitly listed in the :attr:`disable` configuration option.
         :type: Yes
 
 {% endif %}
+{% if rule.PYTHON_VERSION %}
+    .. attribute:: PYTHON_VERSION
+        :type: {{ repr(rule.PYTHON_VERSION) }}
+{% endif %}
 
     .. attribute:: VALID
 

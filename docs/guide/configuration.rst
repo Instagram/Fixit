@@ -84,6 +84,17 @@ The main configuration table.
 
     See :attr:`enable` for details on referencing lint rules.
 
+.. attribute:: python-version
+    :type: str
+    :value: "3.10"
+
+    Python version to target when selecting lint rules. Rules with
+    :attr:`~fixit.LintRule.PYTHON_VERSION` specifiers that don't match this
+    target version will be automatically disabled during linting.
+    
+    Defaults to the currently active version of Python.
+    Set to empty string ``""`` to disable target version checking.
+
 
 ``[tool.fixit.options]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

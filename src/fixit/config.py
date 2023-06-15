@@ -25,10 +25,15 @@ from typing import (
     Type,
 )
 
+from packaging.specifiers import SpecifierSet
+
+from packaging.version import InvalidVersion, Version
+
 from .ftypes import (
     Config,
     is_collection,
     is_sequence,
+    Options,
     QualifiedRule,
     QualifiedRuleRegex,
     RawConfig,
@@ -185,22 +190,37 @@ def walk_module(module: ModuleType) -> Dict[str, Type[LintRule]]:
 
 
 def collect_rules(
-    enables: Collection[QualifiedRule], disables: Collection[QualifiedRule]
+    config: Config,
+    *,
+    # out-param to capture reasons when disabling rules for debugging
+    debug_reasons: Optional[Dict[Type[LintRule], str]] = None,
 ) -> Collection[LintRule]:
     """
     Import and return rules specified by `enables` and `disables`.
     """
 
-    final_rules: Set[Type[LintRule]] = set()
-    for qualified_rule in enables:
-        matched_rules = list(find_rules(qualified_rule))
-        final_rules.update(matched_rules)
+    all_rules: Set[Type[LintRule]] = set()
+    if debug_reasons is not None:
+        disabled_rules = debug_reasons
+    else:
+        disabled_rules = {}
 
-    for qualified_rule in disables:
-        matched_rules = list(find_rules(qualified_rule))
-        final_rules.difference_update(matched_rules)
+    for qualified_rule in config.enable:
+        all_rules |= set(find_rules(qualified_rule))
 
-    return [R() for R in final_rules]
+    for qualified_rule in config.disable:
+        disabled_rules.update({r: "disabled" for r in find_rules(qualified_rule)})
+
+    if config.python_version is not None:
+        disabled_rules.update(
+            {
+                R: "python_version"
+                for R in all_rules
+                if config.python_version not in SpecifierSet(R.PYTHON_VERSION)
+            }
+        )
+
+    return [R() for R in (all_rules - set(disabled_rules))]
 
 
 def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
@@ -342,6 +362,7 @@ def merge_configs(
     enable_rules: Set[QualifiedRule] = {QualifiedRule("fixit.rules")}
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
+    target_python_version = Config.python_version
 
     def process_subpath(
         subpath: Path,
@@ -349,7 +370,10 @@ def merge_configs(
         enable: Sequence[str] = (),
         disable: Sequence[str] = (),
         options: Optional[RuleOptionsTable] = None,
+        python_version: Any = None,
     ):
+        nonlocal target_python_version
+
         subpath = subpath.resolve()
         try:
             path.relative_to(subpath)
@@ -370,6 +394,19 @@ def merge_configs(
         if options:
             rule_options.update(options)
 
+        if python_version is not None:
+            if python_version:
+                try:
+                    target_python_version = Version(python_version)
+                except InvalidVersion:
+                    raise ConfigError(
+                        f"'python_version' {python_version!r} is not valid",
+                        config=config,
+                    )
+
+            else:  # disable versioning, aka python_version = ""
+                target_python_version = None
+
     for config in reversed(raw_configs):
         if root is None:
             root = config.path.parent
@@ -383,6 +420,7 @@ def merge_configs(
             enable=get_sequence(config, "enable"),
             disable=get_sequence(config, "disable"),
             options=get_options(config, "options"),
+            python_version=config.data.pop("python_version", None),
         )
 
         for override in get_sequence(config, "overrides"):
@@ -401,6 +439,7 @@ def merge_configs(
                 enable=get_sequence(config, "enable", data=override),
                 disable=get_sequence(config, "disable", data=override),
                 options=get_options(config, "options", data=override),
+                python_version=override.pop("python_version", None),
             )
 
         for key in data.keys():
@@ -412,10 +451,13 @@ def merge_configs(
         enable=sorted(enable_rules),
         disable=sorted(disable_rules),
         options=rule_options,
+        python_version=target_python_version,
     )
 
 
-def generate_config(path: Path, root: Optional[Path] = None) -> Config:
+def generate_config(
+    path: Path, root: Optional[Path] = None, *, options: Optional[Options] = None
+) -> Config:
     """
     Given a file path, walk upwards looking for and applying cascading configs
     """
@@ -424,6 +466,10 @@ def generate_config(path: Path, root: Optional[Path] = None) -> Config:
     if root is not None:
         root = root.resolve()
 
-    config_paths = locate_configs(path, root=root)
+    if options and options.config_file:
+        config_paths = [options.config_file]
+    else:
+        config_paths = locate_configs(path, root=root)
+
     raw_configs = read_configs(config_paths)
     return merge_configs(path, raw_configs, root=root)
