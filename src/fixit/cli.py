@@ -7,7 +7,7 @@ import logging
 import sys
 import unittest
 from pathlib import Path
-from typing import Optional, Sequence, Set
+from typing import Dict, Optional, Sequence, Set, Type
 
 import click
 
@@ -15,7 +15,8 @@ from fixit import __version__
 
 from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config, parse_rule
-from .ftypes import Options
+from .ftypes import Config, Options
+from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
 
@@ -173,7 +174,9 @@ def test(ctx: click.Context, rules: Sequence[str]):
     test lint rules and their VALID/INVALID cases
     """
     qual_rules = [parse_rule(rule, Path.cwd().resolve()) for rule in rules]
-    lint_rules = collect_rules(enables=qual_rules, disables=())
+    lint_rules = collect_rules(
+        Config(enable=qual_rules, disable=[], python_version=None)
+    )
     test_cases = generate_lint_rule_test_cases(lint_rules)
 
     test_suite = unittest.TestSuite()
@@ -205,8 +208,13 @@ def debug(ctx: click.Context, paths: Sequence[Path]):
     for path in paths:
         path = path.resolve()
         config = generate_config(path)
-        rules = collect_rules(config.enable, config.disable)
+        disabled: Dict[Type[LintRule], str] = {}
+        enabled = collect_rules(config, debug_reasons=disabled)
 
         pprint(">>> ", path)
         pprint(config)
-        pprint(rules)
+        pprint("enabled:", sorted(str(rule) for rule in enabled))
+        pprint(
+            "disabled:",
+            sorted(f"{rule()} ({reason})" for rule, reason in disabled.items()),
+        )

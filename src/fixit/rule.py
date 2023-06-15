@@ -32,9 +32,19 @@ class LintRule(BatchableCSTVisitor):
     """
 
     METADATA_DEPENDENCIES: ClassVar[Collection[ProviderT]] = (PositionProvider,)
+    """
+    Required LibCST metadata providers
+    """
 
     TAGS: Set[str] = set()
     "Arbitrary classification tags for use in configuration/selection"
+
+    PYTHON_VERSION: str = ""
+    """
+    Compatible target Python versions, in `PEP 440 version specifier`__ format.
+
+    __ https://peps.python.org/pep-0440/#version-specifiers
+    """
 
     VALID: ClassVar[List[Union[str, ValidTestCase]]]
     "Test cases that should produce no errors/reports"
@@ -42,8 +52,26 @@ class LintRule(BatchableCSTVisitor):
     INVALID: ClassVar[List[Union[str, InvalidTestCase]]]
     "Test cases that are expected to produce errors, with optional replacements"
 
+    AUTOFIX = False  # set by __subclass_init__
+    """
+    Whether the lint rule contains an autofix.
+
+    Set to ``True`` automatically when :attr:`INVALID` contains at least one
+    test case that provides an expected replacment.
+    """
+
     def __init__(self) -> None:
         self._violations: List[LintViolation] = []
+
+    def __init_subclass__(cls) -> None:
+        invalid: List[Union[str, InvalidTestCase]] = getattr(cls, "INVALID", [])
+        for case in invalid:
+            if isinstance(case, InvalidTestCase) and case.expected_replacement:
+                cls.AUTOFIX = True
+                return
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__module__}:{self.__class__.__name__}"
 
     _visit_hook: Optional[VisitHook] = None
 
@@ -106,21 +134,6 @@ class LintRule(BatchableCSTVisitor):
             name: _wrap(f"{type(self).__name__}.{name}", visitor)
             for (name, visitor) in super().get_visitors().items()
         }
-
-    AUTOFIX = False  # set by __subclass_init__
-    """
-    Whether the lint rule contains an autofix.
-
-    Set to ``True`` automatically when :attr:`INVALID` contains at least one
-    test case that provides an expected replacment.
-    """
-
-    def __init_subclass__(cls) -> None:
-        invalid: List[Union[str, InvalidTestCase]] = getattr(cls, "INVALID", [])
-        for case in invalid:
-            if isinstance(case, InvalidTestCase) and case.expected_replacement:
-                cls.AUTOFIX = True
-                return
 
 
 # DEPRECATED: remove before stable 2.0 release

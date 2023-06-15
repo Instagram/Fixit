@@ -10,7 +10,7 @@ from textwrap import dedent
 from unittest import TestCase
 
 from .. import config
-from ..ftypes import Config, QualifiedRule, RawConfig
+from ..ftypes import Config, QualifiedRule, RawConfig, Version
 
 
 class ConfigTest(TestCase):
@@ -31,12 +31,14 @@ class ConfigTest(TestCase):
                 root = true
                 enable = ["more.rules"]
                 disable = ["fixit.rules.SomethingSpecific"]
+                python_version = "3.8"
 
                 [[tool.fixit.overrides]]
                 path = "other"
                 enable = ["other.stuff", ".globalrules"]
                 disable = ["fixit.rules"]
                 options = {"other.stuff.Whatever"={key="value"}}
+                python_version = "3.10"
                 """
             )
         )
@@ -168,6 +170,7 @@ class ConfigTest(TestCase):
                             "root": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
+                            "python_version": "3.8",
                             "overrides": [
                                 {
                                     "path": "other",
@@ -176,6 +179,7 @@ class ConfigTest(TestCase):
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
+                                    "python_version": "3.10",
                                 },
                             ],
                         },
@@ -195,6 +199,7 @@ class ConfigTest(TestCase):
                             "root": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
+                            "python_version": "3.8",
                             "overrides": [
                                 {
                                     "path": "other",
@@ -203,6 +208,7 @@ class ConfigTest(TestCase):
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
+                                    "python_version": "3.10",
                                 },
                             ],
                         },
@@ -219,6 +225,7 @@ class ConfigTest(TestCase):
                             "root": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
+                            "python_version": "3.8",
                             "overrides": [
                                 {
                                     "path": "other",
@@ -227,6 +234,7 @@ class ConfigTest(TestCase):
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
+                                    "python_version": "3.10",
                                 },
                             ],
                         },
@@ -257,7 +265,10 @@ class ConfigTest(TestCase):
                 [
                     RawConfig(
                         (root / "fixit.toml"),
-                        {"enable": ["foo", "bar"], "disable": ["bar"]},
+                        {
+                            "enable": ["foo", "bar"],
+                            "disable": ["bar"],
+                        },
                     ),
                 ],
                 Config(
@@ -270,12 +281,18 @@ class ConfigTest(TestCase):
             (
                 "without root",
                 [
-                    RawConfig((root / "a/b/c/fixit.toml"), {"enable": ["foo"]}),
+                    RawConfig(
+                        (root / "a/b/c/fixit.toml"),
+                        {"enable": ["foo"], "python_version": "3.10"},
+                    ),
                     RawConfig(
                         (root / "a/b/fixit.toml"),
                         {"enable": ["bar"], "disable": ["foo"]},
                     ),
-                    RawConfig((root / "a/fixit.toml"), {"enable": ["foo"]}),
+                    RawConfig(
+                        (root / "a/fixit.toml"),
+                        {"enable": ["foo"], "python_version": "3.8"},
+                    ),
                 ],
                 Config(
                     path=target,
@@ -285,6 +302,7 @@ class ConfigTest(TestCase):
                         QualifiedRule("fixit.rules"),
                         QualifiedRule("foo"),
                     ],
+                    python_version=Version("3.10"),
                 ),
             ),
             (
@@ -346,6 +364,7 @@ class ConfigTest(TestCase):
                         QualifiedRule("fixit.rules"),
                         QualifiedRule("fixit.rules.SomethingSpecific"),
                     ],
+                    python_version=Version("3.8"),
                 ),
             ),
             (
@@ -376,6 +395,7 @@ class ConfigTest(TestCase):
                         QualifiedRule("fixit.rules.SomethingSpecific"),
                     ],
                     options={"other.stuff.Whatever": {"key": "value"}},
+                    python_version=Version("3.10"),
                 ),
             ),
             (
@@ -387,9 +407,61 @@ class ConfigTest(TestCase):
                     root=self.tdp,
                     enable=[QualifiedRule("fixit.rules"), QualifiedRule("more.rules")],
                     disable=[QualifiedRule("fixit.rules.SomethingSpecific")],
+                    python_version=Version("3.8"),
                 ),
             ),
         ):
             with self.subTest(name):
                 actual = config.generate_config(path, root)
                 self.assertDictEqual(asdict(expected), asdict(actual))
+
+    def test_collect_rules(self):
+        from fixit.rules.cls_in_classmethod import UseClsInClassmethodRule
+        from fixit.rules.use_types_from_typing import UseTypesFromTypingRule
+
+        def collect_types(cfg):
+            return [type(rule) for rule in config.collect_rules(cfg)]
+
+        with self.subTest("everything"):
+            rules = collect_types(
+                Config(
+                    python_version=None,
+                )
+            )
+            self.assertIn(UseClsInClassmethodRule, rules)
+            self.assertIn(UseTypesFromTypingRule, rules)
+
+        with self.subTest("opt-out"):
+            rules = collect_types(
+                Config(
+                    disable=[QualifiedRule("fixit.rules", "UseClsInClassmethodRule")],
+                    python_version=None,
+                )
+            )
+            self.assertNotIn(UseClsInClassmethodRule, rules)
+            self.assertIn(UseTypesFromTypingRule, rules)
+
+        with self.subTest("opt-in"):
+            rules = collect_types(
+                Config(
+                    enable=[QualifiedRule("fixit.rules", "UseClsInClassmethodRule")],
+                    python_version=None,
+                )
+            )
+            self.assertListEqual([UseClsInClassmethodRule], rules)
+
+        with self.subTest("version match"):
+            rules = collect_types(
+                Config(
+                    python_version="3.7",
+                )
+            )
+            self.assertIn(UseTypesFromTypingRule, rules)
+
+        with self.subTest("version mismatch"):
+            rules = collect_types(
+                Config(
+                    python_version="3.10",
+                )
+            )
+            self.assertNotIn(UseTypesFromTypingRule, rules)

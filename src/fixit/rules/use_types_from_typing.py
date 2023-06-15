@@ -23,9 +23,12 @@ QUALIFIED_BUILTINS_TO_REPLACE: Set[str] = {f"builtins.{s}" for s in BUILTINS_TO_
 
 class UseTypesFromTypingRule(CstLintRule):
     """
-    Enforces the use of types from the ``typing`` module in type annotations in place of ``builtins.{builtin_type}``
-    since the type system doesn't recognize the latter as a valid type.
+    Enforces the use of types from the ``typing`` module in type annotations in place
+    of ``builtins.{builtin_type}`` since the type system doesn't recognize the latter
+    as a valid type before Python ``3.10``.
     """
+
+    PYTHON_VERSION = "< 3.10"
 
     METADATA_DEPENDENCIES = (
         QualifiedNameProvider,

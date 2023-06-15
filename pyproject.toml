@@ -28,6 +28,7 @@ dependencies = [
     "click >= 8.0",
     "libcst >= 0.3.18",
     "moreorless >= 0.4.0",
+    "packaging >= 21",
     "tomli >= 2.0; python_version < '3.11'",
     "trailrunner >= 1.2",
 ]
@@ -114,6 +115,7 @@ disable = [
     # We need noqa for compat with flake8 until we jettison flake8
     "fixit.rules:UseLintFixmeCommentRule",
 ]
+python_version = "3.10"
 
 [[tool.fixit.overrides]]
 path = "examples"

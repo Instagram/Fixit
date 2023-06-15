@@ -19,6 +19,20 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+# -- Patch python domain signature regex to allow "foo-bar" style names ------
+
+import re
+# modified from sphinx/domains/python.py
+py_sig_re = re.compile(
+    r'''^ ([\w.]*\.)?            # class name(s)
+          ([\w-]+)  \s*             # thing name
+          (?: \(\s*(.*)\s*\)     # optional: arguments
+           (?:\s* -> \s* (.*))?  #           return annotation
+          )? $                   # and nothing more
+          ''', re.VERBOSE)
+
+from sphinx.domains import python
+python.py_sig_re = py_sig_re
 
 # -- Project information -----------------------------------------------------
 
@@ -63,6 +77,7 @@ autodoc_typehints_format = "short"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "libcst": ("https://libcst.rtfd.io/en/latest", None),
+    "packaging": ("https://packaging.pypa.io/en/latest", None),
 }
 master_doc = "index"
 
