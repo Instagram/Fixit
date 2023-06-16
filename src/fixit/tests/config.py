@@ -10,7 +10,7 @@ from textwrap import dedent
 from unittest import TestCase
 
 from .. import config
-from ..ftypes import Config, QualifiedRule, RawConfig, Version
+from ..ftypes import Config, QualifiedRule, RawConfig, Tags, Version
 
 
 class ConfigTest(TestCase):
@@ -416,11 +416,17 @@ class ConfigTest(TestCase):
                 self.assertDictEqual(asdict(expected), asdict(actual))
 
     def test_collect_rules(self):
+        from fixit.rules.avoid_or_in_except import AvoidOrInExceptRule
         from fixit.rules.cls_in_classmethod import UseClsInClassmethodRule
+        from fixit.rules.no_namedtuple import NoNamedTupleRule
         from fixit.rules.use_types_from_typing import UseTypesFromTypingRule
 
+        AvoidOrInExceptRule.TAGS = {"exceptions"}
+        UseTypesFromTypingRule.TAGS = {"typing"}
+        NoNamedTupleRule.TAGS = {"typing", "tuples"}
+
         def collect_types(cfg):
-            return [type(rule) for rule in config.collect_rules(cfg)]
+            return sorted([type(rule) for rule in config.collect_rules(cfg)], key=str)
 
         with self.subTest("everything"):
             rules = collect_types(
@@ -465,3 +471,36 @@ class ConfigTest(TestCase):
                 )
             )
             self.assertNotIn(UseTypesFromTypingRule, rules)
+
+        with self.subTest("tag select"):
+            rules = collect_types(
+                Config(
+                    python_version=None,
+                    tags=Tags.parse("typing"),
+                )
+            )
+            self.assertListEqual(
+                [
+                    NoNamedTupleRule,
+                    UseTypesFromTypingRule,
+                ],
+                rules,
+            )
+
+        with self.subTest("tag filter"):
+            rules = collect_types(
+                Config(
+                    python_version=None,
+                    tags=Tags.parse("^exceptions"),
+                )
+            )
+            self.assertNotIn(AvoidOrInExceptRule, rules)
+
+        with self.subTest("tag select and filter"):
+            rules = collect_types(
+                Config(
+                    python_version=None,
+                    tags=Tags.parse("typing,^tuples"),
+                )
+            )
+            self.assertListEqual([UseTypesFromTypingRule], rules)

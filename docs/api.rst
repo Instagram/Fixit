@@ -29,10 +29,12 @@ Simple API
 Advanced API
 ^^^^^^^^^^^^
 
-.. autoclass:: fixit.ftypes.FileContent
+.. autoclass:: fixit.FileContent
 
 .. autofunction:: fixit_bytes
 .. autoclass:: fixit.util.capture
 
 .. autoclass:: Config
+.. autoclass:: Options
 .. autoclass:: QualifiedRule
+.. autoclass:: Tags

@@ -7,6 +7,7 @@ import importlib
 import inspect
 import logging
 import pkgutil
+import platform
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -210,6 +211,13 @@ def collect_rules(
 
     for qualified_rule in config.disable:
         disabled_rules.update({r: "disabled" for r in find_rules(qualified_rule)})
+        all_rules -= set(disabled_rules)
+
+    if config.tags:
+        disabled_rules.update(
+            {R: "tags" for R in all_rules if R.TAGS not in config.tags}
+        )
+        all_rules -= set(disabled_rules)
 
     if config.python_version is not None:
         disabled_rules.update(
@@ -219,8 +227,9 @@ def collect_rules(
                 if config.python_version not in SpecifierSet(R.PYTHON_VERSION)
             }
         )
+        all_rules -= set(disabled_rules)
 
-    return [R() for R in (all_rules - set(disabled_rules))]
+    return [R() for R in all_rules]
 
 
 def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
@@ -362,7 +371,7 @@ def merge_configs(
     enable_rules: Set[QualifiedRule] = {QualifiedRule("fixit.rules")}
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
-    target_python_version = Config.python_version
+    target_python_version: Optional[Version] = Version(platform.python_version())
 
     def process_subpath(
         subpath: Path,
@@ -472,4 +481,9 @@ def generate_config(
         config_paths = locate_configs(path, root=root)
 
     raw_configs = read_configs(config_paths)
-    return merge_configs(path, raw_configs, root=root)
+    config = merge_configs(path, raw_configs, root=root)
+
+    if options and options.tags:
+        config.tags = options.tags
+
+    return config

@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Collection,
+    Container,
     ContextManager,
     Dict,
     Iterable,
@@ -106,6 +108,52 @@ class QualifiedRule:
         return NotImplemented
 
 
+@dataclass(frozen=True)
+class Tags(Container[str]):
+    include: Tuple[str, ...] = ()
+    exclude: Tuple[str, ...] = ()
+
+    @staticmethod
+    def parse(value: Optional[str]) -> "Tags":
+        if not value:
+            return Tags()
+
+        include = set()
+        exclude = set()
+        tokens = {value.strip() for value in value.lower().split(",")}
+        for token in tokens:
+            if token[0] in "!^-":
+                exclude.add(token[1:])
+            else:
+                include.add(token)
+
+        return Tags(
+            include=tuple(sorted(include)),
+            exclude=tuple(sorted(exclude)),
+        )
+
+    def __bool__(self) -> bool:
+        return bool(self.include) or bool(self.exclude)
+
+    def __contains__(self, value: object) -> bool:
+        tags: Collection[str]
+
+        if isinstance(value, str):
+            tags = (value,)
+        elif isinstance(value, Collection):
+            tags = value
+        else:
+            return False
+
+        if any(tag in self.exclude for tag in tags):
+            return False
+
+        if not self.include or any(tag in self.include for tag in tags):
+            return True
+
+        return False
+
+
 @dataclass
 class Options:
     """
@@ -114,6 +162,7 @@ class Options:
 
     debug: Optional[bool]
     config_file: Optional[Path]
+    tags: Optional[Tags]
 
 
 @dataclass
@@ -132,7 +181,10 @@ class Config:
     options: RuleOptionsTable = field(default_factory=dict)
 
     # filtering criteria
-    python_version: Optional[Version] = Version(platform.python_version())
+    python_version: Optional[Version] = field(
+        default_factory=lambda: Version(platform.python_version())
+    )
+    tags: Tags = field(default_factory=Tags)
 
     def __post_init__(self):
         self.path = self.path.resolve()

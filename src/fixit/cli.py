@@ -15,7 +15,7 @@ from fixit import __version__
 
 from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config, parse_rule
-from .ftypes import Config, Options
+from .ftypes import Config, Options, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
@@ -60,10 +60,17 @@ def splash(
     default=None,
     help="Override default config file search behavior",
 )
+@click.option(
+    "--tags",
+    type=str,
+    default="",
+    help="Select or filter rules by tags",
+)
 def main(
     ctx: click.Context,
     debug: Optional[bool],
     config_file: Optional[Path],
+    tags: str,
 ):
     level = logging.WARNING
     if debug is not None:
@@ -73,6 +80,7 @@ def main(
     ctx.obj = Options(
         debug=debug,
         config_file=config_file,
+        tags=Tags.parse(tags),
     )
 
 
@@ -88,6 +96,8 @@ def lint(
     """
     lint one or more paths and return suggestions
     """
+    options: Options = ctx.obj
+
     if not paths:
         paths = [Path.cwd()]
 
@@ -95,7 +105,7 @@ def lint(
     visited: Set[Path] = set()
     dirty: Set[Path] = set()
     autofixes = 0
-    for result in fixit_paths(paths):
+    for result in fixit_paths(paths, options=options):
         visited.add(result.path)
 
         if print_result(result, show_diff=diff):
@@ -131,6 +141,8 @@ def fix(
     """
     lint and autofix one or more files and return results
     """
+    options: Options = ctx.obj
+
     if not paths:
         paths = [Path.cwd()]
 
@@ -143,7 +155,9 @@ def fix(
     fixed = 0
 
     # TODO: make this parallel
-    generator = capture(fixit_paths(paths, autofix=autofix, parallel=False))
+    generator = capture(
+        fixit_paths(paths, autofix=autofix, options=options, parallel=False)
+    )
     for result in generator:
         visited.add(result.path)
         if print_result(result, show_diff=interactive or diff):
@@ -197,6 +211,8 @@ def debug(ctx: click.Context, paths: Sequence[Path]):
     """
     print materialized configuration for paths
     """
+    options: Options = ctx.obj
+
     if not paths:
         paths = [Path.cwd()]
 
@@ -207,7 +223,7 @@ def debug(ctx: click.Context, paths: Sequence[Path]):
 
     for path in paths:
         path = path.resolve()
-        config = generate_config(path)
+        config = generate_config(path, options=options)
         disabled: Dict[Type[LintRule], str] = {}
         enabled = collect_rules(config, debug_reasons=disabled)
 

@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import cast, Set
+from typing import Any, cast, Optional, Set
 from unittest import TestCase
 
 from .. import ftypes
@@ -56,3 +56,75 @@ class TypesTest(TestCase):
             },
             valid,
         )
+
+    def test_tags_parser(self) -> None:
+        Tags = ftypes.Tags
+
+        for value, expected in (
+            (None, Tags()),
+            ("", Tags()),
+            ("foo", Tags(("foo",))),
+            ("foo, bar", Tags(("bar", "foo"))),
+            ("foo, !bar", Tags(("foo",), ("bar",))),
+            ("foo, -bar, foo, glob", Tags(("foo", "glob"), ("bar",))),
+        ):
+            with self.subTest(value):
+                result = Tags.parse(value)
+                self.assertEqual(expected, result)
+
+    def test_tags_bool(self) -> None:
+        Tags = ftypes.Tags
+        tags: Optional[str]
+
+        for tags in (
+            "hello",
+            "!hello",
+            "hello,world",
+            "hello,^world",
+        ):
+            self.assertTrue(Tags.parse(tags))
+
+        for tags in (
+            None,
+            "",
+        ):
+            self.assertFalse(Tags.parse(tags))
+
+    def test_tags_contains(self) -> None:
+        Tags = ftypes.Tags
+
+        value: Any
+        for value, tags in (
+            ("", ""),
+            ("", "!hello"),
+            ("hello", ""),
+            ("hello", "hello"),
+            ("hello", "!world"),
+            ("hello", "hello, ^world"),
+            ([], ""),
+            ([], "!hello"),
+            (["hello", "world"], ""),
+            (["hello", "world"], "hello"),
+            (["hello", "world"], "world"),
+            (["hello", "world"], "hello, world, blue"),
+            (["hello", "world"], "hello, world, !blue"),
+        ):
+            with self.subTest(f"{value!r} in {tags!r}"):
+                self.assertIn(value, Tags.parse(tags))
+
+        for value, tags in (
+            (None, ""),
+            (37, ""),
+            (object(), ""),
+            ("", "hello"),
+            ("hello", "^hello"),
+            ("hello", "!hello, world"),
+            ("hello", "something, -world"),
+            ([], "hello"),
+            (["hello", "world"], "!hello"),
+            (["hello", "world"], "!world"),
+            (["hello", "world"], "!hello, world, blue"),
+            (["hello", "world"], "hello, !world, blue"),
+        ):
+            with self.subTest(f"{value!r} not in {tags!r}"):
+                self.assertNotIn(value, Tags.parse(tags))
