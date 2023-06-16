@@ -15,8 +15,10 @@ from .ftypes import (
     Config,
     FileContent,
     LintViolation,
+    Options,
     QualifiedRule,
     Result,
+    Tags,
 )
 from .rule import CSTLintRule, CstLintRule, LintRule
 from .testing import InvalidTestCase, ValidTestCase
@@ -35,8 +37,10 @@ __all__ = [
     "ValidTestCase",
     "Config",
     "FileContent",
+    "Options",
     "QualifiedRule",
     "Result",
+    "Tags",
     "CodeRange",
     "CodePosition",
 ]

@@ -3,6 +3,46 @@
 Commands
 --------
 
+.. code:: console
+
+    $ fixit [OPTIONS] COMMAND ...
+
+
+The following options are available for all commands:
+
+.. attribute:: --debug / --quiet
+
+    Raise or lower the level of output and logging.
+
+.. attribute:: --config-file PATH
+
+    Override the normal hierarchical configuration and use the configuration
+    from the specified path, ignoring all other configuration files entirely.
+
+.. attribute:: --tags TAGS
+
+    Select or filter the set of lint rules to apply based on their tags.
+
+    Takes a comma-separated list of tag names, optionally prefixed with ``!``,
+    ``^``, or ``-``. Tags without one of those prefixes will be considered
+    "include" tags, while tags with one of those prefixes will be considered
+    "exclude" tags.
+
+    Lint rules will be enabled if and only if they have at least one tag that
+    in the "include" list, and no tags in the "exclude" list.
+
+    For example:
+
+    .. code:: console
+
+        $ fixit --tags "hello, world, ^cats" ...
+
+    The command above will filter the set of enabled lint rules to ones that
+    have either the "hello" or "world" tags, and exclude any rules with the
+    "cats" tag, even if they would have otherwise been selected by the other
+    two tags.
+
+
 ``lint``
 ^^^^^^^^
 
