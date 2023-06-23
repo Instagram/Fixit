@@ -119,6 +119,8 @@ class LintRule(BatchableCSTVisitor):
         Includes comments from both leading comments and trailing inline comments.
         """
         while not isinstance(node, Module):
+            # trailing_whitespace can either be a property of the node itself, or in
+            # case of blocks, be part of the block's body element
             tw: Optional[TrailingWhitespace] = getattr(
                 node, "trailing_whitespace", None
             )
@@ -133,13 +135,24 @@ class LintRule(BatchableCSTVisitor):
                 yield tw.comment.value
 
             ll: Optional[Sequence[EmptyLine]] = getattr(node, "leading_lines", None)
-            if ll:
+            if ll is not None:
                 for line in ll:
                     if line.comment:
                         yield line.comment.value
-                break  # stop looking once we've gone up far enough for leading_lines
+                # stop looking once we've gone up far enough for leading_lines,
+                # even if there are no comment lines here at all
+                break
 
             node = self.get_metadata(ParentNodeProvider, node)
+
+        # comments at the start of the file are part of the module header rather than
+        # part of the first statement's leading_lines, so we need to look there in case
+        # the reported node is part of the first statement.
+        parent = self.get_metadata(ParentNodeProvider, node)
+        if isinstance(parent, Module) and parent.body and parent.body[0] == node:
+            for line in parent.header:
+                if line.comment:
+                    yield line.comment.value
 
     def ignore_lint(self, node: CSTNode) -> bool:
         """
@@ -151,7 +164,6 @@ class LintRule(BatchableCSTVisitor):
         rule_names = (self.name, self.name.lower())
         for comment in self.node_comments(node):
             if match := LintIgnoreRegex.match(comment):
-                print(f"{comment = !r}")
                 _style, names = match.groups()
 
                 # directive
