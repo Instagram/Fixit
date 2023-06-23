@@ -10,6 +10,37 @@ from .. import ftypes
 
 
 class TypesTest(TestCase):
+    def test_ignore_comment_regex(self) -> None:
+        for value, expected_names in (
+            ("#lint-ignore", None),
+            ("# lint-ignore", None),
+            ("# lint-ignore:FakeRule", "FakeRule"),
+            ("# lint-ignore: Fake", "Fake"),
+            ("# lint-fixme: Fake,Another", "Fake,Another"),
+            ("#lint-fixme Fake, Another, Name", "Fake, Another, Name"),
+        ):
+            with self.subTest("match " + value):
+                match = ftypes.LintIgnoreRegex.match(value)
+                self.assertIsNotNone(match, "value did not match lint-ignore regex")
+                if match:
+                    _style, names = match.groups()
+                    self.assertEqual(
+                        expected_names, names, "regex captured unexpected names"
+                    )
+
+        for value in (
+            "# something else",
+            "# noqa",
+            "# this is not a lint-ignore",
+            "# fake lint-fixme: something here",
+        ):
+            with self.subTest("no match " + value):
+                self.assertNotRegex(
+                    value,
+                    ftypes.LintIgnoreRegex,
+                    "value unexpectedly matches lint-ignore regex",
+                )
+
     def test_qualified_rule(self) -> None:
         valid: Set[ftypes.QualifiedRule] = set()
 

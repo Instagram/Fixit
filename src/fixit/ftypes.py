@@ -64,6 +64,22 @@ class ValidTestCase:
     code: str
 
 
+LintIgnoreRegex = re.compile(
+    r"""
+    \#\s*                   # leading hash and whitespace
+    (lint-(?:ignore|fixme)) # directive
+    (?:
+        (?::\s*|\s+)        # separator
+        (
+            \w+             # first rule name
+            (?:,\s*\w+)*    # subsequent rule names
+        )
+    )?                      # rule names are optional
+    """,
+    re.VERBOSE,
+)
+
+
 QualifiedRuleRegex = re.compile(
     r"""
     ^

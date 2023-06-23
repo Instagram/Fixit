@@ -89,7 +89,7 @@ class RuleTest(TestCase):
         self.assertEqual(
             violation,
             LintViolation(
-                "ExerciseReportRule",
+                "ExerciseReport",
                 CodeRange(start=CodePosition(1, 0), end=CodePosition(1, 4)),
                 "I pass",
                 violation.node,
@@ -104,7 +104,7 @@ class RuleTest(TestCase):
         self.assertEqual(
             violation,
             LintViolation(
-                "ExerciseReportRule",
+                "ExerciseReport",
                 CodeRange(start=CodePosition(1, 1), end=CodePosition(2, 0)),
                 "I ellipse",
                 violation.node,

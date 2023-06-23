@@ -7,13 +7,39 @@ from __future__ import annotations
 
 import functools
 from dataclasses import replace
-from typing import ClassVar, Collection, List, Mapping, Optional, Set, Union
+from typing import (
+    ClassVar,
+    Collection,
+    Generator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Union,
+)
 
-from libcst import BatchableCSTVisitor, CSTNode
-from libcst.metadata import CodePosition, CodeRange, PositionProvider, ProviderT
+from libcst import (
+    BaseSuite,
+    BatchableCSTVisitor,
+    CSTNode,
+    EmptyLine,
+    IndentedBlock,
+    Module,
+    SimpleStatementSuite,
+    TrailingWhitespace,
+)
+from libcst.metadata import (
+    CodePosition,
+    CodeRange,
+    ParentNodeProvider,
+    PositionProvider,
+    ProviderT,
+)
 
 from .ftypes import (
     InvalidTestCase,
+    LintIgnoreRegex,
     LintViolation,
     NodeReplacement,
     ValidTestCase,
@@ -60,10 +86,21 @@ class LintRule(BatchableCSTVisitor):
     test case that provides an expected replacment.
     """
 
+    name: str
+    """
+    Friendly name of this lint rule class, without any "Rule" suffix.
+    """
+
     def __init__(self) -> None:
         self._violations: List[LintViolation] = []
+        self.name = self.__class__.__name__
+        if self.name.endswith("Rule"):
+            self.name = self.name[:-4]
 
     def __init_subclass__(cls) -> None:
+        if ParentNodeProvider not in cls.METADATA_DEPENDENCIES:
+            cls.METADATA_DEPENDENCIES = (*cls.METADATA_DEPENDENCIES, ParentNodeProvider)
+
         invalid: List[Union[str, InvalidTestCase]] = getattr(cls, "INVALID", [])
         for case in invalid:
             if isinstance(case, InvalidTestCase) and case.expected_replacement:
@@ -74,6 +111,61 @@ class LintRule(BatchableCSTVisitor):
         return f"{self.__class__.__module__}:{self.__class__.__name__}"
 
     _visit_hook: Optional[VisitHook] = None
+
+    def node_comments(self, node: CSTNode) -> Generator[str, None, None]:
+        """
+        Yield all comments associated with the given node.
+
+        Includes comments from both leading comments and trailing inline comments.
+        """
+        while not isinstance(node, Module):
+            tw: Optional[TrailingWhitespace] = getattr(
+                node, "trailing_whitespace", None
+            )
+            if tw is None:
+                body: Optional[BaseSuite] = getattr(node, "body", None)
+                if isinstance(body, SimpleStatementSuite):
+                    tw = body.trailing_whitespace
+                elif isinstance(body, IndentedBlock):
+                    tw = body.header
+
+            if tw and tw.comment:
+                yield tw.comment.value
+
+            ll: Optional[Sequence[EmptyLine]] = getattr(node, "leading_lines", None)
+            if ll:
+                for line in ll:
+                    if line.comment:
+                        yield line.comment.value
+                break  # stop looking once we've gone up far enough for leading_lines
+
+            node = self.get_metadata(ParentNodeProvider, node)
+
+    def ignore_lint(self, node: CSTNode) -> bool:
+        """
+        Whether to ignore a violation for a given node.
+
+        Returns true if any ``# lint-ignore`` or ``# lint-fixme`` directives match the
+        current rule by name, or if the directives have no rule names listed.
+        """
+        rule_names = (self.name, self.name.lower())
+        for comment in self.node_comments(node):
+            if match := LintIgnoreRegex.match(comment):
+                print(f"{comment = !r}")
+                _style, names = match.groups()
+
+                # directive
+                if names is None:
+                    return True
+
+                # directive: RuleName
+                for name in (n.strip() for n in names.split(",")):
+                    if name.endswith("Rule"):
+                        name = name[:-4]
+                    if name in rule_names:
+                        return True
+
+        return False
 
     def report(
         self,
@@ -97,21 +189,25 @@ class LintRule(BatchableCSTVisitor):
         lint violation. Replacing `node` with `replacement` should make the lint
         violation go away.
         """
-        rule_name = type(self).__name__
+        if self.ignore_lint(node):
+            # TODO: consider logging/reporting this somewhere?
+            return
+
         if not message:
             # backwards compat with Fixit 1.0 api
             message = getattr(self, "MESSAGE", None)
             if not message:
-                raise ValueError(f"No message provided in {rule_name}")
+                raise ValueError(f"No message provided in {self.name}")
 
         if position is None:
             position = self.get_metadata(PositionProvider, node)
         elif isinstance(position, CodePosition):
             end = replace(position, line=position.line + 1, column=0)
             position = CodeRange(start=position, end=end)
+
         self._violations.append(
             LintViolation(
-                rule_name,
+                self.name,
                 range=position,
                 message=message,
                 node=node,
