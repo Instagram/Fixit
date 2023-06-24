@@ -177,7 +177,7 @@ class RuleTest(TestCase):
                 """
                     import sys
 
-                    class Foo(object):  # lint-ignore
+                    class Foo(object):  # type: ignore # lint-ignore
                         value = 1
                 """,
                 None,
@@ -197,7 +197,7 @@ class RuleTest(TestCase):
                 """
                     import sys
 
-                    # lint-fixme
+                    # type:ignore  # lint-fixme  # justification
                     class Foo(object):
                         value = 1
                 """,
@@ -231,4 +231,6 @@ class RuleTest(TestCase):
                     self.assertEqual(violation.range.start, CodePosition(*position))
 
                 else:
-                    self.assertListEqual([], violations)
+                    self.assertEqual(
+                        len(violations), 0, "Unexpected lint errors reported"
+                    )

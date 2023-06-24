@@ -17,6 +17,7 @@ class TypesTest(TestCase):
             ("# lint-ignore:FakeRule", "FakeRule"),
             ("# lint-ignore: Fake", "Fake"),
             ("# lint-fixme: Fake,Another", "Fake,Another"),
+            ("#lint-fixme:Fake,Another", "Fake,Another"),
             ("#lint-fixme Fake, Another, Name", "Fake, Another, Name"),
         ):
             with self.subTest("match " + value):

@@ -163,7 +163,7 @@ class LintRule(BatchableCSTVisitor):
         """
         rule_names = (self.name, self.name.lower())
         for comment in self.node_comments(node):
-            if match := LintIgnoreRegex.match(comment):
+            if match := LintIgnoreRegex.search(comment):
                 _style, names = match.groups()
 
                 # directive
