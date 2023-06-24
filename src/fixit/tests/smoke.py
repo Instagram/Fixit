@@ -43,7 +43,7 @@ class SmokeTest(TestCase):
             (tdp / "dirty.py").write_text("name = 'Kirby'\nprint('hello %s' % name)\n")
 
             result = self.runner.invoke(main, ["lint", td])
-            self.assertIn("dirty.py@2:6 UseFstringRule:", result.output)
+            self.assertIn("dirty.py@2:6 UseFstring:", result.output)
             self.assertEqual(result.exit_code, 1)
 
     def test_directory_with_errors(self) -> None:
@@ -64,7 +64,7 @@ class SmokeTest(TestCase):
             (tdp / "broken.py").write_text("print)\n")
 
             result = self.runner.invoke(main, ["lint", td])
-            self.assertIn("dirty.py@2:6 UseFstringRule:", result.output)
+            self.assertIn("dirty.py@2:6 UseFstring:", result.output)
             self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.output)
             self.assertEqual(result.exit_code, 3)
 
@@ -127,7 +127,7 @@ class SmokeTest(TestCase):
             with self.subTest("single fix"):
                 self.assertListEqual(
                     [
-                        "2:9 NoRedundantFStringRule",
+                        "2:9 NoRedundantFString",
                     ],
                     sorted(errors[single]),
                 )
@@ -136,9 +136,9 @@ class SmokeTest(TestCase):
             with self.subTest("multiple fixes"):
                 self.assertListEqual(
                     [
-                        "2:9 NoRedundantFStringRule",
-                        "5:12 NoRedundantFStringRule",
-                        "6:7 CompareSingletonPrimitivesByIsRule",
+                        "2:9 NoRedundantFString",
+                        "5:12 NoRedundantFString",
+                        "6:7 CompareSingletonPrimitivesByIs",
                     ],
                     sorted(errors[multi]),
                 )

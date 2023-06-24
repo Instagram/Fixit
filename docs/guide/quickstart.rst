@@ -57,8 +57,74 @@ When running Fixit, we see two separate lint errors:
 .. code:: console
 
     $ fixit lint custom_object.py
-    custom_object.py@4:15 UseFstringRule: Do not use printf style formatting or .format(). Use f-string instead to be more readable and efficient. See https://www.python.org/dev/peps/pep-0498/
-    custom_object.py@2:0 NoInheritFromObjectRule: Inheriting from object is a no-op.  'class Foo:' is just fine =)
+    custom_object.py@4:15 UseFstring: Do not use printf style formatting or .format(). Use f-string instead to be more readable and efficient. See https://www.python.org/dev/peps/pep-0498/
+    custom_object.py@2:0 NoInheritFromObject: Inheriting from object is a no-op.  'class Foo:' is just fine =)
+
+We can also see any suggested changes by passing ``--diff``:
+
+.. code:: console
+
+    $ fixit lint --diff custom_object.py
+    custom_object.py@7:0 NoInheritFromObject: Inheriting from object is a no-op.  'class Foo:' is just fine =) (has autofix)
+    --- a/custom_object.py
+    +++ b/custom_object.py
+    @@ -6,3 +6,3 @@
+    # Triggers built-in lint rules
+    -class Foo(object):
+    +class Foo:
+        def bar(self, value: str) -> str:
+    custom_object.py@9:15 UseFstring: Do not use printf style formatting or .format(). Use f-string instead to be more readable and efficient. See https://www.python.org/dev/peps/pep-0498/
+    🛠️  1 file checked, 1 file with errors, 1 auto-fix available 🛠️
+
+
+Silencing Errors
+^^^^^^^^^^^^^^^^
+
+For lint rules without autofixes, it may still be useful to silence individual
+errors. A simple ``# lint-ignore`` or ``# lint-fixme`` comment, either as
+a trailing inline comment, or as a dedicated comment line above the code that
+triggered the lint rule:
+
+.. code:: python
+
+    class Foo(object):  # lint-fixme: NoInheritFromObject
+        ...
+
+    # lint-ignore: NoInheritFromObject
+    class Bar(object):
+        ...
+
+By providing one or more lint rule, separated by commas, Fixit can still report
+issues triggered by other lint rules that haven't been listed in the comment,
+but this is not required.
+
+If no rule name is listed, Fixit will silence all rules when reported on code
+associated with that comment:
+
+.. code-block:: python
+
+    class Foo(object):  # lint-ignore
+        ...
+
+
+"ignore" vs "fixme"
+%%%%%%%%%%%%%%%%%%%
+
+Both comment directives achieve the same result — silencing errors for
+a particular statement of code. The semantics of using either term is left to
+the user, though they are intended to be used with the following meanings:
+
+- ``# lint-fixme`` for errors that need to be corrected or reviewed at a later
+  date, but where the lint rule should be silenced temporarily for the sake
+  of CI or similar external circumstances.
+
+- ``# lint-ignore`` for errors that are false-positives (please report issues
+  if this occurs with built-in lint rules) or the code is otherwise
+  intentionally written or structured in a way that the lint error cannot
+  be avoided.
+
+Future versions of Fixit may offer reporting or similar tools that treat
+"fixme" directives differently from "ignore" directives.
 
 
 Custom Rules
@@ -144,7 +210,7 @@ Once enabled, Fixit can run that new lint rule against the codebase:
 .. code:: console
 
     $ fixit lint --diff sourdough/baker.py
-    sourdough/baker.py@7:11 HollywoodNameRule: It's underproved! (has autofix)
+    sourdough/baker.py@7:11 HollywoodName: It's underproved! (has autofix)
     --- a/baker.py
     +++ b/baker.py
     @@ -6,3 +6,3 @@
@@ -161,7 +227,7 @@ The ``fix`` command will apply these suggested changes to the codebase:
 .. code:: console
 
     $ fixit fix --automatic sourdough/baker.py
-    sourdough/baker.py@7:11 HollywoodNameRule: It's underproved! (has autofix)
+    sourdough/baker.py@7:11 HollywoodName: It's underproved! (has autofix)
     🛠️  1 file checked, 1 file with errors, 1 auto-fix available, 1 fix applied 🛠️
 
 By default, the ``fix`` command will interactively prompt the user for each

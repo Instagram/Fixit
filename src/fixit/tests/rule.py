@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from pathlib import Path
+from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -65,6 +66,10 @@ class RunnerTest(TestCase):
 class ExerciseReportRule(LintRule):
     MESSAGE = "message on the class"
 
+    def visit_ClassDef(self, node: cst.ClassDef) -> bool:
+        self.report(node, "class def")
+        return False
+
     def visit_Pass(self, node: cst.Pass) -> bool:
         self.report(node, "I pass")
         return False
@@ -89,7 +94,7 @@ class RuleTest(TestCase):
         self.assertEqual(
             violation,
             LintViolation(
-                "ExerciseReportRule",
+                "ExerciseReport",
                 CodeRange(start=CodePosition(1, 0), end=CodePosition(1, 4)),
                 "I pass",
                 violation.node,
@@ -104,7 +109,7 @@ class RuleTest(TestCase):
         self.assertEqual(
             violation,
             LintViolation(
-                "ExerciseReportRule",
+                "ExerciseReport",
                 CodeRange(start=CodePosition(1, 1), end=CodePosition(2, 0)),
                 "I ellipse",
                 violation.node,
@@ -117,3 +122,115 @@ class RuleTest(TestCase):
         violations = list(runner.collect_violations(self.rules, Config()))
         self.assertEqual(len(violations), 1)
         self.assertEqual(violations[0].message, "message on the class")
+
+    def test_ignore_lint(self) -> None:
+        idx = 0
+        for code, message, position in (
+            ("pass  # random comment\n", "I pass", (1, 0)),
+            ("pass\n", "I pass", (1, 0)),
+            ("pass  # lint-fixme\n", None, None),
+            ("pass  # lint-ignore\n", None, None),
+            ("pass  # lint-fixme: ExerciseReport\n", None, None),
+            ("pass  # lint-ignore: ExerciseReport\n", None, None),
+            ("pass  # lint-fixme: SomethingElse, ExerciseReport\n", None, None),
+            ("pass  # lint-ignore: SomethingElse, ExerciseReport\n", None, None),
+            ("pass  # lint-fixme: SomethingElse\n", "I pass", (1, 0)),
+            ("pass  # lint-ignore: SomethingElse\n", "I pass", (1, 0)),
+            ("# random comment\npass\n", "I pass", (2, 0)),
+            ("# lint-fixme\npass\n", None, None),
+            ("# lint-ignore\npass\n", None, None),
+            ("# lint-fixme: ExerciseReport\npass\n", None, None),
+            ("# lint-ignore: ExerciseReport\npass\n", None, None),
+            ("# lint-fixme: SomethingElse, ExerciseReport\npass\n", None, None),
+            ("# lint-ignore: SomethingElse, ExerciseReport\npass\n", None, None),
+            ("# lint-fixme: SomethingElse\npass\n", "I pass", (2, 0)),
+            ("# lint-ignore: SomethingElse\npass\n", "I pass", (2, 0)),
+            ("def foo(bar): pass\n", "I pass", (1, 14)),
+            ("def foo(bar): pass  # lint-ignore\n", None, None),
+            ("# lint-ignore\ndef foo(bar): pass\n", None, None),
+            ("import sys\n# lint-ignore\ndef foo(bar): pass\n", None, None),
+            ("class bar(object): value = 1\n", "class def", (1, 0)),
+            ("class bar(object): value = 1  # lint-fixme\n", None, None),
+            ("# lint-fixme\nclass bar(object): value = 1\n", None, None),
+            ("import sys\n# lint-fixme\nclass bar(object): value = 1\n", None, None),
+            (
+                """
+                    import sys
+
+                    class Foo(object):
+                        value = 1
+                """,
+                "class def",
+                (4, 0),
+            ),
+            (
+                """
+                    import sys
+
+                    class Foo(object):  # comment
+                        value = 1
+                """,
+                "class def",
+                (4, 0),
+            ),
+            (
+                """
+                    import sys
+
+                    class Foo(object):  # type: ignore # lint-ignore
+                        value = 1
+                """,
+                None,
+                None,
+            ),
+            (
+                """
+                    import sys
+
+                    class Foo(object):  # lint-ignore ExerciseReport
+                        value = 1
+                """,
+                None,
+                None,
+            ),
+            (
+                """
+                    import sys
+
+                    # type:ignore  # lint-fixme  # justification
+                    class Foo(object):
+                        value = 1
+                """,
+                None,
+                None,
+            ),
+            (
+                """
+                    import sys
+
+                    # lint-fixme: UnrelatedRule
+                    class Foo(object):
+                        value = 1
+                """,
+                "class def",
+                (5, 0),
+            ),
+        ):
+            idx += 1
+            content = dedent(code).encode("utf-8")
+            with self.subTest(f"code {idx}"):
+                runner = LintRunner(Path("fake.py"), content)
+                violations = list(
+                    runner.collect_violations([ExerciseReportRule()], Config())
+                )
+
+                if message and position:
+                    self.assertEqual(len(violations), 1)
+                    (violation,) = violations
+                    self.assertEqual(violation.message, message)
+                    self.assertEqual(violation.range.start, CodePosition(*position))
+
+                else:
+                    self.assertEqual(
+                        len(violations), 0, "Unexpected lint errors reported"
+                    )
