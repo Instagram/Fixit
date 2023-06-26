@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.0b1 - 2023-06-26
+
+### Beta Release
+
+This is a beta release of a major rework of Fixit. There are many breaking
+API changes since the `0.1.4` release – existing users should wait for a stable
+release before upgrading.
+
+Please see the new [User Guide][] for an overview of the new version.
+A migration guide is planned, but not yet available.
+
+[User Guide]: https://fixit.rtfd.io/en/latest/guide.html
+
+### Major Changes
+
+- New `test` command for validating local lint rules (#300)
+- Support for configurable target version and selection of applicable rules (#332)
+- Support for selecting and filtering rules by tags at runtime (#333)
+- Support for `# lint-ignore` and `# lint-fixme` directives (#334)
+
+### New Rules
+
+- Added `UseAsyncSleepInAsyncDefRule` (#297)
+- Added `DeprecatedUnittestAssertsRule` (#314)
+
 ## 2.0.0a1 - 2023-04-07
 
 ### Alpha Release
