@@ -23,6 +23,12 @@ lint:
 html: docs/*
 	hatch run docs:build
 
+.PHONY: release
+release:
+	rm -rf dist/
+	hatch build
+	hatch publish
+
 .PHONY: distclean
 distclean:
 	hatch env prune
