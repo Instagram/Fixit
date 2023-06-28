@@ -97,6 +97,7 @@ check = [
     "python scripts/check_copyright.py",
 ]
 fix = [
+    "fixit fix --automatic src/fixit scripts",
     "ufmt format src/fixit scripts",
 ]
 
@@ -117,6 +118,7 @@ disable = [
     "fixit.rules:UseLintFixmeCommentRule",
 ]
 python_version = "3.10"
+formatter = "ufmt"
 
 [[tool.fixit.overrides]]
 path = "examples"

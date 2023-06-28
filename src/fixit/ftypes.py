@@ -202,6 +202,9 @@ class Config:
     )
     tags: Tags = field(default_factory=Tags)
 
+    # post-run processing
+    formatter: Optional[str] = None
+
     def __post_init__(self):
         self.path = self.path.resolve()
         self.root = self.root.resolve()

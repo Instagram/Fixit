@@ -15,6 +15,7 @@ from moreorless.click import echo_color_precomputed_diff
 
 from .config import collect_rules, generate_config
 from .engine import LintRunner
+from .format import format_module
 from .ftypes import Config, FileContent, LintViolation, Options, Result
 
 LOG = logging.getLogger(__name__)
@@ -99,7 +100,7 @@ def fixit_bytes(
 
         if pending_fixes:
             updated = runner.apply_replacements(pending_fixes)
-            return updated
+            return format_module(updated, path, config)
 
     except Exception as error:
         # TODO: this is not the right place to catch errors

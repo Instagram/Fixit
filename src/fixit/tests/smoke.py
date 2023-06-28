@@ -24,6 +24,91 @@ class SmokeTest(TestCase):
         expected = rf"fixit, version {__version__}"
         self.assertIn(expected, result.stdout)
 
+    def test_file_with_formatting(self) -> None:
+        content = dedent(
+            """\
+                import foo
+                import bar
+
+                def func():
+                    value = f"hello world"
+            """
+        )
+        expected_fix = dedent(
+            """\
+                import foo
+                import bar
+
+                def func():
+                    value = "hello world"
+            """
+        )
+        expected_format = dedent(
+            """\
+                import bar
+                import foo
+
+
+                def func():
+                    value = "hello world"
+            """
+        )
+        with TemporaryDirectory() as td:
+            tdp = Path(td).resolve()
+            path = tdp / "file.py"
+
+            with self.subTest("linting"):
+                path.write_text(content)
+                result = self.runner.invoke(
+                    main, ["lint", path.as_posix()], catch_exceptions=False
+                )
+
+                self.assertNotEqual(result.output, "")
+                self.assertNotEqual(result.exit_code, 0)
+                self.assertRegex(
+                    result.output,
+                    r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
+                )
+                self.assertEqual(content, path.read_text(), "file unexpectedly changed")
+
+            with self.subTest("fixing"):
+                path.write_text(content)
+                result = self.runner.invoke(
+                    main,
+                    ["fix", "--automatic", path.as_posix()],
+                    catch_exceptions=False,
+                )
+
+                self.assertNotEqual(result.output, "")
+                self.assertEqual(result.exit_code, 0)
+                self.assertRegex(
+                    result.output,
+                    r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
+                )
+                self.assertEqual(
+                    expected_fix, path.read_text(), "unexpected file output"
+                )
+
+            with self.subTest("fixing with formatting"):
+                (tdp / "pyproject.toml").write_text("[tool.fixit]\nformatter='ufmt'\n")
+
+                path.write_text(content)
+                result = self.runner.invoke(
+                    main,
+                    ["fix", "--automatic", path.as_posix()],
+                    catch_exceptions=False,
+                )
+
+                self.assertNotEqual(result.output, "")
+                self.assertEqual(result.exit_code, 0)
+                self.assertRegex(
+                    result.output,
+                    r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
+                )
+                self.assertEqual(
+                    expected_format, path.read_text(), "unexpected file output"
+                )
+
     def test_this_file_is_clean(self) -> None:
         path = Path(__file__).resolve().as_posix()
         result = self.runner.invoke(main, ["lint", path], catch_exceptions=False)

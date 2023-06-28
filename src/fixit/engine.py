@@ -108,7 +108,7 @@ class LintRunner:
 
         return count
 
-    def apply_replacements(self, violations: Collection[LintViolation]) -> FileContent:
+    def apply_replacements(self, violations: Collection[LintViolation]) -> Module:
         """
         Apply any autofixes to the module, and return the resulting source code.
         """
@@ -125,5 +125,5 @@ class LintRunner:
                     return new
                 return updated
 
-        updated = self.module.visit(ReplacementTransformer())
-        return updated.bytes
+        updated: Module = self.module.visit(ReplacementTransformer())
+        return updated

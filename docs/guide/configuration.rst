@@ -95,6 +95,25 @@ The main configuration table.
     Defaults to the currently active version of Python.
     Set to empty string ``""`` to disable target version checking.
 
+.. attribute:: formatter
+    :type: str
+    :value: None
+
+    Code formatting style to apply after fixing source files.
+
+    Supported code styles:
+
+    - ``None``: No style is applied (default).
+
+    - ``"black"``: `Black <https://black.rtfd.io>`_ code formatter.
+
+    - ``"ufmt"``: `µfmt <https://ufmt.omnilib.dev>`_ code style —
+      `µsort <https://usort.rtfd.io>`_ import sorting with
+      `Black <https://black.rtfd.io>`_ code formatting.
+
+    Alternative formatting styles can be added by implementing the
+    :class:`~fixit.Formatter` interface.
+
 
 ``[tool.fixit.options]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
