@@ -38,3 +38,9 @@ Advanced API
 .. autoclass:: Options
 .. autoclass:: QualifiedRule
 .. autoclass:: Tags
+
+
+Formatters
+----------
+
+.. autoclass:: Formatter

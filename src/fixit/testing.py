@@ -114,7 +114,7 @@ class LintRuleTestCase(unittest.TestCase):
         if test_case.expected_replacement:
             # make sure we produced expected final code
             expected_code = _dedent(test_case.expected_replacement)
-            modified_code = runner.apply_replacements([report]).decode()
+            modified_code = runner.apply_replacements([report]).bytes.decode()
             self.assertMultiLineEqual(expected_code, modified_code)
 
             # make sure we generated a reasonable diff

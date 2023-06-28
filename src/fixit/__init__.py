@@ -9,6 +9,7 @@ Linting framework built on LibCST, with automatic fixes
 
 from .__version__ import __version__
 from .api import fixit_bytes, fixit_file, fixit_paths, print_result
+from .format import Formatter
 from .ftypes import (
     CodePosition,
     CodeRange,
@@ -31,6 +32,7 @@ __all__ = [
     "print_result",
     "CSTLintRule",
     "CstLintRule",
+    "Formatter",
     "LintRule",
     "LintViolation",
     "InvalidTestCase",

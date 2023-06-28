@@ -30,6 +30,7 @@ from packaging.specifiers import SpecifierSet
 
 from packaging.version import InvalidVersion, Version
 
+from .format import FORMAT_STYLES
 from .ftypes import (
     Config,
     is_collection,
@@ -372,6 +373,7 @@ def merge_configs(
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
     target_python_version: Optional[Version] = Version(platform.python_version())
+    target_formatter: Optional[str] = None
 
     def process_subpath(
         subpath: Path,
@@ -380,8 +382,10 @@ def merge_configs(
         disable: Sequence[str] = (),
         options: Optional[RuleOptionsTable] = None,
         python_version: Any = None,
+        formatter: Optional[str] = None,
     ):
         nonlocal target_python_version
+        nonlocal target_formatter
 
         subpath = subpath.resolve()
         try:
@@ -416,6 +420,14 @@ def merge_configs(
             else:  # disable versioning, aka python_version = ""
                 target_python_version = None
 
+        if formatter:
+            if formatter not in FORMAT_STYLES:
+                raise ConfigError(
+                    f"'formatter' {formatter!r} not supported", config=config
+                )
+
+            target_formatter = formatter
+
     for config in reversed(raw_configs):
         if root is None:
             root = config.path.parent
@@ -430,6 +442,7 @@ def merge_configs(
             disable=get_sequence(config, "disable"),
             options=get_options(config, "options"),
             python_version=config.data.pop("python_version", None),
+            formatter=config.data.pop("formatter", None),
         )
 
         for override in get_sequence(config, "overrides"):
@@ -449,6 +462,7 @@ def merge_configs(
                 disable=get_sequence(config, "disable", data=override),
                 options=get_options(config, "options", data=override),
                 python_version=override.pop("python_version", None),
+                formatter=override.pop("formatter", None),
             )
 
         for key in data.keys():
@@ -461,6 +475,7 @@ def merge_configs(
         disable=sorted(disable_rules),
         options=rule_options,
         python_version=target_python_version,
+        formatter=target_formatter,
     )
 
 
