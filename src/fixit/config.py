@@ -9,7 +9,7 @@ import logging
 import pkgutil
 import platform
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from pathlib import Path
 from types import ModuleType
 from typing import (
@@ -24,6 +24,7 @@ from typing import (
     Sequence,
     Set,
     Type,
+    Union,
 )
 
 from packaging.specifiers import SpecifierSet
@@ -44,6 +45,7 @@ from .ftypes import (
     T,
 )
 from .rule import LintRule
+from .util import append_sys_path
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -207,30 +209,41 @@ def collect_rules(
     else:
         disabled_rules = {}
 
-    for qualified_rule in config.enable:
-        all_rules |= set(find_rules(qualified_rule))
+    with ExitStack() as stack:
+        if config.enable_root_import:
+            path = (
+                config.root / config.enable_root_import
+                if isinstance(config.enable_root_import, Path)
+                else config.root
+            )
+            stack.enter_context(append_sys_path(path))
 
-    for qualified_rule in config.disable:
-        disabled_rules.update({r: "disabled" for r in find_rules(qualified_rule)})
-        all_rules -= set(disabled_rules)
+        for qualified_rule in config.enable:
+            all_rules |= set(find_rules(qualified_rule))
 
-    if config.tags:
-        disabled_rules.update(
-            {R: "tags" for R in all_rules if R.TAGS not in config.tags}
-        )
-        all_rules -= set(disabled_rules)
+        for qualified_rule in config.disable:
+            disabled_rules.update({r: "disabled" for r in find_rules(qualified_rule)})
+            all_rules -= set(disabled_rules)
 
-    if config.python_version is not None:
-        disabled_rules.update(
-            {
-                R: "python_version"
-                for R in all_rules
-                if config.python_version not in SpecifierSet(R.PYTHON_VERSION)
-            }
-        )
-        all_rules -= set(disabled_rules)
+        if config.tags:
+            disabled_rules.update(
+                {R: "tags" for R in all_rules if R.TAGS not in config.tags}
+            )
+            all_rules -= set(disabled_rules)
 
-    return [R() for R in all_rules]
+        if config.python_version is not None:
+            disabled_rules.update(
+                {
+                    R: "python_version"
+                    for R in all_rules
+                    if config.python_version not in SpecifierSet(R.PYTHON_VERSION)
+                }
+            )
+            all_rules -= set(disabled_rules)
+
+        materialized_rules = [R() for R in all_rules]
+
+    return materialized_rules
 
 
 def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
@@ -369,6 +382,7 @@ def merge_configs(
     """
 
     config: RawConfig
+    enable_root_import: Union[bool, Path] = Config.enable_root_import
     enable_rules: Set[QualifiedRule] = {QualifiedRule("fixit.rules")}
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
@@ -436,6 +450,25 @@ def merge_configs(
         if data.pop("root", False):
             root = config.path.parent
 
+        if value := data.pop("enable-root-import", False):
+            if root != config.path.parent:
+                raise ConfigError(
+                    "enable-root-import not allowed in non-root configs", config=config
+                )
+            if isinstance(value, str):
+                value_path = Path(value)
+                if value_path.is_absolute():
+                    raise ConfigError(
+                        "enable-root-import: absolute paths not allowed", config=config
+                    )
+                if ".." in value_path.parts:
+                    raise ConfigError(
+                        "enable-root-import: '..' components not allowed", config=config
+                    )
+                enable_root_import = value_path
+            else:
+                enable_root_import = True
+
         process_subpath(
             config.path.parent,
             enable=get_sequence(config, "enable"),
@@ -471,6 +504,7 @@ def merge_configs(
     return Config(
         path=path,
         root=root or Path(path.anchor),
+        enable_root_import=enable_root_import,
         enable=sorted(enable_rules),
         disable=sorted(disable_rules),
         options=rule_options,

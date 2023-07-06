@@ -29,6 +29,7 @@ class ConfigTest(TestCase):
                 """
                 [tool.fixit]
                 root = true
+                enable-root-import = true
                 enable = ["more.rules"]
                 disable = ["fixit.rules.SomethingSpecific"]
                 python_version = "3.8"
@@ -168,6 +169,7 @@ class ConfigTest(TestCase):
                         top,
                         {
                             "root": True,
+                            "enable-root-import": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
                             "python_version": "3.8",
@@ -197,6 +199,7 @@ class ConfigTest(TestCase):
                         top,
                         {
                             "root": True,
+                            "enable-root-import": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
                             "python_version": "3.8",
@@ -223,6 +226,7 @@ class ConfigTest(TestCase):
                         top,
                         {
                             "root": True,
+                            "enable-root-import": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
                             "python_version": "3.8",
@@ -356,6 +360,7 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.outer / "foo.py",
                     root=self.tdp,
+                    enable_root_import=True,
                     enable=[
                         QualifiedRule(".localrules", local=".", root=self.outer),
                         QualifiedRule("more.rules"),
@@ -385,6 +390,7 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.tdp / "other" / "foo.py",
                     root=self.tdp,
+                    enable_root_import=True,
                     enable=[
                         QualifiedRule(".globalrules", local=".", root=self.tdp),
                         QualifiedRule("more.rules"),
@@ -405,6 +411,7 @@ class ConfigTest(TestCase):
                 Config(
                     path=self.tdp / "foo.py",
                     root=self.tdp,
+                    enable_root_import=True,
                     enable=[QualifiedRule("fixit.rules"), QualifiedRule("more.rules")],
                     disable=[QualifiedRule("fixit.rules.SomethingSpecific")],
                     python_version=Version("3.8"),
@@ -414,6 +421,16 @@ class ConfigTest(TestCase):
             with self.subTest(name):
                 actual = config.generate_config(path, root)
                 self.assertDictEqual(asdict(expected), asdict(actual))
+
+    def test_invalid_config(self):
+        with self.subTest("inner enable-root-import"):
+            (self.tdp / "pyproject.toml").write_text("[tool.fixit]\nroot = true\n")
+            (self.tdp / "outer" / "pyproject.toml").write_text(
+                "[tool.fixit]\nenable-root-import = true\n"
+            )
+
+            with self.assertRaisesRegex(config.ConfigError, "enable-root-import"):
+                config.generate_config(self.tdp / "outer" / "foo.py")
 
     def test_collect_rules(self):
         from fixit.rules.avoid_or_in_except import AvoidOrInExceptRule

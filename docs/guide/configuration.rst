@@ -84,6 +84,41 @@ The main configuration table.
 
     See :attr:`enable` for details on referencing lint rules.
 
+.. attribute:: enable-root-import
+    :type: bool | str
+    :value: False
+
+    Allow importing local rules using absolute imports, relative to the root
+    of the project. This provides an alternative to using dotted rule names for
+    enabling and importing local rules (see :attr:`enable`) from either the
+    directory containing the root config (when set to ``true``), or a single,
+    optional path relative to the root config.
+
+    For example, project ``orange`` using a ``src/orange/`` project hierarchy
+    could use the following config:
+
+    .. code-block:: toml
+
+        # pyproject.toml
+        [tool.fixit]
+        root = True
+        enable-root-import = "src"
+        enable = ["orange.rules"]
+
+    Assuming that the namespace ``orange`` is not already in site-packages,
+    then ``orange.rules`` would be imported from ``src/orange/rules/``, while
+    also allowing these local rules to import from other components in the
+    ``orange`` namespace.
+
+    This option may only be specified in the root config file. Specifying the
+    option in any other config file is treated as a configuration error.
+    Absolute paths, or paths containing ``..`` parent-relative components,
+    are not allowed.
+
+    This option is roughly equivalent to adding the configured path, relative
+    to the root configuration, to :attr:`sys.path` when attempting to import
+    and materialize any enabled lint rules.
+
 .. attribute:: python-version
     :type: str
     :value: "3.10"
