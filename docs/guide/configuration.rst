@@ -31,11 +31,12 @@ The main configuration table.
 
 .. attribute:: root
     :type: bool
-    :value: False
+    :value: false
 
     Marks this file as a root of the configuration hierarchy.
 
-    If set to ``True``, Fixit will not visit any files further up the hierarchy.
+    If set to ``true``, Fixit will not visit any configuration files further up
+    the filesystem hierarchy.
 
 .. attribute:: enable
     :type: list[str]
@@ -86,7 +87,6 @@ The main configuration table.
 
 .. attribute:: enable-root-import
     :type: bool | str
-    :value: False
 
     Allow importing local rules using absolute imports, relative to the root
     of the project. This provides an alternative to using dotted rule names for
@@ -99,8 +99,6 @@ The main configuration table.
 
     .. code-block:: toml
 
-        # pyproject.toml
-        [tool.fixit]
         root = True
         enable-root-import = "src"
         enable = ["orange.rules"]
@@ -121,24 +119,28 @@ The main configuration table.
 
 .. attribute:: python-version
     :type: str
-    :value: "3.10"
 
     Python version to target when selecting lint rules. Rules with
     :attr:`~fixit.LintRule.PYTHON_VERSION` specifiers that don't match this
     target version will be automatically disabled during linting.
+
+    To target a minimum Python version of 3.10:
+
+    .. code-block:: toml
+
+        python-version = "3.10"
     
     Defaults to the currently active version of Python.
     Set to empty string ``""`` to disable target version checking.
 
 .. attribute:: formatter
     :type: str
-    :value: None
 
     Code formatting style to apply after fixing source files.
 
     Supported code styles:
 
-    - ``None``: No style is applied (default).
+    - ``(unset)``: No style is applied (default).
 
     - ``"black"``: `Black <https://black.rtfd.io>`_ code formatter.
 
