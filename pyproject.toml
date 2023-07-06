@@ -118,7 +118,7 @@ disable = [
     # We need noqa for compat with flake8 until we jettison flake8
     "fixit.rules:UseLintFixmeCommentRule",
 ]
-python_version = "3.10"
+python-version = "3.10"
 formatter = "ufmt"
 
 [[tool.fixit.overrides]]
