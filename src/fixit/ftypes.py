@@ -190,6 +190,10 @@ class Config:
     path: Path = field(default_factory=Path)
     root: Path = field(default_factory=Path.cwd)
 
+    # feature flags
+    enable_root_import: Union[bool, Path] = False
+
+    # rule selection
     enable: List[QualifiedRule] = field(
         default_factory=lambda: [QualifiedRule("fixit.rules")]
     )

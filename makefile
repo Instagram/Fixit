@@ -1,3 +1,4 @@
+all: format test lint html
 
 .PHONY: venv
 venv:

@@ -31,11 +31,12 @@ The main configuration table.
 
 .. attribute:: root
     :type: bool
-    :value: False
+    :value: false
 
     Marks this file as a root of the configuration hierarchy.
 
-    If set to ``True``, Fixit will not visit any files further up the hierarchy.
+    If set to ``true``, Fixit will not visit any configuration files further up
+    the filesystem hierarchy.
 
 .. attribute:: enable
     :type: list[str]
@@ -84,26 +85,62 @@ The main configuration table.
 
     See :attr:`enable` for details on referencing lint rules.
 
+.. attribute:: enable-root-import
+    :type: bool | str
+
+    Allow importing local rules using absolute imports, relative to the root
+    of the project. This provides an alternative to using dotted rule names for
+    enabling and importing local rules (see :attr:`enable`) from either the
+    directory containing the root config (when set to ``true``), or a single,
+    optional path relative to the root config.
+
+    For example, project ``orange`` using a ``src/orange/`` project hierarchy
+    could use the following config:
+
+    .. code-block:: toml
+
+        root = True
+        enable-root-import = "src"
+        enable = ["orange.rules"]
+
+    Assuming that the namespace ``orange`` is not already in site-packages,
+    then ``orange.rules`` would be imported from ``src/orange/rules/``, while
+    also allowing these local rules to import from other components in the
+    ``orange`` namespace.
+
+    This option may only be specified in the root config file. Specifying the
+    option in any other config file is treated as a configuration error.
+    Absolute paths, or paths containing ``..`` parent-relative components,
+    are not allowed.
+
+    This option is roughly equivalent to adding the configured path, relative
+    to the root configuration, to :attr:`sys.path` when attempting to import
+    and materialize any enabled lint rules.
+
 .. attribute:: python-version
     :type: str
-    :value: "3.10"
 
     Python version to target when selecting lint rules. Rules with
     :attr:`~fixit.LintRule.PYTHON_VERSION` specifiers that don't match this
     target version will be automatically disabled during linting.
+
+    To target a minimum Python version of 3.10:
+
+    .. code-block:: toml
+
+        python-version = "3.10"
     
     Defaults to the currently active version of Python.
     Set to empty string ``""`` to disable target version checking.
 
 .. attribute:: formatter
     :type: str
-    :value: None
 
     Code formatting style to apply after fixing source files.
 
     Supported code styles:
 
-    - ``None``: No style is applied (default).
+    - ``(unset)``: No style is applied (default).
 
     - ``"black"``: `Black <https://black.rtfd.io>`_ code formatter.
 
