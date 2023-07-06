@@ -234,7 +234,7 @@ def collect_rules(
         if config.python_version is not None:
             disabled_rules.update(
                 {
-                    R: "python_version"
+                    R: "python-version"
                     for R in all_rules
                     if config.python_version not in SpecifierSet(R.PYTHON_VERSION)
                 }
@@ -427,11 +427,11 @@ def merge_configs(
                     target_python_version = Version(python_version)
                 except InvalidVersion:
                     raise ConfigError(
-                        f"'python_version' {python_version!r} is not valid",
+                        f"'python-version' {python_version!r} is not valid",
                         config=config,
                     )
 
-            else:  # disable versioning, aka python_version = ""
+            else:  # disable versioning, aka python-version = ""
                 target_python_version = None
 
         if formatter:
@@ -474,7 +474,7 @@ def merge_configs(
             enable=get_sequence(config, "enable"),
             disable=get_sequence(config, "disable"),
             options=get_options(config, "options"),
-            python_version=config.data.pop("python_version", None),
+            python_version=config.data.pop("python-version", None),
             formatter=config.data.pop("formatter", None),
         )
 
@@ -494,7 +494,7 @@ def merge_configs(
                 enable=get_sequence(config, "enable", data=override),
                 disable=get_sequence(config, "disable", data=override),
                 options=get_options(config, "options", data=override),
-                python_version=override.pop("python_version", None),
+                python_version=override.pop("python-version", None),
                 formatter=override.pop("formatter", None),
             )
 

@@ -32,14 +32,14 @@ class ConfigTest(TestCase):
                 enable-root-import = true
                 enable = ["more.rules"]
                 disable = ["fixit.rules.SomethingSpecific"]
-                python_version = "3.8"
+                python-version = "3.8"
 
                 [[tool.fixit.overrides]]
                 path = "other"
                 enable = ["other.stuff", ".globalrules"]
                 disable = ["fixit.rules"]
                 options = {"other.stuff.Whatever"={key="value"}}
-                python_version = "3.10"
+                python-version = "3.10"
                 """
             )
         )
@@ -172,7 +172,7 @@ class ConfigTest(TestCase):
                             "enable-root-import": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
-                            "python_version": "3.8",
+                            "python-version": "3.8",
                             "overrides": [
                                 {
                                     "path": "other",
@@ -181,7 +181,7 @@ class ConfigTest(TestCase):
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
-                                    "python_version": "3.10",
+                                    "python-version": "3.10",
                                 },
                             ],
                         },
@@ -202,7 +202,7 @@ class ConfigTest(TestCase):
                             "enable-root-import": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
-                            "python_version": "3.8",
+                            "python-version": "3.8",
                             "overrides": [
                                 {
                                     "path": "other",
@@ -211,7 +211,7 @@ class ConfigTest(TestCase):
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
-                                    "python_version": "3.10",
+                                    "python-version": "3.10",
                                 },
                             ],
                         },
@@ -229,7 +229,7 @@ class ConfigTest(TestCase):
                             "enable-root-import": True,
                             "enable": ["more.rules"],
                             "disable": ["fixit.rules.SomethingSpecific"],
-                            "python_version": "3.8",
+                            "python-version": "3.8",
                             "overrides": [
                                 {
                                     "path": "other",
@@ -238,7 +238,7 @@ class ConfigTest(TestCase):
                                     "options": {
                                         "other.stuff.Whatever": {"key": "value"}
                                     },
-                                    "python_version": "3.10",
+                                    "python-version": "3.10",
                                 },
                             ],
                         },
@@ -287,7 +287,7 @@ class ConfigTest(TestCase):
                 [
                     RawConfig(
                         (root / "a/b/c/fixit.toml"),
-                        {"enable": ["foo"], "python_version": "3.10"},
+                        {"enable": ["foo"], "python-version": "3.10"},
                     ),
                     RawConfig(
                         (root / "a/b/fixit.toml"),
@@ -295,7 +295,7 @@ class ConfigTest(TestCase):
                     ),
                     RawConfig(
                         (root / "a/fixit.toml"),
-                        {"enable": ["foo"], "python_version": "3.8"},
+                        {"enable": ["foo"], "python-version": "3.8"},
                     ),
                 ],
                 Config(
