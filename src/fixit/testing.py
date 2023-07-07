@@ -72,10 +72,10 @@ class LintRuleTestCase(unittest.TestCase):
         test_case: Union[ValidTestCase, InvalidTestCase],
         rule: LintRule,
     ) -> None:
-        config = Config()
         path = Path(
             "valid.py" if isinstance(test_case, ValidTestCase) else "invalid.py"
         )
+        config = Config(path=path)
         source_code = _dedent(test_case.code)
         runner = LintRunner(path, source_code.encode())
         reports = list(runner.collect_violations([rule], config))
