@@ -38,11 +38,11 @@ from libcst.metadata import (
 )
 
 from .ftypes import (
-    InvalidTestCase,
+    Invalid,
     LintIgnoreRegex,
     LintViolation,
     NodeReplacement,
-    ValidTestCase,
+    Valid,
     VisitHook,
     VisitorMethod,
 )
@@ -72,10 +72,10 @@ class LintRule(BatchableCSTVisitor):
     __ https://peps.python.org/pep-0440/#version-specifiers
     """
 
-    VALID: ClassVar[List[Union[str, ValidTestCase]]]
+    VALID: ClassVar[List[Union[str, Valid]]]
     "Test cases that should produce no errors/reports"
 
-    INVALID: ClassVar[List[Union[str, InvalidTestCase]]]
+    INVALID: ClassVar[List[Union[str, Invalid]]]
     "Test cases that are expected to produce errors, with optional replacements"
 
     AUTOFIX = False  # set by __subclass_init__
@@ -101,9 +101,9 @@ class LintRule(BatchableCSTVisitor):
         if ParentNodeProvider not in cls.METADATA_DEPENDENCIES:
             cls.METADATA_DEPENDENCIES = (*cls.METADATA_DEPENDENCIES, ParentNodeProvider)
 
-        invalid: List[Union[str, InvalidTestCase]] = getattr(cls, "INVALID", [])
+        invalid: List[Union[str, Invalid]] = getattr(cls, "INVALID", [])
         for case in invalid:
-            if isinstance(case, InvalidTestCase) and case.expected_replacement:
+            if isinstance(case, Invalid) and case.expected_replacement:
                 cls.AUTOFIX = True
                 return
 
@@ -242,8 +242,3 @@ class LintRule(BatchableCSTVisitor):
             name: _wrap(f"{type(self).__name__}.{name}", visitor)
             for (name, visitor) in super().get_visitors().items()
         }
-
-
-# DEPRECATED: remove before stable 2.0 release
-CstLintRule = LintRule
-CSTLintRule = LintRule
