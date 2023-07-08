@@ -10,14 +10,21 @@ Fixit requires at least Python 3.8. If you do not have an appropriate version,
 or if you would like to test with newer runtimes, you can use
 [pyenv](https://github.com/pyenv/pyenv) to build and manage versions.
 
+
 ## Developing
 
-Fixit can be built and run locally using a clean virtualenv:
+Fixit can be built and run locally using hatch:
+
+```shell-session
+$ hatch env run -- fixit [args]
+```
+
+You can also use the managed virtualenv:
 
 ```shell-session
 $ hatch shell
 
-$ hatch env run -- fixit [args]
+$ fixit [args]
 ```
 
 To run the test suite, type checker, and linters individually:
@@ -30,10 +37,10 @@ $ hatch run typecheck
 $ hatch run lint:check
 ```
 
-To run the full test, typecheck, and lint suite at once, you can use make:
+To format code, sort imports, and apply automatic lint fixes:
 
 ```shell-session
-$ make test lint html
+$ hatch run lint:fix
 ```
 
 Documentation is built using sphinx. You can generate and view the documentation
@@ -45,6 +52,35 @@ $ hatch run docs:build
 $ open html/index.html
 ```
 
+To run the full test, typecheck, lint suite, and build the docs all at once,
+you can use make:
+
+```shell-session
+$ make
+```
+
+
+## Submitting PRs
+
+Before submitting PRs, please address the following items:
+
+- Add tests exercising any fixed bugs or new functionality
+- Document any changes to configuration or behavior
+- Apply formatting, regenerate documentation, and run the test suite (see above)
+- Summarize the high level features or behavior changes in your commit message
+
+For most developers, we recommend using the [github cli][gh] to submit pull
+requests:
+
+```shell-session
+$ gh pr create
+```
+
+If you are a Fixit maintainer, we recommend using [ghstack][] (see below):
+
+```shell-session
+$ ghstack submit
+```
 
 ## Code style
 
@@ -111,7 +147,7 @@ $ git branchless init
 
 ## ghstack
 
-[ghstack](https://github.com/ezyang/ghstack) is a tool for simplifying and
+[ghstack][] is a tool for simplifying and
 automating the process of submitting stacked PRs, where each PR in the stack
 builds and depends on changes from the previous PR.
 
@@ -128,7 +164,7 @@ Once installed, you can run ghstack to submit a stack of PRs from your active
 branch, one PR for each commit in the branch:
 
 ```shell-session
-$ ghstack
+$ ghstack submit
 ```
 
 Note that any PRs created with ghstack *cannot* be merged using the normal
@@ -141,4 +177,6 @@ last PR in the stack that you want to land:
 $ ghstack land $PR_URL
 ```
 
+[gh]: https://cli.github.com/
+[ghstack]: https://github.com/ezyang/ghstack
 [pipx]: https://pypa.github.io/pipx/
