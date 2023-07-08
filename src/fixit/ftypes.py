@@ -178,7 +178,8 @@ class Options:
 
     debug: Optional[bool]
     config_file: Optional[Path]
-    tags: Optional[Tags]
+    tags: Optional[Tags] = None
+    rules: Sequence[QualifiedRule] = ()
 
 
 @dataclass

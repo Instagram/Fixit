@@ -532,7 +532,12 @@ def generate_config(
     raw_configs = read_configs(config_paths)
     config = merge_configs(path, raw_configs, root=root)
 
-    if options and options.tags:
-        config.tags = options.tags
+    if options:
+        if options.tags:
+            config.tags = options.tags
+
+        if options.rules:
+            config.enable = options.rules
+            config.disable = []
 
     return config

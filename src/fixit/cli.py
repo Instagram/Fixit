@@ -66,11 +66,18 @@ def splash(
     default="",
     help="Select or filter rules by tags",
 )
+@click.option(
+    "--rules",
+    type=str,
+    default="",
+    help="Override configured rules",
+)
 def main(
     ctx: click.Context,
     debug: Optional[bool],
     config_file: Optional[Path],
     tags: str,
+    rules: str,
 ):
     level = logging.WARNING
     if debug is not None:
@@ -81,6 +88,13 @@ def main(
         debug=debug,
         config_file=config_file,
         tags=Tags.parse(tags),
+        rules=sorted(
+            {
+                parse_rule(r, Path.cwd())
+                for r in (rs.strip() for rs in rules.split(","))
+                if r
+            }
+        ),
     )
 
 
@@ -220,6 +234,8 @@ def debug(ctx: click.Context, paths: Sequence[Path]):
         from rich import print as pprint
     except ImportError:
         from pprint import pprint  # type: ignore
+
+    pprint(options)
 
     for path in paths:
         path = path.resolve()
