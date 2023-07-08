@@ -8,10 +8,10 @@ from typing import List, Union
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class NoRedundantArgumentsSuperRule(CstLintRule):
+class NoRedundantArgumentsSuperRule(LintRule):
     """
     Remove redundant arguments when using super for readability.
     """

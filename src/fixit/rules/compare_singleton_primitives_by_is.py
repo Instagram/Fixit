@@ -8,10 +8,10 @@ from typing import FrozenSet, Union
 import libcst as cst
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class CompareSingletonPrimitivesByIsRule(CstLintRule):
+class CompareSingletonPrimitivesByIsRule(LintRule):
     """
     Enforces the use of `is` and `is not` in comparisons to singleton primitives (None, True, False) rather than == and !=.
     The == operator checks equality, when in this scenario, we want to check identity.

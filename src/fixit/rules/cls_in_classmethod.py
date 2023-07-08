@@ -14,7 +14,7 @@ from libcst.metadata import (
     ScopeProvider,
 )
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 CLS = "cls"
@@ -37,7 +37,7 @@ class _RenameTransformer(cst.CSTTransformer):
         return updated_node
 
 
-class UseClsInClassmethodRule(CstLintRule):
+class UseClsInClassmethodRule(LintRule):
     """
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
     """

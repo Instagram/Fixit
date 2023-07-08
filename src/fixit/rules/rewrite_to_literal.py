@@ -8,7 +8,7 @@ from typing import Sequence
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 UNNECESSARY_LITERAL: str = (
@@ -22,7 +22,7 @@ UNNCESSARY_CALL: str = (
 )
 
 
-class RewriteToLiteralRule(CstLintRule):
+class RewriteToLiteralRule(LintRule):
     """
     A derivative of flake8-comprehensions' C405-C406 and C409-C410. It's
     unnecessary to use a list or tuple literal within a call to tuple, list,

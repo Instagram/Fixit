@@ -8,7 +8,7 @@ from typing import Optional, Union
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 UNNECESSARY_GENERATOR: str = (
@@ -21,7 +21,7 @@ UNNECESSARY_LIST_COMPREHENSION: str = (
 )
 
 
-class RewriteToComprehensionRule(CstLintRule):
+class RewriteToComprehensionRule(LintRule):
     """
     A derivative of flake8-comprehensions's C400-C402 and C403-C404.
     Comprehensions are more efficient than functions calls. This C400-C402

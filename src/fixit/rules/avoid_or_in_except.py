@@ -6,10 +6,10 @@
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class AvoidOrInExceptRule(CstLintRule):
+class AvoidOrInExceptRule(LintRule):
     """
     Discourages use of ``or`` in except clauses. If an except clause needs to catch multiple exceptions,
     they must be expressed as a parenthesized tuple, for example:

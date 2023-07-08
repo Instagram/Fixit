@@ -8,16 +8,10 @@ import libcst.matchers as m
 from libcst._nodes.whitespace import SimpleWhitespace
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
-from fixit import (
-    CodePosition,
-    CodeRange,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CodePosition, CodeRange, Invalid, LintRule, Valid
 
 
-class ExplicitFrozenDataclassRule(CstLintRule):
+class ExplicitFrozenDataclassRule(LintRule):
     """
     Encourages the use of frozen dataclass objects by telling users to specify the
     kwarg.

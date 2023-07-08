@@ -7,10 +7,10 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.helpers import ensure_type
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class UseAssertInRule(CstLintRule):
+class UseAssertInRule(LintRule):
     """
     Discourages use of ``assertTrue(x in y)`` and ``assertFalse(x in y)``
     as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).

@@ -9,7 +9,7 @@ from typing import Callable, cast, List, Optional
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 USE_FSTRING_SIMPLE_EXPRESSION_MAX_LENGTH = 30
@@ -71,7 +71,7 @@ class EscapeStringQuote(cst.CSTTransformer):
         return original_node
 
 
-class UseFstringRule(CstLintRule):
+class UseFstringRule(LintRule):
     """
     Encourages the use of f-string instead of %-formatting or .format() for high code quality and efficiency.
 

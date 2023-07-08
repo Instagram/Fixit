@@ -8,10 +8,10 @@ from typing import Optional
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class NoStaticIfConditionRule(CstLintRule):
+class NoStaticIfConditionRule(LintRule):
     """
     Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
     """

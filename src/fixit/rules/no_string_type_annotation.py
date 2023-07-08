@@ -9,16 +9,10 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.metadata import QualifiedNameProvider
 
-from fixit import (
-    CodePosition,
-    CodeRange,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CodePosition, CodeRange, Invalid, LintRule, Valid
 
 
-class NoStringTypeAnnotationRule(CstLintRule):
+class NoStringTypeAnnotationRule(LintRule):
     """
     Enforce the use of type identifier instead of using string type hints for simplicity and better syntax highlighting.
     Starting in Python 3.7, ``from __future__ import annotations`` can postpone evaluation of type annotations

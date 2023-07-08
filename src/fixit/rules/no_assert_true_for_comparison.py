@@ -8,10 +8,10 @@ from typing import Sequence
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class NoAssertTrueForComparisonsRule(CstLintRule):
+class NoAssertTrueForComparisonsRule(LintRule):
     """
     Finds incorrect use of ``assertTrue`` when the intention is to compare two values.
     These calls are replaced with ``assertEqual``.

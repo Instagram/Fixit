@@ -9,10 +9,10 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.helpers import ensure_type
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class UseAssertIsNotNoneRule(CstLintRule):
+class UseAssertIsNotNoneRule(LintRule):
     """
     Discourages use of ``assertTrue(x is not None)`` and ``assertFalse(x is not None)`` as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).
     Use ``assertIsNotNone(x)`` and ``assertIsNone(x)``) instead.

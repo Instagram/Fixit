@@ -9,7 +9,7 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 _ISINSTANCE = QualifiedName(
@@ -17,7 +17,7 @@ _ISINSTANCE = QualifiedName(
 )
 
 
-class CollapseIsinstanceChecksRule(CstLintRule):
+class CollapseIsinstanceChecksRule(LintRule):
     """
     The built-in ``isinstance`` function, instead of a single type,
     can take a tuple of types and check whether given target suits

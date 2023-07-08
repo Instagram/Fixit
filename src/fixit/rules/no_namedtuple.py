@@ -9,10 +9,10 @@ import libcst as cst
 from libcst import ensure_type, MaybeSentinel, parse_expression
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class NoNamedTupleRule(CstLintRule):
+class NoNamedTupleRule(LintRule):
     """
     Enforce the use of ``dataclasses.dataclass`` decorator instead of ``NamedTuple`` for cleaner customization and
     inheritance. It supports default value, combining fields for inheritance, and omitting optional fields at
