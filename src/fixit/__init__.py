@@ -21,8 +21,15 @@ from .ftypes import (
     Result,
     Tags,
 )
-from .rule import CSTLintRule, CstLintRule, LintRule
-from .testing import InvalidTestCase, ValidTestCase
+from .rule import LintRule
+from .testing import Invalid, Valid
+
+# DEPRECATED: aliases to 0.x names
+# TODO: create lint rules to fix references
+CstLintRule = LintRule
+CSTLintRule = LintRule
+InvalidTestCase = Invalid
+ValidTestCase = Valid
 
 __all__ = [
     "__version__",
@@ -35,7 +42,9 @@ __all__ = [
     "Formatter",
     "LintRule",
     "LintViolation",
+    "Invalid",
     "InvalidTestCase",
+    "Valid",
     "ValidTestCase",
     "Config",
     "FileContent",

@@ -14,7 +14,7 @@ from moreorless import unified_diff
 
 from .engine import LintRunner
 from .ftypes import Config
-from .rule import InvalidTestCase, LintRule, ValidTestCase
+from .rule import Invalid, LintRule, Valid
 
 
 def _dedent(src: str) -> str:
@@ -30,7 +30,7 @@ def get_fixture_path(
     return fixture_top_dir / fixture_subdir
 
 
-def validate_patch(report: Any, test_case: InvalidTestCase) -> None:
+def validate_patch(report: Any, test_case: Invalid) -> None:
     patch = report.patch
     expected_replacement = test_case.expected_replacement  # type: ignore
 
@@ -61,7 +61,7 @@ class TestCasePrecursor:
     rule: LintRule
     test_methods: Mapping[
         str,
-        Union[ValidTestCase, InvalidTestCase],
+        Union[Valid, Invalid],
     ]
     fixture_paths: Mapping[str, Path]
 
@@ -69,18 +69,16 @@ class TestCasePrecursor:
 class LintRuleTestCase(unittest.TestCase):
     def _test_method(
         self,
-        test_case: Union[ValidTestCase, InvalidTestCase],
+        test_case: Union[Valid, Invalid],
         rule: LintRule,
     ) -> None:
-        path = Path(
-            "valid.py" if isinstance(test_case, ValidTestCase) else "invalid.py"
-        )
+        path = Path("valid.py" if isinstance(test_case, Valid) else "invalid.py")
         config = Config(path=path)
         source_code = _dedent(test_case.code)
         runner = LintRunner(path, source_code.encode())
         reports = list(runner.collect_violations([rule], config))
 
-        if isinstance(test_case, ValidTestCase):
+        if isinstance(test_case, Valid):
             self.assertEqual(
                 len(reports),
                 0,
@@ -137,7 +135,7 @@ def gen_test_methods_for_rule(rule: LintRule) -> TestCasePrecursor:
     for idx, test_case_or_str in enumerate(rule.VALID):
         name = f"test_VALID_{idx}"
         valid_test_case = (
-            ValidTestCase(code=test_case_or_str)
+            Valid(code=test_case_or_str)
             if isinstance(test_case_or_str, str)
             else test_case_or_str
         )
@@ -145,7 +143,7 @@ def gen_test_methods_for_rule(rule: LintRule) -> TestCasePrecursor:
     for idx, inv_test_case_or_str in enumerate(rule.INVALID):
         name = f"test_INVALID_{idx}"
         invalid_test_case = (
-            InvalidTestCase(code=inv_test_case_or_str)
+            Invalid(code=inv_test_case_or_str)
             if isinstance(inv_test_case_or_str, str)
             else inv_test_case_or_str
         )
@@ -184,7 +182,7 @@ def generate_lint_rule_test_cases(
 
             def test_method(
                 self: LintRuleTestCase,
-                data: Union[ValidTestCase, InvalidTestCase] = test_method_data,
+                data: Union[Valid, Invalid] = test_method_data,
                 rule: LintRule = test_case.rule,
             ) -> None:
                 # instantiate a new rule for every test

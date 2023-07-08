@@ -52,7 +52,7 @@ Version
 
 
 @dataclass(frozen=True)
-class InvalidTestCase:
+class Invalid:
     code: str
     range: Optional[CodeRange] = None
     expected_message: Optional[str] = None
@@ -60,7 +60,7 @@ class InvalidTestCase:
 
 
 @dataclass(frozen=True)
-class ValidTestCase:
+class Valid:
     code: str
 
 
