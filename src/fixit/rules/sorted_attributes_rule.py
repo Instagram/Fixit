@@ -8,13 +8,13 @@ from typing import List, Union
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 LineType = Union[cst.BaseSmallStatement, cst.BaseStatement]
 
 
-class SortedAttributesRule(CstLintRule):
+class SortedAttributesRule(LintRule):
     """
     Ever wanted to sort a bunch of class attributes alphabetically?
     Well now it's easy! Just add "@sorted-attributes" in the doc string of

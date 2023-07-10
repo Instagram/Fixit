@@ -7,7 +7,7 @@ import libcst as cst
 import libcst.matchers as m
 from libcst.helpers import get_full_name_for_node
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 UNNECESSARY_LAMBDA: str = (
@@ -16,7 +16,7 @@ UNNECESSARY_LAMBDA: str = (
 )
 
 
-class NoRedundantLambdaRule(CstLintRule):
+class NoRedundantLambdaRule(LintRule):
     """
     A lamba function which has a single objective of
     passing all it is arguments to another callable can

@@ -6,10 +6,10 @@
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class ReplaceUnionWithOptionalRule(CstLintRule):
+class ReplaceUnionWithOptionalRule(LintRule):
     """
     Enforces the use of ``Optional[T]`` over ``Union[T, None]`` and ``Union[None, T]``.
     See https://docs.python.org/3/library/typing.html#typing.Optional to learn more about Optionals.

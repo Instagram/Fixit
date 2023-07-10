@@ -8,7 +8,7 @@ from typing import Set
 import libcst
 from libcst.metadata import QualifiedNameProvider, ScopeProvider
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
 REPLACE_BUILTIN_TYPE_ANNOTATION: str = (
@@ -21,7 +21,7 @@ BUILTINS_TO_REPLACE: Set[str] = {"dict", "list", "set", "tuple"}
 QUALIFIED_BUILTINS_TO_REPLACE: Set[str] = {f"builtins.{s}" for s in BUILTINS_TO_REPLACE}
 
 
-class UseTypesFromTypingRule(CstLintRule):
+class UseTypesFromTypingRule(LintRule):
     """
     Enforces the use of types from the ``typing`` module in type annotations in place
     of ``builtins.{builtin_type}`` since the type system doesn't recognize the latter

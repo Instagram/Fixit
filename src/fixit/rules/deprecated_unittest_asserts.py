@@ -6,10 +6,10 @@
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class DeprecatedUnittestAssertsRule(CstLintRule):
+class DeprecatedUnittestAssertsRule(LintRule):
     """
     Discourages the use of various deprecated unittest.TestCase functions
 

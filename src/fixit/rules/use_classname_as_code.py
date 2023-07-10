@@ -9,10 +9,10 @@ from typing import cast
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import CstLintRule, InvalidTestCase as Invalid, ValidTestCase as Valid
+from fixit import Invalid, LintRule, Valid
 
 
-class UseClassNameAsCodeRule(CstLintRule):
+class UseClassNameAsCodeRule(LintRule):
     """
     Meta lint rule which checks that codes of lint rules are migrated to new format in lint rule class definitions.
     """

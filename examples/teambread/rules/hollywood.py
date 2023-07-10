@@ -3,19 +3,20 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from fixit import LintRule, InvalidTestCase, ValidTestCase
 import libcst
+from fixit import Invalid, LintRule, Valid
+
 
 class HollywoodNameRule(LintRule):
     # clean code samples
     VALID = [
-        ValidTestCase('name = "Susan"'),
-        ValidTestCase("print('Terry')"),
+        Valid('name = "Susan"'),
+        Valid("print('Terry')"),
     ]
     # code that triggers this rule
     INVALID = [
-        InvalidTestCase('name = "Paul"', expected_replacement='name = "Mary"'),
-        InvalidTestCase("print('Paul')", expected_replacement='print("Mary")'),
+        Invalid('name = "Paul"', expected_replacement='name = "Mary"'),
+        Invalid("print('Paul')", expected_replacement='print("Mary")'),
     ]
 
     def visit_SimpleString(self, node: libcst.SimpleString) -> None:

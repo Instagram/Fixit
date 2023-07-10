@@ -6,16 +6,10 @@
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import (
-    CodePosition,
-    CodeRange,
-    CstLintRule,
-    InvalidTestCase as Invalid,
-    ValidTestCase as Valid,
-)
+from fixit import CodePosition, CodeRange, Invalid, LintRule, Valid
 
 
-class NoRedundantFStringRule(CstLintRule):
+class NoRedundantFStringRule(LintRule):
     """
     Remove redundant f-string without placeholders.
     """

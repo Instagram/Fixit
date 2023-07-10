@@ -5,10 +5,10 @@
 import libcst as cst
 from libcst.metadata import QualifiedNameProvider
 
-from fixit import CstLintRule, InvalidTestCase, ValidTestCase
+from fixit import Invalid, LintRule, Valid
 
 
-class UseAsyncSleepInAsyncDefRule(CstLintRule):
+class UseAsyncSleepInAsyncDefRule(LintRule):
     """
     Detect if asyncio.sleep is used in an async function
     """
@@ -16,35 +16,35 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
     MESSAGE: str = "Use asyncio.sleep in async function"
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
     VALID = [
-        ValidTestCase(
+        Valid(
             """
             import time
             def func():
                 time.sleep(1)
             """
         ),
-        ValidTestCase(
+        Valid(
             """
             from time import sleep
             def func():
                 sleep(1)
             """
         ),
-        ValidTestCase(
+        Valid(
             """
             from asyncio import sleep
             async def func():
                 await sleep(1)
             """
         ),
-        ValidTestCase(
+        Valid(
             """
             import asyncio
             async def func():
                 await asyncio.sleep(1)
             """
         ),
-        ValidTestCase(
+        Valid(
             """
             import time
             import asyncio
@@ -52,7 +52,7 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
                 time.sleep(1)
             """
         ),
-        ValidTestCase(
+        Valid(
             """
             import time
             import asyncio
@@ -60,7 +60,7 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
                 await asyncio.sleep(1)
             """
         ),
-        ValidTestCase(
+        Valid(
             """
             import time
             import asyncio
@@ -69,7 +69,7 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
                 await fut
             """
         ),
-        ValidTestCase(
+        Valid(
             """
             import something
             async def func():
@@ -78,21 +78,21 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
         ),
     ]
     INVALID = [
-        InvalidTestCase(
+        Invalid(
             """
             import time
             async def func():
                 time.sleep(1)
             """
         ),
-        InvalidTestCase(
+        Invalid(
             """
             from time import sleep
             async def func():
                 sleep(1)
             """
         ),
-        InvalidTestCase(
+        Invalid(
             """
             from time import sleep
             import asyncio
@@ -101,7 +101,7 @@ class UseAsyncSleepInAsyncDefRule(CstLintRule):
                 asyncio.sleep(1)
             """
         ),
-        InvalidTestCase(
+        Invalid(
             """
             from asyncio import sleep
             import time
