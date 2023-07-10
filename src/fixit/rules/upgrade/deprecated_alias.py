@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, Optional, Sequence, Tuple
+from typing import Dict, Sequence, Tuple
 
 import libcst
 from fixit import Invalid, LintRule, Valid
@@ -70,7 +70,7 @@ class FixitDeprecatedAlias(LintRule):
         ),
     ]
 
-    def visit_ImportFrom(self, node: ImportFrom) -> bool | None:
+    def visit_ImportFrom(self, node: ImportFrom) -> None:
         if isinstance(node.module, libcst.Name) and isinstance(node.names, Sequence):
             module = node.module.value
 
@@ -84,7 +84,11 @@ class FixitDeprecatedAlias(LintRule):
                     )
 
                     # don't keep 'Name as Name'
-                    if alias.asname and alias.asname.name.value == new_name:
+                    if (
+                        alias.asname
+                        and isinstance(alias.asname.name, libcst.Name)
+                        and alias.asname.name.value == new_name
+                    ):
                         rep = rep.with_changes(asname=None)
 
                     self.report(
