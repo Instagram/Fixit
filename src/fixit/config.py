@@ -537,7 +537,7 @@ def generate_config(
             config.tags = options.tags
 
         if options.rules:
-            config.enable = options.rules
+            config.enable = list(options.rules)
             config.disable = []
 
     return config
