@@ -3,13 +3,19 @@
    THIS FILE IS GENERATED - DO NOT EDIT BY HAND!
    Run `make html` or `scripts/document_rules.py` to regenerate this file.
 
-.. module:: fixit.rules
+.. module:: builtin-rules
 
 Built-in Rules
 --------------
 
-These rules are all part of the :mod:`fixit.rules` package, and are enabled by default
-unless explicitly listed in the :attr:`disable` configuration option.
+- :mod:`fixit.rules`
+- :mod:`fixit.rules.upgrade`
+
+
+``fixit.rules``
+^^^^^^^^^^^^^^^
+
+.. automodule:: fixit.rules
 
 - :class:`AvoidOrInExceptRule`
 - :class:`CollapseIsinstanceChecksRule`
@@ -95,11 +101,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
             5
 
         Exc2:
-    
 
     .. attribute:: MESSAGE
 
         Avoid using 'or' in an except block. For example:'except ValueError or TypeError' only catches 'ValueError'. Instead, use parentheses, 'except (ValueError, TypeError)'
+
 
     .. attribute:: VALID
 
@@ -125,11 +131,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     any of them. Rather than chaining multiple ``isinstance`` calls
     with a boolean-or operation, a single ``isinstance`` call where
     the second argument is a tuple of all types can be used.
-    
 
     .. attribute:: MESSAGE
 
         Multiple isinstance calls with the same target but different types can be collapsed into a single call with a tuple of types.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -164,11 +170,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     Enforces the use of ``==`` and ``!=`` in comparisons to primitives rather than ``is`` and ``is not``.
     The ``==`` operator checks equality (https://docs.python.org/3/reference/datamodel.html#object.__eq__),
     while ``is`` checks identity (https://docs.python.org/3/reference/expressions.html#is).
-    
 
     .. attribute:: MESSAGE
 
         Don't use `is` or `is not` to compare primitives, as they compare references. Use == or != instead.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -203,11 +209,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     Enforces the use of `is` and `is not` in comparisons to singleton primitives (None, True, False) rather than == and !=.
     The == operator checks equality, when in this scenario, we want to check identity.
     See Flake8 rules E711 (https://www.flake8rules.com/rules/E711.html) and E712 (https://www.flake8rules.com/rules/E712.html).
-    
 
     .. attribute:: MESSAGE
 
         Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identiy. Use `is` or `is not` instead.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -242,11 +248,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     Discourages the use of various deprecated unittest.TestCase functions
 
     See https://docs.python.org/3/library/unittest.html#deprecated-aliases
-    
 
     .. attribute:: MESSAGE
 
         {deprecated} is deprecated, use {replacement} instead
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -283,11 +289,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
     Without this lint rule, most users of dataclass won't know to use the kwarg, and
     may unintentionally end up with mutable objects.
-    
 
     .. attribute:: MESSAGE
 
         When using dataclasses, explicitly specify a frozen keyword argument. Example: `@dataclass(frozen=True)` or `@dataclass(frozen=False)`. Docs: https://docs.python.org/3/library/dataclasses.html
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -338,11 +344,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     These calls are replaced with ``assertEqual``.
     Comparisons with True, False and None are replaced with one-argument
     calls to ``assertTrue``, ``assertFalse`` and ``assertIsNone``.
-    
 
     .. attribute:: MESSAGE
 
         "assertTrue" does not compare its arguments, use "assertEqual" or other appropriate functions.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -376,11 +382,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
     In Python 3, a class is inherited from ``object`` by default.
     Explicitly inheriting from ``object`` is redundant, so removing it keeps the code simpler.
-    
 
     .. attribute:: MESSAGE
 
         Inheriting from object is a no-op.  'class Foo:' is just fine =)
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -421,11 +427,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     inheritance. It supports default value, combining fields for inheritance, and omitting optional fields at
     instantiation. See `PEP 557 <https://www.python.org/dev/peps/pep-0557>`_.
     ``@dataclass`` is faster at reading an object's nested properties and executing its methods. (`benchmark <https://medium.com/@jacktator/dataclass-vs-namedtuple-vs-object-for-performance-optimization-in-python-691e234253b9>`_)
-    
 
     .. attribute:: MESSAGE
 
         Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead for simplicity, efficiency and consistency.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -476,11 +482,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: NoRedundantArgumentsSuperRule
 
     Remove redundant arguments when using super for readability.
-    
 
     .. attribute:: MESSAGE
 
         Do not use arguments when calling super for the parent class. See https://www.python.org/dev/peps/pep-3135/
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -527,11 +533,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: NoRedundantFStringRule
 
     Remove redundant f-string without placeholders.
-    
 
     .. attribute:: MESSAGE
 
         f-string doesn't have placeholders, remove redundant f-string.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -566,7 +572,6 @@ unless explicitly listed in the :attr:`disable` configuration option.
     A lamba function which has a single objective of
     passing all it is arguments to another callable can
     be safely replaced by that callable.
-    
 
     .. attribute:: AUTOFIX
         :type: Yes
@@ -600,7 +605,6 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: NoRedundantListComprehensionRule
 
     A derivative of flake8-comprehensions's C407 rule.
-    
 
     .. attribute:: AUTOFIX
         :type: Yes
@@ -634,11 +638,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: NoStaticIfConditionRule
 
     Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
-    
 
     .. attribute:: MESSAGE
 
         Your if condition appears to evaluate to a static value (e.g. `or True`, `and False`). Please double check this logic and if it is actually temporary debug code.
+
 
     .. attribute:: VALID
 
@@ -667,11 +671,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     Starting in Python 3.7, ``from __future__ import annotations`` can postpone evaluation of type annotations
     `PEP 563 <https://www.python.org/dev/peps/pep-0563/#forward-references>`_
     and thus forward references no longer need to use string annotation style.
-    
 
     .. attribute:: MESSAGE
 
         String type hints are no longer necessary in Python, use the type identifier directly.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -732,11 +736,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
     Enforces the use of ``Optional[T]`` over ``Union[T, None]`` and ``Union[None, T]``.
     See https://docs.python.org/3/library/typing.html#typing.Optional to learn more about Optionals.
-    
 
     .. attribute:: MESSAGE
 
         `Optional[T]` is preferred over `Union[T, None]` or `Union[None, T]`. Learn more: https://docs.python.org/3/library/typing.html#typing.Optional
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -777,7 +781,6 @@ unless explicitly listed in the :attr:`disable` configuration option.
     function calls whenever possible. C403-C404 suggest to remove unnecessary
     list comprehension in a set/dict call, and replace it with set/dict
     comprehension.
-    
 
     .. attribute:: AUTOFIX
         :type: Yes
@@ -813,7 +816,6 @@ unless explicitly listed in the :attr:`disable` configuration option.
     A derivative of flake8-comprehensions' C405-C406 and C409-C410. It's
     unnecessary to use a list or tuple literal within a call to tuple, list,
     set, or dict since there is literal syntax for these types.
-    
 
     .. attribute:: AUTOFIX
         :type: Yes
@@ -851,11 +853,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     a class definition and lint will automatically sort all attributes alphabetically.
 
     Feel free to add other methods and such -- it should only affect class attributes.
-    
 
     .. attribute:: MESSAGE
 
         It appears you are using the @sorted-attributes directive and the class variables are unsorted. See the lint autofix suggestion.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -913,12 +915,12 @@ unless explicitly listed in the :attr:`disable` configuration option.
     Discourages use of ``assertTrue(x in y)`` and ``assertFalse(x in y)``
     as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).
     Use ``assertIn(x, y)`` and ``assertNotIn(x, y)``) instead.
-    
 
     .. attribute:: MESSAGE
 
         Use assertIn/assertNotIn instead of assertTrue/assertFalse for inclusion check.
         See https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertIn)
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -953,12 +955,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     Discourages use of ``assertTrue(x is not None)`` and ``assertFalse(x is not None)`` as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).
     Use ``assertIsNotNone(x)`` and ``assertIsNone(x)``) instead.
 
-    
-
     .. attribute:: MESSAGE
 
         "assertTrue" and "assertFalse" are deprecated. Use "assertIsNotNone" and "assertIsNone" instead.
         See https://docs.python.org/3.8/library/unittest.html#deprecated-aliases
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -991,11 +992,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: UseAsyncSleepInAsyncDefRule
 
     Detect if asyncio.sleep is used in an async function
-    
 
     .. attribute:: MESSAGE
 
         Use asyncio.sleep in async function
+
 
     .. attribute:: VALID
 
@@ -1025,11 +1026,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: UseClassNameAsCodeRule
 
     Meta lint rule which checks that codes of lint rules are migrated to new format in lint rule class definitions.
-    
 
     .. attribute:: MESSAGE
 
         `IG`-series codes are deprecated. Use class name as code instead.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -1077,11 +1078,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
 .. class:: UseClsInClassmethodRule
 
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
-    
 
     .. attribute:: MESSAGE
 
         When using @classmethod, the first argument must be `cls`.
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -1153,11 +1154,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     2. only %s placeholders are linted against for now. We leave it as future work to support other placeholders.
         For example, %d raises TypeError for non-numeric objects, whereas f"{x:d}" raises ValueError.
         This discrepancy in the type of exception raised could potentially break the logic in the code where the exception is handled
-    
 
     .. attribute:: MESSAGE
 
         Do not use printf style formatting or .format(). Use f-string instead to be more readable and efficient. See https://www.python.org/dev/peps/pep-0498/
+
     .. attribute:: AUTOFIX
         :type: Yes
 
@@ -1193,11 +1194,11 @@ unless explicitly listed in the :attr:`disable` configuration option.
     ``noqa`` is deprecated and not supported because explicitly providing lint rule names to be suppressed
     in lint-fixme comment is preferred over implicit noqa comments. Implicit noqa suppression comments
     sometimes accidentally silence warnings unexpectedly.
-    
 
     .. attribute:: MESSAGE
 
         noqa is deprecated. Use `lint-fixme` or `lint-ignore` instead.
+
 
     .. attribute:: VALID
 
@@ -1226,7 +1227,6 @@ unless explicitly listed in the :attr:`disable` configuration option.
     Enforces the use of types from the ``typing`` module in type annotations in place
     of ``builtins.{builtin_type}`` since the type system doesn't recognize the latter
     as a valid type before Python ``3.10``.
-    
 
     .. attribute:: AUTOFIX
         :type: Yes
@@ -1262,4 +1262,49 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
             def function(list: list[str]) -> None:
                 pass
+
+``fixit.rules.upgrade``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: fixit.rules.upgrade
+
+- :class:`FixitDeprecatedAlias`
+
+.. class:: FixitDeprecatedAlias
+
+    Upgrade lint rules to replace deprecated imports with their replacements.
+
+    .. attribute:: MESSAGE
+
+        Fixit deprecated import {old_name}, use {new_name} instead
+
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            from fixit import LintRule
+        .. code:: python
+
+            from fixit import Invalid
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            from fixit import CstLintRule
+
+            # suggested fix
+            from fixit import LintRule
+
+        .. code:: python
+
+            from fixit import CSTLintRule
+
+            # suggested fix
+            from fixit import LintRule
+
     

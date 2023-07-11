@@ -6,9 +6,10 @@
 from typing import Dict, Sequence, Tuple
 
 import libcst
-from fixit import Invalid, LintRule, Valid
 from libcst._nodes.statement import ImportFrom
 from libcst.metadata import FullyQualifiedNameProvider
+
+from fixit import Invalid, LintRule, Valid
 
 
 class FixitDeprecatedAlias(LintRule):
