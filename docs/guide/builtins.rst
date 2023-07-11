@@ -9,7 +9,7 @@ Built-in Rules
 --------------
 
 - :mod:`fixit.rules`
-- :mod:`fixit.rules.upgrade`
+- :mod:`fixit.upgrade`
 
 
 ``fixit.rules``
@@ -1263,14 +1263,14 @@ Built-in Rules
             def function(list: list[str]) -> None:
                 pass
 
-``fixit.rules.upgrade``
-^^^^^^^^^^^^^^^^^^^^^^^
+``fixit.upgrade``
+^^^^^^^^^^^^^^^^^
 
-.. automodule:: fixit.rules.upgrade
+.. automodule:: fixit.upgrade
 
-- :class:`FixitDeprecatedAlias`
+- :class:`FixitDeprecatedImport`
 
-.. class:: FixitDeprecatedAlias
+.. class:: FixitDeprecatedImport
 
     Upgrade lint rules to replace deprecated imports with their replacements.
 

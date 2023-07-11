@@ -11,7 +11,7 @@ from fixit.ftypes import QualifiedRule
 
 from jinja2 import Template
 
-RULES = ["fixit.rules", "fixit.rules.upgrade"]
+RULES = ["fixit.rules", "fixit.upgrade"]
 
 RULES_DOC = Path(__file__).parent.parent / "docs" / "guide" / "builtins.rst"
 
@@ -95,7 +95,7 @@ def redent(value: str, prefix: str = "") -> str:
 
 
 def main() -> None:
-    qrules = [QualifiedRule(r) for r in RULES]
+    qrules = sorted(QualifiedRule(r) for r in RULES)
     packages = {qrule: list(find_rules(qrule)) for qrule in qrules}
 
     RULES_DOC.write_text(
