@@ -12,7 +12,7 @@ from libcst.metadata import FullyQualifiedNameProvider
 from fixit import Invalid, LintRule, Valid
 
 
-class FixitDeprecatedAlias(LintRule):
+class FixitDeprecatedImport(LintRule):
     """
     Upgrade lint rules to replace deprecated imports with their replacements.
     """
