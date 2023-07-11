@@ -11,6 +11,8 @@ from fixit.ftypes import QualifiedRule
 
 from jinja2 import Template
 
+RULES = ["fixit.rules", "fixit.rules.upgrade"]
+
 RULES_DOC = Path(__file__).parent.parent / "docs" / "guide" / "builtins.rst"
 
 PAGE_TPL = Template(
@@ -19,13 +21,21 @@ PAGE_TPL = Template(
    THIS FILE IS GENERATED - DO NOT EDIT BY HAND!
    Run `make html` or `scripts/document_rules.py` to regenerate this file.
 
-.. module:: fixit.rules
+.. module:: builtin-rules
 
 Built-in Rules
 --------------
 
-These rules are all part of the :mod:`fixit.rules` package, and are enabled by default
-unless explicitly listed in the :attr:`disable` configuration option.
+{% for pkg in packages %}
+- :mod:`{{ pkg.module }}`
+{% endfor %}
+
+{% for pkg, rules in packages.items() %}
+
+``{{ pkg.module }}``
+^^^^{{ "^" * len(pkg.module) }}
+
+.. automodule:: {{ pkg.module }}
 
 {% for rule in rules %}
 - :class:`{{rule.__name__}}`
@@ -33,12 +43,13 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
 {% for rule in rules %}
 .. class:: {{ rule.__name__ }}
-{{ rule.__doc__ }}
+{{ rule.__doc__.rstrip() }}
 
 {% if rule.MESSAGE %}
     .. attribute:: MESSAGE
 
-{{ indent(rule.MESSAGE, "        ") }}
+{{ redent(rule.MESSAGE, "        ") }}
+
 {% endif %}
 {% if rule.AUTOFIX %}
     .. attribute:: AUTOFIX
@@ -72,6 +83,7 @@ unless explicitly listed in the :attr:`disable` configuration option.
 {% endif %}
 {% endfor %}
 {% endfor %}
+{% endfor %}
     """,
     trim_blocks=True,
     lstrip_blocks=True,
@@ -79,12 +91,12 @@ unless explicitly listed in the :attr:`disable` configuration option.
 
 
 def redent(value: str, prefix: str = "") -> str:
-    return indent(dedent(value).strip("\n"), prefix)
+    return indent(dedent(value).strip("\n"), prefix).rstrip()
 
 
 def main() -> None:
-    search = QualifiedRule("fixit.rules")
-    rules = list(find_rules(search))
+    qrules = [QualifiedRule(r) for r in RULES]
+    packages = {qrule: list(find_rules(qrule)) for qrule in qrules}
 
     RULES_DOC.write_text(
         PAGE_TPL.render(
@@ -94,7 +106,7 @@ def main() -> None:
             hasattr=hasattr,
             len=len,
             repr=repr,
-            rules=rules,
+            packages=packages,
         )
     )
 
