@@ -37,7 +37,7 @@ class _RenameTransformer(cst.CSTTransformer):
         return updated_node
 
 
-class UseClsInClassmethodRule(LintRule):
+class UseClsInClassmethod(LintRule):
     """
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
     """

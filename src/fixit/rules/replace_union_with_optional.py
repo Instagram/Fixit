@@ -9,7 +9,7 @@ import libcst.matchers as m
 from fixit import Invalid, LintRule, Valid
 
 
-class ReplaceUnionWithOptionalRule(LintRule):
+class ReplaceUnionWithOptional(LintRule):
     """
     Enforces the use of ``Optional[T]`` over ``Union[T, None]`` and ``Union[None, T]``.
     See https://docs.python.org/3/library/typing.html#typing.Optional to learn more about Optionals.

@@ -22,7 +22,7 @@ UNNCESSARY_CALL: str = (
 )
 
 
-class RewriteToLiteralRule(LintRule):
+class RewriteToLiteral(LintRule):
     """
     A derivative of flake8-comprehensions' C405-C406 and C409-C410. It's
     unnecessary to use a list or tuple literal within a call to tuple, list,

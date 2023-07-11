@@ -8,7 +8,7 @@ import libcst as cst
 from fixit import Invalid, LintRule, Valid
 
 
-class ComparePrimitivesByEqualRule(LintRule):
+class ComparePrimitivesByEqual(LintRule):
     """
     Enforces the use of ``==`` and ``!=`` in comparisons to primitives rather than ``is`` and ``is not``.
     The ``==`` operator checks equality (https://docs.python.org/3/reference/datamodel.html#object.__eq__),

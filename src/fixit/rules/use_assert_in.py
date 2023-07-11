@@ -10,7 +10,7 @@ from libcst.helpers import ensure_type
 from fixit import Invalid, LintRule, Valid
 
 
-class UseAssertInRule(LintRule):
+class UseAssertIn(LintRule):
     """
     Discourages use of ``assertTrue(x in y)`` and ``assertFalse(x in y)``
     as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).

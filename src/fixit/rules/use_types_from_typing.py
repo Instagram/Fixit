@@ -21,7 +21,7 @@ BUILTINS_TO_REPLACE: Set[str] = {"dict", "list", "set", "tuple"}
 QUALIFIED_BUILTINS_TO_REPLACE: Set[str] = {f"builtins.{s}" for s in BUILTINS_TO_REPLACE}
 
 
-class UseTypesFromTypingRule(LintRule):
+class UseTypesFromTyping(LintRule):
     """
     Enforces the use of types from the ``typing`` module in type annotations in place
     of ``builtins.{builtin_type}`` since the type system doesn't recognize the latter

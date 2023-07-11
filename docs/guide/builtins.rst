@@ -17,35 +17,35 @@ Built-in Rules
 
 .. automodule:: fixit.rules
 
-- :class:`AvoidOrInExceptRule`
-- :class:`CollapseIsinstanceChecksRule`
-- :class:`ComparePrimitivesByEqualRule`
-- :class:`CompareSingletonPrimitivesByIsRule`
-- :class:`DeprecatedUnittestAssertsRule`
-- :class:`ExplicitFrozenDataclassRule`
-- :class:`NoAssertTrueForComparisonsRule`
-- :class:`NoInheritFromObjectRule`
-- :class:`NoNamedTupleRule`
-- :class:`NoRedundantArgumentsSuperRule`
-- :class:`NoRedundantFStringRule`
-- :class:`NoRedundantLambdaRule`
-- :class:`NoRedundantListComprehensionRule`
-- :class:`NoStaticIfConditionRule`
-- :class:`NoStringTypeAnnotationRule`
-- :class:`ReplaceUnionWithOptionalRule`
-- :class:`RewriteToComprehensionRule`
-- :class:`RewriteToLiteralRule`
-- :class:`SortedAttributesRule`
-- :class:`UseAssertInRule`
-- :class:`UseAssertIsNotNoneRule`
-- :class:`UseAsyncSleepInAsyncDefRule`
-- :class:`UseClassNameAsCodeRule`
-- :class:`UseClsInClassmethodRule`
-- :class:`UseFstringRule`
-- :class:`UseLintFixmeCommentRule`
-- :class:`UseTypesFromTypingRule`
+- :class:`AvoidOrInExcept`
+- :class:`CollapseIsinstanceChecks`
+- :class:`ComparePrimitivesByEqual`
+- :class:`CompareSingletonPrimitivesByIs`
+- :class:`DeprecatedUnittestAsserts`
+- :class:`ExplicitFrozenDataclass`
+- :class:`NoAssertTrueForComparisons`
+- :class:`NoInheritFromObject`
+- :class:`NoNamedTuple`
+- :class:`NoRedundantArgumentsSuper`
+- :class:`NoRedundantFString`
+- :class:`NoRedundantLambda`
+- :class:`NoRedundantListComprehension`
+- :class:`NoStaticIfCondition`
+- :class:`NoStringTypeAnnotation`
+- :class:`ReplaceUnionWithOptional`
+- :class:`RewriteToComprehension`
+- :class:`RewriteToLiteral`
+- :class:`SortedAttributes`
+- :class:`UseAssertIn`
+- :class:`UseAssertIsNotNone`
+- :class:`UseAsyncSleepInAsyncDef`
+- :class:`UseClassNameAsCode`
+- :class:`UseClsInClassmethod`
+- :class:`UseFstring`
+- :class:`UseLintFixmeComment`
+- :class:`UseTypesFromTyping`
 
-.. class:: AvoidOrInExceptRule
+.. class:: AvoidOrInExcept
 
     Discourages use of ``or`` in except clauses. If an except clause needs to catch multiple exceptions,
     they must be expressed as a parenthesized tuple, for example:
@@ -124,7 +124,7 @@ Built-in Rules
                 print()
             except ValueError or TypeError:
                 pass
-.. class:: CollapseIsinstanceChecksRule
+.. class:: CollapseIsinstanceChecks
 
     The built-in ``isinstance`` function, instead of a single type,
     can take a tuple of types and check whether given target suits
@@ -165,7 +165,7 @@ Built-in Rules
             # suggested fix
             isinstance(x, (y, z, q))
 
-.. class:: ComparePrimitivesByEqualRule
+.. class:: ComparePrimitivesByEqual
 
     Enforces the use of ``==`` and ``!=`` in comparisons to primitives rather than ``is`` and ``is not``.
     The ``==`` operator checks equality (https://docs.python.org/3/reference/datamodel.html#object.__eq__),
@@ -204,7 +204,7 @@ Built-in Rules
             # suggested fix
             a == '1'
 
-.. class:: CompareSingletonPrimitivesByIsRule
+.. class:: CompareSingletonPrimitivesByIs
 
     Enforces the use of `is` and `is not` in comparisons to singleton primitives (None, True, False) rather than == and !=.
     The == operator checks equality, when in this scenario, we want to check identity.
@@ -243,7 +243,7 @@ Built-in Rules
             # suggested fix
             x is not False
 
-.. class:: DeprecatedUnittestAssertsRule
+.. class:: DeprecatedUnittestAsserts
 
     Discourages the use of various deprecated unittest.TestCase functions
 
@@ -282,7 +282,7 @@ Built-in Rules
             # suggested fix
             self.assertNotEqual(a, b)
 
-.. class:: ExplicitFrozenDataclassRule
+.. class:: ExplicitFrozenDataclass
 
     Encourages the use of frozen dataclass objects by telling users to specify the
     kwarg.
@@ -338,7 +338,7 @@ Built-in Rules
             @dataclass(frozen=True)  # called as a function, no kwargs
             class Cls: pass
 
-.. class:: NoAssertTrueForComparisonsRule
+.. class:: NoAssertTrueForComparisons
 
     Finds incorrect use of ``assertTrue`` when the intention is to compare two values.
     These calls are replaced with ``assertEqual``.
@@ -378,7 +378,7 @@ Built-in Rules
             # suggested fix
             self.assertEqual(hash(s[:4]), 0x1234)
 
-.. class:: NoInheritFromObjectRule
+.. class:: NoInheritFromObject
 
     In Python 3, a class is inherited from ``object`` by default.
     Explicitly inheriting from ``object`` is redundant, so removing it keeps the code simpler.
@@ -421,7 +421,7 @@ Built-in Rules
             class B(A):
                 pass
 
-.. class:: NoNamedTupleRule
+.. class:: NoNamedTuple
 
     Enforce the use of ``dataclasses.dataclass`` decorator instead of ``NamedTuple`` for cleaner customization and
     inheritance. It supports default value, combining fields for inheritance, and omitting optional fields at
@@ -479,7 +479,7 @@ Built-in Rules
             class Foo:
                 pass
 
-.. class:: NoRedundantArgumentsSuperRule
+.. class:: NoRedundantArgumentsSuper
 
     Remove redundant arguments when using super for readability.
 
@@ -530,7 +530,7 @@ Built-in Rules
                 def foo(cls, bar):
                     super().foo(bar)
 
-.. class:: NoRedundantFStringRule
+.. class:: NoRedundantFString
 
     Remove redundant f-string without placeholders.
 
@@ -567,7 +567,7 @@ Built-in Rules
             # suggested fix
             bad: str = 'bad'
 
-.. class:: NoRedundantLambdaRule
+.. class:: NoRedundantLambda
 
     A lamba function which has a single objective of
     passing all it is arguments to another callable can
@@ -602,7 +602,7 @@ Built-in Rules
             # suggested fix
             foo
 
-.. class:: NoRedundantListComprehensionRule
+.. class:: NoRedundantListComprehension
 
     A derivative of flake8-comprehensions's C407 rule.
 
@@ -635,7 +635,7 @@ Built-in Rules
             # suggested fix
             all(val for val in iterable)
 
-.. class:: NoStaticIfConditionRule
+.. class:: NoStaticIfCondition
 
     Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
 
@@ -665,7 +665,7 @@ Built-in Rules
 
             if crazy_expression or True:
                 do_something()
-.. class:: NoStringTypeAnnotationRule
+.. class:: NoStringTypeAnnotation
 
     Enforce the use of type identifier instead of using string type hints for simplicity and better syntax highlighting.
     Starting in Python 3.7, ``from __future__ import annotations`` can postpone evaluation of type annotations
@@ -732,7 +732,7 @@ Built-in Rules
             async def foo() -> Class:
                 return await Class()
 
-.. class:: ReplaceUnionWithOptionalRule
+.. class:: ReplaceUnionWithOptional
 
     Enforces the use of ``Optional[T]`` over ``Union[T, None]`` and ``Union[None, T]``.
     See https://docs.python.org/3/library/typing.html#typing.Optional to learn more about Optionals.
@@ -773,7 +773,7 @@ Built-in Rules
             def func() -> Optional[Dict[str, int]]:
                 pass
 
-.. class:: RewriteToComprehensionRule
+.. class:: RewriteToComprehension
 
     A derivative of flake8-comprehensions's C400-C402 and C403-C404.
     Comprehensions are more efficient than functions calls. This C400-C402
@@ -811,7 +811,7 @@ Built-in Rules
             # suggested fix
             [val for row in matrix for val in row]
 
-.. class:: RewriteToLiteralRule
+.. class:: RewriteToLiteral
 
     A derivative of flake8-comprehensions' C405-C406 and C409-C410. It's
     unnecessary to use a list or tuple literal within a call to tuple, list,
@@ -846,7 +846,7 @@ Built-in Rules
             # suggested fix
             (1, 2)
 
-.. class:: SortedAttributesRule
+.. class:: SortedAttributes
 
     Ever wanted to sort a bunch of class attributes alphabetically?
     Well now it's easy! Just add "@sorted-attributes" in the doc string of
@@ -910,7 +910,7 @@ Built-in Rules
                 def get_foo(cls) -> str:
                     return "some random thing"
 
-.. class:: UseAssertInRule
+.. class:: UseAssertIn
 
     Discourages use of ``assertTrue(x in y)`` and ``assertFalse(x in y)``
     as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).
@@ -950,7 +950,7 @@ Built-in Rules
             # suggested fix
             self.assertIn(f(), b)
 
-.. class:: UseAssertIsNotNoneRule
+.. class:: UseAssertIsNotNone
 
     Discourages use of ``assertTrue(x is not None)`` and ``assertFalse(x is not None)`` as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).
     Use ``assertIsNotNone(x)`` and ``assertIsNone(x)``) instead.
@@ -989,7 +989,7 @@ Built-in Rules
             # suggested fix
             self.assertIsNotNone(x)
 
-.. class:: UseAsyncSleepInAsyncDefRule
+.. class:: UseAsyncSleepInAsyncDef
 
     Detect if asyncio.sleep is used in an async function
 
@@ -1023,7 +1023,7 @@ Built-in Rules
             from time import sleep
             async def func():
                 sleep(1)
-.. class:: UseClassNameAsCodeRule
+.. class:: UseClassNameAsCode
 
     Meta lint rule which checks that codes of lint rules are migrated to new format in lint rule class definitions.
 
@@ -1075,7 +1075,7 @@ Built-in Rules
                         )
                 ]
 
-.. class:: UseClsInClassmethodRule
+.. class:: UseClsInClassmethod
 
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
 
@@ -1135,7 +1135,7 @@ Built-in Rules
                 def cm(cls):
                     return cls
 
-.. class:: UseFstringRule
+.. class:: UseFstring
 
     Encourages the use of f-string instead of %-formatting or .format() for high code quality and efficiency.
 
@@ -1184,7 +1184,7 @@ Built-in Rules
             # suggested fix
             f"{'hi'}"
 
-.. class:: UseLintFixmeCommentRule
+.. class:: UseLintFixmeComment
 
     To silence a lint warning, use ``lint-fixme`` (when plans to fix the issue later) or ``lint-ignore``
     (when the lint warning is not valid) comments.
@@ -1222,7 +1222,7 @@ Built-in Rules
              1,
              2,  # noqa
             )
-.. class:: UseTypesFromTypingRule
+.. class:: UseTypesFromTyping
 
     Enforces the use of types from the ``typing`` module in type annotations in place
     of ``builtins.{builtin_type}`` since the type system doesn't recognize the latter

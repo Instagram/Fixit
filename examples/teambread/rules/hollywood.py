@@ -7,7 +7,7 @@ import libcst
 from fixit import Invalid, LintRule, Valid
 
 
-class HollywoodNameRule(LintRule):
+class HollywoodName(LintRule):
     # clean code samples
     VALID = [
         Valid('name = "Susan"'),

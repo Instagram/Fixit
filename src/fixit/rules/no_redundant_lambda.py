@@ -16,7 +16,7 @@ UNNECESSARY_LAMBDA: str = (
 )
 
 
-class NoRedundantLambdaRule(LintRule):
+class NoRedundantLambda(LintRule):
     """
     A lamba function which has a single objective of
     passing all it is arguments to another callable can

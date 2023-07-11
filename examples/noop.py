@@ -5,7 +5,8 @@
 
 from fixit import LintRule
 
-class NoOpRule(LintRule):
+
+class NoOp(LintRule):
     MESSAGE = "You shouldn't be seeing this"
     VALID = []
     INVALID = []

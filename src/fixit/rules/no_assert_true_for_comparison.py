@@ -11,7 +11,7 @@ import libcst.matchers as m
 from fixit import Invalid, LintRule, Valid
 
 
-class NoAssertTrueForComparisonsRule(LintRule):
+class NoAssertTrueForComparisons(LintRule):
     """
     Finds incorrect use of ``assertTrue`` when the intention is to compare two values.
     These calls are replaced with ``assertEqual``.

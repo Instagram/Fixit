@@ -21,7 +21,7 @@ UNNECESSARY_LIST_COMPREHENSION: str = (
 )
 
 
-class RewriteToComprehensionRule(LintRule):
+class RewriteToComprehension(LintRule):
     """
     A derivative of flake8-comprehensions's C400-C402 and C403-C404.
     Comprehensions are more efficient than functions calls. This C400-C402

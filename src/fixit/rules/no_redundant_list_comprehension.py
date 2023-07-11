@@ -15,7 +15,7 @@ UNNECESSARY_LIST_COMPREHENSION: str = (
 )
 
 
-class NoRedundantListComprehensionRule(LintRule):
+class NoRedundantListComprehension(LintRule):
     """
     A derivative of flake8-comprehensions's C407 rule.
     """

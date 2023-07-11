@@ -8,7 +8,7 @@ from libcst.metadata import QualifiedNameProvider
 from fixit import Invalid, LintRule, Valid
 
 
-class UseAsyncSleepInAsyncDefRule(LintRule):
+class UseAsyncSleepInAsyncDef(LintRule):
     """
     Detect if asyncio.sleep is used in an async function
     """

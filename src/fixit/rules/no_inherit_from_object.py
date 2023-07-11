@@ -9,7 +9,7 @@ import libcst.matchers as m
 from fixit import CodePosition, CodeRange, Invalid, LintRule, Valid
 
 
-class NoInheritFromObjectRule(LintRule):
+class NoInheritFromObject(LintRule):
     """
     In Python 3, a class is inherited from ``object`` by default.
     Explicitly inheriting from ``object`` is redundant, so removing it keeps the code simpler.

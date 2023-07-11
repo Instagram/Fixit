@@ -8,7 +8,7 @@ import libcst as cst
 from fixit import Invalid, LintRule, Valid
 
 
-class UseLintFixmeCommentRule(LintRule):
+class UseLintFixmeComment(LintRule):
     """
     To silence a lint warning, use ``lint-fixme`` (when plans to fix the issue later) or ``lint-ignore``
     (when the lint warning is not valid) comments.

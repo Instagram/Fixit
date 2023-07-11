@@ -14,7 +14,7 @@ from fixit import Invalid, LintRule, Valid
 LineType = Union[cst.BaseSmallStatement, cst.BaseStatement]
 
 
-class SortedAttributesRule(LintRule):
+class SortedAttributes(LintRule):
     """
     Ever wanted to sort a bunch of class attributes alphabetically?
     Well now it's easy! Just add "@sorted-attributes" in the doc string of
