@@ -152,6 +152,8 @@ The main configuration table.
     :class:`~fixit.Formatter` interface.
 
 
+.. _rule-options:
+
 ``[tool.fixit.options]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

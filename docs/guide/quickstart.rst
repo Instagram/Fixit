@@ -77,6 +77,8 @@ We can also see any suggested changes by passing ``--diff``:
     🛠️  1 file checked, 1 file with errors, 1 auto-fix available 🛠️
 
 
+.. _suppressions:
+
 Silencing Errors
 ^^^^^^^^^^^^^^^^
 

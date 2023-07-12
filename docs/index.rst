@@ -39,6 +39,7 @@ Fixit: linting framework with auto-fixes
     :hidden:
     :maxdepth: 1
 
+    upgrade
     changelog
     contributing
     code-of-conduct

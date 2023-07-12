@@ -8,8 +8,8 @@ Lint Rules
 ----------
 
 .. autoclass:: LintRule
-.. autoclass:: ValidTestCase
-.. autoclass:: InvalidTestCase
+.. autoclass:: Valid
+.. autoclass:: Invalid
 
 
 Frontends
