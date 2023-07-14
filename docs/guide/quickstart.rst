@@ -18,6 +18,10 @@ If you want to customize the list of enabled rules, either to add new rules
 or disable others, see the :ref:`Configuration Guide <configuration>` for
 details and options available.
 
+If you are upgrading from previous versions of Fixit, look at the
+:ref:`Upgrade Guide <upgrade>` for a list of changes and tools to assist with
+migrating to the latest version.
+
 
 Usage
 ^^^^^

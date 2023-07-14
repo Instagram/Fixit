@@ -15,14 +15,15 @@ from .ftypes import (
     CodeRange,
     Config,
     FileContent,
+    Invalid,
     LintViolation,
     Options,
     QualifiedRule,
     Result,
     Tags,
+    Valid,
 )
 from .rule import LintRule
-from .testing import Invalid, Valid
 
 # DEPRECATED: aliases to 0.x names
 # TODO: create lint rules to fix references

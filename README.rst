@@ -38,7 +38,8 @@ lint rules.** If you are using Fixit 0.1.4 or older, take a look at the
 `legacy documentation <https://fixit.rtfd.io/en/v0.1.4/>`_
 or the `stable branch <https://github.com/Instagram/Fixit/tree/0.x>`_.
 See the `upgrade guide <https://fixit.rtfd.io/en/latest/upgrade.html>`_
-for tools and information to migrate existing configuration and lint rules.
+for tools and information to migrate existing configuration and lint rules
+and ensure compatibility with the latest version of Fixit.
 
 For more details, see the `user guide`__.
 
