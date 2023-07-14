@@ -11,7 +11,7 @@ import libcst.matchers as m
 from fixit import Invalid, LintRule, Valid
 
 
-class NoRedundantArgumentsSuperRule(LintRule):
+class NoRedundantArgumentsSuper(LintRule):
     """
     Remove redundant arguments when using super for readability.
     """

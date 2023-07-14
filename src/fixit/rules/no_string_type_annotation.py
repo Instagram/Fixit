@@ -12,7 +12,7 @@ from libcst.metadata import QualifiedNameProvider
 from fixit import CodePosition, CodeRange, Invalid, LintRule, Valid
 
 
-class NoStringTypeAnnotationRule(LintRule):
+class NoStringTypeAnnotation(LintRule):
     """
     Enforce the use of type identifier instead of using string type hints for simplicity and better syntax highlighting.
     Starting in Python 3.7, ``from __future__ import annotations`` can postpone evaluation of type annotations

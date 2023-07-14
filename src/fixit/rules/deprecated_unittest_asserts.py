@@ -9,7 +9,7 @@ import libcst.matchers as m
 from fixit import Invalid, LintRule, Valid
 
 
-class DeprecatedUnittestAssertsRule(LintRule):
+class DeprecatedUnittestAsserts(LintRule):
     """
     Discourages the use of various deprecated unittest.TestCase functions
 

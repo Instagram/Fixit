@@ -11,7 +11,7 @@ from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameS
 from fixit import CodePosition, CodeRange, Invalid, LintRule, Valid
 
 
-class ExplicitFrozenDataclassRule(LintRule):
+class ExplicitFrozenDataclass(LintRule):
     """
     Encourages the use of frozen dataclass objects by telling users to specify the
     kwarg.

@@ -9,7 +9,7 @@ import libcst.matchers as m
 from fixit import Invalid, LintRule, Valid
 
 
-class AvoidOrInExceptRule(LintRule):
+class AvoidOrInExcept(LintRule):
     """
     Discourages use of ``or`` in except clauses. If an except clause needs to catch multiple exceptions,
     they must be expressed as a parenthesized tuple, for example:

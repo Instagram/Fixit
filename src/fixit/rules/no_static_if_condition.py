@@ -11,7 +11,7 @@ import libcst.matchers as m
 from fixit import Invalid, LintRule, Valid
 
 
-class NoStaticIfConditionRule(LintRule):
+class NoStaticIfCondition(LintRule):
     """
     Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
     """

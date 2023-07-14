@@ -17,7 +17,7 @@ _ISINSTANCE = QualifiedName(
 )
 
 
-class CollapseIsinstanceChecksRule(LintRule):
+class CollapseIsinstanceChecks(LintRule):
     """
     The built-in ``isinstance`` function, instead of a single type,
     can take a tuple of types and check whether given target suits

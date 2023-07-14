@@ -12,7 +12,7 @@ from libcst.helpers import ensure_type
 from fixit import Invalid, LintRule, Valid
 
 
-class UseAssertIsNotNoneRule(LintRule):
+class UseAssertIsNotNone(LintRule):
     """
     Discourages use of ``assertTrue(x is not None)`` and ``assertFalse(x is not None)`` as it is deprecated (https://docs.python.org/3.8/library/unittest.html#deprecated-aliases).
     Use ``assertIsNotNone(x)`` and ``assertIsNone(x)``) instead.

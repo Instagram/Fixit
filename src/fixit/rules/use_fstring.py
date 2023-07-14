@@ -71,7 +71,7 @@ class EscapeStringQuote(cst.CSTTransformer):
         return original_node
 
 
-class UseFstringRule(LintRule):
+class UseFstring(LintRule):
     """
     Encourages the use of f-string instead of %-formatting or .format() for high code quality and efficiency.
 

@@ -11,7 +11,7 @@ from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameS
 from fixit import Invalid, LintRule, Valid
 
 
-class CompareSingletonPrimitivesByIsRule(LintRule):
+class CompareSingletonPrimitivesByIs(LintRule):
     """
     Enforces the use of `is` and `is not` in comparisons to singleton primitives (None, True, False) rather than == and !=.
     The == operator checks equality, when in this scenario, we want to check identity.

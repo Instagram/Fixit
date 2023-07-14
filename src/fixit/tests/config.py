@@ -433,14 +433,14 @@ class ConfigTest(TestCase):
                 config.generate_config(self.tdp / "outer" / "foo.py")
 
     def test_collect_rules(self):
-        from fixit.rules.avoid_or_in_except import AvoidOrInExceptRule
-        from fixit.rules.cls_in_classmethod import UseClsInClassmethodRule
-        from fixit.rules.no_namedtuple import NoNamedTupleRule
-        from fixit.rules.use_types_from_typing import UseTypesFromTypingRule
+        from fixit.rules.avoid_or_in_except import AvoidOrInExcept
+        from fixit.rules.cls_in_classmethod import UseClsInClassmethod
+        from fixit.rules.no_namedtuple import NoNamedTuple
+        from fixit.rules.use_types_from_typing import UseTypesFromTyping
 
-        AvoidOrInExceptRule.TAGS = {"exceptions"}
-        UseTypesFromTypingRule.TAGS = {"typing"}
-        NoNamedTupleRule.TAGS = {"typing", "tuples"}
+        AvoidOrInExcept.TAGS = {"exceptions"}
+        UseTypesFromTyping.TAGS = {"typing"}
+        NoNamedTuple.TAGS = {"typing", "tuples"}
 
         def collect_types(cfg):
             return sorted([type(rule) for rule in config.collect_rules(cfg)], key=str)
@@ -451,27 +451,27 @@ class ConfigTest(TestCase):
                     python_version=None,
                 )
             )
-            self.assertIn(UseClsInClassmethodRule, rules)
-            self.assertIn(UseTypesFromTypingRule, rules)
+            self.assertIn(UseClsInClassmethod, rules)
+            self.assertIn(UseTypesFromTyping, rules)
 
         with self.subTest("opt-out"):
             rules = collect_types(
                 Config(
-                    disable=[QualifiedRule("fixit.rules", "UseClsInClassmethodRule")],
+                    disable=[QualifiedRule("fixit.rules", "UseClsInClassmethod")],
                     python_version=None,
                 )
             )
-            self.assertNotIn(UseClsInClassmethodRule, rules)
-            self.assertIn(UseTypesFromTypingRule, rules)
+            self.assertNotIn(UseClsInClassmethod, rules)
+            self.assertIn(UseTypesFromTyping, rules)
 
         with self.subTest("opt-in"):
             rules = collect_types(
                 Config(
-                    enable=[QualifiedRule("fixit.rules", "UseClsInClassmethodRule")],
+                    enable=[QualifiedRule("fixit.rules", "UseClsInClassmethod")],
                     python_version=None,
                 )
             )
-            self.assertListEqual([UseClsInClassmethodRule], rules)
+            self.assertListEqual([UseClsInClassmethod], rules)
 
         with self.subTest("version match"):
             rules = collect_types(
@@ -479,7 +479,7 @@ class ConfigTest(TestCase):
                     python_version="3.7",
                 )
             )
-            self.assertIn(UseTypesFromTypingRule, rules)
+            self.assertIn(UseTypesFromTyping, rules)
 
         with self.subTest("version mismatch"):
             rules = collect_types(
@@ -487,7 +487,7 @@ class ConfigTest(TestCase):
                     python_version="3.10",
                 )
             )
-            self.assertNotIn(UseTypesFromTypingRule, rules)
+            self.assertNotIn(UseTypesFromTyping, rules)
 
         with self.subTest("tag select"):
             rules = collect_types(
@@ -498,8 +498,8 @@ class ConfigTest(TestCase):
             )
             self.assertListEqual(
                 [
-                    NoNamedTupleRule,
-                    UseTypesFromTypingRule,
+                    NoNamedTuple,
+                    UseTypesFromTyping,
                 ],
                 rules,
             )
@@ -511,7 +511,7 @@ class ConfigTest(TestCase):
                     tags=Tags.parse("^exceptions"),
                 )
             )
-            self.assertNotIn(AvoidOrInExceptRule, rules)
+            self.assertNotIn(AvoidOrInExcept, rules)
 
         with self.subTest("tag select and filter"):
             rules = collect_types(
@@ -520,4 +520,4 @@ class ConfigTest(TestCase):
                     tags=Tags.parse("typing,^tuples"),
                 )
             )
-            self.assertListEqual([UseTypesFromTypingRule], rules)
+            self.assertListEqual([UseTypesFromTyping], rules)

@@ -12,7 +12,7 @@ from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameS
 from fixit import Invalid, LintRule, Valid
 
 
-class NoNamedTupleRule(LintRule):
+class NoNamedTuple(LintRule):
     """
     Enforce the use of ``dataclasses.dataclass`` decorator instead of ``NamedTuple`` for cleaner customization and
     inheritance. It supports default value, combining fields for inheritance, and omitting optional fields at
