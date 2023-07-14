@@ -15,7 +15,7 @@ from fixit import __version__
 
 from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config, parse_rule
-from .ftypes import Config, Options, Tags
+from .ftypes import Config, Options, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
@@ -216,6 +216,21 @@ def test(ctx: click.Context, rules: Sequence[str]):
     result = runner.run(test_suite)
     if not result.wasSuccessful():
         ctx.exit(1)
+
+
+@main.command()
+@click.pass_context
+@click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
+def upgrade(ctx: click.Context, paths: Sequence[Path]):
+    """
+    upgrade lint rules and apply deprecation fixes
+
+    roughly equivalent to `fixit --rules fixit.upgrade fix --automatic`
+    """
+    options: Options = ctx.obj
+    options.rules = (QualifiedRule("fixit.upgrade"),)
+
+    ctx.invoke(fix, paths=paths, interactive=False)
 
 
 @main.command()
