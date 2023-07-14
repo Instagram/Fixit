@@ -1269,6 +1269,7 @@ Built-in Rules
 .. automodule:: fixit.upgrade
 
 - :class:`FixitDeprecatedImport`
+- :class:`FixitRemoveRuleSuffix`
 
 .. class:: FixitDeprecatedImport
 
@@ -1307,4 +1308,34 @@ Built-in Rules
             # suggested fix
             from fixit import LintRule
 
+.. class:: FixitRemoveRuleSuffix
+
+    Remove the "Rule" suffix from lint rule class names
+
+    .. attribute:: MESSAGE
+
+        Do not end lint rule subclasses with 'Rule'
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            import fixit
+            class DontTryThisAtHome(fixit.LintRule): ...
+        .. code:: python
+
+            from fixit import LintRule
+            class CatsRuleDogsDrool(LintRule): ...
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            import fixit
+            class DontTryThisAtHomeRule(fixit.LintRule): ...
+        .. code:: python
+
+            from fixit import LintRule
+            class CatsRuleDogsDroolRule(LintRule): ...
     
