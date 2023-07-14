@@ -109,6 +109,19 @@ Example:
     OK
 
 
+``upgrade``
+^^^^^^^^^^^
+
+Upgrade lint rules or client code to the latest version of Fixit.
+Automatically applies fixes from all upgrade rules in :mod:`fixit.upgrade`.
+
+Shortcut for ``fixit --rules fixit.upgrade fix --automatic <path>``
+
+.. code:: console
+
+    $ fixit upgrade [PATH ...]
+
+
 ``debug``
 ^^^^^^^^^
 
