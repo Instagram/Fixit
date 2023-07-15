@@ -51,11 +51,13 @@ Most options can be migrated to the new format as such:
     omitting a rule name will automatically all rules from the given package:
 
     .. code-block:: yaml
+        :caption: Fixit 1: .fixit.config.yaml
 
         allow_list_rules: [CustomLintRule]
         packages: [mypackage.rules]
 
     .. code-block:: toml
+        :caption: Fixit 2: pyproject.toml
 
         enable = [
             "mypackage.rules:CustomLintRule",  # single rule
@@ -74,6 +76,7 @@ Most options can be migrated to the new format as such:
     with the :attr:`formatter` option:
 
     .. code-block:: toml
+        :caption: Fixit 2: pyproject.toml
 
         formatter = "ufmt"  # or "black"
 
@@ -87,6 +90,17 @@ Most options can be migrated to the new format as such:
     of a ``pyproject.toml`` or ``fixit.toml`` file, or explicitly by the nearest
     configuration file with the :attr:`root` option set.
 
+    .. code-block:: toml
+        :caption: Fixit 2: pyproject.toml
+
+        root = true  # equivalent to "."
+
+    .. code-block:: toml
+        :caption: Fixit 2: pyproject.toml
+
+        root = "src/"
+
+
 - ``rule_config``:
 
     Rule specific configuration is now specified in the
@@ -94,12 +108,14 @@ Most options can be migrated to the new format as such:
     similar to :attr:`enable` and :attr:`disable`:
 
     .. code-block:: yaml
+        :caption: Fixit 1: .fixit.config.yaml
 
         rule_config:
             CustomLintRule:
                 key: value
 
     .. code-block:: toml
+        :caption: Fixit 2: pyproject.toml
 
         [tool.fixit.options]
         "mypackage.rules:CustomLintRule" = {key = "value"}
