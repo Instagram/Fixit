@@ -1269,6 +1269,7 @@ Built-in Rules
 .. automodule:: fixit.upgrade
 
 - :class:`FixitDeprecatedImport`
+- :class:`FixitDeprecatedTestCaseKeywords`
 - :class:`FixitRemoveRuleSuffix`
 
 .. class:: FixitDeprecatedImport
@@ -1307,6 +1308,21 @@ Built-in Rules
 
             # suggested fix
             from fixit import LintRule
+
+.. class:: FixitDeprecatedTestCaseKeywords
+
+    Modify lint rule test cases from Fixit 1 to remove deprecated keyword arguments
+    and convert the line and column values into a CodeRange.
+
+    .. attribute:: MESSAGE
+
+        Fix deprecated Valid/Invalid keyword arguments
+
+
+    .. attribute:: VALID
+
+
+    .. attribute:: INVALID
 
 .. class:: FixitRemoveRuleSuffix
 
