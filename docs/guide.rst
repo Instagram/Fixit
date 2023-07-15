@@ -1,3 +1,5 @@
+.. _user-guide:
+
 User Guide
 ==========
 
@@ -8,4 +10,3 @@ User Guide
 .. include:: guide/integrations.rst
 
 .. include:: guide/builtins.rst
-

@@ -18,6 +18,10 @@ If you want to customize the list of enabled rules, either to add new rules
 or disable others, see the :ref:`Configuration Guide <configuration>` for
 details and options available.
 
+If you are upgrading from previous versions of Fixit, look at the
+:ref:`Upgrade Guide <upgrade>` for a list of changes and tools to assist with
+migrating to the latest version.
+
 
 Usage
 ^^^^^
@@ -76,6 +80,8 @@ We can also see any suggested changes by passing ``--diff``:
     custom_object.py@9:15 UseFstring: Do not use printf style formatting or .format(). Use f-string instead to be more readable and efficient. See https://www.python.org/dev/peps/pep-0498/
     🛠️  1 file checked, 1 file with errors, 1 auto-fix available 🛠️
 
+
+.. _suppressions:
 
 Silencing Errors
 ^^^^^^^^^^^^^^^^

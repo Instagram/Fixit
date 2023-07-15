@@ -3,7 +3,7 @@
    THIS FILE IS GENERATED - DO NOT EDIT BY HAND!
    Run `make html` or `scripts/document_rules.py` to regenerate this file.
 
-.. module:: builtin-rules
+.. _builtin-rules:
 
 Built-in Rules
 --------------
