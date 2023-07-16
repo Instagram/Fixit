@@ -1318,11 +1318,40 @@ Built-in Rules
 
         Fix deprecated Valid/Invalid keyword arguments
 
+    .. attribute:: AUTOFIX
+        :type: Yes
+
 
     .. attribute:: VALID
 
+        .. code:: python
+
+            from fixit import InvalidTestCase
+
+            InvalidTestCase(
+                "print('hello')",
+                message="oops",
+            )
 
     .. attribute:: INVALID
+
+        .. code:: python
+
+            from fixit import InvalidTestCase
+            InvalidTestCase(
+                "print('hello')",
+                line=3,
+                column=10,
+                config=None,
+                filename="hello.py",
+                kind="X123",
+            )
+
+            # suggested fix
+            from fixit import InvalidTestCase
+            InvalidTestCase(
+                "print('hello')",
+                range = CodeRange(start=CodePosition(3, 10), end=CodePosition(1 + 3, 0)))
 
 .. class:: FixitRemoveRuleSuffix
 
