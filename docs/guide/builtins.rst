@@ -1269,6 +1269,7 @@ Built-in Rules
 .. automodule:: fixit.upgrade
 
 - :class:`FixitDeprecatedImport`
+- :class:`FixitDeprecatedTestCaseKeywords`
 - :class:`FixitRemoveRuleSuffix`
 
 .. class:: FixitDeprecatedImport
@@ -1307,6 +1308,50 @@ Built-in Rules
 
             # suggested fix
             from fixit import LintRule
+
+.. class:: FixitDeprecatedTestCaseKeywords
+
+    Modify lint rule test cases from Fixit 1 to remove deprecated keyword arguments
+    and convert the line and column values into a CodeRange.
+
+    .. attribute:: MESSAGE
+
+        Fix deprecated Valid/Invalid keyword arguments
+
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            from fixit import InvalidTestCase
+
+            InvalidTestCase(
+                "print('hello')",
+                message="oops",
+            )
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            from fixit import InvalidTestCase
+            InvalidTestCase(
+                "print('hello')",
+                line=3,
+                column=10,
+                config=None,
+                filename="hello.py",
+                kind="X123",
+            )
+
+            # suggested fix
+            from fixit import InvalidTestCase
+            InvalidTestCase(
+                "print('hello')",
+                range = CodeRange(start=CodePosition(3, 10), end=CodePosition(1 + 3, 0)))
 
 .. class:: FixitRemoveRuleSuffix
 

@@ -43,30 +43,46 @@ class FixitDeprecatedImport(LintRule):
         ),
         Invalid(
             "from fixit import InvalidTestCase",
-            expected_replacement="from fixit import InvalidTestCase",
+            expected_replacement="from fixit import Invalid",
         ),
         Invalid(
             "from fixit import InvalidTestCase as Invalid",
-            expected_replacement="from fixit import InvalidTestCase",
+            expected_replacement="from fixit import Invalid",
         ),
         Invalid(
             "from fixit import ValidTestCase as Valid",
-            expected_replacement="from fixit import ValidTestCase",
+            expected_replacement="from fixit import Valid",
         ),
         Invalid(
             """
             from fixit import (
                 CstLintRule,
                 InvalidTestCase as Invalid,
-                ValidTestCase as Valid,
+                ValidTestCase,
             )
+
+            class FakeThing(CstLintRule):
+                VALID = [
+                    ValidTestCase(""),
+                ]
+                INVALID = [
+                    Invalid(""),
+                ]
             """,
             expected_replacement="""
             from fixit import (
-                CstLintRule,
-                InvalidTestCase as Invalid,
-                ValidTestCase as Valid,
+                LintRule,
+                Invalid,
+                Valid,
             )
+
+            class FakeThing(LintRule):
+                VALID = [
+                    Valid(""),
+                ]
+                INVALID = [
+                    Invalid(""),
+                ]
             """,
         ),
     ]

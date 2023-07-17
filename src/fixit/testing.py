@@ -72,7 +72,9 @@ class LintRuleTestCase(unittest.TestCase):
         test_case: Union[Valid, Invalid],
         rule: LintRule,
     ) -> None:
-        path = Path("valid.py" if isinstance(test_case, Valid) else "invalid.py")
+        path = Path.cwd() / (
+            "valid.py" if isinstance(test_case, Valid) else "invalid.py"
+        )
         config = Config(path=path)
         source_code = _dedent(test_case.code)
         runner = LintRunner(path, source_code.encode())
@@ -94,32 +96,26 @@ class LintRuleTestCase(unittest.TestCase):
             + "not called:\n"
             + test_case.code,
         )
-        self.assertLessEqual(
-            len(reports),
-            1,
-            'Expected one report from this "invalid" test case. Found multiple:\n'
-            + "\n".join(str(e) for e in reports),
-        )
 
-        report = reports[0]
+        for report in reports:
+            if test_case.range is not None:
+                self.assertEqual(test_case.range, report.range)
 
-        if test_case.range is not None:
-            self.assertEqual(test_case.range, report.range)
-
-        if test_case.expected_message is not None:
-            self.assertEqual(test_case.expected_message, report.message)
+            if test_case.expected_message is not None:
+                self.assertEqual(test_case.expected_message, report.message)
 
         if test_case.expected_replacement:
             # make sure we produced expected final code
             expected_code = _dedent(test_case.expected_replacement)
-            modified_code = runner.apply_replacements([report]).bytes.decode()
+            modified_code = runner.apply_replacements(reports).bytes.decode()
             self.assertMultiLineEqual(expected_code, modified_code)
 
-            # make sure we generated a reasonable diff
-            expected_diff = unified_diff(
-                source_code, expected_code, filename=path.name, n=1
-            )
-            self.assertEqual(expected_diff, report.diff)
+            if len(reports) == 1:
+                # make sure we generated a reasonable diff
+                expected_diff = unified_diff(
+                    source_code, expected_code, filename=path.name, n=1
+                )
+                self.assertEqual(expected_diff, report.diff)
 
 
 def gen_test_methods_for_rule(rule: LintRule) -> TestCasePrecursor:
