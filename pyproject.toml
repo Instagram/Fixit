@@ -62,7 +62,7 @@ fixit = "fixit.cli:main"
 [project.urls]
 Home = "https://fixit.rtfd.io"
 Github = "https://github.com/Instagram/Fixit"
-Changelog = "https://github.com/Instagram/LibCST/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/Instagram/Fixit/blob/main/CHANGELOG.md"
 
 [tool.black]
 target-version = ["py37"]
