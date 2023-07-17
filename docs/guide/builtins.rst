@@ -9,6 +9,7 @@ Built-in Rules
 --------------
 
 - :mod:`fixit.rules`
+- :mod:`fixit.rules.extra`
 - :mod:`fixit.upgrade`
 
 
@@ -22,7 +23,6 @@ Built-in Rules
 - :class:`ComparePrimitivesByEqual`
 - :class:`CompareSingletonPrimitivesByIs`
 - :class:`DeprecatedUnittestAsserts`
-- :class:`ExplicitFrozenDataclass`
 - :class:`NoAssertTrueForComparisons`
 - :class:`NoInheritFromObject`
 - :class:`NoNamedTuple`
@@ -39,10 +39,8 @@ Built-in Rules
 - :class:`UseAssertIn`
 - :class:`UseAssertIsNotNone`
 - :class:`UseAsyncSleepInAsyncDef`
-- :class:`UseClassNameAsCode`
 - :class:`UseClsInClassmethod`
 - :class:`UseFstring`
-- :class:`UseLintFixmeComment`
 - :class:`UseTypesFromTyping`
 
 .. class:: AvoidOrInExcept
@@ -281,62 +279,6 @@ Built-in Rules
 
             # suggested fix
             self.assertNotEqual(a, b)
-
-.. class:: ExplicitFrozenDataclass
-
-    Encourages the use of frozen dataclass objects by telling users to specify the
-    kwarg.
-
-    Without this lint rule, most users of dataclass won't know to use the kwarg, and
-    may unintentionally end up with mutable objects.
-
-    .. attribute:: MESSAGE
-
-        When using dataclasses, explicitly specify a frozen keyword argument. Example: `@dataclass(frozen=True)` or `@dataclass(frozen=False)`. Docs: https://docs.python.org/3/library/dataclasses.html
-
-    .. attribute:: AUTOFIX
-        :type: Yes
-
-
-    .. attribute:: VALID
-
-        .. code:: python
-
-            @some_other_decorator
-            class Cls: pass
-        .. code:: python
-
-            from dataclasses import dataclass
-            @dataclass(frozen=False)
-            class Cls: pass
-
-    .. attribute:: INVALID
-
-        .. code:: python
-
-            from dataclasses import dataclass
-            @some_unrelated_decorator
-            @dataclass  # not called as a function
-            @another_unrelated_decorator
-            class Cls: pass
-
-            # suggested fix
-            from dataclasses import dataclass
-            @some_unrelated_decorator
-            @dataclass(frozen=True)  # not called as a function
-            @another_unrelated_decorator
-            class Cls: pass
-
-        .. code:: python
-
-            from dataclasses import dataclass
-            @dataclass()  # called as a function, no kwargs
-            class Cls: pass
-
-            # suggested fix
-            from dataclasses import dataclass
-            @dataclass(frozen=True)  # called as a function, no kwargs
-            class Cls: pass
 
 .. class:: NoAssertTrueForComparisons
 
@@ -1023,58 +965,6 @@ Built-in Rules
             from time import sleep
             async def func():
                 sleep(1)
-.. class:: UseClassNameAsCode
-
-    Meta lint rule which checks that codes of lint rules are migrated to new format in lint rule class definitions.
-
-    .. attribute:: MESSAGE
-
-        `IG`-series codes are deprecated. Use class name as code instead.
-
-    .. attribute:: AUTOFIX
-        :type: Yes
-
-
-    .. attribute:: VALID
-
-        .. code:: python
-
-            MESSAGE = "This is a message"
-        .. code:: python
-
-            from fixit.common.base import CstLintRule
-            class FakeRule(CstLintRule):
-                MESSAGE = "This is a message"
-
-    .. attribute:: INVALID
-
-        .. code:: python
-
-            MESSAGE = "IG90000 Message"
-
-            # suggested fix
-            MESSAGE = "Message"
-
-        .. code:: python
-
-            from fixit.common.base import CstLintRule
-            class FakeRule(CstLintRule):
-                INVALID = [
-                    Invalid(
-                        code="",
-                        kind="IG000"
-                    )
-                ]
-
-            # suggested fix
-            from fixit.common.base import CstLintRule
-            class FakeRule(CstLintRule):
-                INVALID = [
-                    Invalid(
-                        code="",
-                        )
-                ]
-
 .. class:: UseClsInClassmethod
 
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
@@ -1184,44 +1074,6 @@ Built-in Rules
             # suggested fix
             f"{'hi'}"
 
-.. class:: UseLintFixmeComment
-
-    To silence a lint warning, use ``lint-fixme`` (when plans to fix the issue later) or ``lint-ignore``
-    (when the lint warning is not valid) comments.
-    The comment requires to be in a standalone comment line and follows the format ``lint-fixme: RULE_NAMES EXTRA_COMMENTS``.
-    It suppresses the lint warning with the RULE_NAMES in the next line.
-    RULE_NAMES can be one or more lint rule names separated by comma.
-    ``noqa`` is deprecated and not supported because explicitly providing lint rule names to be suppressed
-    in lint-fixme comment is preferred over implicit noqa comments. Implicit noqa suppression comments
-    sometimes accidentally silence warnings unexpectedly.
-
-    .. attribute:: MESSAGE
-
-        noqa is deprecated. Use `lint-fixme` or `lint-ignore` instead.
-
-
-    .. attribute:: VALID
-
-        .. code:: python
-
-            # lint-fixme: UseFstringRule
-            "%s" % "hi"
-        .. code:: python
-
-            # lint-ignore: UsePlusForStringConcatRule
-            'ab' 'cd'
-
-    .. attribute:: INVALID
-
-        .. code:: python
-
-            fn() # noqa
-        .. code:: python
-
-            (
-             1,
-             2,  # noqa
-            )
 .. class:: UseTypesFromTyping
 
     Enforces the use of types from the ``typing`` module in type annotations in place
@@ -1262,6 +1114,109 @@ Built-in Rules
 
             def function(list: list[str]) -> None:
                 pass
+
+``fixit.rules.extra``
+^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: fixit.rules.extra
+
+- :class:`ExplicitFrozenDataclass`
+- :class:`UseLintFixmeComment`
+
+.. class:: ExplicitFrozenDataclass
+
+    Encourages the use of frozen dataclass objects by telling users to specify the
+    kwarg.
+
+    Without this lint rule, most users of dataclass won't know to use the kwarg, and
+    may unintentionally end up with mutable objects.
+
+    .. attribute:: MESSAGE
+
+        When using dataclasses, explicitly specify a frozen keyword argument. Example: `@dataclass(frozen=True)` or `@dataclass(frozen=False)`. Docs: https://docs.python.org/3/library/dataclasses.html
+
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            @some_other_decorator
+            class Cls: pass
+        .. code:: python
+
+            from dataclasses import dataclass
+            @dataclass(frozen=False)
+            class Cls: pass
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            from dataclasses import dataclass
+            @some_unrelated_decorator
+            @dataclass  # not called as a function
+            @another_unrelated_decorator
+            class Cls: pass
+
+            # suggested fix
+            from dataclasses import dataclass
+            @some_unrelated_decorator
+            @dataclass(frozen=True)  # not called as a function
+            @another_unrelated_decorator
+            class Cls: pass
+
+        .. code:: python
+
+            from dataclasses import dataclass
+            @dataclass()  # called as a function, no kwargs
+            class Cls: pass
+
+            # suggested fix
+            from dataclasses import dataclass
+            @dataclass(frozen=True)  # called as a function, no kwargs
+            class Cls: pass
+
+.. class:: UseLintFixmeComment
+
+    To silence a lint warning, use ``lint-fixme`` (when plans to fix the issue later) or ``lint-ignore``
+    (when the lint warning is not valid) comments.
+    The comment requires to be in a standalone comment line and follows the format ``lint-fixme: RULE_NAMES EXTRA_COMMENTS``.
+    It suppresses the lint warning with the RULE_NAMES in the next line.
+    RULE_NAMES can be one or more lint rule names separated by comma.
+    ``noqa`` is deprecated and not supported because explicitly providing lint rule names to be suppressed
+    in lint-fixme comment is preferred over implicit noqa comments. Implicit noqa suppression comments
+    sometimes accidentally silence warnings unexpectedly.
+
+    .. attribute:: MESSAGE
+
+        noqa is deprecated. Use `lint-fixme` or `lint-ignore` instead.
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            # lint-fixme: UseFstringRule
+            "%s" % "hi"
+        .. code:: python
+
+            # lint-ignore: UsePlusForStringConcatRule
+            'ab' 'cd'
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            fn() # noqa
+        .. code:: python
+
+            (
+             1,
+             2,  # noqa
+            )
 
 ``fixit.upgrade``
 ^^^^^^^^^^^^^^^^^

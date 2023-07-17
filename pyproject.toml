@@ -111,12 +111,6 @@ build = [
 
 [tool.fixit]
 enable = ["fixit.rules"]
-disable = [
-    # We don't want everything to be frozen or have to set frozen=False
-    "fixit.rules:ExplicitFrozenDataclass",
-    # We need noqa for compat with flake8 until we jettison flake8
-    "fixit.rules:UseLintFixmeComment",
-]
 python-version = "3.10"
 formatter = "ufmt"
 
