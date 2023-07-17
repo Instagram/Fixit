@@ -25,7 +25,7 @@ classifiers = [
 
 requires-python = ">=3.8"
 dependencies = [
-    "click >= 8.0, != 8.1.4",
+    "click >= 8.0",
     "libcst >= 0.3.18",
     "moreorless >= 0.4.0",
     "packaging >= 21",
@@ -43,6 +43,7 @@ docs = [
     "sphinx-mdinclude == 0.5.3",
 ]
 dev = [
+    "click < 8.1.4",  # https://github.com/pallets/click/issues/2558
     "attribution == 1.6.2",
     "black == 23.3.0",
     "flake8 == 6.0.0",
