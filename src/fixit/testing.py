@@ -72,7 +72,9 @@ class LintRuleTestCase(unittest.TestCase):
         test_case: Union[Valid, Invalid],
         rule: LintRule,
     ) -> None:
-        path = Path("valid.py" if isinstance(test_case, Valid) else "invalid.py")
+        path = Path.cwd() / (
+            "valid.py" if isinstance(test_case, Valid) else "invalid.py"
+        )
         config = Config(path=path)
         source_code = _dedent(test_case.code)
         runner = LintRunner(path, source_code.encode())
