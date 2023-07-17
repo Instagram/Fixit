@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.0.0 - 2023-07-17
+
+This is the first stable release with the major rework of Fixit. There are many
+breaking changes since the `0.1.4` release, including configuration formats,
+CLI commands, and lint rule APIs. Existing users should look at the
+[Upgrade Guide][] for help migrating to the latest version.
+
+[Upgrade Guide]: https://fixit.rtfd.io/en/latest/upgrade.html
+
+### Major Changes
+
+- Hierarchical configuration via TOML format
+- Support for in-repo custom lint rules relative to project configuration
+- Simplified CLI binary with subcommands to check for errors and apply fixes
+- Interactive review and application of autofixes
+- Dedicated API for integration with alternate frontends
+- Overhauled documentation, with quick start guide
+- Integration with pre-commit
+- Support for configurable target version and selection of applicable rules
+- Support for selecting and filtering rules by tags at runtime
+
+### New Rules
+
+- Added `UseAsyncSleepInAsyncDef` (#297)
+- Added `DeprecatedUnittestAsserts` (#314)
+
 ## 2.0.0b1 - 2023-06-26
 
 ### Beta Release
