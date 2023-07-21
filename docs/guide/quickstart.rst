@@ -161,7 +161,7 @@ in a single unit. A (very) simple rule looks like this:
         ]
 
         def visit_SimpleString(self, node: libcst.SimpleString) -> None:
-            if name.value in ('"Paul"', "'Paul'"):
+            if node.value in ('"Paul"', "'Paul'"):
                 self.report(node, "It's underproved!")
 
 Rules can suggest auto-fixes for the user by including a replacement CST node
@@ -170,7 +170,7 @@ when reporting an error:
 .. code:: python
 
     def visit_SimpleString(self, node: libcst.SimpleString) -> None:
-        if name.value in ('"Paul"', "'Paul'"):
+        if node.value in ('"Paul"', "'Paul'"):
             new_node = libcst.SimpleString('"Mary"')
             self.report(node, "It's underproved!", replacement=new_node)
 
