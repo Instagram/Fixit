@@ -148,11 +148,16 @@ class LintRule(BatchableCSTVisitor):
         # comments at the start of the file are part of the module header rather than
         # part of the first statement's leading_lines, so we need to look there in case
         # the reported node is part of the first statement.
-        parent = self.get_metadata(ParentNodeProvider, node)
-        if isinstance(parent, Module) and parent.body and parent.body[0] == node:
-            for line in parent.header:
+        if isinstance(node, Module):
+            for line in node.header:
                 if line.comment:
                     yield line.comment.value
+        else:
+            parent = self.get_metadata(ParentNodeProvider, node)
+            if isinstance(parent, Module) and parent.body and parent.body[0] == node:
+                for line in parent.header:
+                    if line.comment:
+                        yield line.comment.value
 
     def ignore_lint(self, node: CSTNode) -> bool:
         """
