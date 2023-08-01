@@ -45,7 +45,7 @@ docs = [
 dev = [
     "click < 8.1.4",  # https://github.com/pallets/click/issues/2558
     "attribution == 1.6.2",
-    "black == 23.3.0",
+    "black == 23.7.0",
     "flake8 == 6.0.0",
     "flake8-bugbear == 23.6.5",
     "mypy == 1.4.1",
