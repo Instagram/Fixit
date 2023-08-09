@@ -43,7 +43,6 @@ docs = [
     "sphinx-mdinclude == 0.5.3",
 ]
 dev = [
-    "click < 8.1.4",  # https://github.com/pallets/click/issues/2558
     "attribution == 1.6.2",
     "black == 23.7.0",
     "flake8 == 6.0.0",
