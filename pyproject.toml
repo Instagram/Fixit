@@ -45,7 +45,7 @@ docs = [
 dev = [
     "attribution == 1.6.2",
     "black == 23.7.0",
-    "flake8 == 6.0.0",
+    "flake8 == 6.1.0",
     "flake8-bugbear == 23.7.10",
     "mypy == 1.4.1",
     "ufmt == 2.1.0",
