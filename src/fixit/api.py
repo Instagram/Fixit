@@ -73,7 +73,8 @@ def fixit_bytes(
     Lint raw bytes content representing a single path, using the given configuration.
 
     Yields :class:`Result` objects for each lint error or exception found, or a single
-    empty result if the file is clean.
+    empty result if the file is clean. A file is considered clean if no lint errors or
+    no rules are enabled for the given path.
     Returns the final :class:`FileContent` including any fixes applied.
 
     Use :func:`capture` to more easily capture return value after iterating through
@@ -82,9 +83,15 @@ def fixit_bytes(
 
     If ``autofix`` is ``True``, all violations with replacements will be applied
     automatically, even if ``False`` is sent back to the generator.
+
     """
     try:
         rules = collect_rules(config)
+
+        if not rules:
+            yield Result(path, violation=None)
+            return None
+
         runner = LintRunner(path, content)
         pending_fixes: List[LintViolation] = []
 

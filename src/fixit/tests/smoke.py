@@ -228,3 +228,51 @@ class SmokeTest(TestCase):
                     sorted(errors[multi]),
                 )
                 self.assertEqual(expected, multi.read_text())
+
+    def test_lint_directory_with_no_rules_enabled(self) -> None:
+        content = dedent(
+            """\
+                import foo
+                import bar
+
+                def func():
+                    value = f"hello world"
+            """
+        )
+        with self.subTest("lint"):
+            with TemporaryDirectory() as td:
+                tdp = Path(td).resolve()
+                path = tdp / "file.py"
+
+                (tdp / "pyproject.toml").write_text(
+                    "[tool.fixit]\ndisable=['fixit.rules']\n"
+                )
+
+                path.write_text(content)
+                result = self.runner.invoke(
+                    main,
+                    ["lint", path.as_posix()],
+                    catch_exceptions=False,
+                )
+
+                self.assertEqual(result.output, "")
+                self.assertEqual(result.exit_code, 0)
+
+        with self.subTest("fix"):
+            with TemporaryDirectory() as td:
+                tdp = Path(td).resolve()
+                path = tdp / "file.py"
+
+                (tdp / "pyproject.toml").write_text(
+                    "[tool.fixit]\ndisable=['fixit.rules']\n"
+                )
+
+                path.write_text(content)
+                result = self.runner.invoke(
+                    main,
+                    ["fix", "--automatic", path.as_posix()],
+                    catch_exceptions=False,
+                )
+
+                self.assertEqual(result.output, "")
+                self.assertEqual(result.exit_code, 0)
