@@ -210,7 +210,7 @@ Built-in Rules
 
     .. attribute:: MESSAGE
 
-        Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identiy. Use `is` or `is not` instead.
+        Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identity. Use `is` or `is not` instead.
 
     .. attribute:: AUTOFIX
         :type: Yes

@@ -19,7 +19,7 @@ class CompareSingletonPrimitivesByIs(LintRule):
     """
 
     MESSAGE: str = (
-        "Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identiy."
+        "Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identity."
         + " Use `is` or `is not` instead."
     )
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
