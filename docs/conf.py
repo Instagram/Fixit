@@ -22,6 +22,7 @@
 # -- Patch python domain signature regex to allow "foo-bar" style names ------
 
 import re
+
 # modified from sphinx/domains/python.py
 py_sig_re = re.compile(
     r'''^ ([\w.]*\.)?            # class name(s)
@@ -32,17 +33,14 @@ py_sig_re = re.compile(
           ''', re.VERBOSE)
 
 from sphinx.domains import python
+
 python.py_sig_re = py_sig_re
 
 # -- Project information -----------------------------------------------------
 
-import datetime
-
 project = "Fixit"
 copyright = f" Copyright © Meta Platforms, Inc. and affiliates"
 author = ""
-
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
