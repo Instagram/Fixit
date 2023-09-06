@@ -46,7 +46,9 @@ The following options are available for all commands:
 ``lint``
 ^^^^^^^^
 
-Lint one or more paths, and print a list of lint errors.
+Lint one or more paths, and print a list of lint errors. If "-" is given as the
+first path, then the second given path will be used for configuration lookup
+and error messages, and the input read from STDIN.
 
 .. code:: console
 
@@ -60,7 +62,10 @@ Lint one or more paths, and print a list of lint errors.
 ``fix``
 ^^^^^^^
 
-Lint one or more paths, and apply suggested fixes.
+Lint one or more paths, and apply suggested fixes. If "-" is given as the
+first path, then the second given path will be used for configuration lookup,
+the input read from STDIN, and the fixed output printed to STDOUT (ignoring
+:attr:`--interactive`).
 
 .. code:: console
 

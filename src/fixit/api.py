@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import sys
 import traceback
 from functools import partial
 from pathlib import Path
@@ -16,12 +17,14 @@ from moreorless.click import echo_color_precomputed_diff
 from .config import collect_rules, generate_config
 from .engine import LintRunner
 from .format import format_module
-from .ftypes import Config, FileContent, LintViolation, Options, Result
+from .ftypes import Config, FileContent, LintViolation, Options, Result, STDIN
 
 LOG = logging.getLogger(__name__)
 
 
-def print_result(result: Result, show_diff: bool = False) -> int:
+def print_result(
+    result: Result, *, show_diff: bool = False, stderr: bool = False
+) -> int:
     """
     Print linting results in a simple format designed for human eyes.
 
@@ -44,7 +47,9 @@ def print_result(result: Result, show_diff: bool = False) -> int:
         if result.violation.autofixable:
             message += " (has autofix)"
         click.secho(
-            f"{path}@{start_line}:{start_col} {rule_name}: {message}", fg="yellow"
+            f"{path}@{start_line}:{start_col} {rule_name}: {message}",
+            fg="yellow",
+            err=stderr,
         )
         if show_diff and result.violation.diff:
             echo_color_precomputed_diff(result.violation.diff)
@@ -53,8 +58,8 @@ def print_result(result: Result, show_diff: bool = False) -> int:
     elif result.error:
         # An exception occurred while processing a file
         error, tb = result.error
-        click.secho(f"{path}: EXCEPTION: {error}", fg="red")
-        click.echo(tb.strip())
+        click.secho(f"{path}: EXCEPTION: {error}", fg="red", err=stderr)
+        click.echo(tb.strip(), err=stderr)
         return True
 
     else:
@@ -117,6 +122,36 @@ def fixit_bytes(
     return None
 
 
+def fixit_stdin(
+    path: Path,
+    *,
+    autofix: bool = False,
+    options: Optional[Options] = None,
+) -> Generator[Result, bool, None]:
+    """
+    Wrapper around :func:`fixit_bytes` for formatting content from STDIN.
+
+    The resulting fixed content will be printed to STDOUT.
+
+    Requires passing a path that represents the filesystem location matching the
+    contents to be linted. This will be used to resolve the ``fixit.toml`` config
+    file(s).
+    """
+    path = path.resolve()
+
+    try:
+        content: FileContent = sys.stdin.buffer.read()
+        config = generate_config(path, options=options)
+
+        updated = yield from fixit_bytes(path, content, config=config, autofix=autofix)
+        if autofix:
+            sys.stdout.buffer.write(updated or content)
+
+    except Exception as error:
+        LOG.debug("Exception while fixit_stdin", exc_info=error)
+        yield Result(path, violation=None, error=(error, traceback.format_exc()))
+
+
 def fixit_file(
     path: Path,
     *,
@@ -177,6 +212,16 @@ def fixit_paths(
     Yields :class:`Result` objects for each path, lint error, or exception found.
     See :func:`fixit_bytes` for semantics.
 
+    If the first given path is STDIN (``Path("-")``), then content will be linted
+    from STDIN using :func:`fixit_stdin`. The fixed content will be written to STDOUT.
+    A second path argument may be given, which represents the original content's true
+    path name, and will be used:
+    - to resolve the ``fixit.toml`` configuration file(s)
+    - when printing status messages, diffs, or errors.
+    If no second path argument is given, it will default to "stdin" in the current
+    working directory.
+    Any further path names will result in a runtime error.
+
     .. note::
 
         Currently does not support applying individual fixes when ``parallel=True``,
@@ -188,10 +233,25 @@ def fixit_paths(
         return
 
     expanded_paths: List[Path] = []
-    for path in paths:
-        expanded_paths.extend(trailrunner.walk(path))
+    is_stdin = False
+    stdin_path = Path("stdin")
+    for i, path in enumerate(paths):
+        if path == STDIN:
+            if i == 0:
+                is_stdin = True
+            else:
+                LOG.warning("Cannot mix stdin ('-') with normal paths, ignoring")
+        elif is_stdin:
+            if i == 1:
+                stdin_path = path
+            else:
+                raise ValueError("too many stdin paths")
+        else:
+            expanded_paths.extend(trailrunner.walk(path))
 
-    if len(expanded_paths) == 1 or not parallel:
+    if is_stdin:
+        yield from fixit_stdin(stdin_path, autofix=autofix, options=options)
+    elif len(expanded_paths) == 1 or not parallel:
         for path in expanded_paths:
             yield from fixit_file(path, autofix=autofix, options=options)
     else:

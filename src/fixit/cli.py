@@ -109,6 +109,8 @@ def lint(
 ):
     """
     lint one or more paths and return suggestions
+
+    pass "- <FILENAME>" for STDIN representing <FILENAME>
     """
     options: Options = ctx.obj
 
@@ -142,7 +144,7 @@ def lint(
     "-i/-a",
     is_flag=True,
     default=True,
-    help="how to apply fixes; interactive by default",
+    help="how to apply fixes; interactive by default unless STDIN",
 )
 @click.option("--diff", "-d", is_flag=True, help="show diff even with --automatic")
 @click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
@@ -154,12 +156,17 @@ def fix(
 ):
     """
     lint and autofix one or more files and return results
+
+    pass "- <FILENAME>" for STDIN representing <FILENAME>;
+    this will ignore "--interactive" and always use "--automatic"
     """
     options: Options = ctx.obj
 
     if not paths:
         paths = [Path.cwd()]
 
+    is_stdin = paths[0] and str(paths[0]) == "-"
+    interactive = interactive and not is_stdin
     autofix = not interactive
     exit_code = 0
 
@@ -174,7 +181,9 @@ def fix(
     )
     for result in generator:
         visited.add(result.path)
-        if print_result(result, show_diff=interactive or diff):
+        # for STDIN, we need STDOUT to equal the fixed content, so
+        # move everything else to STDERR
+        if print_result(result, show_diff=interactive or diff, stderr=is_stdin):
             dirty.add(result.path)
             if autofix and result.violation and result.violation.autofixable:
                 autofixes += 1
