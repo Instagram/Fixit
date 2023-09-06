@@ -183,6 +183,17 @@ class Options:
 
 
 @dataclass
+class LspOptions:
+    """
+    Command-line options to affect LSP runtime behavior
+    """
+
+    tcp: Optional[int]
+    ws: Optional[int]
+    stdio: bool = True
+
+
+@dataclass
 class Config:
     """
     Materialized configuration valid for processing a single file.

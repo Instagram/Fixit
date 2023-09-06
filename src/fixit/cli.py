@@ -15,7 +15,8 @@ from fixit import __version__
 
 from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config, parse_rule
-from .ftypes import Config, Options, QualifiedRule, Tags
+from .ftypes import Config, LspOptions, Options, QualifiedRule, Tags
+from .lsp import start_lsp
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
@@ -54,6 +55,12 @@ def splash(
     "--debug/--quiet", is_flag=True, default=None, help="Increase decrease verbosity"
 )
 @click.option(
+    "--log-file",
+    type=click.Path(dir_okay=False, exists=False, path_type=Path),
+    default=None,
+    help="Log to file instead of stderr",
+)
+@click.option(
     "--config-file",
     "-c",
     type=click.Path(dir_okay=False, exists=True, path_type=Path),
@@ -75,6 +82,7 @@ def splash(
 def main(
     ctx: click.Context,
     debug: Optional[bool],
+    log_file: Optional[Path],
     config_file: Optional[Path],
     tags: str,
     rules: str,
@@ -82,7 +90,10 @@ def main(
     level = logging.WARNING
     if debug is not None:
         level = logging.DEBUG if debug else logging.ERROR
-    logging.basicConfig(level=level, stream=sys.stderr)
+    if log_file is None:
+        logging.basicConfig(level=level, stream=sys.stderr)
+    else:
+        logging.basicConfig(level=level, filename=log_file)
 
     ctx.obj = Options(
         debug=debug,
@@ -192,6 +203,26 @@ def fix(
 
     splash(visited, dirty, autofixes, fixed)
     ctx.exit(exit_code)
+
+
+@main.command()
+@click.pass_context
+@click.option("--stdio", type=bool, default=True, help="Serve LSP over stdio")
+@click.option("--tcp", type=int, help="Port to serve LSP over")
+@click.option("--ws", type=int, help="Port to serve WS over")
+def lsp(
+    ctx: click.Context,
+    stdio: bool,
+    tcp: Optional[int],
+    ws: Optional[int],
+):
+    main_options = ctx.obj
+    lsp_options = LspOptions(
+        tcp=tcp,
+        ws=ws,
+        stdio=stdio,
+    )
+    start_lsp(main_options, lsp_options)
 
 
 @main.command()

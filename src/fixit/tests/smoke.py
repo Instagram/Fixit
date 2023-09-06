@@ -3,11 +3,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import json
 from collections import defaultdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest import TestCase
+
+import pygls.uris as Uri
 
 from click.testing import CliRunner
 
@@ -107,6 +110,37 @@ class SmokeTest(TestCase):
                 )
                 self.assertEqual(
                     expected_format, path.read_text(), "unexpected file output"
+                )
+
+            with self.subTest("LSP"):
+                path.write_text(content)
+                uri = Uri.from_fs_path(path.as_posix())
+
+                initialize = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}'
+
+                did_open_template = '{{"jsonrpc":"2.0","id":1,"method":"textDocument/didOpen","params":{{"textDocument":{{"uri":{uri},"languageId":"python","version":0,"text":{content}}}}}}}'
+                did_open = did_open_template.format(
+                    uri=json.dumps(uri), content=json.dumps(content)
+                )
+
+                initialize_payload = (
+                    f"Content-Length: {len(initialize)}\r\n\r\n{initialize}"
+                )
+                did_open_payload = f"Content-Length: {len(did_open)}\r\n\r\n{did_open}"
+                payload = initialize_payload + did_open_payload
+
+                result = self.runner.invoke(
+                    main,
+                    ["--debug", "lsp"],
+                    input=payload,
+                    catch_exceptions=False,
+                )
+
+                self.assertNotEqual(result.output, "")
+                self.assertEqual(result.exit_code, 0)
+                self.assertRegex(
+                    result.output,
+                    r"file\.py\".+\"range\".+\"start\".+\"end\".+\"severity\": 2, \"code\": \"NoRedundantFString\", \"source\": \"fixit\"",
                 )
 
     def test_this_file_is_clean(self) -> None:

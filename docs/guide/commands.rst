@@ -14,6 +14,10 @@ The following options are available for all commands:
 
     Raise or lower the level of output and logging.
 
+.. attribute:: --log-file PATH
+
+   Log to a specified file instead of stderr.
+
 .. attribute:: --config-file PATH
 
     Override the normal hierarchical configuration and use the configuration
@@ -78,6 +82,28 @@ Lint one or more paths, and apply suggested fixes.
 .. attribute:: --diff / -d
 
     Show applied fixes in unified diff format when applied automatically.
+
+``lsp``
+^^^^^^^
+
+Start the language server providing IDE features over
+`LSP <https://microsoft.github.io/language-server-protocol/>`__.
+
+.. code:: console
+
+    $ fixit lsp [--stdio | --tcp PORT | --ws PORT]
+
+.. attribute:: --stdio
+
+    Serve LSP over stdio. *default*
+
+.. attribute:: --tcp
+
+    Serve LSP over TCP on PORT.
+
+.. attribute:: --ws
+
+    Serve LSP over WebSocket on PORT.
 
 
 ``test``

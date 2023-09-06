@@ -29,6 +29,7 @@ dependencies = [
     "libcst >= 0.3.18",
     "moreorless >= 0.4.0",
     "packaging >= 21",
+    "pygls >= 1.0.2",
     "tomli >= 2.0; python_version < '3.11'",
     "trailrunner >= 1.2",
 ]
