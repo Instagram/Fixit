@@ -84,6 +84,33 @@ the input read from STDIN, and the fixed output printed to STDOUT (ignoring
 
     Show applied fixes in unified diff format when applied automatically.
 
+``lsp``
+^^^^^^^
+
+Start the language server providing IDE features over
+`LSP <https://microsoft.github.io/language-server-protocol/>`__.
+This command is only available if installed with the `lsp` extra.
+
+.. code:: console
+
+    $ fixit lsp [--stdio | --tcp PORT | --ws PORT]
+
+.. attribute:: --stdio
+
+    Serve LSP over stdio. *default*
+
+.. attribute:: --tcp
+
+    Serve LSP over TCP on PORT.
+
+.. attribute:: --ws
+
+    Serve LSP over WebSocket on PORT.
+
+.. attribute:: --debounce-interval
+
+    Delay in seconds for server-side debounce. *default: 0.5*
+
 
 ``test``
 ^^^^^^^^
