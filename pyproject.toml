@@ -54,6 +54,9 @@ dev = [
 pretty = [
     "rich >= 12.6.0",
 ]
+lsp = [
+    "pygls[ws] >= 1.0.2",
+]
 
 [project.scripts]
 fixit = "fixit.cli:main"
@@ -99,7 +102,7 @@ exclude = [
 features = ["dev", "docs", "pretty"]
 
 [tool.hatch.envs.default]
-features = ["dev", "pretty"]
+features = ["dev", "lsp", "pretty"]
 
 [tool.hatch.envs.default.scripts]
 test = "python -m fixit.tests"
