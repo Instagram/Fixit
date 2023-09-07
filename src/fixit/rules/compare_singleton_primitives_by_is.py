@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import FrozenSet, Union
+from typing import cast, FrozenSet, Union
 
 import libcst as cst
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
@@ -37,6 +37,8 @@ class CompareSingletonPrimitivesByIs(LintRule):
         Valid("False is x"),
         Valid("x == 2"),
         Valid("2 != x"),
+        Valid('"True" == "True"'),
+        Valid('"True" != "False".lower()'),
     ]
     INVALID = [
         Invalid(
@@ -76,6 +78,14 @@ class CompareSingletonPrimitivesByIs(LintRule):
         }
     )
 
+    def is_singleton(self, node: cst.BaseExpression):
+        qual_name = cast(set, self.get_metadata(QualifiedNameProvider, node, set()))
+        return (
+            isinstance(node, cst.Name)
+            and qual_name
+            and qual_name < self.QUALIFIED_SINGLETON_PRIMITIVES
+        )
+
     def visit_Comparison(self, node: cst.Comparison) -> None:
         # Initialize the needs_report flag as False to begin with
         needs_report = False
@@ -84,12 +94,7 @@ class CompareSingletonPrimitivesByIs(LintRule):
         for target in node.comparisons:
             operator, right_comp = target.operator, target.comparator
             if isinstance(operator, (cst.Equal, cst.NotEqual)) and (
-                not self.QUALIFIED_SINGLETON_PRIMITIVES.isdisjoint(
-                    self.get_metadata(QualifiedNameProvider, left_comp, set())
-                )
-                or not self.QUALIFIED_SINGLETON_PRIMITIVES.isdisjoint(
-                    self.get_metadata(QualifiedNameProvider, right_comp, set())
-                )
+                self.is_singleton(left_comp) or self.is_singleton(right_comp)
             ):
                 needs_report = True
                 altered_comparisons.append(
