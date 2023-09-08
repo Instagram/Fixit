@@ -11,6 +11,7 @@ from .config import ConfigTest
 from .ftypes import TypesTest
 from .rule import RuleTest, RunnerTest
 from .smoke import SmokeTest
+from .util import DebounceTest
 
 add_lint_rule_tests_to_module(
     globals(),

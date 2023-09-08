@@ -210,17 +210,25 @@ def fix(
 @click.option("--stdio", type=bool, default=True, help="Serve LSP over stdio")
 @click.option("--tcp", type=int, help="Port to serve LSP over")
 @click.option("--ws", type=int, help="Port to serve WS over")
+@click.option(
+    "--debounce-interval",
+    type=float,
+    default=0.2,
+    help="Delay in seconds for server-side debounce",
+)
 def lsp(
     ctx: click.Context,
     stdio: bool,
     tcp: Optional[int],
     ws: Optional[int],
+    debounce_interval: float,
 ):
     main_options = ctx.obj
     lsp_options = LspOptions(
         tcp=tcp,
         ws=ws,
         stdio=stdio,
+        debounce_interval=debounce_interval,
     )
     start_lsp(main_options, lsp_options)
 

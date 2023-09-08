@@ -105,6 +105,10 @@ Start the language server providing IDE features over
 
     Serve LSP over WebSocket on PORT.
 
+.. attribute:: --debounce-interval
+
+    Delay in seconds for server-side debounce. *default: 0.2*
+
 
 ``test``
 ^^^^^^^^

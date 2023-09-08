@@ -4,13 +4,16 @@
 # LICENSE file in the root directory of this source tree.
 
 import sys
+import threading
 from contextlib import contextmanager
 from pathlib import Path
-from typing import cast, Generator, Generic, Optional, TypeVar, Union
+from typing import Any, Callable, cast, Generator, Generic, Optional, TypeVar, Union
 
 Yield = TypeVar("Yield")
 Send = TypeVar("Send")
 Return = TypeVar("Return")
+Function = TypeVar("Function", bound=Callable[..., Any])
+Decorator = Callable[[Function], Function]
 
 Sentinel = object()
 
@@ -87,3 +90,29 @@ def append_sys_path(path: Path) -> Generator[None, None, None]:
     # already there: do nothing, and don't remove it later
     else:
         yield
+
+
+def debounce(interval: float) -> Decorator:
+    """
+    Wait `interval` seconds before calling `f`, and cancel if called again.
+    The return value of `f` is ignored regardless of whether or not `f` is called.
+    """
+
+    class Debouncer:
+        def __init__(self, f: Callable[..., None], interval: float):
+            self.f = f
+            self.interval = interval
+            self._timer: Optional[threading.Timer] = None
+            self._lock = threading.Lock()
+
+        def __call__(self, *args, **kwargs):
+            with self._lock:
+                if self._timer is not None:
+                    self._timer.cancel()
+                self._timer = threading.Timer(self.interval, self.f, args, kwargs)
+                self._timer.start()
+
+    def decorator(f: Callable[..., None]) -> Callable[..., None]:
+        return Debouncer(f, interval)
+
+    return decorator

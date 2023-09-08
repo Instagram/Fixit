@@ -24,7 +24,7 @@ from lsprotocol.types import (
 from pygls.server import LanguageServer
 
 from fixit import __version__
-from fixit.util import capture
+from fixit.util import capture, debounce
 
 from .api import fixit_bytes
 from .config import generate_config
@@ -87,6 +87,7 @@ def start_lsp(main_options: Options, lsp_options: LspOptions):
         )
 
     @ls.feature(TEXT_DOCUMENT_DID_CHANGE)
+    @debounce(lsp_options.debounce_interval)
     def _(params: DidChangeTextDocumentParams):
         publish_diagnostics(
             params.text_document.uri, version=params.text_document.version

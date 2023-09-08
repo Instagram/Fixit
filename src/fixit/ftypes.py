@@ -191,6 +191,7 @@ class LspOptions:
     tcp: Optional[int]
     ws: Optional[int]
     stdio: bool = True
+    debounce_interval: float = 0.2
 
 
 @dataclass
