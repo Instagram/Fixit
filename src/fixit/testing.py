@@ -10,9 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Collection, Dict, List, Mapping, Sequence, Type, Union
 
-from moreorless import unified_diff
-
-from .engine import LintRunner
+from .engine import LintRunner, diff_violation
 from .ftypes import Config
 from .rule import Invalid, LintRule, Valid
 
@@ -112,9 +110,7 @@ class LintRuleTestCase(unittest.TestCase):
 
             if len(reports) == 1:
                 # make sure we generated a reasonable diff
-                expected_diff = unified_diff(
-                    source_code, expected_code, filename=path.name, n=1
-                )
+                expected_diff = diff_violation(path, runner.module, reports[0])
                 self.assertEqual(expected_diff, report.diff)
 
 

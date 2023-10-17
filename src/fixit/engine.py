@@ -28,6 +28,26 @@ from .rule import LintRule
 LOG = logging.getLogger(__name__)
 
 
+def diff_violation(path: Path, module: Module, violation: LintViolation) -> str:
+    """
+    Generate string diff representation of a violation.
+    """
+
+    orig = module.code
+    mod = module.deep_replace(  # type:ignore # LibCST#906
+        violation.node, violation.replacement
+    )
+    assert isinstance(mod, Module)
+    change = mod.code
+
+    return unified_diff(
+        orig,
+        change,
+        path.name,
+        n=1,
+    )
+
+
 class LintRunner:
     def __init__(self, path: Path, source: FileContent) -> None:
         self.path = path
@@ -87,19 +107,7 @@ class LintRunner:
                 count += 1
 
                 if violation.replacement:
-                    orig = self.module.code
-                    mod = self.module.deep_replace(  # type:ignore # LibCST#906
-                        violation.node, violation.replacement
-                    )
-                    assert isinstance(mod, Module)
-                    change = mod.code
-
-                    diff = unified_diff(
-                        orig,
-                        change,
-                        self.path.name,
-                        n=1,
-                    )
+                    diff = diff_violation(self.path, self.module, violation)
                     violation = replace(violation, diff=diff)
 
                 yield violation
