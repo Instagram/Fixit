@@ -1,5 +1,7 @@
 [flake8]
-exclude = legacy/
+exclude =
+    legacy/
+    __version__.py
 ignore =
     # mccabe complexity
     C901
