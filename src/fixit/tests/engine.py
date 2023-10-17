@@ -5,7 +5,6 @@
 
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, cast, Optional, Set
 from unittest import TestCase
 
 from libcst import (

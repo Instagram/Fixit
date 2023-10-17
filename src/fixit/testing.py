@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Collection, Dict, List, Mapping, Sequence, Type, Union
 
-from .engine import LintRunner, diff_violation
+from .engine import diff_violation, LintRunner
 from .ftypes import Config
 from .rule import Invalid, LintRule, Valid
 
