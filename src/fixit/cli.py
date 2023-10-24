@@ -165,7 +165,7 @@ def fix(
     if not paths:
         paths = [Path.cwd()]
 
-    is_stdin = paths[0] and str(paths[0]) == "-"
+    is_stdin = bool(paths[0] and str(paths[0]) == "-")
     interactive = interactive and not is_stdin
     autofix = not interactive
     exit_code = 0
