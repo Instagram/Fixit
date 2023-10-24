@@ -84,6 +84,14 @@ class NoStringTypeAnnotation(LintRule):
                 return "a"
             """
         ),
+        Valid(
+            """
+            import typing
+
+            def foo() -> typing.Optional[typing.Literal["class", "function"]]:
+                return "class"
+            """
+        ),
     ]
 
     INVALID = [
@@ -273,7 +281,12 @@ class NoStringTypeAnnotation(LintRule):
                     metadata=m.MatchMetadataIfTrue(
                         QualifiedNameProvider,
                         lambda qualnames: any(
-                            n.name == "typing_extensions.Literal" for n in qualnames
+                            n.name
+                            in (
+                                "typing.Literal",
+                                "typing_extensions.Literal",
+                            )
+                            for n in qualnames
                         ),
                     )
                 ),
@@ -295,4 +308,8 @@ class NoStringTypeAnnotation(LintRule):
             value = node.evaluated_value
             if isinstance(value, bytes):
                 value = value.decode("utf-8")
-            self.report(node, replacement=cst.parse_expression(value))
+            try:
+                repl = cst.parse_expression(value)
+                self.report(node, replacement=repl)
+            except cst.ParserSyntaxError:
+                self.report(node)
