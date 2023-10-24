@@ -69,6 +69,9 @@ class CollectionError(RuntimeError):
         super().__init__(msg)
         self.rule = rule
 
+    def __reduce__(self):
+        return type(self), (*self.args, self.rule)
+
 
 def is_rule(obj: Type[T]) -> bool:
     """
