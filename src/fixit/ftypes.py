@@ -32,6 +32,8 @@ from packaging.version import Version
 
 T = TypeVar("T")
 
+STDIN = Path("-")
+
 CodeRange
 CodePosition
 

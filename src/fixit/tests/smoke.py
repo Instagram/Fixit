@@ -109,6 +109,32 @@ class SmokeTest(TestCase):
                     expected_format, path.read_text(), "unexpected file output"
                 )
 
+            with self.subTest("linting via stdin"):
+                result = self.runner.invoke(
+                    main,
+                    ["lint", "-", path.as_posix()],
+                    input=content,
+                    catch_exceptions=False,
+                )
+
+                self.assertNotEqual(result.output, "")
+                self.assertNotEqual(result.exit_code, 0)
+                self.assertRegex(
+                    result.output,
+                    r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
+                )
+
+            with self.subTest("fixing with formatting via stdin"):
+                result = self.runner.invoke(
+                    main,
+                    ["fix", "-", path.as_posix()],
+                    input=content,
+                    catch_exceptions=False,
+                )
+
+                self.assertEqual(result.exit_code, 0)
+                self.assertEqual(expected_format, result.output, "unexpected stdout")
+
     def test_this_file_is_clean(self) -> None:
         path = Path(__file__).resolve().as_posix()
         result = self.runner.invoke(main, ["lint", path], catch_exceptions=False)
