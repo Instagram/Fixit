@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.1.0 - 2023-10-25
+
+Minor feature release
+
+New:
+
+- Lint and fix via STDIN by passing `-` as path (#388)
+- Skip linting files when no rules enabled (#379)
+
+Fixed:
+
+- Reporting violations on `Module` nodes (#368, #367)
+- Incorrect auto-fixes from `CompareSingletonPrimitivesByIs` (#391, #378, #375)
+- Parsing error for `typing.Literal` in `NoStringTypeAnnotation` rule (#400, #377)
+- Error handling when rules fail to import in child processes (#401, #381)
+
+Thanks:
+
+```
+$ git shortlog -sn v2.0.0.post1...
+     8  Amethyst Reese
+     2  LW
+     1  Dave Turner
+     1  Uzumaki
+     1  Yajus Gakhar
+     1  rembridge
+```
+
 ## 2.0.0 - 2023-07-17
 
 This is the first stable release with the major rework of Fixit. There are many
