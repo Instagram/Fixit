@@ -48,7 +48,7 @@ dev = [
     "flake8 == 6.1.0",
     "flake8-bugbear == 23.9.16",
     "mypy == 1.6.1",
-    "ufmt == 2.2.0",
+    "ufmt == 2.3.0",
     "usort == 1.0.7",
 ]
 pretty = [
