@@ -78,7 +78,7 @@ disable = [
     "fixit.core.RuleFour",  # disable a core rule by fully qualified name
 ]
 
-[[tools.fixit.overrides]]
+[[tool.fixit.overrides]]
 path = "foo/bar/baz"
 
 enable = ["..."]
