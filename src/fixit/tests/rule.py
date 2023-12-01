@@ -312,6 +312,22 @@ class RuleTest(TestCase):
                 None,
                 None,
             ),
+            (  # list elements
+                """
+                    [
+                        # lint-fixme: ExerciseReport
+                        ...,
+                        None,
+                    ]
+
+                    [
+                        ...,  # lint-fixme: ExerciseReport
+                        None,
+                    ]
+                """,
+                None,
+                None,
+            ),
         ):
             idx += 1
             content = dedent(code).encode("utf-8")
