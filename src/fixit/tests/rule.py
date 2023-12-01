@@ -293,6 +293,25 @@ class RuleTest(TestCase):
                 None,
                 None,
             ),
+            (  # comprehensions
+                """
+                    # lint-fixme: ExerciseReport
+                    [... for _ in range(1)]
+
+                    [
+                        # lint-fixme: ExerciseReport
+                        ... for _ in range(1)
+                    ]
+
+                    [... for _ in range(1)]  # lint-fixme: ExerciseReport
+
+                    [
+                        ... for _ in range(1)  # lint-fixme: ExerciseReport
+                    ]
+                """,
+                None,
+                None,
+            ),
         ):
             idx += 1
             content = dedent(code).encode("utf-8")
