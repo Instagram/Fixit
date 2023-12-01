@@ -72,6 +72,8 @@ class ExerciseReportRule(LintRule):
 
     def visit_ClassDef(self, node: cst.ClassDef) -> bool:
         self.report(node, "class def")
+        for d in node.decorators:
+            self.report(d, "class decorator")
         return False
 
     def visit_Pass(self, node: cst.Pass) -> bool:
@@ -278,6 +280,18 @@ class RuleTest(TestCase):
                 """,
                 "class def",
                 (5, 0),
+            ),
+            (  # class decorators
+                """
+                    import dataclasses
+
+                    # lint-fixme: ExerciseReport
+                    @dataclasses.dataclass
+                    class C:
+                        value = 1
+                """,
+                None,
+                None,
             ),
         ):
             idx += 1
