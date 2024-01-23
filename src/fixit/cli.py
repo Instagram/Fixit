@@ -194,7 +194,7 @@ def fix(
                 "Apply autofix?", default="y", type=click.Choice("ynq", False)
             )
             if answer == "y":
-                generator.respond(True)
+                generator.respond(True)  # noqa: B038
                 fixed += 1
             elif answer == "q":
                 break
