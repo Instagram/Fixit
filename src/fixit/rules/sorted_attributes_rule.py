@@ -73,7 +73,9 @@ class SortedAttributes(LintRule):
            """
         )
     ]
-    MESSAGE: str = "It appears you are using the @sorted-attributes directive and the class variables are unsorted. See the lint autofix suggestion."
+    MESSAGE: str = (
+        "It appears you are using the @sorted-attributes directive and the class variables are unsorted. See the lint autofix suggestion."
+    )
 
     def visit_ClassDef(self, node: cst.ClassDef) -> None:
         doc_string = node.get_docstring()
@@ -86,9 +88,11 @@ class SortedAttributes(LintRule):
         post_assign_lines: List[LineType] = []
 
         def _add_unmatched_line(line: LineType) -> None:
-            post_assign_lines.append(
-                line
-            ) if found_any_assign else pre_assign_lines.append(line)
+            (
+                post_assign_lines.append(line)
+                if found_any_assign
+                else pre_assign_lines.append(line)
+            )
 
         for line in node.body.body:
             if m.matches(

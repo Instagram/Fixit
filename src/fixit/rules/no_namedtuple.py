@@ -20,7 +20,9 @@ class NoNamedTuple(LintRule):
     ``@dataclass`` is faster at reading an object's nested properties and executing its methods. (`benchmark <https://medium.com/@jacktator/dataclass-vs-namedtuple-vs-object-for-performance-optimization-in-python-691e234253b9>`_)
     """
 
-    MESSAGE: str = "Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead for simplicity, efficiency and consistency."
+    MESSAGE: str = (
+        "Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead for simplicity, efficiency and consistency."
+    )
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
 
     VALID = [
