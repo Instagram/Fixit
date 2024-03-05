@@ -77,14 +77,16 @@ class ComparePrimitivesByEqual(LintRule):
                     comparator, self.PRIMITIVES
                 ):
                     target = target.with_changes(
-                        operator=cst.Equal(
-                            whitespace_before=op.whitespace_before,
-                            whitespace_after=op.whitespace_after,
-                        )
-                        if isinstance(op, cst.Is)
-                        else cst.NotEqual(
-                            whitespace_before=op.whitespace_before,
-                            whitespace_after=op.whitespace_after,
+                        operator=(
+                            cst.Equal(
+                                whitespace_before=op.whitespace_before,
+                                whitespace_after=op.whitespace_after,
+                            )
+                            if isinstance(op, cst.Is)
+                            else cst.NotEqual(
+                                whitespace_before=op.whitespace_before,
+                                whitespace_after=op.whitespace_after,
+                            )
                         )
                     )
             comparisons.append(target)
