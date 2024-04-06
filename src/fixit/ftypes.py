@@ -220,12 +220,18 @@ class Config:
     )
     tags: Tags = field(default_factory=Tags)
 
+    output_format: str = ""
+
     # post-run processing
     formatter: Optional[str] = None
 
     def __post_init__(self) -> None:
+        from .config import DEFAULT_OUTPUT_FORMAT
+
         self.path = self.path.resolve()
         self.root = self.root.resolve()
+        if not self.output_format:
+            self.output_format = DEFAULT_OUTPUT_FORMAT
 
 
 @dataclass
@@ -266,5 +272,6 @@ class Result:
     """
 
     path: Path
+    config: Config
     violation: Optional[LintViolation]
     error: Optional[Tuple[Exception, str]] = None

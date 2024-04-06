@@ -123,8 +123,9 @@ def lint(
     autofixes = 0
     for result in fixit_paths(paths, options=options):
         visited.add(result.path)
-
-        if print_result(result, show_diff=diff):
+        if print_result(
+            result, show_diff=diff, output_format=result.config.output_format
+        ):
             dirty.add(result.path)
             if result.violation:
                 exit_code |= 1
@@ -183,7 +184,12 @@ def fix(
         visited.add(result.path)
         # for STDIN, we need STDOUT to equal the fixed content, so
         # move everything else to STDERR
-        if print_result(result, show_diff=interactive or diff, stderr=is_stdin):
+        if print_result(
+            result,
+            show_diff=interactive or diff,
+            stderr=is_stdin,
+            output_format=result.config.output_format,
+        ):
             dirty.add(result.path)
             if autofix and result.violation and result.violation.autofixable:
                 autofixes += 1

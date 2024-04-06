@@ -10,7 +10,11 @@ from textwrap import dedent
 from typing import List, Sequence, Tuple, Type
 from unittest import TestCase
 
+from click.testing import CliRunner
+
 from .. import config
+
+from ..cli import main
 from ..ftypes import Config, QualifiedRule, RawConfig, Tags, Version
 from ..rule import LintRule
 
@@ -435,6 +439,15 @@ class ConfigTest(TestCase):
             with self.assertRaisesRegex(config.ConfigError, "enable-root-import"):
                 config.generate_config(self.tdp / "outer" / "foo.py")
 
+        with self.subTest("inner output-format"):
+            (self.tdp / "pyproject.toml").write_text("[tool.fixit]\nroot = true\n")
+            (self.tdp / "outer" / "pyproject.toml").write_text(
+                "[tool.fixit]\noutput-format = 'this is some weird format'\n"
+            )
+
+            with self.assertRaisesRegex(config.ConfigError, "output-format"):
+                config.generate_config(self.tdp / "outer" / "foo.py")
+
     def test_collect_rules(self) -> None:
         from fixit.rules.avoid_or_in_except import AvoidOrInExcept
         from fixit.rules.cls_in_classmethod import UseClsInClassmethod
@@ -542,3 +555,35 @@ class ConfigTest(TestCase):
                 )
             )
             self.assertListEqual([UseTypesFromTyping], rules)
+
+    def test_format_output(self):
+        expected_format = config.DEFAULT_OUTPUT_FORMAT.replace("@", ":")
+        (self.tdp / "pyproject.toml").write_text(
+            f"[tool.fixit]\noutput-format = '{expected_format}'\nroot= true\n"
+        )
+        with self.subTest("output-format loaded correctly"):
+
+            config_ = config.generate_config(self.tdp / "outer" / "foo.py")
+            self.assertEqual(
+                expected_format,
+                config_.output_format,
+                (expected_format, config_.output_format),
+            )
+
+        runner = CliRunner(mix_stderr=False)
+        content = "name = '{name}'.format(name='Jane Doe')"
+        filepath = self.tdp / "f_string.py"
+        filepath.write_text(content)
+        output_format_regex = r".*f_string\.py:\d+:\d+ UseFstring: .+"
+
+        with self.subTest("linting"):
+            result = runner.invoke(
+                main, ["lint", filepath.as_posix()], catch_exceptions=False
+            )
+            self.assertRegex(result.output, output_format_regex)
+
+        with self.subTest("linting"):
+            result = runner.invoke(
+                main, ["fix", filepath.as_posix()], catch_exceptions=False
+            )
+            self.assertRegex(result.output, output_format_regex)

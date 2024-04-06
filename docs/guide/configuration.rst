@@ -99,7 +99,7 @@ The main configuration table.
 
     .. code-block:: toml
 
-        root = True
+        root = true
         enable-root-import = "src"
         enable = ["orange.rules"]
 
@@ -117,6 +117,26 @@ The main configuration table.
     to the root configuration, to :attr:`sys.path` when attempting to import
     and materialize any enabled lint rules.
 
+
+.. attribute:: output-format
+    :type: str
+
+    Sets the format of output printed to terminal. Can only be set in root config (see :attr:`enable-root-import`).
+
+    Defaults to ``{path}@{start_line}:{start_col} {rule_name}: {message}``
+
+    Supported variables:
+
+    - ``path``: Path to affected file.
+
+    - ``start_line``: Start line of affected code lines.
+
+    - ``start_col``: Start column of affected code.
+
+    - ``rule_name``: Name of the applied rule
+
+    - ``message``: Message emitted by the applied rule
+
 .. attribute:: python-version
     :type: str
 
@@ -129,7 +149,7 @@ The main configuration table.
     .. code-block:: toml
 
         python-version = "3.10"
-    
+
     Defaults to the currently active version of Python.
     Set to empty string ``""`` to disable target version checking.
 

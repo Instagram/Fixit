@@ -54,6 +54,7 @@ else:
 
 FIXIT_CONFIG_FILENAMES = ("fixit.toml", ".fixit.toml", "pyproject.toml")
 FIXIT_LOCAL_MODULE = "fixit.local"
+DEFAULT_OUTPUT_FORMAT = "{path}@{start_line}:{start_col} {rule_name}: {message}"
 
 log = logging.getLogger(__name__)
 
@@ -402,6 +403,7 @@ def merge_configs(
     rule_options: RuleOptionsTable = {}
     target_python_version: Optional[Version] = Version(platform.python_version())
     target_formatter: Optional[str] = None
+    output_format: str = DEFAULT_OUTPUT_FORMAT
 
     def process_subpath(
         subpath: Path,
@@ -414,6 +416,7 @@ def merge_configs(
     ) -> None:
         nonlocal target_python_version
         nonlocal target_formatter
+        nonlocal output_format
 
         subpath = subpath.resolve()
         try:
@@ -463,6 +466,13 @@ def merge_configs(
         data = config.data
         if data.pop("root", False):
             root = config.path.parent
+
+        if value := data.pop("output-format", False):
+            if root != config.path.parent:
+                raise ConfigError(
+                    "output-format not allowed in non-root configs", config=config
+                )
+            output_format = value
 
         if value := data.pop("enable-root-import", False):
             if root != config.path.parent:
@@ -524,6 +534,7 @@ def merge_configs(
         options=rule_options,
         python_version=target_python_version,
         formatter=target_formatter,
+        output_format=output_format,
     )
 
 
