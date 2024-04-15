@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import cast, FrozenSet, Union
+from typing import cast, FrozenSet, Set, Union
 
 import libcst as cst
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
@@ -78,9 +78,11 @@ class CompareSingletonPrimitivesByIs(LintRule):
         }
     )
 
-    def is_singleton(self, node: cst.BaseExpression):
-        qual_name = cast(set, self.get_metadata(QualifiedNameProvider, node, set()))
-        return (
+    def is_singleton(self, node: cst.BaseExpression) -> bool:
+        qual_name = cast(
+            Set[QualifiedName], self.get_metadata(QualifiedNameProvider, node, set())
+        )
+        return bool(
             isinstance(node, cst.Name)
             and qual_name
             and qual_name < self.QUALIFIED_SINGLETON_PRIMITIVES

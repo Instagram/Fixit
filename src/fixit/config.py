@@ -23,6 +23,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     Type,
     Union,
 )
@@ -50,7 +51,7 @@ from .util import append_sys_path
 if sys.version_info >= (3, 11):
     import tomllib
 else:
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore
 
 FIXIT_CONFIG_FILENAMES = ("fixit.toml", ".fixit.toml", "pyproject.toml")
 FIXIT_LOCAL_MODULE = "fixit.local"
@@ -69,7 +70,7 @@ class CollectionError(RuntimeError):
         super().__init__(msg)
         self.rule = rule
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[Type[RuntimeError], Any]:
         return type(self), (*self.args, self.rule)
 
 
@@ -230,7 +231,7 @@ def collect_rules(
 
         if config.tags:
             disabled_rules.update(
-                {R: "tags" for R in all_rules if R.TAGS not in config.tags}
+                {R: "tags" for R in all_rules if R.TAGS not in config.tags}  # type: ignore[comparison-overlap]
             )
             all_rules -= set(disabled_rules)
 
@@ -314,6 +315,7 @@ def read_configs(paths: List[Path]) -> List[RawConfig]:
 def get_sequence(
     config: RawConfig, key: str, *, data: Optional[Dict[str, Any]] = None
 ) -> Sequence[str]:
+    value: Sequence[str]
     if data:
         value = data.pop(key, ())
     else:
@@ -400,7 +402,7 @@ def merge_configs(
         options: Optional[RuleOptionsTable] = None,
         python_version: Any = None,
         formatter: Optional[str] = None,
-    ):
+    ) -> None:
         nonlocal target_python_version
         nonlocal target_formatter
 

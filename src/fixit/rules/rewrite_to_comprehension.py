@@ -141,9 +141,7 @@ class RewriteToComprehension(LintRule):
 
                 replacement = node.deep_replace(
                     node,
-                    # pyre-fixme[6]: Expected `BaseAssignTargetExpression` for 1st
-                    #  param but got `BaseExpression`.
-                    cst.DictComp(key=key, value=value, for_in=exp.for_in),  # type: ignore
+                    cst.DictComp(key=key, value=value, for_in=exp.for_in),
                 )
 
             self.report(

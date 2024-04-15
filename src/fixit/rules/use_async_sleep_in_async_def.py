@@ -112,7 +112,7 @@ class UseAsyncSleepInAsyncDef(LintRule):
         ),
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # is async func
         self.async_func = False

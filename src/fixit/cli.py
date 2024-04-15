@@ -78,7 +78,7 @@ def main(
     config_file: Optional[Path],
     tags: str,
     rules: str,
-):
+) -> None:
     level = logging.WARNING
     if debug is not None:
         level = logging.DEBUG if debug else logging.ERROR
@@ -106,7 +106,7 @@ def lint(
     ctx: click.Context,
     diff: bool,
     paths: Sequence[Path],
-):
+) -> None:
     """
     lint one or more paths and return suggestions
 
@@ -153,7 +153,7 @@ def fix(
     interactive: bool,
     diff: bool,
     paths: Sequence[Path],
-):
+) -> None:
     """
     lint and autofix one or more files and return results
 
@@ -206,7 +206,7 @@ def fix(
 @main.command()
 @click.pass_context
 @click.argument("rules", nargs=-1, required=True, type=str)
-def test(ctx: click.Context, rules: Sequence[str]):
+def test(ctx: click.Context, rules: Sequence[str]) -> None:
     """
     test lint rules and their VALID/INVALID cases
     """
@@ -230,7 +230,7 @@ def test(ctx: click.Context, rules: Sequence[str]):
 @main.command()
 @click.pass_context
 @click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
-def upgrade(ctx: click.Context, paths: Sequence[Path]):
+def upgrade(ctx: click.Context, paths: Sequence[Path]) -> None:
     """
     upgrade lint rules and apply deprecation fixes
 
@@ -245,7 +245,7 @@ def upgrade(ctx: click.Context, paths: Sequence[Path]):
 @main.command()
 @click.pass_context
 @click.argument("paths", nargs=-1, type=click.Path(exists=True, path_type=Path))
-def debug(ctx: click.Context, paths: Sequence[Path]):
+def debug(ctx: click.Context, paths: Sequence[Path]) -> None:
     """
     print materialized configuration for paths
     """
