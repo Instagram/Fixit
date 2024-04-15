@@ -7,16 +7,18 @@ from dataclasses import asdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
+from typing import List, Sequence, Tuple, Type
 from unittest import TestCase
 
 from .. import config
 from ..ftypes import Config, QualifiedRule, RawConfig, Tags, Version
+from ..rule import LintRule
 
 
 class ConfigTest(TestCase):
     maxDiff = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.td = TemporaryDirectory()
         self.tdp = Path(self.td.name).resolve()
 
@@ -72,10 +74,10 @@ class ConfigTest(TestCase):
             )
         )
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.td.cleanup()
 
-    def test_locate_configs(self):
+    def test_locate_configs(self) -> None:
         for name, path, root, expected in (
             ("top", self.tdp, None, [self.tdp / "pyproject.toml"]),
             ("top file", self.tdp / "hello.py", None, [self.tdp / "pyproject.toml"]),
@@ -135,7 +137,7 @@ class ConfigTest(TestCase):
                 actual = config.locate_configs(path, root)
                 self.assertListEqual(expected, actual)
 
-    def test_read_configs(self):
+    def test_read_configs(self) -> None:
         # in-out priority order
         innerA = self.inner / "fixit.toml"
         innerB = self.inner / "pyproject.toml"
@@ -250,11 +252,11 @@ class ConfigTest(TestCase):
                 actual = config.read_configs(paths)
                 self.assertListEqual(expected, actual)
 
-    def test_merge_configs(self):
+    def test_merge_configs(self) -> None:
         root = self.tdp
         target = root / "a" / "b" / "c" / "foo.py"
 
-        for name, raw_configs, expected in (
+        params: Sequence[Tuple[str, List[RawConfig], Config]] = (
             (
                 "empty",
                 [],
@@ -331,12 +333,13 @@ class ConfigTest(TestCase):
                     enable=[QualifiedRule("fixit.rules"), QualifiedRule("foo")],
                 ),
             ),
-        ):
+        )
+        for name, raw_configs, expected in params:
             with self.subTest(name):
                 actual = config.merge_configs(target, raw_configs)
                 self.assertEqual(expected, actual)
 
-    def test_generate_config(self):
+    def test_generate_config(self) -> None:
         for name, path, root, expected in (
             (
                 "inner",
@@ -422,7 +425,7 @@ class ConfigTest(TestCase):
                 actual = config.generate_config(path, root)
                 self.assertDictEqual(asdict(expected), asdict(actual))
 
-    def test_invalid_config(self):
+    def test_invalid_config(self) -> None:
         with self.subTest("inner enable-root-import"):
             (self.tdp / "pyproject.toml").write_text("[tool.fixit]\nroot = true\n")
             (self.tdp / "outer" / "pyproject.toml").write_text(
@@ -432,7 +435,7 @@ class ConfigTest(TestCase):
             with self.assertRaisesRegex(config.ConfigError, "enable-root-import"):
                 config.generate_config(self.tdp / "outer" / "foo.py")
 
-    def test_collect_rules(self):
+    def test_collect_rules(self) -> None:
         from fixit.rules.avoid_or_in_except import AvoidOrInExcept
         from fixit.rules.cls_in_classmethod import UseClsInClassmethod
         from fixit.rules.no_namedtuple import NoNamedTuple
@@ -442,7 +445,7 @@ class ConfigTest(TestCase):
         UseTypesFromTyping.TAGS = {"typing"}
         NoNamedTuple.TAGS = {"typing", "tuples"}
 
-        def collect_types(cfg):
+        def collect_types(cfg: Config) -> List[Type[LintRule]]:
             return sorted([type(rule) for rule in config.collect_rules(cfg)], key=str)
 
         with self.subTest("everything"):
@@ -476,7 +479,7 @@ class ConfigTest(TestCase):
         with self.subTest("version match"):
             rules = collect_types(
                 Config(
-                    python_version="3.7",
+                    python_version=Version("3.7"),
                 )
             )
             self.assertIn(UseTypesFromTyping, rules)
@@ -484,7 +487,7 @@ class ConfigTest(TestCase):
         with self.subTest("version mismatch"):
             rules = collect_types(
                 Config(
-                    python_version="3.10",
+                    python_version=Version("3.10"),
                 )
             )
             self.assertNotIn(UseTypesFromTyping, rules)

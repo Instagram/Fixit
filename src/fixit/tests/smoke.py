@@ -16,10 +16,10 @@ from fixit.cli import main
 
 
 class SmokeTest(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.runner = CliRunner(mix_stderr=False)
 
-    def test_cli_version(self):
+    def test_cli_version(self) -> None:
         result = self.runner.invoke(main, ["--version"])
         expected = rf"fixit, version {__version__}"
         self.assertIn(expected, result.stdout)

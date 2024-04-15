@@ -127,7 +127,7 @@ class LintRunner:
                 # don't visit children if we're going to replace the parent anyways
                 return node not in replacements
 
-            def on_leave(self, node: CSTNode, updated: CSTNode) -> NodeReplacement:
+            def on_leave(self, node: CSTNode, updated: CSTNode) -> NodeReplacement:  # type: ignore[type-arg]
                 if node in replacements:
                     new = replacements[node]
                     return new

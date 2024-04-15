@@ -190,7 +190,7 @@ class LintRule(BatchableCSTVisitor):
         message: Optional[str] = None,
         *,
         position: Optional[Union[CodePosition, CodeRange]] = None,
-        replacement: Optional[NodeReplacement] = None,
+        replacement: Optional[NodeReplacement[CSTNode]] = None,
     ) -> None:
         """
         Report a lint rule violation.

@@ -22,7 +22,7 @@ from ..ftypes import LintViolation
 
 
 class EngineTest(TestCase):
-    def test_diff_violation(self):
+    def test_diff_violation(self) -> None:
         src = dedent(
             """\
                 import sys

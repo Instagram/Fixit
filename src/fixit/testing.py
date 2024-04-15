@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any, Callable, Collection, Dict, List, Mapping, Sequence, Type, Union
 
 from .engine import diff_violation, LintRunner
-from .ftypes import Config
-from .rule import Invalid, LintRule, Valid
+from .ftypes import Config, Invalid, Valid
+from .rule import LintRule
 
 
 def _dedent(src: str) -> str:
@@ -30,7 +30,7 @@ def get_fixture_path(
 
 def validate_patch(report: Any, test_case: Invalid) -> None:
     patch = report.patch
-    expected_replacement = test_case.expected_replacement  # type: ignore
+    expected_replacement = test_case.expected_replacement
 
     if patch is None:
         if expected_replacement is not None:
@@ -168,7 +168,7 @@ def generate_lint_rule_test_cases(
     test_case_classes: List[Type[unittest.TestCase]] = []
     for test_case in gen_all_test_methods(rules):
         rule_name = type(test_case.rule).__name__
-        test_methods_to_add: Dict[str, Callable] = {}
+        test_methods_to_add: Dict[str, Callable[..., Any]] = {}
 
         for test_method_name, test_method_data in test_case.test_methods.items():
 

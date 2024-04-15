@@ -63,8 +63,24 @@ Home = "https://fixit.rtfd.io"
 Github = "https://github.com/Instagram/Fixit"
 Changelog = "https://github.com/Instagram/Fixit/blob/main/CHANGELOG.md"
 
+[tool.attribution]
+name = "Fixit"
+package = "fixit"
+signed_tags = true
+version_file = false
+ignored_authors = ["dependabot"]
+
 [tool.black]
-target-version = ["py37"]
+target-version = ["py38"]
+
+[tool.fixit]
+enable = ["fixit.rules"]
+python-version = "3.10"
+formatter = "ufmt"
+
+[[tool.fixit.overrides]]
+path = "examples"
+enable = [".examples.noop"]
 
 [tool.hatch.version]
 source = "vcs"
@@ -109,18 +125,7 @@ build = [
     "sphinx-build -a -b html docs html",
 ]
 
-[tool.fixit]
-enable = ["fixit.rules"]
-python-version = "3.10"
-formatter = "ufmt"
-
-[[tool.fixit.overrides]]
-path = "examples"
-enable = [".examples.noop"]
-
-[tool.attribution]
-name = "Fixit"
-package = "fixit"
-signed_tags = true
-version_file = false
-ignored_authors = ["dependabot"]
+[tool.mypy]
+strict = true
+python_version = "3.8"
+ignore_missing_imports = true
