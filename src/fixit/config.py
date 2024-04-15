@@ -29,7 +29,6 @@ from typing import (
 )
 
 from packaging.specifiers import SpecifierSet
-
 from packaging.version import InvalidVersion, Version
 
 from .format import FORMAT_STYLES
@@ -51,7 +50,7 @@ from .util import append_sys_path
 if sys.version_info >= (3, 11):
     import tomllib
 else:
-    import tomli as tomllib  # type: ignore
+    import tomli as tomllib
 
 FIXIT_CONFIG_FILENAMES = ("fixit.toml", ".fixit.toml", "pyproject.toml")
 FIXIT_LOCAL_MODULE = "fixit.local"
