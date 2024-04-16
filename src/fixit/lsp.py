@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any, Callable, cast, Dict, Generator, List, Optional, TypeVar
 
 import pygls.uris as Uri
-
 from lsprotocol.types import (
     Diagnostic,
     DiagnosticSeverity,
@@ -24,13 +23,13 @@ from lsprotocol.types import (
     TextEdit,
 )
 from pygls.server import LanguageServer
+from pygls.workspace.text_document import TextDocument
 
-from fixit import __version__
-from fixit.util import capture
-
+from .__version__ import __version__
 from .api import fixit_bytes
 from .config import generate_config
 from .ftypes import Config, FileContent, LSPOptions, Options, Result
+from .util import capture
 
 
 class LSP:
@@ -65,7 +64,7 @@ class LSP:
         return self._config_cache[path]
 
     def diagnostic_generator(
-        self, uri: str, autofix=False
+        self, uri: str, autofix: bool = False
     ) -> Optional[Generator[Result, bool, Optional[FileContent]]]:
         """
         LSP wrapper (provides document state from `pygls`) for `fixit_bytes`.
@@ -75,9 +74,10 @@ class LSP:
             return None
         path = Path(path)
 
+        doc: TextDocument = self.lsp.workspace.get_document(uri)  # type: ignore[no-untyped-call]
         return fixit_bytes(
             path,
-            self.lsp.workspace.get_document(uri).source.encode(),
+            doc.source.encode(),
             autofix=autofix,
             config=self.load_config(path),
         )
@@ -137,7 +137,7 @@ class LSP:
         if not formatted_content:
             return None
 
-        doc = self.lsp.workspace.get_document(params.text_document.uri)
+        doc: TextDocument = self.lsp.workspace.get_document(params.text_document.uri)  # type: ignore[no-untyped-call]
         entire_range = Range(
             start=Position(line=0, character=0),
             end=Position(line=len(doc.lines) - 1, character=len(doc.lines[-1])),
@@ -167,7 +167,7 @@ class Debouncer:
         self._timer: Optional[threading.Timer] = None
         self._lock = threading.Lock()
 
-    def __call__(self, *args, **kwargs) -> None:
+    def __call__(self, *args: Any, **kwargs: Any) -> None:
         with self._lock:
             if self._timer is not None:
                 self._timer.cancel()
@@ -175,7 +175,7 @@ class Debouncer:
             self._timer.start()
 
 
-def debounce(interval: float):
+def debounce(interval: float) -> Callable[[VoidFunction], VoidFunction]:
     """
     Wait `interval` seconds before calling `f`, and cancel if called again.
     The decorated function will return None immediately,

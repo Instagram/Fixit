@@ -51,11 +51,11 @@ dev = [
     "ufmt == 2.5.1",
     "usort == 1.0.8.post1",
 ]
-pretty = [
-    "rich >= 12.6.0",
-]
 lsp = [
     "pygls[ws] >= 1.0.2",
+]
+pretty = [
+    "rich >= 12.6.0",
 ]
 
 [project.scripts]
@@ -99,7 +99,7 @@ exclude = [
 ]
 
 [tool.hatch.envs.all]
-features = ["dev", "docs", "pretty"]
+features = ["dev", "docs", "lsp", "pretty"]
 
 [tool.hatch.envs.default]
 features = ["dev", "lsp", "pretty"]

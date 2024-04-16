@@ -220,7 +220,7 @@ def lsp(
     tcp: Optional[int],
     ws: Optional[int],
     debounce_interval: float,
-):
+) -> None:
     """
     Start server for:
     https://microsoft.github.io/language-server-protocol/
