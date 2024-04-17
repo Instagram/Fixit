@@ -184,6 +184,18 @@ class Options:
 
 
 @dataclass
+class LSPOptions:
+    """
+    Command-line options to affect LSP runtime behavior
+    """
+
+    tcp: Optional[int]
+    ws: Optional[int]
+    stdio: bool = True
+    debounce_interval: float = 0.5
+
+
+@dataclass
 class Config:
     """
     Materialized configuration valid for processing a single file.

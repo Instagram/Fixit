@@ -15,7 +15,7 @@ from fixit import __version__
 
 from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config, parse_rule
-from .ftypes import Config, Options, QualifiedRule, Tags
+from .ftypes import Config, LSPOptions, Options, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
@@ -201,6 +201,40 @@ def fix(
 
     splash(visited, dirty, autofixes, fixed)
     ctx.exit(exit_code)
+
+
+@main.command()
+@click.pass_context
+@click.option("--stdio", type=bool, default=True, help="Serve LSP over stdio")
+@click.option("--tcp", type=int, help="Port to serve LSP over")
+@click.option("--ws", type=int, help="Port to serve WS over")
+@click.option(
+    "--debounce-interval",
+    type=float,
+    default=LSPOptions.debounce_interval,
+    help="Delay in seconds for server-side debounce",
+)
+def lsp(
+    ctx: click.Context,
+    stdio: bool,
+    tcp: Optional[int],
+    ws: Optional[int],
+    debounce_interval: float,
+) -> None:
+    """
+    Start server for:
+    https://microsoft.github.io/language-server-protocol/
+    """
+    from .lsp import LSP
+
+    main_options = ctx.obj
+    lsp_options = LSPOptions(
+        tcp=tcp,
+        ws=ws,
+        stdio=stdio,
+        debounce_interval=debounce_interval,
+    )
+    LSP(main_options, lsp_options).start()
 
 
 @main.command()

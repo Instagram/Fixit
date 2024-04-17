@@ -1,5 +1,51 @@
+.. _integrations:
+
 Integrations
 ------------
+
+.. _ide_integrations:
+
+IDE
+^^^
+
+Fixit can be used to lint as you type as well as to format files.
+
+To get this functionality, install the ``lsp`` extras (e.g.
+``pip install fixit[lsp]``) then set up an LSP client to launch and connect to
+the Fixit LSP server. See the :ref:`lsp command <lsp_command>` for command
+usage details.
+
+Examples of client setup:
+
+- VSCode: `Generic LSP Client <https://github.com/llllvvuu/vscode-glspc>`_:
+
+.. code:: json
+
+    {
+      "glspc.languageId": "python",
+      "glspc.serverCommand": "fixit",
+      "glspc.serverCommandArguments": ["lsp"],
+      "glspc.pathPrepend": "/path/to/python/3.11.4/bin/",
+    }
+
+- Neovim: `nvim-lspconfig <https://github.com/neovim/nvim-lspconfig>`_:
+
+.. code:: lua
+
+      require("lspconfig.configs").fixit = {
+        default_config = {
+          cmd = { "fixit", "lsp" },
+          filetypes = { "python" },
+          root_dir = require("lspconfig").util.root_pattern(
+            "pyproject.toml", "setup.py", "requirements.txt", ".git",
+          ),
+          single_file_support = true,
+        },
+      }
+
+      lspconfig.fixit.setup({})
+
+- `Other IDEs <https://microsoft.github.io/language-server-protocol/implementors/tools/>`_
 
 pre-commit
 ^^^^^^^^^^
