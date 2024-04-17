@@ -1,14 +1,19 @@
 Integrations
 ------------
 
+.. _ide_integrations:
+
 IDE
 ^^^
 
 Fixit can be used to lint as you type as well as to format files.
 
-To get this functionality, install the `lsp` extra, e.g.
-`pip install fixit[lsp]`, then set up an LSP client to launch and connect to
-the Fixit LSP server (``fixit lsp``). Examples of client setup:
+To get this functionality, install the ``lsp`` extras (e.g.
+``pip install fixit[lsp]``) then set up an LSP client to launch and connect to
+the Fixit LSP server. See the :ref:`lsp command <lsp_command>` for command
+usage details.
+
+Examples of client setup:
 
 - VSCode: `Generic LSP Client <https://github.com/llllvvuu/vscode-glspc>`_:
 
