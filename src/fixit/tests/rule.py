@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from pathlib import Path
-from textwrap import dedent
+from textwrap import dedent, indent
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -282,7 +282,7 @@ class RuleTest(TestCase):
         ):
             idx += 1
             content = dedent(code).encode("utf-8")
-            with self.subTest(f"code {idx}"):
+            with self.subTest(f"test case {idx}"):
                 runner = LintRunner(Path("fake.py"), content)
                 violations = list(
                     runner.collect_violations([ExerciseReportRule()], Config())
@@ -308,5 +308,13 @@ class RuleTest(TestCase):
                         violations.pop(0)
 
                     self.assertEqual(
-                        len(violations), 0, "Unexpected lint errors reported"
+                        len(violations),
+                        0,
+                        (
+                            f"Unexpected lint errors reported:\n{indent(dedent(code), '    ')}\n"
+                            + "\n".join(
+                                f":{v.range.start.line}:{v.range.start.column} {v.rule_name}: {v.message}"
+                                for v in violations
+                            )
+                        ),
                     )
