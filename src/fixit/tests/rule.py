@@ -5,6 +5,7 @@
 
 from pathlib import Path
 from textwrap import dedent, indent
+from typing import Optional, Sequence, Tuple
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -282,7 +283,7 @@ class RuleTest(TestCase):
         ):
             idx += 1
             content = dedent(code).encode("utf-8")
-            with self.subTest(f"test case {idx}"):
+            with self.subTest(f"test ignore {idx}"):
                 runner = LintRunner(Path("fake.py"), content)
                 violations = list(
                     runner.collect_violations([ExerciseReportRule()], Config())
