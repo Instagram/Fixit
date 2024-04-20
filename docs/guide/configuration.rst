@@ -117,26 +117,6 @@ The main configuration table.
     to the root configuration, to :attr:`sys.path` when attempting to import
     and materialize any enabled lint rules.
 
-
-.. attribute:: output-format
-    :type: str
-
-    Sets the format of output printed to terminal. Can only be set in root config (see :attr:`enable-root-import`).
-
-    Defaults to ``{path}@{start_line}:{start_col} {rule_name}: {message}``
-
-    Supported variables:
-
-    - ``path``: Path to affected file.
-
-    - ``start_line``: Start line of affected code lines.
-
-    - ``start_col``: Start column of affected code.
-
-    - ``rule_name``: Name of the applied rule
-
-    - ``message``: Message emitted by the applied rule
-
 .. attribute:: python-version
     :type: str
 
@@ -171,6 +151,41 @@ The main configuration table.
     Alternative formatting styles can be added by implementing the
     :class:`~fixit.Formatter` interface.
 
+.. attribute:: output-format
+    :type: Literal['fixit', 'vscode', 'custom']
+
+    Choose one of the presets for terminal output formatting.
+    Fixit only reads this option from the current working directory or from an explicitly specified config file.
+
+    Defaults to fixit's output style.
+
+    Can be one of:
+
+    - ``fixit``: Fixit's default output format
+    - ``vscode``: A format that works well with Visual Studio Code
+    - ``custom``: Use your own format via :attr:`output-template` config option
+
+.. attribute:: output-template
+    :type: str
+
+    Sets the format of output printed to terminal.
+    Python formatting is used in the background to fill in data.
+    Only active with ``output-format = 'custom'``.
+    Like :attr:`output-format`, this config variable is only read from the current working directory.
+
+    Defaults to ``{path}@{start_line}:{start_col} {rule_name}: {message}``
+
+    Supported variables:
+
+    - ``path``: Path to affected file.
+
+    - ``start_line``: Start line of affected code lines.
+
+    - ``start_col``: Start column of affected code.
+
+    - ``rule_name``: Name of the applied rule
+
+    - ``message``: Message emitted by the applied rule
 
 .. _rule-options:
 

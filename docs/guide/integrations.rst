@@ -79,5 +79,5 @@ see the `pre-commit docs <https://pre-commit.com/#pre-commit-configyaml---hooks>
 
 VSCode
 ^^^^^^
-For integration with Visual Studio Code setting ``output-format`` to ``{path}:{start_line}:{start_col} {rule_name}: {message}`` is recommended.
-That way VSCode opens the editor at the right position when clicking on filenames in Fixit's terminal output.
+For better integration with Visual Studio Code setting ``output-format`` can be set to ``vscode``.
+That way VSCode opens the editor at the right position when clicking on code locations in Fixit's terminal output.

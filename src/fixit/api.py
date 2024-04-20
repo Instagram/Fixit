@@ -8,13 +8,18 @@ import sys
 import traceback
 from functools import partial
 from pathlib import Path
-from typing import Generator, Iterable, List, Optional
+from typing import Generator, Iterable, List, Literal, Optional, Union
 
 import click
 import trailrunner
 from moreorless.click import echo_color_precomputed_diff
 
-from .config import collect_rules, DEFAULT_OUTPUT_FORMAT, generate_config
+from .config import (
+    collect_rules,
+    generate_config,
+    output_formats_templates,
+    OutputFormatTypeInput,
+)
 from .engine import LintRunner
 from .format import format_module
 from .ftypes import Config, FileContent, LintViolation, Options, Result, STDIN
@@ -27,7 +32,8 @@ def print_result(
     *,
     show_diff: bool = False,
     stderr: bool = False,
-    output_format: str = DEFAULT_OUTPUT_FORMAT,
+    output_format_type: OutputFormatTypeInput = "fixit",
+    output_template: str = output_formats_templates["fixit"],
 ) -> int:
     """
     Print linting results in a simple format designed for human eyes.
@@ -43,6 +49,9 @@ def print_result(
     except ValueError:
         pass
 
+    if output_format_type != "custom":
+        output_template = output_formats_templates[output_format_type]
+
     if result.violation:
         rule_name = result.violation.rule_name
         start_line = result.violation.range.start.line
@@ -51,7 +60,7 @@ def print_result(
         if result.violation.autofixable:
             message += " (has autofix)"
         click.secho(
-            output_format.format(
+            output_template.format(
                 path=path,
                 start_line=start_line,
                 start_col=start_col,
@@ -104,7 +113,7 @@ def fixit_bytes(
         rules = collect_rules(config)
 
         if not rules:
-            yield Result(path, violation=None, config=config)
+            yield Result(path, violation=None)
             return None
 
         runner = LintRunner(path, content)
@@ -113,12 +122,12 @@ def fixit_bytes(
         clean = True
         for violation in runner.collect_violations(rules, config):
             clean = False
-            fix = yield Result(path, violation=violation, config=config)
+            fix = yield Result(path, violation=violation)
             if fix or autofix:
                 pending_fixes.append(violation)
 
         if clean:
-            yield Result(path, violation=None, config=config)
+            yield Result(path, violation=None)
 
         if pending_fixes:
             updated = runner.apply_replacements(pending_fixes)
@@ -128,7 +137,9 @@ def fixit_bytes(
         # TODO: this is not the right place to catch errors
         LOG.debug("Exception while linting", exc_info=error)
         yield Result(
-            path, violation=None, error=(error, traceback.format_exc()), config=config
+            path,
+            violation=None,
+            error=(error, traceback.format_exc()),
         )
 
     return None
@@ -161,9 +172,7 @@ def fixit_stdin(
 
     except Exception as error:
         LOG.debug("Exception while fixit_stdin", exc_info=error)
-        yield Result(
-            path, violation=None, error=(error, traceback.format_exc()), config=config
-        )
+        yield Result(path, violation=None, error=(error, traceback.format_exc()))
 
 
 def fixit_file(
@@ -196,9 +205,7 @@ def fixit_file(
 
     except Exception as error:
         LOG.debug("Exception while fixit_file", exc_info=error)
-        yield Result(
-            path, violation=None, error=(error, traceback.format_exc()), config=config
-        )
+        yield Result(path, violation=None, error=(error, traceback.format_exc()))
 
 
 def _fixit_file_wrapper(
