@@ -22,10 +22,14 @@ from typing import (
 from libcst import (
     BaseSuite,
     BatchableCSTVisitor,
+    Comma,
     CSTNode,
+    Decorator,
     EmptyLine,
     IndentedBlock,
+    LeftSquareBracket,
     Module,
+    RightSquareBracket,
     SimpleStatementSuite,
     TrailingWhitespace,
 )
@@ -134,14 +138,42 @@ class LintRule(BatchableCSTVisitor):
             if tw and tw.comment:
                 yield tw.comment.value
 
+            comma: Optional[Comma] = getattr(node, "comma", None)
+            if isinstance(comma, Comma):
+                tw = getattr(comma.whitespace_after, "first_line", None)
+                if tw and tw.comment:
+                    yield tw.comment.value
+
+            rb: Optional[RightSquareBracket] = getattr(node, "rbracket", None)
+            if rb is not None:
+                tw = getattr(rb.whitespace_before, "first_line", None)
+                if tw and tw.comment:
+                    yield tw.comment.value
+
+            el: Optional[Sequence[EmptyLine]] = None
+            lb: Optional[LeftSquareBracket] = getattr(node, "lbracket", None)
+            if lb is not None:
+                el = getattr(lb.whitespace_after, "empty_lines", None)
+                if el is not None:
+                    for line in el:
+                        if line.comment:
+                            yield line.comment.value
+
+            el = getattr(node, "lines_after_decorators", None)
+            if el is not None:
+                for line in el:
+                    if line.comment:
+                        yield line.comment.value
+
             ll: Optional[Sequence[EmptyLine]] = getattr(node, "leading_lines", None)
             if ll is not None:
                 for line in ll:
                     if line.comment:
                         yield line.comment.value
-                # stop looking once we've gone up far enough for leading_lines,
-                # even if there are no comment lines here at all
-                break
+                if not isinstance(node, Decorator):
+                    # stop looking once we've gone up far enough for leading_lines,
+                    # even if there are no comment lines here at all
+                    break
 
             node = self.get_metadata(ParentNodeProvider, node)
 
