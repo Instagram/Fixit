@@ -557,7 +557,7 @@ class ConfigTest(TestCase):
             )
             self.assertListEqual([UseTypesFromTyping], rules)
 
-    def test_cwd_config(self):
+    def test_cwd_config(self) -> None:
         prev_cwd = Path.cwd()
         os.chdir(str(self.outer))
         try:
@@ -593,7 +593,7 @@ class ConfigTest(TestCase):
         finally:
             os.chdir(str(prev_cwd))
 
-    def test_format_output(self):
+    def test_format_output(self) -> None:
         prev_cwd = Path.cwd()
         try:
             os.chdir(str(self.tdp))

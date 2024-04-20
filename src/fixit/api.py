@@ -8,21 +8,24 @@ import sys
 import traceback
 from functools import partial
 from pathlib import Path
-from typing import Generator, Iterable, List, Literal, Optional, Union
+from typing import Generator, Iterable, List, Optional
 
 import click
 import trailrunner
 from moreorless.click import echo_color_precomputed_diff
 
-from .config import (
-    collect_rules,
-    generate_config,
-    output_formats_templates,
-    OutputFormatTypeInput,
-)
+from .config import collect_rules, generate_config, output_formats_templates
 from .engine import LintRunner
 from .format import format_module
-from .ftypes import Config, FileContent, LintViolation, Options, Result, STDIN
+from .ftypes import (
+    Config,
+    FileContent,
+    LintViolation,
+    Options,
+    OutputFormatTypeInput,
+    Result,
+    STDIN,
+)
 
 LOG = logging.getLogger(__name__)
 

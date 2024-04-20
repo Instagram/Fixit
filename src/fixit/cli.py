@@ -14,15 +14,15 @@ import click
 from fixit import __version__
 
 from .api import fixit_paths, print_result
-from .config import (
-    collect_rules,
-    generate_config,
-    get_cwd_config,
-    output_formats_templates,
+from .config import collect_rules, generate_config, get_cwd_config, parse_rule
+from .ftypes import (
+    Config,
+    LSPOptions,
+    Options,
     OutputFormatTypeInput,
-    parse_rule,
+    QualifiedRule,
+    Tags,
 )
-from .ftypes import Config, LSPOptions, Options, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture

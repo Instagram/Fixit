@@ -10,7 +10,7 @@ import pkgutil
 import platform
 import sys
 from contextlib import contextmanager, ExitStack
-from functools import reduce
+
 from pathlib import Path
 from types import ModuleType
 from typing import (
@@ -20,7 +20,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Literal,
     Mapping,
     Optional,
     Sequence,
@@ -62,7 +61,7 @@ FIXIT_LOCAL_MODULE = "fixit.local"
 CWD_CONFIG_KEYS = ("output-format", "output-template")
 
 
-output_formats_templates: dict[OutputFormatType, str] = {
+output_formats_templates: Dict[OutputFormatType, str] = {
     "fixit": "{path}@{start_line}:{start_col} {rule_name}: {message}",
     "vscode": "{path}:{start_line}:{start_col} {rule_name}: {message}",
 }

@@ -14,7 +14,6 @@ from typing import (
     Container,
     ContextManager,
     Dict,
-    get_args,
     Iterable,
     List,
     Literal,
@@ -243,7 +242,7 @@ class CwdConfig:
     output_format: OutputFormatTypeInput = "fixit"
     output_template: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         from .config import output_formats_templates
 
         self.output_template = output_formats_templates["fixit"]
