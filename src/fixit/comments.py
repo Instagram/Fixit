@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Generator, Optional, Sequence
+from typing import Generator, List, Optional, Sequence
 
 from libcst import (
     BaseSuite,
@@ -12,14 +12,20 @@ from libcst import (
     CSTNode,
     Decorator,
     EmptyLine,
+    ensure_type,
     IndentedBlock,
     LeftSquareBracket,
+    matchers as m,
     Module,
+    ParenthesizedWhitespace,
     RightSquareBracket,
     SimpleStatementSuite,
+    SimpleWhitespace,
     TrailingWhitespace,
 )
 from libcst.metadata import MetadataWrapper, ParentNodeProvider, PositionProvider
+
+from .ftypes import LintIgnore, LintIgnoreStyle
 
 
 def node_comments(
@@ -111,3 +117,104 @@ def node_comments(
     # to only include comments that are located on or before the line containing
     # the original node that we're searching from
     yield from (c for c in gen(node) if positions[c].end.line <= target_line)
+
+
+def node_nearest_comment(node: CSTNode, metadata: MetadataWrapper) -> CSTNode:
+    """
+    Return the nearest tree node where a suppression comment could be added.
+    """
+    parent_nodes = metadata.resolve(ParentNodeProvider)
+    positions = metadata.resolve(PositionProvider)
+    node_line = positions[node].start.line
+
+    while not isinstance(node, Module):
+        if hasattr(node, "comment"):
+            return node
+
+        if hasattr(node, "trailing_whitespace"):
+            tw = ensure_type(node.trailing_whitespace, TrailingWhitespace)
+            if tw and positions[tw].start.line == node_line:
+                if tw.comment:
+                    return tw.comment
+                else:
+                    return tw
+
+        if hasattr(node, "comma"):
+            if m.matches(
+                node.comma,
+                m.Comma(
+                    whitespace_after=m.ParenthesizedWhitespace(
+                        first_line=m.TrailingWhitespace()
+                    )
+                ),
+            ):
+                return ensure_type(
+                    node.comma.whitespace_after.first_line, TrailingWhitespace
+                )
+
+        if hasattr(node, "rbracket"):
+            tw = ensure_type(
+                ensure_type(
+                    node.rbracket.whitespace_before,
+                    ParenthesizedWhitespace,
+                ).first_line,
+                TrailingWhitespace,
+            )
+            if positions[tw].start.line == node_line:
+                return tw
+
+        if hasattr(node, "leading_lines"):
+            return node
+
+        parent = parent_nodes.get(node)
+        if parent is None:
+            break
+        node = parent
+
+    raise RuntimeError("could not find nearest comment node")
+
+
+def add_suppression_comment(
+    module: Module,
+    node: CSTNode,
+    metadata: MetadataWrapper,
+    name: str,
+    style: LintIgnoreStyle = LintIgnoreStyle.fixme,
+) -> Module:
+    """
+    Return a modified tree that includes a suppression comment for the given rule.
+    """
+    # reuse an existing suppression directive if available rather than making a new one
+    for comment in node_comments(node, metadata):
+        lint_ignore = LintIgnore.parse(comment.value)
+        if lint_ignore and lint_ignore.style == style:
+            if name in lint_ignore.names:
+                return module  # already suppressed
+            lint_ignore.names.add(name)
+            return module.with_deep_changes(comment, value=str(lint_ignore))
+
+    # no existing directives, find the "nearest" location and add a comment there
+    target = node_nearest_comment(node, metadata)
+    lint_ignore = LintIgnore(style, {name})
+
+    if isinstance(target, Comment):
+        lint_ignore.prefix = target.value.strip()
+        return module.with_deep_changes(target, value=str(lint_ignore))
+
+    if isinstance(target, TrailingWhitespace):
+        if target.comment:
+            lint_ignore.prefix = target.comment.value.strip()
+            return module.with_deep_changes(target.comment, value=str(lint_ignore))
+        else:
+            return module.with_deep_changes(
+                target,
+                comment=Comment(str(lint_ignore)),
+                whitespace=SimpleWhitespace("  "),
+            )
+
+    if hasattr(target, "leading_lines"):
+        ll: List[EmptyLine] = list(target.leading_lines or ())
+        ll.append(EmptyLine(comment=Comment(str(lint_ignore))))
+        return module.with_deep_changes(target, leading_lines=ll)
+
+    raise RuntimeError("failed to add suppression comment")
