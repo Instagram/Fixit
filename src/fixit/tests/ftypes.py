@@ -7,6 +7,7 @@ from typing import Any, cast, Optional, Set
 from unittest import TestCase
 
 from .. import ftypes
+from ..ftypes import LintIgnore, LintIgnoreStyle
 
 
 class TypesTest(TestCase):
@@ -41,6 +42,57 @@ class TypesTest(TestCase):
                     ftypes.LintIgnoreRegex,
                     "value unexpectedly matches lint-ignore regex",
                 )
+
+    def test_lint_ignore_parse(self) -> None:
+        for value, expected in (
+            ("# lint-ignore", LintIgnore(LintIgnoreStyle.ignore)),
+            ("# lint-fixme: foo", LintIgnore(LintIgnoreStyle.fixme, {"foo"})),
+            (
+                "# lint-ignore: foo, bar",
+                LintIgnore(LintIgnoreStyle.ignore, {"foo", "bar"}),
+            ),
+            (
+                "# lint-ignore: foo, bar, foo, bar, baz",
+                LintIgnore(LintIgnoreStyle.ignore, {"foo", "bar", "baz"}),
+            ),
+            (
+                "# type: ignore  # lint-fixme: foo, bar  # noqa",
+                LintIgnore(
+                    LintIgnoreStyle.fixme,
+                    {"foo", "bar"},
+                    prefix="# type: ignore",
+                    postfix="  # noqa",
+                ),
+            ),
+        ):
+            with self.subTest(value):
+                result = LintIgnore.parse(value)
+                self.assertEqual(expected, result)
+
+    def test_lint_ignore_roundtrip(self) -> None:
+        """ensure that well-formed/sorted ignores parse and stringify back exactly"""
+        for idx, (value, expected) in enumerate(
+            (
+                ("# lint-ignore", LintIgnore(LintIgnoreStyle.ignore)),
+                ("# lint-fixme", LintIgnore(LintIgnoreStyle.fixme)),
+                ("# lint-ignore: foo", LintIgnore(LintIgnoreStyle.ignore, {"foo"})),
+                ("# lint-fixme: foo", LintIgnore(LintIgnoreStyle.fixme, {"foo"})),
+                (
+                    "# type: ignore  # lint-fixme: bar, foo  # noqa",
+                    LintIgnore(
+                        LintIgnoreStyle.fixme,
+                        {"bar", "foo"},
+                        "# type: ignore",
+                        "  # noqa",
+                    ),
+                ),
+            ),
+            start=1,
+        ):
+            with self.subTest(f"lint ignore {idx}"):
+                ignore = LintIgnore.parse(value)
+                self.assertEqual(expected, ignore)
+                self.assertEqual(value, str(ignore))
 
     def test_qualified_rule(self) -> None:
         valid: Set[ftypes.QualifiedRule] = set()
