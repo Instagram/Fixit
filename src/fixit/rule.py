@@ -7,32 +7,9 @@ from __future__ import annotations
 
 import functools
 from dataclasses import replace
-from typing import (
-    ClassVar,
-    Collection,
-    Generator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Union,
-)
+from typing import ClassVar, Collection, List, Mapping, Optional, Set, Union
 
-from libcst import (
-    BaseSuite,
-    BatchableCSTVisitor,
-    Comma,
-    CSTNode,
-    Decorator,
-    EmptyLine,
-    IndentedBlock,
-    LeftSquareBracket,
-    Module,
-    RightSquareBracket,
-    SimpleStatementSuite,
-    TrailingWhitespace,
-)
+from libcst import BatchableCSTVisitor, CSTNode, MetadataWrapper, Module
 from libcst.metadata import (
     CodePosition,
     CodeRange,
@@ -41,6 +18,7 @@ from libcst.metadata import (
     ProviderT,
 )
 
+from .comments import node_comments
 from .ftypes import (
     Invalid,
     LintIgnoreRegex,
@@ -115,81 +93,7 @@ class LintRule(BatchableCSTVisitor):
         return f"{self.__class__.__module__}:{self.__class__.__name__}"
 
     _visit_hook: Optional[VisitHook] = None
-
-    def node_comments(self, node: CSTNode) -> Generator[str, None, None]:
-        """
-        Yield all comments associated with the given node.
-
-        Includes comments from both leading comments and trailing inline comments.
-        """
-        while not isinstance(node, Module):
-            # trailing_whitespace can either be a property of the node itself, or in
-            # case of blocks, be part of the block's body element
-            tw: Optional[TrailingWhitespace] = getattr(
-                node, "trailing_whitespace", None
-            )
-            if tw is None:
-                body: Optional[BaseSuite] = getattr(node, "body", None)
-                if isinstance(body, SimpleStatementSuite):
-                    tw = body.trailing_whitespace
-                elif isinstance(body, IndentedBlock):
-                    tw = body.header
-
-            if tw and tw.comment:
-                yield tw.comment.value
-
-            comma: Optional[Comma] = getattr(node, "comma", None)
-            if isinstance(comma, Comma):
-                tw = getattr(comma.whitespace_after, "first_line", None)
-                if tw and tw.comment:
-                    yield tw.comment.value
-
-            rb: Optional[RightSquareBracket] = getattr(node, "rbracket", None)
-            if rb is not None:
-                tw = getattr(rb.whitespace_before, "first_line", None)
-                if tw and tw.comment:
-                    yield tw.comment.value
-
-            el: Optional[Sequence[EmptyLine]] = None
-            lb: Optional[LeftSquareBracket] = getattr(node, "lbracket", None)
-            if lb is not None:
-                el = getattr(lb.whitespace_after, "empty_lines", None)
-                if el is not None:
-                    for line in el:
-                        if line.comment:
-                            yield line.comment.value
-
-            el = getattr(node, "lines_after_decorators", None)
-            if el is not None:
-                for line in el:
-                    if line.comment:
-                        yield line.comment.value
-
-            ll: Optional[Sequence[EmptyLine]] = getattr(node, "leading_lines", None)
-            if ll is not None:
-                for line in ll:
-                    if line.comment:
-                        yield line.comment.value
-                if not isinstance(node, Decorator):
-                    # stop looking once we've gone up far enough for leading_lines,
-                    # even if there are no comment lines here at all
-                    break
-
-            node = self.get_metadata(ParentNodeProvider, node)
-
-        # comments at the start of the file are part of the module header rather than
-        # part of the first statement's leading_lines, so we need to look there in case
-        # the reported node is part of the first statement.
-        if isinstance(node, Module):
-            for line in node.header:
-                if line.comment:
-                    yield line.comment.value
-        else:
-            parent = self.get_metadata(ParentNodeProvider, node)
-            if isinstance(parent, Module) and parent.body and parent.body[0] == node:
-                for line in parent.header:
-                    if line.comment:
-                        yield line.comment.value
+    _metadata_wrapper: MetadataWrapper = MetadataWrapper(Module([]))
 
     def ignore_lint(self, node: CSTNode) -> bool:
         """
@@ -199,8 +103,8 @@ class LintRule(BatchableCSTVisitor):
         current rule by name, or if the directives have no rule names listed.
         """
         rule_names = (self.name, self.name.lower())
-        for comment in self.node_comments(node):
-            if match := LintIgnoreRegex.search(comment):
+        for comment in node_comments(node, self._metadata_wrapper):
+            if match := LintIgnoreRegex.search(comment.value):
                 _style, names = match.groups()
 
                 # directive
