@@ -54,6 +54,7 @@ class LintRunner:
         self.source = source
         self.module: Module = parse_module(source)
         self.timings: Timings = defaultdict(lambda: 0)
+        self.wrapper = MetadataWrapper(self.module)
 
     def collect_violations(
         self,
@@ -79,10 +80,14 @@ class LintRunner:
                 self.timings[name] += duration_us
 
         metadata_cache: Mapping[ProviderT, object] = {}
+        self.wrapper = MetadataWrapper(
+            self.module, unsafe_skip_copy=True, cache=metadata_cache
+        )
         needs_repo_manager: Set[ProviderT] = set()
 
         for rule in rules:
             rule._visit_hook = visit_hook
+            rule._metadata_wrapper = self.wrapper
             for provider in rule.get_inherited_dependencies():
                 if provider.gen_cache is not None:
                     # TODO: find a better way to declare this requirement in LibCST
@@ -95,12 +100,11 @@ class LintRunner:
                 providers=needs_repo_manager,
             )
             repo_manager.resolve_cache()
-            metadata_cache = repo_manager.get_cache_for_path(config.path.as_posix())
+            self.wrapper._cache = repo_manager.get_cache_for_path(
+                config.path.as_posix()
+            )
 
-        wrapper = MetadataWrapper(
-            self.module, unsafe_skip_copy=True, cache=metadata_cache
-        )
-        wrapper.visit_batched(rules)
+        self.wrapper.visit_batched(rules)
         count = 0
         for rule in rules:
             for violation in rule._violations:

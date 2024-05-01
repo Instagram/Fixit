@@ -328,10 +328,11 @@ class RuleTest(TestCase):
             (
                 # after class decorators
                 """
+                    # after class decorators
                     import dataclasses
 
-                    @dataclasses.dataclass
-                    # lint-fixme: ExerciseReport
+                    @dataclasses.dataclass  # lint-fixme: ExerciseReport [decorator]
+                    # lint-fixme: ExerciseReport [classdef]
                     class C:
                         value = 1
                 """,

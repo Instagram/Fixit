@@ -6,6 +6,7 @@
 import platform
 import re
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
@@ -63,6 +64,11 @@ class Invalid:
 @dataclass(frozen=True)
 class Valid:
     code: str
+
+
+class LintIgnoreStyle(Enum):
+    fixme = "fixme"
+    ignore = "ignore"
 
 
 LintIgnoreRegex = re.compile(
