@@ -7,6 +7,7 @@ from fixit.config import collect_rules
 from fixit.ftypes import Config, QualifiedRule
 
 from fixit.testing import add_lint_rule_tests_to_module
+from .comments import CommentsTest
 from .config import ConfigTest
 from .engine import EngineTest
 from .ftypes import TypesTest
