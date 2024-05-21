@@ -5,19 +5,28 @@
 
 import logging
 import sys
+import time
 import traceback
 from functools import partial
 from pathlib import Path
-from typing import Generator, Iterable, List, Optional
+from typing import Dict, Generator, Iterable, List, Optional
 
 import click
 import trailrunner
 from moreorless.click import echo_color_precomputed_diff
 
-from .config import collect_rules, generate_config
+from .config import collect_rules, generate_config, generate_config_tree
 from .engine import LintRunner
 from .format import format_module
-from .ftypes import Config, FileContent, LintViolation, Options, Result, STDIN
+from .ftypes import (
+    Config,
+    ConfigTree,
+    FileContent,
+    LintViolation,
+    Options,
+    Result,
+    STDIN,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -157,6 +166,7 @@ def fixit_file(
     *,
     autofix: bool = False,
     options: Optional[Options] = None,
+    config_tree: Optional[ConfigTree] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint a single file on disk, detecting and generating appropriate configuration.
@@ -173,7 +183,10 @@ def fixit_file(
 
     try:
         content: FileContent = path.read_bytes()
-        config = generate_config(path, options=options)
+        if config_tree:
+            config = config_tree.resolve(path)
+        else:
+            config = generate_config(path, options=options)
 
         updated = yield from fixit_bytes(path, content, config=config, autofix=autofix)
         if updated and updated != content:
@@ -186,12 +199,25 @@ def fixit_file(
 
 
 def _fixit_file_wrapper(
-    path: Path, *, autofix: bool = False, options: Optional[Options] = None
+    path: Path,
+    *,
+    autofix: bool = False,
+    options: Optional[Options] = None,
+    trees: Optional[Dict[Path, ConfigTree]] = None,
 ) -> List[Result]:
     """
     Wrapper because generators can't be pickled or used directly via multiprocessing
     TODO: replace this with some sort of queue or whatever
     """
+    trees = trees or {}
+    for tree_path, tree in trees.items():
+        try:
+            if path.relative_to(tree_path):
+                list(
+                    fixit_file(path, autofix=autofix, options=options, config_tree=tree)
+                )
+        except ValueError:
+            pass
     return list(fixit_file(path, autofix=autofix, options=options))
 
 
@@ -235,6 +261,7 @@ def fixit_paths(
     expanded_paths: List[Path] = []
     is_stdin = False
     stdin_path = Path("stdin")
+    trees: Dict[Path, ConfigTree] = {}
     for i, path in enumerate(paths):
         if path == STDIN:
             if i == 0:
@@ -247,6 +274,11 @@ def fixit_paths(
             else:
                 raise ValueError("too many stdin paths")
         else:
+            start = time.perf_counter()
+            config_tree = generate_config_tree(path, options=options)
+            trees[path] = config_tree
+            duration_us = time.perf_counter() - start
+            print(f"Took {duration_us}us to generate config tree")
             expanded_paths.extend(trailrunner.walk(path))
 
     if is_stdin:
@@ -255,6 +287,6 @@ def fixit_paths(
         for path in expanded_paths:
             yield from fixit_file(path, autofix=autofix, options=options)
     else:
-        fn = partial(_fixit_file_wrapper, autofix=autofix, options=options)
+        fn = partial(_fixit_file_wrapper, autofix=autofix, options=options, trees=trees)
         for _, results in trailrunner.run_iter(expanded_paths, fn):
             yield from results

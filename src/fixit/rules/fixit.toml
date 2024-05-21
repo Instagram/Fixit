@@ -1,0 +1,5 @@
+[tool.fixit]
+root = false
+disable=[
+    "fixit.rules",
+]

@@ -2,7 +2,6 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
 import platform
 import re
 from dataclasses import dataclass, field
@@ -16,6 +15,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -26,7 +26,8 @@ from typing import (
 
 from libcst import CSTNode, CSTNodeT, FlattenSentinel, RemovalSentinel
 from libcst._add_slots import add_slots
-from libcst.metadata import CodePosition as CodePosition, CodeRange as CodeRange
+from libcst.metadata import CodePosition as CodePosition
+from libcst.metadata import CodeRange as CodeRange
 from packaging.version import Version
 
 __all__ = ("Version",)
@@ -235,6 +236,27 @@ class RawConfig:
 
     def __post_init__(self) -> None:
         self.path = self.path.resolve()
+
+
+@dataclass(frozen=True)
+class ConfigTree:
+    """
+    A tree of merged configuration files, with the root at the top.
+    """
+
+    tree: Mapping[Path, Config] = field(default_factory=dict)
+    # __slots__ = ("tree",)
+
+    def resolve(self, path: Path) -> Config:
+        """
+        Resolve the configuration for a given path.
+        """
+        check_directory = path if path.is_dir() else path.parent
+        while check_directory != check_directory.parent:
+            if check_directory in self.tree:
+                return self.tree[check_directory]
+            check_directory = check_directory.parent
+        raise ValueError(f"no configuration found for {path}")  # todo: custom exception
 
 
 @add_slots

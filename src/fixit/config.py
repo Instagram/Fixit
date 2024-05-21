@@ -2,7 +2,6 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
 import importlib
 import inspect
 import logging
@@ -30,10 +29,12 @@ from typing import (
 
 from packaging.specifiers import SpecifierSet
 from packaging.version import InvalidVersion, Version
+from trailrunner.core import gitignore, project_root
 
 from .format import FORMAT_STYLES
 from .ftypes import (
     Config,
+    ConfigTree,
     is_collection,
     is_sequence,
     Options,
@@ -545,3 +546,51 @@ def generate_config(
             config.disable = []
 
     return config
+
+
+def generate_config_tree(
+    lint_root: Path,
+    *,
+    config_root: Optional[Path] = None,
+    options: Optional[Options] = None,
+) -> ConfigTree:
+    """
+    Given a lint root, generate all configurations in the tree.
+
+    `config_root` can be a parent of `lint_root` if provided. Any configs found
+    between `lint_root` and `config_root` will be merged in ascending priorty.
+    """
+
+    # TODO: honour `options`
+    configs: Dict[Path, Config] = {}
+    lint_root = lint_root.resolve()
+    root_paths = locate_configs(lint_root, root=config_root)
+    root_configs = read_configs(root_paths)
+    merged = merge_configs(lint_root, root_configs, root=config_root)
+    configs[lint_root] = merged
+    project_dir = project_root(lint_root)
+    ignore = gitignore(project_dir)
+
+    def descend(path: Path, raw_configs: List[RawConfig]) -> None:
+        if path.is_file():
+            return
+
+        if path != lint_root:
+            candidates = (path / filename for filename in FIXIT_CONFIG_FILENAMES)
+            for candidate in candidates:
+                if candidate.is_file():
+                    relative = candidate.relative_to(project_dir)
+                    # Skip gitignored files
+                    if ignore.match_file(relative):
+                        continue
+                    read = read_configs([candidate])
+                    raw_configs = [*read, *raw_configs]
+                    merged = merge_configs(path, raw_configs, root=config_root)
+                    configs[path] = merged
+
+        subdirs = [d for d in path.iterdir() if d.is_dir()]
+        for subdir in subdirs:
+            descend(subdir, raw_configs)
+
+    descend(lint_root, root_configs)
+    return ConfigTree(tree=configs)
