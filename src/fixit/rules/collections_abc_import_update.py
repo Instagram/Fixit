@@ -53,7 +53,7 @@ ABCS = frozenset(
 class DeprecatedABCImport(LintRule):
     """
     Checks for the use of the deprecated collections ABC import. Since python 3.3, the Collections Abstract Base Classes (ABC) have been moved to `collections.abc`.
-    This `LintRule` checks that all ABC imports are under `collections.ABC`.
+    This `LintRule` checks that all ABC imports are under `collections.abc`.
     """
 
     TASKS = {"safe"}
@@ -228,7 +228,7 @@ class DeprecatedABCImport(LintRule):
 
     def visit_ImportAlias(self, node: cst.ImportAlias) -> None:
         """
-        This catches the straight `import collections.<ABC>` cases.
+        This catches the `import collections.<ABC>` cases.
         """
         if (
             type(node.name) is Attribute
