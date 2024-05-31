@@ -68,7 +68,8 @@ class DeprecatedABCImport(LintRule):
             expected_replacement="import collections.abc.Container",
         ),
         # No expected replacement for this one since it would require updating
-        # the parent node in the `visit`.
+        # the parent node in the `visit`. This is due to the need of splitting
+        # the import statement into two separate import statements.
         Invalid(
             "from collections import defaultdict, Container",
         ),
@@ -76,14 +77,14 @@ class DeprecatedABCImport(LintRule):
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
         import_names = [name.name.value in ABCS for name in node.names]
-        # This catches the `form collections import <ABC>` case.
         if (
             node.module
             and node.module.value == "collections"
             and any(import_names)
         ):
             # Replacing the case where there are ABCs mixed with non-ABCs requires
-            # updating the parent of the `node`.
+            # updating the parent of the `node`. This is due to the need of splitting
+            # the import statement into two separate import statements.
             if not all(import_names):
                 self.report(node)
             else:
