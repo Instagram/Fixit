@@ -48,6 +48,7 @@ class DeprecatedABCImport(LintRule):
         Valid("from collections import abc"),
         Valid("import collections"),
         Valid("import collections.abc"),
+        Valid("import collections.abc.Container"),
     ]
     INVALID: list[Invalid | str] = [
         Invalid(
