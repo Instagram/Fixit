@@ -1,5 +1,10 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import libcst as cst
-from libcst._nodes.expression import Attribute
+from libcst._nodes.expression import Attribute, Name
 
 from fixit import Invalid, LintRule, Valid
 
@@ -38,11 +43,16 @@ ABCS = frozenset(
 
 
 class DeprecatedABCImport(LintRule):
+    """
+    Checks for the use of the deprecated collections ABC import. Since python 3.3, the Collections Abstract Base Classes (ABC) have been moved to `collections.abc`.
+    This `LintRule` checks that all ABC imports are under `collections.ABC`.
+    """
+
     TASKS = {"safe"}
     MESSAGE = "Since python 3.3, the Collections Abstract Base Classes (ABC) have been moved to `collections.abc`. This was a deprecation warning up until 3.9, and is an import error in 3.10."
     PYTHON_VERSION = ">= 3.3"
 
-    VALID: list[Valid | str] = [
+    VALID = [
         Valid("from collections.abc import Container"),
         Valid("from collections.abc import Container, Hashable"),
         Valid("from collections.abc import (Container, Hashable)"),
@@ -52,7 +62,7 @@ class DeprecatedABCImport(LintRule):
         Valid("import collections.abc"),
         Valid("import collections.abc.Container"),
     ]
-    INVALID: list[Invalid | str] = [
+    INVALID = [
         Invalid(
             "from collections import Container",
             expected_replacement="from collections.abc import Container",
@@ -78,7 +88,11 @@ class DeprecatedABCImport(LintRule):
     ]
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
-        import_names = [name.name.value in ABCS for name in node.names]
+        import_names = (
+            [name.name.value in ABCS for name in node.names]
+            if type(node.names) is tuple
+            else [False]
+        )
         if node.module and node.module.value == "collections" and any(import_names):
             # Replacing the case where there are ABCs mixed with non-ABCs requires
             # updating the parent of the `node`. This is due to the need of splitting
@@ -99,6 +113,7 @@ class DeprecatedABCImport(LintRule):
     def visit_ImportAlias(self, node: cst.ImportAlias) -> None:
         if (
             type(node.name) is Attribute
+            and type(node.name.value) is Name
             and node.name.value.value == "collections"
             and node.name.attr.value in ABCS
         ):
