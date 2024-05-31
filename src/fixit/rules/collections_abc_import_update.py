@@ -1,11 +1,12 @@
 import libcst as cst
+from libcst._nodes.expression import Attribute
 
 from fixit import Invalid, LintRule, Valid
-from libcst._nodes.expression import Attribute
 
 
 # The ABCs that have been moved to `collections.abc`
-ABCS = frozenset({
+ABCS = frozenset(
+    {
         "AsyncGenerator",
         "AsyncIterable",
         "AsyncIterator",
@@ -32,7 +33,8 @@ ABCS = frozenset({
         "Set",
         "Sized",
         "ValuesView",
-    })
+    }
+)
 
 
 class DeprecatedABCImport(LintRule):
@@ -77,11 +79,7 @@ class DeprecatedABCImport(LintRule):
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
         import_names = [name.name.value in ABCS for name in node.names]
-        if (
-            node.module
-            and node.module.value == "collections"
-            and any(import_names)
-        ):
+        if node.module and node.module.value == "collections" and any(import_names):
             # Replacing the case where there are ABCs mixed with non-ABCs requires
             # updating the parent of the `node`. This is due to the need of splitting
             # the import statement into two separate import statements.
@@ -92,7 +90,8 @@ class DeprecatedABCImport(LintRule):
                     node,
                     replacement=node.with_changes(
                         module=cst.Attribute(
-                            value=cst.Name(value="collections"), attr=cst.Name(value="abc")
+                            value=cst.Name(value="collections"),
+                            attr=cst.Name(value="abc"),
                         )
                     ),
                 )
@@ -108,9 +107,10 @@ class DeprecatedABCImport(LintRule):
                 replacement=node.with_changes(
                     name=cst.Attribute(
                         value=cst.Attribute(
-                            value=cst.Name(value="collections"), attr=cst.Name(value="abc")
+                            value=cst.Name(value="collections"),
+                            attr=cst.Name(value="abc"),
                         ),
-                        attr=node.name.attr
+                        attr=node.name.attr,
                     )
                 ),
             )
