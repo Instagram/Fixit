@@ -245,7 +245,7 @@ Built-in Rules
 .. class:: DeprecatedABCImport
 
     Checks for the use of the deprecated collections ABC import. Since python 3.3, the Collections Abstract Base Classes (ABC) have been moved to `collections.abc`.
-    This `LintRule` checks that all ABC imports are under `collections.ABC`.
+    This `LintRule` checks that all ABC imports are under `collections.abc`.
 
     .. attribute:: MESSAGE
 
