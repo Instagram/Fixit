@@ -64,6 +64,13 @@ class DeprecatedABCImport(LintRule):
         Valid("import collections"),
         Valid("import collections.abc"),
         Valid("import collections.abc.Container"),
+        Valid(
+            """
+            class MyTest(collections.Something):
+                def test(self):
+                    pass
+            """
+        ),
     ]
     INVALID = [
         Invalid(
@@ -93,6 +100,18 @@ class DeprecatedABCImport(LintRule):
         Invalid(
             "from collections import defaultdict\nfrom collections import Container",
             expected_replacement="from collections import defaultdict\nfrom collections.abc import Container",
+        ),
+        Invalid(
+            """
+            class MyTest(collections.Container):
+                def test(self):
+                    pass
+            """,
+            expected_replacement="""
+            class MyTest(collections.abc.Container):
+                def test(self):
+                    pass
+            """,
         ),
     ]
 
@@ -263,3 +282,50 @@ class DeprecatedABCImport(LintRule):
                     )
                 ),
             )
+
+    def visit_ClassDef(self, node: cst.ClassDef) -> None:
+        # Iterate over inherited Classes and search for `collections.<ABC>`
+        for base in node.bases:
+            if m.matches(
+                base,
+                m.Arg(
+                    value=m.Attribute(
+                        value=m.Name("collections"),
+                        attr=m.OneOf(*[m.Name(abc) for abc in ABCS]),
+                    )
+                ),
+            ):
+                # Report + replace `collections.<ABC>` with `collections.abc.<ABC>`
+                # while keeping the remaining classes.
+                self.report(
+                    node,
+                    replacement=node.with_changes(
+                        bases=[
+                            (
+                                cst.Arg(
+                                    value=cst.Attribute(
+                                        value=cst.Attribute(
+                                            value=cst.Name("collections"),
+                                            attr=cst.Name("abc"),
+                                        ),
+                                        attr=base.value.attr,
+                                    ),
+                                )
+                                if m.matches(
+                                    base,
+                                    m.Arg(
+                                        value=m.Attribute(
+                                            value=m.Name("collections"),
+                                            attr=m.OneOf(
+                                                *[m.Name(abc) for abc in ABCS]
+                                            ),
+                                        )
+                                    ),
+                                )
+                                and isinstance(base.value, cst.Attribute)
+                                else base
+                            )
+                            for base in node.bases
+                        ]
+                    ),
+                )
