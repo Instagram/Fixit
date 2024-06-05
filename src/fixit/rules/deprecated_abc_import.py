@@ -6,10 +6,11 @@
 from typing import List, Optional, Union
 
 import libcst as cst
+
+import libcst.matchers as m
 from libcst._nodes.expression import Attribute, Name
 from libcst._nodes.statement import (
     BaseCompoundStatement,
-    ImportAlias,
     ImportFrom,
     SimpleStatementLine,
 )
@@ -149,26 +150,31 @@ class DeprecatedABCImport(LintRule):
         Iterate over a Statement Sequence and return a Statement if it is a
         `cst.ImportFrom` statement.
         """
-        if isinstance(node, SimpleStatementLine):
-            for statement in node.body:
-                # Get the imports in this statement
-                import_names = (
-                    [
-                        name.name.value if isinstance(name, ImportAlias) else None
-                        for name in statement.names
-                    ]
-                    if isinstance(statement, ImportFrom)
-                    and isinstance(statement.names, tuple)
-                    else []
-                )
-                if (
-                    isinstance(statement, ImportFrom)
-                    and statement.module
-                    and statement.module.value == "collections"
-                    # Ensure the imports in this statement are the ones we are looking for
-                    and set(import_names).intersection(set(self.imports_names))
-                ):
-                    return statement
+        if m.matches(
+            node,
+            m.SimpleStatementLine(
+                body=[
+                    m.ZeroOrMore(),
+                    m.ImportFrom(
+                        module=m.Name("collections"),
+                        names=m.OneOf(
+                            [m.ImportAlias(name=m.Name(n)) for n in self.imports_names]
+                        ),
+                    ),
+                    m.ZeroOrMore(),
+                ]
+            ),
+        ):
+            imp = m.findall(
+                node,
+                m.ImportFrom(
+                    module=m.Name("collections"),
+                    names=m.OneOf(
+                        [m.ImportAlias(name=m.Name(n)) for n in self.imports_names]
+                    ),
+                ),
+            )[0]
+            return imp if isinstance(imp, cst.ImportFrom) else None
 
         return None
 
