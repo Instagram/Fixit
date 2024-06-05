@@ -8,7 +8,6 @@ from typing import List, Optional, Union
 import libcst as cst
 
 import libcst.matchers as m
-from libcst._nodes.expression import Attribute, Name
 from libcst._nodes.statement import (
     BaseCompoundStatement,
     ImportFrom,
@@ -239,10 +238,19 @@ class DeprecatedABCImport(LintRule):
         This catches the `import collections.<ABC>` cases.
         """
         if (
-            type(node.name) is Attribute
-            and type(node.name.value) is Name
-            and node.name.value.value == "collections"
-            and node.name.attr.value in ABCS
+            m.matches(
+                node,
+                m.ImportAlias(
+                    name=m.Attribute(
+                        value=m.Name("collections"),
+                        attr=m.OneOf(*[m.Name(abc) for abc in ABCS]),
+                    )
+                ),
+            )
+            # This is necessary for the typecheck. Otherwise when replacing the node
+            # and using `attr=node.name.attr`, the type checker will complain since
+            # node.name is `Union[cst.Name | cst.Attribute]`
+            and isinstance(node.name, cst.Attribute)
         ):
             self.report(
                 node,
