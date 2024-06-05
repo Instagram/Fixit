@@ -100,7 +100,9 @@ class DeprecatedABCImport(LintRule):
     def __init__(self) -> None:
         super().__init__()
         # If the module needs to updated
-        self.update_module = False
+        self.update_module: bool = False
+        # The original imports
+        self.imports_names: List[str] = []
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
         """
