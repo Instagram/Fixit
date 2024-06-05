@@ -8,11 +8,6 @@ from typing import List, Optional, Union
 import libcst as cst
 
 import libcst.matchers as m
-from libcst._nodes.statement import (
-    BaseCompoundStatement,
-    ImportFrom,
-    SimpleStatementLine,
-)
 
 from fixit import Invalid, LintRule, Valid
 
@@ -147,8 +142,8 @@ class DeprecatedABCImport(LintRule):
                 )
 
     def get_import_from(
-        self, node: Union[SimpleStatementLine, BaseCompoundStatement]
-    ) -> Optional[ImportFrom]:
+        self, node: Union[cst.SimpleStatementLine, cst.BaseCompoundStatement]
+    ) -> Optional[cst.ImportFrom]:
         """
         Iterate over a Statement Sequence and return a Statement if it is a
         `cst.ImportFrom` statement.
