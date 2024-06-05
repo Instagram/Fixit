@@ -238,20 +238,14 @@ class DeprecatedABCImport(LintRule):
         """
         This catches the `import collections.<ABC>` cases.
         """
-        if (
-            m.matches(
-                node,
-                m.ImportAlias(
-                    name=m.Attribute(
-                        value=m.Name("collections"),
-                        attr=m.OneOf(*[m.Name(abc) for abc in ABCS]),
-                    )
-                ),
-            )
-            # This is necessary for the typecheck. Otherwise when replacing the node
-            # and using `attr=node.name.attr`, the type checker will complain since
-            # node.name is `Union[cst.Name | cst.Attribute]`
-            and isinstance(node.name, cst.Attribute)
+        if m.matches(
+            node,
+            m.ImportAlias(
+                name=m.Attribute(
+                    value=m.Name("collections"),
+                    attr=m.OneOf(*[m.Name(abc) for abc in ABCS]),
+                )
+            ),
         ):
             self.report(
                 node,
@@ -261,7 +255,7 @@ class DeprecatedABCImport(LintRule):
                             value=cst.Name(value="collections"),
                             attr=cst.Name(value="abc"),
                         ),
-                        attr=node.name.attr,
+                        attr=cst.ensure_type(node.name, cst.Attribute).attr,
                     )
                 ),
             )
