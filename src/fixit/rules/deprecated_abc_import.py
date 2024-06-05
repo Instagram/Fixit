@@ -88,6 +88,10 @@ class DeprecatedABCImport(LintRule):
             expected_replacement="import collections.abc.Container",
         ),
         Invalid(
+            "import collections.Container as cont",
+            expected_replacement="import collections.abc.Container as cont",
+        ),
+        Invalid(
             "from collections import defaultdict, Container",
             expected_replacement="from collections import defaultdict\nfrom collections.abc import Container",
         ),
