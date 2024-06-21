@@ -476,6 +476,24 @@ class ConfigTest(TestCase):
             )
             self.assertListEqual([UseClsInClassmethod], rules)
 
+        with self.subTest("disable builtins"):
+            rules = collect_types(
+                Config(
+                    disable=[QualifiedRule("fixit.rules")],
+                    python_version=None,
+                )
+            )
+            self.assertListEqual([], rules)
+
+        with self.subTest("override broad opt-out"):
+            rules = collect_types(
+                Config(
+                    disable=[QualifiedRule("fixit.rules")],
+                    enable=[QualifiedRule("fixit.rules", "UseClsInClassmethod")],
+                )
+            )
+            self.assertListEqual([UseClsInClassmethod], rules)
+
         with self.subTest("version match"):
             rules = collect_types(
                 Config(

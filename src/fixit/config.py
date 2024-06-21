@@ -207,6 +207,7 @@ def collect_rules(
     """
 
     all_rules: Set[Type[LintRule]] = set()
+    named_enables: Set[Type[LintRule]] = set()
     if debug_reasons is not None:
         disabled_rules = debug_reasons
     else:
@@ -222,10 +223,19 @@ def collect_rules(
             stack.enter_context(append_sys_path(path))
 
         for qualified_rule in config.enable:
-            all_rules |= set(find_rules(qualified_rule))
+            rules = set(find_rules(qualified_rule))
+            if qualified_rule.name:
+                named_enables |= rules
+            all_rules |= rules
 
         for qualified_rule in config.disable:
-            disabled_rules.update({r: "disabled" for r in find_rules(qualified_rule)})
+            disabled_rules.update(
+                {
+                    r: "disabled"
+                    for r in find_rules(qualified_rule)
+                    if r not in named_enables
+                }
+            )
             all_rules -= set(disabled_rules)
 
         if config.tags:
