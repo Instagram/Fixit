@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 from dataclasses import asdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -10,7 +11,11 @@ from textwrap import dedent
 from typing import List, Sequence, Tuple, Type
 from unittest import TestCase
 
+from click.testing import CliRunner
+
 from .. import config
+
+from ..cli import main
 from ..ftypes import Config, QualifiedRule, RawConfig, Tags, Version
 from ..rule import LintRule
 
@@ -542,3 +547,88 @@ class ConfigTest(TestCase):
                 )
             )
             self.assertListEqual([UseTypesFromTyping], rules)
+
+    def test_cwd_config(self) -> None:
+        prev_cwd = Path.cwd()
+        os.chdir(str(self.outer))
+        try:
+
+            cwd_config = config.get_cwd_config()
+            self.assertEqual("fixit", cwd_config.output_format)
+
+            (self.inner / "fixit.toml").write_text(
+                "[tool.fixit]\noutput-format = 'custom'"
+            )
+
+            cwd_config = config.get_cwd_config()
+            self.assertEqual("fixit", cwd_config.output_format)
+
+            (self.tdp / "pyproject.toml").write_text(
+                "[tool.fixit]\noutput-format = 'custom'"
+            )
+
+            cwd_config = config.get_cwd_config()
+            self.assertEqual("fixit", cwd_config.output_format)
+
+            (self.outer / "pyproject.toml").write_text(
+                "[tool.fixit]\noutput-format = 'vscode'"
+            )
+
+            cwd_config = config.get_cwd_config()
+            self.assertEqual("vscode", cwd_config.output_format)
+
+            os.chdir(str(self.inner))
+
+            cwd_config = config.get_cwd_config()
+            self.assertEqual("custom", cwd_config.output_format)
+        finally:
+            os.chdir(str(prev_cwd))
+
+    def test_format_output(self) -> None:
+        prev_cwd = Path.cwd()
+        try:
+            os.chdir(str(self.tdp))
+            (self.tdp / "pyproject.toml").write_text(
+                "[tool.fixit]\noutput-format = 'vscode'\n"
+            )
+
+            runner = CliRunner(mix_stderr=False)
+            content = "name = '{name}'.format(name='Jane Doe')"
+            filepath = self.tdp / "f_string.py"
+            filepath.write_text(content)
+            output_format_regex = r".*f_string\.py:\d+:\d+ UseFstring: .+"
+
+            with self.subTest("linting vscode"):
+                result = runner.invoke(
+                    main, ["lint", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, output_format_regex)
+
+            with self.subTest("fixing vscode"):
+                result = runner.invoke(
+                    main, ["fix", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, output_format_regex)
+
+            custom_output_format_regex = r".*f_string\.py|\d+|\d+ UseFstring: .+"
+            custom_output_format = (
+                "{path}|{start_line}|{start_col} {rule_name}: {message}"
+            )
+            (self.tdp / "pyproject.toml").write_text(
+                f"[tool.fixit]\noutput-format = 'custom'\noutput-template = '{custom_output_format}'"
+            )
+
+            with self.subTest("linting custom"):
+                result = runner.invoke(
+                    main, ["lint", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, custom_output_format_regex)
+
+            with self.subTest("fixing custom"):
+                result = runner.invoke(
+                    main, ["fix", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, custom_output_format_regex)
+
+        finally:
+            os.chdir(str(prev_cwd))

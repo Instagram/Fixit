@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -49,7 +50,10 @@ Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
 
 VisitorMethod = Callable[[CSTNode], None]
+
 VisitHook = Callable[[str], ContextManager[None]]
+OutputFormatType = Literal["fixit", "vscode", "json"]
+OutputFormatTypeInput = Literal[OutputFormatType, "custom"]
 
 
 @dataclass(frozen=True)
@@ -181,6 +185,8 @@ class Options:
     config_file: Optional[Path]
     tags: Optional[Tags] = None
     rules: Sequence[QualifiedRule] = ()
+    output_format: Optional[OutputFormatTypeInput] = None
+    output_template: Optional[str] = None
 
 
 @dataclass
@@ -226,6 +232,17 @@ class Config:
     def __post_init__(self) -> None:
         self.path = self.path.resolve()
         self.root = self.root.resolve()
+
+
+@dataclass
+class CwdConfig:
+    output_format: OutputFormatTypeInput = "fixit"
+    output_template: str = ""
+
+    def __post_init__(self) -> None:
+        from .config import output_formats_templates
+
+        self.output_template = output_formats_templates["fixit"]
 
 
 @dataclass
