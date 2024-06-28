@@ -93,7 +93,7 @@ the input read from STDIN, and the fixed output printed to STDOUT (ignoring
 Start the language server providing IDE features over
 `LSP <https://microsoft.github.io/language-server-protocol/>`__.
 This command is only available if installed with the ``lsp`` extras (e.g.
-``pip install fixit[lsp]``).  See :ref:`IDE Integrations <ide_integrations>`
+``pip install "fixit[lsp]"``).  See :ref:`IDE Integrations <ide_integrations>`
 for more details.
 
 .. code:: console
