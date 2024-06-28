@@ -17,10 +17,13 @@ usage details.
 
 Examples of client setup:
 
-- VSCode - unofficial extension:
+- VSCode:
 
-  - `GitHub <https://github.com/llllvvuu/vscode-glspc/tree/fixit>`_
-  - `VSCode Marketplace <https://marketplace.visualstudio.com/items?itemName=llllvvuu.fixit-unofficial>`_
+  - `Generic LSP Client <https://github.com/llllvvuu/vscode-glspc>`_
+    (via GitHub; requires configuration)
+  - `Fixit (Unofficial) <https://marketplace.visualstudio.com/items?itemName=llllvvuu.fixit-unofficial>`_
+    (via VSCode Marketplace; compiled from Generic LSP Client with preset
+    configuration for Fixit)
 
 - Neovim: `nvim-lspconfig <https://github.com/neovim/nvim-lspconfig>`_:
 
