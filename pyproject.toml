@@ -40,7 +40,7 @@ description = "A lint framework that writes better Python code for you."
 docs = [
     "jinja2 == 3.1.4",
     "sphinx == 7.0.1",
-    "sphinx-mdinclude == 0.6.0",
+    "sphinx-mdinclude == 0.6.1",
 ]
 dev = [
     "attribution == 1.7.1",
