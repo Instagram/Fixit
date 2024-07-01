@@ -43,7 +43,7 @@ docs = [
     "sphinx-mdinclude == 0.6.0",
 ]
 dev = [
-    "attribution == 1.7.1",
+    "attribution == 1.8.0",
     "black == 24.4.2",
     "flake8 == 7.0.0",
     "flake8-bugbear == 24.4.26",
