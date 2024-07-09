@@ -6,6 +6,7 @@
 import platform
 import re
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
@@ -16,7 +17,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -50,11 +50,14 @@ Timings = Dict[str, int]
 TimingsHook = Callable[[Timings], None]
 
 VisitorMethod = Callable[[CSTNode], None]
-VisitHook = Callable[[str], ContextManager]
-OutputFormatType = Literal["fixit", "vscode", "json"]
-OutputFormatTypeInput = Literal[OutputFormatType, "custom"]
+VisitHook = Callable[[str], ContextManager[None]]
 
-Version
+
+class OutputFormat(str, Enum):
+    custom = "custom"
+    fixit = "fixit"
+    # json = "json"  # TODO
+    vscode = "vscode"
 
 
 @dataclass(frozen=True)
@@ -182,12 +185,12 @@ class Options:
     Command-line options to affect runtime behavior
     """
 
-    debug: Optional[bool]
-    config_file: Optional[Path]
+    debug: Optional[bool] = None
+    config_file: Optional[Path] = None
     tags: Optional[Tags] = None
     rules: Sequence[QualifiedRule] = ()
-    output_format: Optional[OutputFormatTypeInput] = None
-    output_template: Optional[str] = None
+    output_format: Optional[OutputFormat] = None
+    output_template: str = ""
 
 
 @dataclass
@@ -230,22 +233,13 @@ class Config:
     # post-run processing
     formatter: Optional[str] = None
 
-    def __post_init__(self) -> None:
-        from .config import DEFAULT_OUTPUT_FORMAT
-
-        self.path = self.path.resolve()
-        self.root = self.root.resolve()
-
-
-@dataclass
-class CwdConfig:
-    output_format: OutputFormatTypeInput = "fixit"
+    # output formatting options
+    output_format: OutputFormat = OutputFormat.fixit
     output_template: str = ""
 
     def __post_init__(self) -> None:
-        from .config import output_formats_templates
-
-        self.output_template = output_formats_templates["fixit"]
+        self.path = self.path.resolve()
+        self.root = self.root.resolve()
 
 
 @dataclass

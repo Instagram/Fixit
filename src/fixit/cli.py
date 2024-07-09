@@ -7,22 +7,15 @@ import logging
 import sys
 import unittest
 from pathlib import Path
-from typing import Dict, get_args, Optional, Sequence, Set, Type
+from typing import Dict, Optional, Sequence, Set, Type
 
 import click
 
 from fixit import __version__
 
 from .api import fixit_paths, print_result
-from .config import collect_rules, generate_config, get_cwd_config, parse_rule
-from .ftypes import (
-    Config,
-    LSPOptions,
-    Options,
-    OutputFormatTypeInput,
-    QualifiedRule,
-    Tags,
-)
+from .config import collect_rules, generate_config, parse_rule
+from .ftypes import Config, LSPOptions, Options, OutputFormat, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
@@ -82,15 +75,16 @@ def splash(
 @click.option(
     "--output-format",
     "-o",
-    type=click.Choice(get_args(OutputFormatTypeInput), case_sensitive=False),
+    type=click.Choice([o.name for o in OutputFormat], case_sensitive=False),
+    show_choices=True,
     default=None,
-    help="Select output format type [fixit, vscode, json, custom]",
+    help="Select output format type",
 )
 @click.option(
     "--output-template",
     type=str,
-    default=None,
-    help="Python format Template to use with output format 'custom'",
+    default="",
+    help="Python format template to use with output format 'custom'",
 )
 def main(
     ctx: click.Context,
@@ -98,8 +92,8 @@ def main(
     config_file: Optional[Path],
     tags: str,
     rules: str,
-    output_format: Optional[OutputFormatTypeInput],
-    output_template: Optional[str],
+    output_format: Optional[OutputFormat],
+    output_template: str,
 ) -> None:
     level = logging.WARNING
     if debug is not None:
@@ -145,14 +139,14 @@ def lint(
     visited: Set[Path] = set()
     dirty: Set[Path] = set()
     autofixes = 0
-    cwd_config = get_cwd_config(options=options)
+    config = generate_config(options=options)
     for result in fixit_paths(paths, options=options):
         visited.add(result.path)
         if print_result(
             result,
             show_diff=diff,
-            output_format_type=cwd_config.output_format,
-            output_template=cwd_config.output_template,
+            output_format=config.output_format,
+            output_template=config.output_template,
         ):
             dirty.add(result.path)
             if result.violation:
@@ -208,7 +202,7 @@ def fix(
     generator = capture(
         fixit_paths(paths, autofix=autofix, options=options, parallel=False)
     )
-    cwd_config = get_cwd_config(options=options)
+    config = generate_config(options=options)
     for result in generator:
         visited.add(result.path)
         # for STDIN, we need STDOUT to equal the fixed content, so
@@ -217,8 +211,8 @@ def fix(
             result,
             show_diff=interactive or diff,
             stderr=is_stdin,
-            output_format_type=cwd_config.output_format,
-            output_template=cwd_config.output_template,
+            output_format=config.output_format,
+            output_template=config.output_template,
         ):
             dirty.add(result.path)
             if autofix and result.violation and result.violation.autofixable:

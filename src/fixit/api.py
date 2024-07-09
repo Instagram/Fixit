@@ -14,7 +14,7 @@ import click
 import trailrunner
 from moreorless.click import echo_color_precomputed_diff
 
-from .config import collect_rules, generate_config, output_formats_templates
+from .config import collect_rules, generate_config
 from .engine import LintRunner
 from .format import format_module
 from .ftypes import (
@@ -22,7 +22,7 @@ from .ftypes import (
     FileContent,
     LintViolation,
     Options,
-    OutputFormatTypeInput,
+    OutputFormat,
     Result,
     STDIN,
 )
@@ -35,8 +35,8 @@ def print_result(
     *,
     show_diff: bool = False,
     stderr: bool = False,
-    output_format_type: OutputFormatTypeInput = "fixit",
-    output_template: str = output_formats_templates["fixit"],
+    output_format: OutputFormat = OutputFormat.fixit,
+    output_template: str = "",
 ) -> int:
     """
     Print linting results in a simple format designed for human eyes.
@@ -52,9 +52,6 @@ def print_result(
     except ValueError:
         pass
 
-    if output_format_type != "custom":
-        output_template = output_formats_templates[output_format_type]
-
     if result.violation:
         rule_name = result.violation.rule_name
         start_line = result.violation.range.start.line
@@ -62,17 +59,24 @@ def print_result(
         message = result.violation.message
         if result.violation.autofixable:
             message += " (has autofix)"
-        click.secho(
-            output_template.format(
-                path=path,
-                start_line=start_line,
-                start_col=start_col,
-                rule_name=rule_name,
+
+        if output_format == OutputFormat.fixit:
+            line = f"{path}@{start_line}:{start_col} {rule_name}: {message}"
+        elif output_format == OutputFormat.vscode:
+            line = f"{path}:{start_line}:{start_col} {rule_name}: {message}"
+        elif output_format == OutputFormat.custom:
+            line = output_template.format(
                 message=message,
-            ),
-            fg="yellow",
-            err=stderr,
-        )
+                path=path,
+                result=result,
+                rule_name=rule_name,
+                start_col=start_col,
+                start_line=start_line,
+            )
+        else:
+            raise NotImplementedError(f"output-format = {output_format!r}")
+        click.secho(line, fg="yellow", err=stderr)
+
         if show_diff and result.violation.diff:
             echo_color_precomputed_diff(result.violation.diff)
         return True
@@ -125,7 +129,7 @@ def fixit_bytes(
         clean = True
         for violation in runner.collect_violations(rules, config):
             clean = False
-            fix = yield Result(path, violation=violation)
+            fix = yield Result(path, violation)
             if fix or autofix:
                 pending_fixes.append(violation)
 
@@ -139,11 +143,7 @@ def fixit_bytes(
     except Exception as error:
         # TODO: this is not the right place to catch errors
         LOG.debug("Exception while linting", exc_info=error)
-        yield Result(
-            path,
-            violation=None,
-            error=(error, traceback.format_exc()),
-        )
+        yield Result(path, violation=None, error=(error, traceback.format_exc()))
 
     return None
 

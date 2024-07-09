@@ -152,40 +152,43 @@ The main configuration table.
     :class:`~fixit.Formatter` interface.
 
 .. attribute:: output-format
-    :type: Literal['fixit', 'vscode', 'custom']
+    :type: str
 
     Choose one of the presets for terminal output formatting.
-    Fixit only reads this option from the current working directory or from an explicitly specified config file.
-
-    Defaults to fixit's output style.
+    This option is inferred based on the current working directory or from
+    an explicity specified config file -- subpath overrides will be ignored.
 
     Can be one of:
 
-    - ``fixit``: Fixit's default output format
-    - ``vscode``: A format that works well with Visual Studio Code
-    - ``custom``: Use your own format via :attr:`output-template` config option
+    - ``custom``: Specify your own format using the :attr:`output-template`
+      option below.
+    - ``fixit``: Fixit's default output format.
+    - ``vscode``: A format that provides clickable paths for Visual Studio Code.
 
 .. attribute:: output-template
     :type: str
 
     Sets the format of output printed to terminal.
     Python formatting is used in the background to fill in data.
-    Only active with ``output-format = 'custom'``.
-    Like :attr:`output-format`, this config variable is only read from the current working directory.
+    Only active with :attr:`output-format` set to ``custom``.
 
-    Defaults to ``{path}@{start_line}:{start_col} {rule_name}: {message}``
+    This option is inferred based on the current working directory or from
+    an explicity specified config file -- subpath overrides will be ignored.
 
     Supported variables:
 
+    - ``message``: Message emitted by the applied rule.
+
     - ``path``: Path to affected file.
 
-    - ``start_line``: Start line of affected code lines.
+    - ``result``: Raw :class:`~fixit.Result` object.
+
+    - ``rule_name``: Name of the applied rule.
 
     - ``start_col``: Start column of affected code.
 
-    - ``rule_name``: Name of the applied rule
+    - ``start_line``: Start line of affected code.
 
-    - ``message``: Message emitted by the applied rule
 
 .. _rule-options:
 
