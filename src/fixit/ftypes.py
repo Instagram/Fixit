@@ -53,6 +53,13 @@ VisitorMethod = Callable[[CSTNode], None]
 VisitHook = Callable[[str], ContextManager[None]]
 
 
+class OutputFormat(str, Enum):
+    custom = "custom"
+    fixit = "fixit"
+    # json = "json"  # TODO
+    vscode = "vscode"
+
+
 @dataclass(frozen=True)
 class Invalid:
     code: str
@@ -183,10 +190,12 @@ class Options:
     Command-line options to affect runtime behavior
     """
 
-    debug: Optional[bool]
-    config_file: Optional[Path]
+    debug: Optional[bool] = None
+    config_file: Optional[Path] = None
     tags: Optional[Tags] = None
     rules: Sequence[QualifiedRule] = ()
+    output_format: Optional[OutputFormat] = None
+    output_template: str = ""
 
 
 @dataclass
@@ -228,6 +237,10 @@ class Config:
 
     # post-run processing
     formatter: Optional[str] = None
+
+    # output formatting options
+    output_format: OutputFormat = OutputFormat.fixit
+    output_template: str = ""
 
     def __post_init__(self) -> None:
         self.path = self.path.resolve()

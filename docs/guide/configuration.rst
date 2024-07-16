@@ -99,7 +99,7 @@ The main configuration table.
 
     .. code-block:: toml
 
-        root = True
+        root = true
         enable-root-import = "src"
         enable = ["orange.rules"]
 
@@ -129,7 +129,7 @@ The main configuration table.
     .. code-block:: toml
 
         python-version = "3.10"
-    
+
     Defaults to the currently active version of Python.
     Set to empty string ``""`` to disable target version checking.
 
@@ -150,6 +150,51 @@ The main configuration table.
 
     Alternative formatting styles can be added by implementing the
     :class:`~fixit.Formatter` interface.
+
+.. attribute:: output-format
+    :type: str
+
+    Choose one of the presets for terminal output formatting.
+    This option is inferred based on the current working directory or from
+    an explicity specified config file -- subpath overrides will be ignored.
+
+    Can be one of:
+
+    - ``custom``: Specify your own format using the :attr:`output-template`
+      option below.
+    - ``fixit``: Fixit's default output format.
+    - ``vscode``: A format that provides clickable paths for Visual Studio Code.
+
+    .. note::
+
+        The default output format is planned to change to ``vscode`` in
+        the next feature release, expected as part of ``v2.3`` or ``v3.0``.
+        If you are sensitive to output formats changing, specify your preferred
+        format in your project configs accordingly.
+
+.. attribute:: output-template
+    :type: str
+
+    Sets the format of output printed to terminal.
+    Python formatting is used in the background to fill in data.
+    Only active with :attr:`output-format` set to ``custom``.
+
+    This option is inferred based on the current working directory or from
+    an explicity specified config file -- subpath overrides will be ignored.
+
+    Supported variables:
+
+    - ``message``: Message emitted by the applied rule.
+
+    - ``path``: Path to affected file.
+
+    - ``result``: Raw :class:`~fixit.Result` object.
+
+    - ``rule_name``: Name of the applied rule.
+
+    - ``start_col``: Start column of affected code.
+
+    - ``start_line``: Start line of affected code.
 
 
 .. _rule-options:

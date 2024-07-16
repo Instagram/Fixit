@@ -10,9 +10,21 @@ from textwrap import dedent
 from typing import List, Sequence, Tuple, Type
 from unittest import TestCase
 
+from click.testing import CliRunner
+
 from .. import config
-from ..ftypes import Config, QualifiedRule, RawConfig, Tags, Version
+from ..cli import main
+from ..ftypes import (
+    Config,
+    Options,
+    OutputFormat,
+    QualifiedRule,
+    RawConfig,
+    Tags,
+    Version,
+)
 from ..rule import LintRule
+from ..util import chdir
 
 
 class ConfigTest(TestCase):
@@ -340,10 +352,11 @@ class ConfigTest(TestCase):
                 self.assertEqual(expected, actual)
 
     def test_generate_config(self) -> None:
-        for name, path, root, expected in (
+        for name, path, root, options, expected in (
             (
                 "inner",
                 self.inner / "foo.py",
+                None,
                 None,
                 Config(
                     path=self.inner / "foo.py",
@@ -359,6 +372,7 @@ class ConfigTest(TestCase):
             (
                 "outer",
                 self.outer / "foo.py",
+                None,
                 None,
                 Config(
                     path=self.outer / "foo.py",
@@ -379,6 +393,7 @@ class ConfigTest(TestCase):
                 "outer with root",
                 self.outer / "foo.py",
                 self.outer,
+                None,
                 Config(
                     path=self.outer / "foo.py",
                     root=self.outer,
@@ -389,6 +404,7 @@ class ConfigTest(TestCase):
             (
                 "other",
                 self.tdp / "other" / "foo.py",
+                None,
                 None,
                 Config(
                     path=self.tdp / "other" / "foo.py",
@@ -411,6 +427,7 @@ class ConfigTest(TestCase):
                 "root",
                 self.tdp / "foo.py",
                 None,
+                None,
                 Config(
                     path=self.tdp / "foo.py",
                     root=self.tdp,
@@ -420,9 +437,25 @@ class ConfigTest(TestCase):
                     python_version=Version("3.8"),
                 ),
             ),
+            (
+                "root with options",
+                self.tdp / "foo.py",
+                None,
+                Options(output_format=OutputFormat.custom, output_template="foo-bar"),
+                Config(
+                    path=self.tdp / "foo.py",
+                    root=self.tdp,
+                    enable_root_import=True,
+                    enable=[QualifiedRule("fixit.rules"), QualifiedRule("more.rules")],
+                    disable=[QualifiedRule("fixit.rules.SomethingSpecific")],
+                    python_version=Version("3.8"),
+                    output_format=OutputFormat.custom,
+                    output_template="foo-bar",
+                ),
+            ),
         ):
             with self.subTest(name):
-                actual = config.generate_config(path, root)
+                actual = config.generate_config(path, root, options=options)
                 self.assertDictEqual(asdict(expected), asdict(actual))
 
     def test_invalid_config(self) -> None:
@@ -433,6 +466,15 @@ class ConfigTest(TestCase):
             )
 
             with self.assertRaisesRegex(config.ConfigError, "enable-root-import"):
+                config.generate_config(self.tdp / "outer" / "foo.py")
+
+        with self.subTest("inner output-format"):
+            (self.tdp / "pyproject.toml").write_text("[tool.fixit]\nroot = true\n")
+            (self.tdp / "outer" / "pyproject.toml").write_text(
+                "[tool.fixit]\noutput-format = 'this is some weird format'\n"
+            )
+
+            with self.assertRaisesRegex(config.ConfigError, "output-format"):
                 config.generate_config(self.tdp / "outer" / "foo.py")
 
     def test_collect_rules(self) -> None:
@@ -472,6 +514,24 @@ class ConfigTest(TestCase):
                 Config(
                     enable=[QualifiedRule("fixit.rules", "UseClsInClassmethod")],
                     python_version=None,
+                )
+            )
+            self.assertListEqual([UseClsInClassmethod], rules)
+
+        with self.subTest("disable builtins"):
+            rules = collect_types(
+                Config(
+                    disable=[QualifiedRule("fixit.rules")],
+                    python_version=None,
+                )
+            )
+            self.assertListEqual([], rules)
+
+        with self.subTest("override broad opt-out"):
+            rules = collect_types(
+                Config(
+                    disable=[QualifiedRule("fixit.rules")],
+                    enable=[QualifiedRule("fixit.rules", "UseClsInClassmethod")],
                 )
             )
             self.assertListEqual([UseClsInClassmethod], rules)
@@ -524,3 +584,81 @@ class ConfigTest(TestCase):
                 )
             )
             self.assertListEqual([UseTypesFromTyping], rules)
+
+    def test_format_output(self) -> None:
+        with chdir(self.tdp):
+            (self.tdp / "pyproject.toml").write_text(
+                dedent(
+                    """
+                    [tool.fixit]
+                    output-format = "vscode"
+                    """
+                )
+            )
+
+            runner = CliRunner(mix_stderr=False)
+            content = "name = '{name}'.format(name='Jane Doe')"
+            filepath = self.tdp / "f_string.py"
+            filepath.write_text(content)
+            output_format_regex = r".*f_string\.py:\d+:\d+ UseFstring: .+"
+
+            with self.subTest("linting vscode"):
+                result = runner.invoke(
+                    main, ["lint", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, output_format_regex)
+
+            with self.subTest("fixing vscode"):
+                result = runner.invoke(
+                    main, ["fix", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, output_format_regex)
+
+            custom_output_format_regex = r".*f_string\.py|\d+|\d+ UseFstring: .+"
+            custom_output_format = (
+                "{path}|{start_line}|{start_col} {rule_name}: {message}"
+            )
+            (self.tdp / "pyproject.toml").write_text(
+                dedent(
+                    f"""
+                    [tool.fixit]
+                    output-format = 'custom'
+                    output-template = '{custom_output_format}'
+                    """
+                )
+            )
+
+            with self.subTest("linting custom"):
+                result = runner.invoke(
+                    main, ["lint", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, custom_output_format_regex)
+
+            with self.subTest("fixing custom"):
+                result = runner.invoke(
+                    main, ["fix", filepath.as_posix()], catch_exceptions=False
+                )
+                self.assertRegex(result.output, custom_output_format_regex)
+
+            with self.subTest("override output-format"):
+                result = runner.invoke(
+                    main,
+                    ["--output-format", "vscode", "lint", filepath.as_posix()],
+                    catch_exceptions=True,
+                )
+                self.assertRegex(result.output, output_format_regex)
+
+            with self.subTest("override output-template"):
+                result = runner.invoke(
+                    main,
+                    [
+                        "--output-template",
+                        "file {path} line {start_line} rule {rule_name}",
+                        "lint",
+                        filepath.as_posix(),
+                    ],
+                    catch_exceptions=True,
+                )
+                self.assertRegex(
+                    result.output, r"file .*f_string\.py line \d+ rule UseFstring"
+                )

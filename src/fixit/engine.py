@@ -9,7 +9,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
-from typing import Collection, Iterable, Iterator, Mapping, Optional, Set
+from typing import Collection, Generator, Iterator, Mapping, Optional, Set
 
 from libcst import CSTNode, CSTTransformer, Module, parse_module
 from libcst.metadata import FullRepoManager, MetadataWrapper, ProviderT
@@ -61,7 +61,7 @@ class LintRunner:
         rules: Collection[LintRule],
         config: Config,
         timings_hook: Optional[TimingsHook] = None,
-    ) -> Iterable[LintViolation]:
+    ) -> Generator[LintViolation, None, int]:
         """Run multiple `LintRule`s and yield any lint violations.
 
         The optional `timings_hook` parameter will be called (if provided) after all

@@ -17,13 +17,26 @@ from moreorless.click import echo_color_precomputed_diff
 from .config import collect_rules, generate_config
 from .engine import LintRunner
 from .format import format_module
-from .ftypes import Config, FileContent, LintViolation, Options, Result, STDIN
+from .ftypes import (
+    Config,
+    FileContent,
+    LintViolation,
+    Options,
+    OutputFormat,
+    Result,
+    STDIN,
+)
 
 LOG = logging.getLogger(__name__)
 
 
 def print_result(
-    result: Result, *, show_diff: bool = False, stderr: bool = False
+    result: Result,
+    *,
+    show_diff: bool = False,
+    stderr: bool = False,
+    output_format: OutputFormat = OutputFormat.fixit,
+    output_template: str = "",
 ) -> int:
     """
     Print linting results in a simple format designed for human eyes.
@@ -46,11 +59,24 @@ def print_result(
         message = result.violation.message
         if result.violation.autofixable:
             message += " (has autofix)"
-        click.secho(
-            f"{path}@{start_line}:{start_col} {rule_name}: {message}",
-            fg="yellow",
-            err=stderr,
-        )
+
+        if output_format == OutputFormat.fixit:
+            line = f"{path}@{start_line}:{start_col} {rule_name}: {message}"
+        elif output_format == OutputFormat.vscode:
+            line = f"{path}:{start_line}:{start_col} {rule_name}: {message}"
+        elif output_format == OutputFormat.custom:
+            line = output_template.format(
+                message=message,
+                path=path,
+                result=result,
+                rule_name=rule_name,
+                start_col=start_col,
+                start_line=start_line,
+            )
+        else:
+            raise NotImplementedError(f"output-format = {output_format!r}")
+        click.secho(line, fg="yellow", err=stderr)
+
         if show_diff and result.violation.diff:
             echo_color_precomputed_diff(result.violation.diff)
         return True
