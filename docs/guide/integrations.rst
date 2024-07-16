@@ -75,3 +75,9 @@ your repository.
 
 To read more about how you can customize your pre-commit configuration,
 see the `pre-commit docs <https://pre-commit.com/#pre-commit-configyaml---hooks>`__.
+
+
+VSCode
+^^^^^^
+For better integration with Visual Studio Code setting ``output-format`` can be set to ``vscode``.
+That way VSCode opens the editor at the right position when clicking on code locations in Fixit's terminal output.
