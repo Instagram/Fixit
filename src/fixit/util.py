@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -87,3 +88,13 @@ def append_sys_path(path: Path) -> Generator[None, None, None]:
     # already there: do nothing, and don't remove it later
     else:
         yield
+
+
+@contextmanager
+def chdir(path: Path) -> Generator[None, None, None]:
+    cwd = Path.cwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(cwd)
