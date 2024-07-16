@@ -22,6 +22,7 @@ Built-in Rules
 - :class:`CollapseIsinstanceChecks`
 - :class:`ComparePrimitivesByEqual`
 - :class:`CompareSingletonPrimitivesByIs`
+- :class:`DeprecatedABCImport`
 - :class:`DeprecatedUnittestAsserts`
 - :class:`NoAssertTrueForComparisons`
 - :class:`NoInheritFromObject`
@@ -240,6 +241,47 @@ Built-in Rules
 
             # suggested fix
             x is not False
+
+.. class:: DeprecatedABCImport
+
+    Checks for the use of the deprecated collections ABC import. Since python 3.3,
+    the Collections Abstract Base Classes (ABC) have been moved to `collections.abc`.
+    These ABCs are import errors starting in Python 3.10.
+
+    .. attribute:: MESSAGE
+
+        ABCs must be imported from collections.abc
+
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+    .. attribute:: PYTHON_VERSION
+        :type: '>= 3.3'
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            from collections.abc import Container
+        .. code:: python
+
+            from collections.abc import Container, Hashable
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            from collections import Container
+
+            # suggested fix
+            from collections.abc import Container
+
+        .. code:: python
+
+            from collections import Container, Hashable
+
+            # suggested fix
+            from collections.abc import Container, Hashable
 
 .. class:: DeprecatedUnittestAsserts
 

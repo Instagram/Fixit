@@ -10,6 +10,7 @@ import pkgutil
 import platform
 import sys
 from contextlib import contextmanager, ExitStack
+
 from pathlib import Path
 from types import ModuleType
 from typing import (
@@ -37,6 +38,7 @@ from .ftypes import (
     is_collection,
     is_sequence,
     Options,
+    OutputFormat,
     QualifiedRule,
     QualifiedRuleRegex,
     RawConfig,
@@ -54,6 +56,7 @@ else:
 
 FIXIT_CONFIG_FILENAMES = ("fixit.toml", ".fixit.toml", "pyproject.toml")
 FIXIT_LOCAL_MODULE = "fixit.local"
+
 
 log = logging.getLogger(__name__)
 
@@ -207,6 +210,7 @@ def collect_rules(
     """
 
     all_rules: Set[Type[LintRule]] = set()
+    named_enables: Set[Type[LintRule]] = set()
     if debug_reasons is not None:
         disabled_rules = debug_reasons
     else:
@@ -222,10 +226,19 @@ def collect_rules(
             stack.enter_context(append_sys_path(path))
 
         for qualified_rule in config.enable:
-            all_rules |= set(find_rules(qualified_rule))
+            rules = set(find_rules(qualified_rule))
+            if qualified_rule.name:
+                named_enables |= rules
+            all_rules |= rules
 
         for qualified_rule in config.disable:
-            disabled_rules.update({r: "disabled" for r in find_rules(qualified_rule)})
+            disabled_rules.update(
+                {
+                    r: "disabled"
+                    for r in find_rules(qualified_rule)
+                    if r not in named_enables
+                }
+            )
             all_rules -= set(disabled_rules)
 
         if config.tags:
@@ -392,6 +405,8 @@ def merge_configs(
     rule_options: RuleOptionsTable = {}
     target_python_version: Optional[Version] = Version(platform.python_version())
     target_formatter: Optional[str] = None
+    output_format: OutputFormat = OutputFormat.fixit
+    output_template: str = ""
 
     def process_subpath(
         subpath: Path,
@@ -473,6 +488,17 @@ def merge_configs(
             else:
                 enable_root_import = True
 
+        if value := data.pop("output-format", ""):
+            try:
+                output_format = OutputFormat(value)
+            except ValueError as e:
+                raise ConfigError(
+                    "output-format: unknown value {value!r}", config=config
+                ) from e
+
+        if value := data.pop("output-template", ""):
+            output_template = value
+
         process_subpath(
             config.path.parent,
             enable=get_sequence(config, "enable"),
@@ -514,16 +540,21 @@ def merge_configs(
         options=rule_options,
         python_version=target_python_version,
         formatter=target_formatter,
+        output_format=output_format,
+        output_template=output_template,
     )
 
 
 def generate_config(
-    path: Path, root: Optional[Path] = None, *, options: Optional[Options] = None
+    path: Optional[Path] = None,
+    root: Optional[Path] = None,
+    *,
+    options: Optional[Options] = None,
 ) -> Config:
     """
     Given a file path, walk upwards looking for and applying cascading configs
     """
-    path = path.resolve()
+    path = (path or Path.cwd()).resolve()
 
     if root is not None:
         root = root.resolve()
@@ -543,5 +574,11 @@ def generate_config(
         if options.rules:
             config.enable = list(options.rules)
             config.disable = []
+
+        if options.output_format:
+            config.output_format = options.output_format
+
+        if options.output_template:
+            config.output_template = options.output_template
 
     return config
