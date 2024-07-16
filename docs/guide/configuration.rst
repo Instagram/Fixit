@@ -165,6 +165,13 @@ The main configuration table.
     - ``fixit``: Fixit's default output format.
     - ``vscode``: A format that provides clickable paths for Visual Studio Code.
 
+    .. note::
+
+        The default output format is planned to change to ``vscode`` in
+        the next feature release, expected as part of ``v2.3`` or ``v3.0``.
+        If you are sensitive to output formats changing, specify your preferred
+        format in your project configs accordingly.
+
 .. attribute:: output-template
     :type: str
 
