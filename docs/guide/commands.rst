@@ -43,6 +43,16 @@ The following options are available for all commands:
     two tags.
 
 
+.. attribute:: --output-format / -o FORMAT_TYPE
+
+    Override how Fixit prints violations to the terminal.
+
+    See :attr:`output-format` for available formats.
+
+.. attribute:: --output-template TEMPLATE
+
+    Override the python formatting template to use with ``output-format = 'custom'``.
+
 ``lint``
 ^^^^^^^^
 
@@ -72,7 +82,7 @@ the input read from STDIN, and the fixed output printed to STDOUT (ignoring
     $ fixit fix [--interactive | --automatic [--diff]] [PATH ...]
 
 .. attribute:: --interactive / -i
-    
+
     Interactively prompt the user to apply or decline suggested fixes for
     each auto-fix available. *default*
 
@@ -93,7 +103,7 @@ the input read from STDIN, and the fixed output printed to STDOUT (ignoring
 Start the language server providing IDE features over
 `LSP <https://microsoft.github.io/language-server-protocol/>`__.
 This command is only available if installed with the ``lsp`` extras (e.g.
-``pip install fixit[lsp]``).  See :ref:`IDE Integrations <ide_integrations>`
+``pip install "fixit[lsp]"``).  See :ref:`IDE Integrations <ide_integrations>`
 for more details.
 
 .. code:: console

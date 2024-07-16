@@ -15,7 +15,7 @@ from fixit import __version__
 
 from .api import fixit_paths, print_result
 from .config import collect_rules, generate_config, parse_rule
-from .ftypes import Config, LSPOptions, Options, QualifiedRule, Tags
+from .ftypes import Config, LSPOptions, Options, OutputFormat, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
@@ -72,12 +72,28 @@ def splash(
     default="",
     help="Override configured rules",
 )
+@click.option(
+    "--output-format",
+    "-o",
+    type=click.Choice([o.name for o in OutputFormat], case_sensitive=False),
+    show_choices=True,
+    default=None,
+    help="Select output format type",
+)
+@click.option(
+    "--output-template",
+    type=str,
+    default="",
+    help="Python format template to use with output format 'custom'",
+)
 def main(
     ctx: click.Context,
     debug: Optional[bool],
     config_file: Optional[Path],
     tags: str,
     rules: str,
+    output_format: Optional[OutputFormat],
+    output_template: str,
 ) -> None:
     level = logging.WARNING
     if debug is not None:
@@ -95,6 +111,8 @@ def main(
                 if r
             }
         ),
+        output_format=output_format,
+        output_template=output_template,
     )
 
 
@@ -121,10 +139,15 @@ def lint(
     visited: Set[Path] = set()
     dirty: Set[Path] = set()
     autofixes = 0
+    config = generate_config(options=options)
     for result in fixit_paths(paths, options=options):
         visited.add(result.path)
-
-        if print_result(result, show_diff=diff):
+        if print_result(
+            result,
+            show_diff=diff,
+            output_format=config.output_format,
+            output_template=config.output_template,
+        ):
             dirty.add(result.path)
             if result.violation:
                 exit_code |= 1
@@ -179,11 +202,18 @@ def fix(
     generator = capture(
         fixit_paths(paths, autofix=autofix, options=options, parallel=False)
     )
+    config = generate_config(options=options)
     for result in generator:
         visited.add(result.path)
         # for STDIN, we need STDOUT to equal the fixed content, so
         # move everything else to STDERR
-        if print_result(result, show_diff=interactive or diff, stderr=is_stdin):
+        if print_result(
+            result,
+            show_diff=interactive or diff,
+            stderr=is_stdin,
+            output_format=config.output_format,
+            output_template=config.output_template,
+        ):
             dirty.add(result.path)
             if autofix and result.violation and result.violation.autofixable:
                 autofixes += 1
