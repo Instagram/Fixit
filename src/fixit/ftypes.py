@@ -73,6 +73,11 @@ class Valid:
     code: str
 
 
+class LintIgnoreStyle(Enum):
+    fixme = "fixme"
+    ignore = "ignore"
+
+
 LintIgnoreRegex = re.compile(
     r"""
     \#\s*                   # leading hash and whitespace

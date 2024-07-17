@@ -31,6 +31,7 @@ dependencies = [
     "packaging >= 21",
     "tomli >= 2.0; python_version < '3.11'",
     "trailrunner >= 1.2",
+    "typing_extensions >= 4.0",
 ]
 
 dynamic = ["version"]
