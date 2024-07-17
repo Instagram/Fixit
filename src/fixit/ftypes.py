@@ -19,6 +19,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Set,
     Tuple,
     TypedDict,
     TypeVar,
@@ -29,6 +30,7 @@ from libcst import CSTNode, CSTNodeT, FlattenSentinel, RemovalSentinel
 from libcst._add_slots import add_slots
 from libcst.metadata import CodePosition as CodePosition, CodeRange as CodeRange
 from packaging.version import Version
+from typing_extensions import Self
 
 __all__ = ("Version",)
 
@@ -81,7 +83,7 @@ class LintIgnoreStyle(Enum):
 LintIgnoreRegex = re.compile(
     r"""
     \#\s*                   # leading hash and whitespace
-    (lint-(?:ignore|fixme)) # directive
+    (?:lint-(ignore|fixme)) # directive
     (?:
         (?::\s*|\s+)        # separator
         (
@@ -92,6 +94,34 @@ LintIgnoreRegex = re.compile(
     """,
     re.VERBOSE,
 )
+
+
+@dataclass
+class LintIgnore:
+    style: LintIgnoreStyle
+    names: Set[str] = field(default_factory=set)
+    prefix: str = ""
+    postfix: str = ""
+
+    @classmethod
+    def parse(cls, value: str) -> Optional[Self]:
+        value = value.strip()
+        if match := LintIgnoreRegex.search(value):
+            style, raw_names = match.groups()
+            names = {n.strip() for n in raw_names.split(",")} if raw_names else set()
+            start, end = match.span()
+            prefix = value[:start].strip()
+            postfix = value[end:]
+            return cls(LintIgnoreStyle(style), names, prefix, postfix)
+
+        return None
+
+    def __str__(self) -> str:
+        if self.names:
+            directive = f"# lint-{self.style.value}: {', '.join(sorted(self.names))}"
+        else:
+            directive = f"# lint-{self.style.value}"
+        return f"{self.prefix}  {directive}{self.postfix}".strip()
 
 
 QualifiedRuleRegex = re.compile(
