@@ -47,15 +47,15 @@ class RunnerTest(TestCase):
         rule = NoopRule()
         for _ in self.runner.collect_violations([rule], Config()):
             pass  # exhaust the generator
-        self.assertIn("NoopRule.visit_Module", self.runner.timings)
-        self.assertIn("NoopRule.leave_Module", self.runner.timings)
-        self.assertGreaterEqual(self.runner.timings["NoopRule.visit_Module"], 0)
+        self.assertIn("NoopRule.visit_Module", self.runner.log_event)
+        self.assertIn("NoopRule.leave_Module", self.runner.log_event)
+        self.assertGreaterEqual(self.runner.log_event["NoopRule.visit_Module"], 0)
 
     def test_timing_hook(self) -> None:
         rule = NoopRule()
         hook = MagicMock()
         for i, _ in enumerate(
-            self.runner.collect_violations([rule], Config(), timings_hook=hook)
+            self.runner.collect_violations([rule], Config(), logger_hook=hook)
         ):
             if i <= 1:
                 # only called at the end

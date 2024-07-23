@@ -46,8 +46,8 @@ RuleOptionsTable = Dict[str, RuleOptions]
 
 NodeReplacement = Union[CSTNodeT, FlattenSentinel[CSTNodeT], RemovalSentinel]
 
-Timings = Dict[str, int]
-TimingsHook = Callable[[Timings], None]
+LoggableMetric = Dict[str, Any]
+LoggerHook = Callable[[LoggableMetric], None]
 
 VisitorMethod = Callable[[CSTNode], None]
 VisitHook = Callable[[str], ContextManager[None]]
