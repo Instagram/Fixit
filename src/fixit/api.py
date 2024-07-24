@@ -21,7 +21,7 @@ from .ftypes import (
     Config,
     FileContent,
     LintViolation,
-    LoggerHook,
+    MetricsHook,
     Options,
     OutputFormat,
     Result,
@@ -100,7 +100,7 @@ def fixit_bytes(
     *,
     config: Config,
     autofix: bool = False,
-    logger_hook: Optional[LoggerHook] = None,
+    logger_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, Optional[FileContent]]:
     """
     Lint raw bytes content representing a single path, using the given configuration.
@@ -155,7 +155,7 @@ def fixit_stdin(
     *,
     autofix: bool = False,
     options: Optional[Options] = None,
-    logger_hook: Optional[LoggerHook] = None,
+    logger_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Wrapper around :func:`fixit_bytes` for formatting content from STDIN.
@@ -188,7 +188,7 @@ def fixit_file(
     *,
     autofix: bool = False,
     options: Optional[Options] = None,
-    logger_hook: Optional[LoggerHook] = None,
+    logger_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint a single file on disk, detecting and generating appropriate configuration.
@@ -224,7 +224,7 @@ def _fixit_file_wrapper(
     *,
     autofix: bool = False,
     options: Optional[Options] = None,
-    logger_hook: Optional[LoggerHook] = None,
+    logger_hook: Optional[MetricsHook] = None,
 ) -> List[Result]:
     """
     Wrapper because generators can't be pickled or used directly via multiprocessing
@@ -241,7 +241,7 @@ def fixit_paths(
     autofix: bool = False,
     options: Optional[Options] = None,
     parallel: bool = True,
-    logger_hook: Optional[LoggerHook] = None,
+    logger_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint multiple files or directories, recursively expanding each path.
