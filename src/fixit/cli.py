@@ -119,11 +119,13 @@ def main(
 @main.command()
 @click.pass_context
 @click.option("--diff", "-d", is_flag=True, help="Show diff of suggested changes")
+@click.option("--metrics", "-m", is_flag=True, help="Print metrics of this run")
 @click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
 def lint(
     ctx: click.Context,
     diff: bool,
     paths: Sequence[Path],
+    metrics: bool,
 ) -> None:
     """
     lint one or more paths and return suggestions
@@ -140,7 +142,9 @@ def lint(
     dirty: Set[Path] = set()
     autofixes = 0
     config = generate_config(options=options)
-    for result in fixit_paths(paths, options=options):
+    for result in fixit_paths(
+        paths, options=options, logger_hook=print if metrics else None
+    ):
         visited.add(result.path)
         if print_result(
             result,
@@ -170,12 +174,14 @@ def lint(
     help="how to apply fixes; interactive by default unless STDIN",
 )
 @click.option("--diff", "-d", is_flag=True, help="show diff even with --automatic")
+@click.option("--metrics", "-m", is_flag=True, help="Print metrics of this run")
 @click.argument("paths", nargs=-1, type=click.Path(path_type=Path))
 def fix(
     ctx: click.Context,
     interactive: bool,
     diff: bool,
     paths: Sequence[Path],
+    metrics: bool,
 ) -> None:
     """
     lint and autofix one or more files and return results
@@ -200,7 +206,13 @@ def fix(
 
     # TODO: make this parallel
     generator = capture(
-        fixit_paths(paths, autofix=autofix, options=options, parallel=False)
+        fixit_paths(
+            paths,
+            autofix=autofix,
+            options=options,
+            parallel=False,
+            logger_hook=print if metrics else None,
+        )
     )
     config = generate_config(options=options)
     for result in generator:
