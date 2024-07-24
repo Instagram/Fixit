@@ -144,7 +144,7 @@ def lint(
     autofixes = 0
     config = generate_config(options=options)
     for result in fixit_paths(
-        paths, options=options, logger_hook=print if options.print_metrics else None
+        paths, options=options, metrics_hook=print if options.print_metrics else None
     ):
         visited.add(result.path)
         if print_result(
@@ -210,7 +210,7 @@ def fix(
             autofix=autofix,
             options=options,
             parallel=False,
-            logger_hook=print if options.print_metrics else None,
+            metrics_hook=print if options.print_metrics else None,
         )
     )
     config = generate_config(options=options)
