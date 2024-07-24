@@ -191,6 +191,7 @@ class Options:
     rules: Sequence[QualifiedRule] = ()
     output_format: Optional[OutputFormat] = None
     output_template: str = ""
+    print_metrics: bool = False
 
 
 @dataclass
