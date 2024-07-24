@@ -46,8 +46,8 @@ RuleOptionsTable = Dict[str, RuleOptions]
 
 NodeReplacement = Union[CSTNodeT, FlattenSentinel[CSTNodeT], RemovalSentinel]
 
-Timings = Dict[str, int]
-TimingsHook = Callable[[Timings], None]
+Metrics = Dict[str, Any]
+MetricsHook = Callable[[Metrics], None]
 
 VisitorMethod = Callable[[CSTNode], None]
 VisitHook = Callable[[str], ContextManager[None]]
@@ -191,6 +191,7 @@ class Options:
     rules: Sequence[QualifiedRule] = ()
     output_format: Optional[OutputFormat] = None
     output_template: str = ""
+    print_metrics: bool = False
 
 
 @dataclass

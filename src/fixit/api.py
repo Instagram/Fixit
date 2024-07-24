@@ -21,6 +21,7 @@ from .ftypes import (
     Config,
     FileContent,
     LintViolation,
+    MetricsHook,
     Options,
     OutputFormat,
     Result,
@@ -99,6 +100,7 @@ def fixit_bytes(
     *,
     config: Config,
     autofix: bool = False,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, Optional[FileContent]]:
     """
     Lint raw bytes content representing a single path, using the given configuration.
@@ -127,7 +129,7 @@ def fixit_bytes(
         pending_fixes: List[LintViolation] = []
 
         clean = True
-        for violation in runner.collect_violations(rules, config):
+        for violation in runner.collect_violations(rules, config, metrics_hook):
             clean = False
             fix = yield Result(path, violation)
             if fix or autofix:
@@ -153,6 +155,7 @@ def fixit_stdin(
     *,
     autofix: bool = False,
     options: Optional[Options] = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Wrapper around :func:`fixit_bytes` for formatting content from STDIN.
@@ -169,7 +172,9 @@ def fixit_stdin(
         content: FileContent = sys.stdin.buffer.read()
         config = generate_config(path, options=options)
 
-        updated = yield from fixit_bytes(path, content, config=config, autofix=autofix)
+        updated = yield from fixit_bytes(
+            path, content, config=config, autofix=autofix, metrics_hook=metrics_hook
+        )
         if autofix:
             sys.stdout.buffer.write(updated or content)
 
@@ -183,6 +188,7 @@ def fixit_file(
     *,
     autofix: bool = False,
     options: Optional[Options] = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint a single file on disk, detecting and generating appropriate configuration.
@@ -201,7 +207,9 @@ def fixit_file(
         content: FileContent = path.read_bytes()
         config = generate_config(path, options=options)
 
-        updated = yield from fixit_bytes(path, content, config=config, autofix=autofix)
+        updated = yield from fixit_bytes(
+            path, content, config=config, autofix=autofix, metrics_hook=metrics_hook
+        )
         if updated and updated != content:
             LOG.info(f"{path}: writing changes to file")
             path.write_bytes(updated)
@@ -212,13 +220,19 @@ def fixit_file(
 
 
 def _fixit_file_wrapper(
-    path: Path, *, autofix: bool = False, options: Optional[Options] = None
+    path: Path,
+    *,
+    autofix: bool = False,
+    options: Optional[Options] = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> List[Result]:
     """
     Wrapper because generators can't be pickled or used directly via multiprocessing
     TODO: replace this with some sort of queue or whatever
     """
-    return list(fixit_file(path, autofix=autofix, options=options))
+    return list(
+        fixit_file(path, autofix=autofix, options=options, metrics_hook=metrics_hook)
+    )
 
 
 def fixit_paths(
@@ -227,6 +241,7 @@ def fixit_paths(
     autofix: bool = False,
     options: Optional[Options] = None,
     parallel: bool = True,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint multiple files or directories, recursively expanding each path.
@@ -276,11 +291,20 @@ def fixit_paths(
             expanded_paths.extend(trailrunner.walk(path))
 
     if is_stdin:
-        yield from fixit_stdin(stdin_path, autofix=autofix, options=options)
+        yield from fixit_stdin(
+            stdin_path, autofix=autofix, options=options, metrics_hook=metrics_hook
+        )
     elif len(expanded_paths) == 1 or not parallel:
         for path in expanded_paths:
-            yield from fixit_file(path, autofix=autofix, options=options)
+            yield from fixit_file(
+                path, autofix=autofix, options=options, metrics_hook=metrics_hook
+            )
     else:
-        fn = partial(_fixit_file_wrapper, autofix=autofix, options=options)
+        fn = partial(
+            _fixit_file_wrapper,
+            autofix=autofix,
+            options=options,
+            metrics_hook=metrics_hook,
+        )
         for _, results in trailrunner.run_iter(expanded_paths, fn):
             yield from results

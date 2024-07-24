@@ -19,9 +19,9 @@ from .ftypes import (
     Config,
     FileContent,
     LintViolation,
+    Metrics,
+    MetricsHook,
     NodeReplacement,
-    Timings,
-    TimingsHook,
 )
 from .rule import LintRule
 
@@ -53,17 +53,17 @@ class LintRunner:
         self.path = path
         self.source = source
         self.module: Module = parse_module(source)
-        self.timings: Timings = defaultdict(lambda: 0)
+        self.metrics: Metrics = defaultdict(lambda: 0)
 
     def collect_violations(
         self,
         rules: Collection[LintRule],
         config: Config,
-        timings_hook: Optional[TimingsHook] = None,
+        metrics_hook: Optional[MetricsHook] = None,
     ) -> Generator[LintViolation, None, int]:
         """Run multiple `LintRule`s and yield any lint violations.
 
-        The optional `timings_hook` parameter will be called (if provided) after all
+        The optional `metrics_hook` parameter will be called (if provided) after all
         lint rules have finished running, passing in a dictionary of
         ``RuleName.visit_function_name`` -> ``duration in microseconds``.
         """
@@ -76,7 +76,7 @@ class LintRunner:
             finally:
                 duration_us = int(1000 * 1000 * (time.perf_counter() - start))
                 LOG.debug(f"PERF: {name} took {duration_us} µs")
-                self.timings[name] += duration_us
+                self.metrics[name] += duration_us
 
         metadata_cache: Mapping[ProviderT, object] = {}
         needs_repo_manager: Set[ProviderT] = set()
@@ -111,8 +111,8 @@ class LintRunner:
                     violation = replace(violation, diff=diff)
 
                 yield violation
-        if timings_hook:
-            timings_hook(self.timings)
+        if metrics_hook:
+            metrics_hook(self.metrics)
 
         return count
 

@@ -86,6 +86,7 @@ def splash(
     default="",
     help="Python format template to use with output format 'custom'",
 )
+@click.option("--print-metrics", is_flag=True, help="Print metrics of this run")
 def main(
     ctx: click.Context,
     debug: Optional[bool],
@@ -94,6 +95,7 @@ def main(
     rules: str,
     output_format: Optional[OutputFormat],
     output_template: str,
+    print_metrics: bool,
 ) -> None:
     level = logging.WARNING
     if debug is not None:
@@ -113,6 +115,7 @@ def main(
         ),
         output_format=output_format,
         output_template=output_template,
+        print_metrics=print_metrics,
     )
 
 
@@ -140,7 +143,9 @@ def lint(
     dirty: Set[Path] = set()
     autofixes = 0
     config = generate_config(options=options)
-    for result in fixit_paths(paths, options=options):
+    for result in fixit_paths(
+        paths, options=options, metrics_hook=print if options.print_metrics else None
+    ):
         visited.add(result.path)
         if print_result(
             result,
@@ -200,7 +205,13 @@ def fix(
 
     # TODO: make this parallel
     generator = capture(
-        fixit_paths(paths, autofix=autofix, options=options, parallel=False)
+        fixit_paths(
+            paths,
+            autofix=autofix,
+            options=options,
+            parallel=False,
+            metrics_hook=print if options.print_metrics else None,
+        )
     )
     config = generate_config(options=options)
     for result in generator:
