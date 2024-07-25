@@ -3,13 +3,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import List, Optional, Union
+from typing import List, Optional, Set, Union
 
 import libcst as cst
 import libcst.matchers as m
 
 from fixit import Invalid, LintRule, Valid
-from libcst.metadata import ParentNodeProvider
 
 
 # The ABCs that have been moved to `collections.abc`
@@ -154,7 +153,7 @@ class DeprecatedABCImport(LintRule):
         # The original imports
         self.imports_names: List[str] = []
         # Nodes to ignore
-        self.ignore_nodes: set[cst.ImportFrom] = set()
+        self.ignore_nodes: Set[cst.ImportFrom] = set()
 
     def visit_Try(self, node: cst.Try) -> None:
         """
@@ -190,8 +189,14 @@ class DeprecatedABCImport(LintRule):
                             ],
                         ),
                     )
-                ) and m.matches(node=handler.type, matcher=m.Name("ImportError")):
-                    self.ignore_nodes |= set(import_nodes)
+                ) and m.matches(
+                    node=cst.ensure_type(handler.type, cst.Name),
+                    matcher=m.Name("ImportError"),
+                ):
+                    self.ignore_nodes |= {
+                        cst.ensure_type(import_node, cst.ImportFrom)
+                        for import_node in import_nodes
+                    }
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
         """
