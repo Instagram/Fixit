@@ -160,7 +160,7 @@ class DeprecatedABCImport(LintRule):
         Catch instances where a correct import is in a try block with an except block
         that fails over to the deprecated import.
         """
-        # If a try block imports
+        # If a try block imports the correct import, check the except block
         if m.findall(
             node,
             m.ImportFrom(
@@ -173,6 +173,8 @@ class DeprecatedABCImport(LintRule):
                 ],
             ),
         ):
+            # For each handler, ensure it is a ImportError and check that it contains
+            # the deprecated import
             for handler in node.handlers:
                 if (
                     import_nodes := m.findall(
