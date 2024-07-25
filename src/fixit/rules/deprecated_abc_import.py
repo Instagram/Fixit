@@ -6,10 +6,10 @@
 from typing import List, Optional, Union
 
 import libcst as cst
-
 import libcst.matchers as m
 
 from fixit import Invalid, LintRule, Valid
+from libcst.metadata import ParentNodeProvider
 
 
 # The ABCs that have been moved to `collections.abc`
@@ -71,6 +71,38 @@ class DeprecatedABCImport(LintRule):
                     pass
             """
         ),
+        Valid(
+            """
+            try:
+                from collections.abc import Mapping
+            except ImportError:
+                from collections import Mapping
+            """
+        ),
+        Valid(
+            """
+            try:
+                from collections.abc import Mapping, Container
+            except ImportError:
+                from collections import Mapping, Container
+            """
+        ),
+        Valid(
+            """
+            try:
+                from collections.abc import Mapping, Container
+            except Exception:
+                exit()
+            """
+        ),
+        Valid(
+            """
+            try:
+                from collections import defaultdict
+            except Exception:
+                exit()
+            """
+        ),
     ]
     INVALID = [
         Invalid(
@@ -121,11 +153,53 @@ class DeprecatedABCImport(LintRule):
         self.update_module: bool = False
         # The original imports
         self.imports_names: List[str] = []
+        # Nodes to ignore
+        self.ignore_nodes: set[cst.ImportFrom] = set()
+
+    def visit_Try(self, node: cst.Try) -> None:
+        """
+        Catch instances where a correct import is in a try block with an except block
+        that fails over to the deprecated import.
+        """
+        # If a try block imports
+        if m.findall(
+            node,
+            m.ImportFrom(
+                module=m.Attribute(value=m.Name("collections"), attr=m.Name("abc")),
+                names=[
+                    m.AtLeastN(
+                        n=1,
+                        matcher=m.OneOf(*[m.ImportAlias(name=m.Name(n)) for n in ABCS]),
+                    )
+                ],
+            ),
+        ):
+            for handler in node.handlers:
+                if (
+                    import_nodes := m.findall(
+                        handler,
+                        m.ImportFrom(
+                            module=m.Name("collections"),
+                            names=[
+                                m.AtLeastN(
+                                    n=1,
+                                    matcher=m.OneOf(
+                                        *[m.ImportAlias(name=m.Name(n)) for n in ABCS]
+                                    ),
+                                )
+                            ],
+                        ),
+                    )
+                ) and m.matches(node=handler.type, matcher=m.Name("ImportError")):
+                    self.ignore_nodes |= set(import_nodes)
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
         """
         This catches the `from collections import <ABC>` cases
         """
+        if node in self.ignore_nodes:
+            return
+
         # Get imports in this statement
         import_names = (
             [name.name.value for name in node.names]
