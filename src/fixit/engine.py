@@ -76,7 +76,7 @@ class LintRunner:
             finally:
                 duration_us = int(1000 * 1000 * (time.perf_counter() - start))
                 LOG.debug(f"PERF: {name} took {duration_us} µs")
-                self.metrics[name] += duration_us
+                self.metrics[f"Duration.{name}"] += duration_us
 
         metadata_cache: Mapping[ProviderT, object] = {}
         needs_repo_manager: Set[ProviderT] = set()
@@ -103,10 +103,13 @@ class LintRunner:
         wrapper.visit_batched(rules)
         count = 0
         for rule in rules:
+            self.metrics[f"ViolationCount.{rule.name}"] = len(rule._violations)
+            self.metrics[f"ViolationCountWithReplacement.{rule.name}"] = 0
             for violation in rule._violations:
                 count += 1
 
                 if violation.replacement:
+                    self.metrics[f"ViolationCountWithReplacement.{rule.name}"] += 1
                     diff = diff_violation(self.path, self.module, violation)
                     violation = replace(violation, diff=diff)
 
