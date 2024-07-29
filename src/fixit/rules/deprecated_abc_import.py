@@ -167,7 +167,7 @@ class DeprecatedABCImport(LintRule):
 
     def is_except_block(self, node: cst.CSTNode) -> bool:
         """
-        Check if the node is in an except block - if it is, we know ti ignore it, as it
+        Check if the node is in an except block - if it is, we know to ignore it, as it
         may be a fallback import
         """
         parent = self.get_metadata(ParentNodeProvider, node)
