@@ -93,6 +93,15 @@ class DeprecatedABCImport(LintRule):
             """
             try:
                 from collections.abc import Mapping, Container
+            except ImportError:
+                def fallback_import():
+                    from collections import Mapping, Container
+            """
+        ),
+        Valid(
+            """
+            try:
+                from collections.abc import Mapping, Container
             except Exception:
                 exit()
             """
@@ -161,18 +170,14 @@ class DeprecatedABCImport(LintRule):
         Check if the node is in an except block - if it is, we know ti ignore it, as it
         may be a fallback import
         """
-        try:
-            return isinstance(
-                self.get_metadata(
-                    ParentNodeProvider,
-                    self.get_metadata(
-                        ParentNodeProvider, self.get_metadata(ParentNodeProvider, node)
-                    ),
-                ),
-                cst.ExceptHandler,
-            )
-        except KeyError:
-            return False
+        parent = self.get_metadata(ParentNodeProvider, node)
+        while not isinstance(parent, cst.Module):
+            if isinstance(parent, cst.ExceptHandler):
+                return True
+
+            parent = self.get_metadata(ParentNodeProvider, parent)
+
+        return False
 
     def visit_ImportFrom(self, node: cst.ImportFrom) -> None:
         """
