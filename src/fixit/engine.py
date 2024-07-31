@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+import os
 import time
 from collections import defaultdict
 from contextlib import contextmanager
@@ -65,8 +66,16 @@ class LintRunner:
 
         The optional `metrics_hook` parameter will be called (if provided) after all
         lint rules have finished running, passing in a dictionary of
-        ``RuleName.visit_function_name`` -> ``duration in microseconds``.
+        {
+            CLIENT_ID: an optional client id set by environment variable,
+            Duration.RuleName.visit_function_name: duration in microseconds,
+            ViolationCount.RuleName: number of violations,
+            ViolationCountReplacement.RuleName: number of violations with replacements,
+            ViolationCount.Total: total number of violations,
+        }
         """
+
+        self.metrics["CLIENT_ID"] = os.environ.get("FIXIT_CLIENT_ID", "default")
 
         @contextmanager
         def visit_hook(name: str) -> Iterator[None]:
