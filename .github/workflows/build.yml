@@ -39,7 +39,7 @@ jobs:
         run: |
           python -m hatch run typecheck
       - name: Docs
-        if: ${{ matrix.python-version != '3.8' }}
+        if: ${{ matrix.python-version != '3.8' && matrix.python-version != '3.9' }}
         run: |
           python -m hatch run docs:build
       - name: Generated changes
