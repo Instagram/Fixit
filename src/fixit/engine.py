@@ -103,13 +103,13 @@ class LintRunner:
         wrapper.visit_batched(rules)
         count = 0
         for rule in rules:
-            self.metrics[f"ViolationCount.{rule.name}"] = len(rule._violations)
-            self.metrics[f"ViolationCountWithReplacement.{rule.name}"] = 0
+            self.metrics[f"Count.{rule.name}"] = len(rule._violations)
+            self.metrics[f"FixCount.{rule.name}"] = 0
             for violation in rule._violations:
                 count += 1
 
                 if violation.replacement:
-                    self.metrics[f"ViolationCountWithReplacement.{rule.name}"] += 1
+                    self.metrics[f"FixCount.{rule.name}"] += 1
                     diff = diff_violation(self.path, self.module, violation)
                     violation = replace(violation, diff=diff)
 
