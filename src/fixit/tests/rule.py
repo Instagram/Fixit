@@ -50,9 +50,9 @@ class RunnerTest(TestCase):
         self.assertIn("Duration.NoopRule.visit_Module", self.runner.metrics)
         self.assertIn("Duration.NoopRule.leave_Module", self.runner.metrics)
         self.assertGreaterEqual(self.runner.metrics["NoopRule.visit_Module"], 0)
-        self.assertIn("ViolationCount.Noop", self.runner.metrics)
-        self.assertIn("ViolationCountWithReplacement.Noop", self.runner.metrics)
-        self.assertIn("ViolationCount.Total", self.runner.metrics)
+        self.assertIn("Count.Noop", self.runner.metrics)
+        self.assertIn("FixCount.Noop", self.runner.metrics)
+        self.assertIn("Count.Total", self.runner.metrics)
 
     def test_timing_hook(self) -> None:
         rule = NoopRule()

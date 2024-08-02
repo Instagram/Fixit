@@ -115,7 +115,7 @@ class LintRunner:
 
                 yield violation
 
-        self.metrics["ViolationCount.Total"] = count
+        self.metrics["Count.Total"] = count
 
         if metrics_hook:
             metrics_hook(self.metrics)
