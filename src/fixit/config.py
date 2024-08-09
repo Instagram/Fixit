@@ -232,7 +232,13 @@ def collect_rules(
                     named_enables |= rules
                 all_rules |= rules
             except CollectionError as e:
-                log.warning(f"Failed to collect enabled rules for {config.enable}: {e}")
+                log.warning(
+                    f"Collection Error: Failed to collect enabled rules for {config.enable}: {e}"
+                )
+            except Exception as e:
+                log.warning(
+                    f"Failed to collect enabled rules for {config.enable}: {e.__class__.__name__}: {e}"
+                )
 
         for qualified_rule in config.disable:
             try:
@@ -246,7 +252,11 @@ def collect_rules(
                 all_rules -= set(disabled_rules)
             except CollectionError as e:
                 log.warning(
-                    f"Failed to collect disabled rules for {config.enable}: {e}"
+                    f"Collection Error: Failed to collect disabled rules for {config.enable}: {e}"
+                )
+            except Exception as e:
+                log.warning(
+                    f"Failed to collect disabled rules for {config.enable}: {e.__class__.__name__}: {e}"
                 )
 
         if config.tags:
