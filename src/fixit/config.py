@@ -226,20 +226,26 @@ def collect_rules(
             stack.enter_context(append_sys_path(path))
 
         for qualified_rule in config.enable:
-            rules = set(find_rules(qualified_rule))
-            if qualified_rule.name:
-                named_enables |= rules
-            all_rules |= rules
+            try:
+                rules = set(find_rules(qualified_rule))
+                if qualified_rule.name:
+                    named_enables |= rules
+                all_rules |= rules
+            except CollectionError as e:
+                log.error(f"Failed to collect enabled rules for {config.enable}: {e}")
 
         for qualified_rule in config.disable:
-            disabled_rules.update(
-                {
-                    r: "disabled"
-                    for r in find_rules(qualified_rule)
-                    if r not in named_enables
-                }
-            )
-            all_rules -= set(disabled_rules)
+            try:
+                disabled_rules.update(
+                    {
+                        r: "disabled"
+                        for r in find_rules(qualified_rule)
+                        if r not in named_enables
+                    }
+                )
+                all_rules -= set(disabled_rules)
+            except CollectionError as e:
+                log.error(f"Failed to collect disabled rules for {config.enable}: {e}")
 
         if config.tags:
             disabled_rules.update(
