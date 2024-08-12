@@ -356,7 +356,7 @@ def debug(ctx: click.Context, paths: Sequence[Path]) -> None:
 @click.argument("paths", nargs=-1, type=click.Path(exists=True, path_type=Path))
 def validate_config(ctx: click.Context, paths: Sequence[Path]) -> None:
     """
-    print materialized configuration for paths
+    test the config(s) for the provided path(s)
     """
     options: Options = ctx.obj
 
@@ -368,11 +368,17 @@ def validate_config(ctx: click.Context, paths: Sequence[Path]) -> None:
     except ImportError:
         from pprint import pprint  # type: ignore
 
+    invalid_detected: bool = False
+
     for path in paths:
         try:
             collect_rules(generate_config(path.resolve(), options=options))
         except Exception as e:
             pprint(f"Invalid config: {e.__class__.__name__}: {e}")
-            exit(-1)
+            invalid_detected = True
+
+    if invalid_detected:
+        pprint("Invalid Config(s) Detected")
+        exit(-1)
 
     pprint("Valid Config")
