@@ -20,8 +20,6 @@ from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
 
-log = logging.getLogger(__name__)
-
 
 def splash(
     visited: Set[Path], dirty: Set[Path], autofixes: int = 0, fixed: int = 0
@@ -371,11 +369,8 @@ def validate_config(ctx: click.Context, paths: Sequence[Path]) -> None:
         from pprint import pprint  # type: ignore
 
     for path in paths:
-        path = path.resolve()
-
         try:
-            config = generate_config(path, options=options)
-            enabled = collect_rules(config)
+            collect_rules(generate_config(path.resolve(), options=options))
         except Exception as e:
             pprint(f"Invalid config: {e.__class__.__name__}: {e}")
             exit(-1)
