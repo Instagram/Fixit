@@ -356,7 +356,7 @@ def debug(ctx: click.Context, paths: Sequence[Path]) -> None:
 @click.argument("paths", nargs=-1, type=click.Path(exists=True, path_type=Path))
 def validate_config(ctx: click.Context, paths: Sequence[Path]) -> None:
     """
-    test the config(s) for the provided path(s)
+    validate the config(s) for the provided path(s)
     """
     options: Options = ctx.obj
 
