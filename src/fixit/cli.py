@@ -20,6 +20,8 @@ from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
 from .util import capture
 
+log = logging.getLogger(__name__)
+
 
 def splash(
     visited: Set[Path], dirty: Set[Path], autofixes: int = 0, fixed: int = 0
@@ -349,3 +351,33 @@ def debug(ctx: click.Context, paths: Sequence[Path]) -> None:
             "disabled:",
             sorted(f"{rule()} ({reason})" for rule, reason in disabled.items()),
         )
+
+
+@main.command()
+@click.pass_context
+@click.argument("paths", nargs=-1, type=click.Path(exists=True, path_type=Path))
+def validate_config(ctx: click.Context, paths: Sequence[Path]) -> None:
+    """
+    print materialized configuration for paths
+    """
+    options: Options = ctx.obj
+
+    if not paths:
+        paths = [Path.cwd()]
+
+    try:
+        from rich import print as pprint
+    except ImportError:
+        from pprint import pprint  # type: ignore
+
+    for path in paths:
+        path = path.resolve()
+
+        try:
+            config = generate_config(path, options=options)
+            enabled = collect_rules(config)
+        except Exception as e:
+            pprint(f"Invalid config: {e.__class__.__name__}: {e}")
+            exit(-1)
+
+    pprint("Valid Config")
