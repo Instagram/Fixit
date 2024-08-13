@@ -358,8 +358,6 @@ def validate_config(ctx: click.Context, path: Path) -> None:
     """
     validate the config(s) for the provided path(s)
     """
-    options: Options = ctx.obj
-
     try:
         from rich import print as pprint
     except ImportError:
@@ -368,21 +366,26 @@ def validate_config(ctx: click.Context, path: Path) -> None:
     try:
         configs = read_configs([path])[0]
 
-        def validate_rules(rules: List[str]) -> None:
+        def validate_rules(rules: List[str], path: Path) -> None:
             for rule in rules:
                 try:
                     qualified_rule = parse_rule(rule, path, configs)
-                    for lint_rule in find_rules(qualified_rule):
+                    for _ in find_rules(qualified_rule):
                         pass
                 except Exception as e:
                     pprint(
                         f"Failed to parse rule `{rule}`: {e.__class__.__name__}: {e}"
                     )
 
-        print(configs)
         data = configs.data
-        validate_rules(data.get("enable", []))
-        validate_rules(data.get("disable", []))
+        validate_rules(data.get("enable", []), path)
+        validate_rules(data.get("disable", []), path)
+
+        for override in data.get("overrides", []):
+            validate_rules(override.get("enable", []), Path(override.get("path", path)))
+            validate_rules(
+                override.get("disable", []), Path(override.get("path", path))
+            )
 
     except Exception as e:
         pprint(f"Invalid config: {e.__class__.__name__}: {e}")
