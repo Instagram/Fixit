@@ -7,14 +7,14 @@ import logging
 import sys
 import unittest
 from pathlib import Path
-from typing import Dict, Optional, Sequence, Set, Type
+from typing import Dict, List, Optional, Sequence, Set, Type
 
 import click
 
 from fixit import __version__
 
 from .api import fixit_paths, print_result
-from .config import collect_rules, generate_config, parse_rule
+from .config import collect_rules, find_rules, generate_config, parse_rule, read_configs
 from .ftypes import Config, LSPOptions, Options, OutputFormat, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
@@ -353,32 +353,36 @@ def debug(ctx: click.Context, paths: Sequence[Path]) -> None:
 
 @main.command()
 @click.pass_context
-@click.argument("paths", nargs=-1, type=click.Path(exists=True, path_type=Path))
-def validate_config(ctx: click.Context, paths: Sequence[Path]) -> None:
+@click.argument("path", nargs=1, type=click.Path(exists=True, path_type=Path))
+def validate_config(ctx: click.Context, path: Path) -> None:
     """
     validate the config(s) for the provided path(s)
     """
     options: Options = ctx.obj
-
-    if not paths:
-        paths = [Path.cwd()]
 
     try:
         from rich import print as pprint
     except ImportError:
         from pprint import pprint  # type: ignore
 
-    invalid_detected: bool = False
+    try:
+        configs = read_configs([path])[0]
 
-    for path in paths:
-        try:
-            collect_rules(generate_config(path.resolve(), options=options))
-        except Exception as e:
-            pprint(f"Invalid config: {e.__class__.__name__}: {e}")
-            invalid_detected = True
+        def validate_rules(rules: List[str]) -> None:
+            for rule in rules:
+                try:
+                    qualified_rule = parse_rule(rule, path, configs)
+                    for lint_rule in find_rules(qualified_rule):
+                        pass
+                except Exception as e:
+                    pprint(
+                        f"Failed to parse rule `{rule}`: {e.__class__.__name__}: {e}"
+                    )
 
-    if invalid_detected:
-        pprint("Invalid Config(s) Detected")
-        exit(-1)
+        print(configs)
+        data = configs.data
+        validate_rules(data.get("enable", []))
+        validate_rules(data.get("disable", []))
 
-    pprint("Valid Config")
+    except Exception as e:
+        pprint(f"Invalid config: {e.__class__.__name__}: {e}")
