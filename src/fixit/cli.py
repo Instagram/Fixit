@@ -363,6 +363,8 @@ def validate_config(ctx: click.Context, path: Path) -> None:
     except ImportError:
         from pprint import pprint  # type: ignore
 
+    exception_raised = False
+
     try:
         configs = read_configs([path])[0]
 
@@ -373,6 +375,7 @@ def validate_config(ctx: click.Context, path: Path) -> None:
                     for _ in find_rules(qualified_rule):
                         pass
                 except Exception as e:
+                    exception_raised = True
                     pprint(
                         f"Failed to parse rule `{rule}`: {e.__class__.__name__}: {e}"
                     )
@@ -388,4 +391,8 @@ def validate_config(ctx: click.Context, path: Path) -> None:
             )
 
     except Exception as e:
+        exception_raised = True
         pprint(f"Invalid config: {e.__class__.__name__}: {e}")
+
+    if exception_raised:
+        exit(-1)
