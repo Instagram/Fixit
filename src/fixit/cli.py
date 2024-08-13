@@ -375,6 +375,7 @@ def validate_config(ctx: click.Context, path: Path) -> None:
                     for _ in find_rules(qualified_rule):
                         pass
                 except Exception as e:
+                    nonlocal exception_raised
                     exception_raised = True
                     pprint(
                         f"Failed to parse rule `{rule}`: {e.__class__.__name__}: {e}"
