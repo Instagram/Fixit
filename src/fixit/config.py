@@ -592,3 +592,52 @@ def generate_config(
             config.output_template = options.output_template
 
     return config
+
+
+def validate_config(path: Path) -> List[str]:
+    """
+    Validate the config provided. The provided path is expected to be a valid toml
+    config file. Any exception found while parsing or importing will be added to a list
+    of exceptions that are returned.
+    """
+    exceptions: List[str] = []
+    try:
+        configs = read_configs([path])[0]
+
+        def validate_rules(rules: List[str], path: Path, context: str) -> None:
+            for rule in rules:
+                try:
+                    qualified_rule = parse_rule(rule, path, configs)
+                    try:
+                        for _ in find_rules(qualified_rule):
+                            pass
+                    except Exception as e:
+                        exceptions.append(
+                            f"Failed to import rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
+                        )
+                except Exception as e:
+                    exceptions.append(
+                        f"Failed to parse rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
+                    )
+
+        data = configs.data
+        validate_rules(data.get("enable", []), path, "global enable")
+        validate_rules(data.get("disable", []), path, "global disable")
+
+        for override in data.get("overrides", []):
+            override_path = Path(override.get("path", path))
+            validate_rules(
+                override.get("enable", []),
+                override_path,
+                f"override enable: `{override_path}`",
+            )
+            validate_rules(
+                override.get("disable", []),
+                override_path,
+                f"override disable: `{override_path}`",
+            )
+
+    except Exception as e:
+        exceptions.append(f"Invalid config: {e.__class__.__name__}: {e}")
+
+    return exceptions
