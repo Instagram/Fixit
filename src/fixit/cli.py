@@ -368,27 +368,40 @@ def validate_config(ctx: click.Context, path: Path) -> None:
     try:
         configs = read_configs([path])[0]
 
-        def validate_rules(rules: List[str], path: Path) -> None:
+        def validate_rules(rules: List[str], path: Path, context: str) -> None:
             for rule in rules:
                 try:
                     qualified_rule = parse_rule(rule, path, configs)
-                    for _ in find_rules(qualified_rule):
-                        pass
+                    try:
+                        for _ in find_rules(qualified_rule):
+                            pass
+                    except Exception as e:
+                        nonlocal exception_raised
+                        pprint(
+                            f"Failed to import rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
+                        )
                 except Exception as e:
                     nonlocal exception_raised
                     exception_raised = True
                     pprint(
-                        f"Failed to parse rule `{rule}`: {e.__class__.__name__}: {e}"
+                        f"Failed to parse rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
                     )
 
         data = configs.data
-        validate_rules(data.get("enable", []), path)
-        validate_rules(data.get("disable", []), path)
+        validate_rules(data.get("enable", []), path, "global enable")
+        validate_rules(data.get("disable", []), path, "global disable")
 
         for override in data.get("overrides", []):
-            validate_rules(override.get("enable", []), Path(override.get("path", path)))
+            override_path = Path(override.get("path", path))
             validate_rules(
-                override.get("disable", []), Path(override.get("path", path))
+                override.get("enable", []),
+                override_path,
+                f"override enable: `{override_path}`",
+            )
+            validate_rules(
+                override.get("disable", []),
+                override_path,
+                f"override disable: `{override_path}`",
             )
 
     except Exception as e:
