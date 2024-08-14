@@ -358,11 +358,6 @@ def validate_config(ctx: click.Context, path: Path) -> None:
     """
     validate the config(s) for the provided path(s)
     """
-    try:
-        from rich import print as pprint
-    except ImportError:
-        from pprint import pprint  # type: ignore
-
     exception_raised = False
 
     try:
@@ -377,13 +372,13 @@ def validate_config(ctx: click.Context, path: Path) -> None:
                             pass
                     except Exception as e:
                         nonlocal exception_raised
-                        pprint(
+                        print(
                             f"Failed to import rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
                         )
                 except Exception as e:
                     nonlocal exception_raised
                     exception_raised = True
-                    pprint(
+                    print(
                         f"Failed to parse rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
                     )
 
@@ -406,7 +401,7 @@ def validate_config(ctx: click.Context, path: Path) -> None:
 
     except Exception as e:
         exception_raised = True
-        pprint(f"Invalid config: {e.__class__.__name__}: {e}")
+        print(f"Invalid config: {e.__class__.__name__}: {e}")
 
     if exception_raised:
         exit(-1)
