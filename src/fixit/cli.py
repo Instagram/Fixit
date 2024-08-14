@@ -7,14 +7,14 @@ import logging
 import sys
 import unittest
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Set, Type
+from typing import Dict, Optional, Sequence, Set, Type
 
 import click
 
 from fixit import __version__
 
-from .api import fixit_paths, print_result
-from .config import collect_rules, find_rules, generate_config, parse_rule, read_configs
+from .api import fixit_paths, print_result, validate_config
+from .config import collect_rules, generate_config, parse_rule
 from .ftypes import Config, LSPOptions, Options, OutputFormat, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
@@ -351,57 +351,21 @@ def debug(ctx: click.Context, paths: Sequence[Path]) -> None:
         )
 
 
-@main.command()
+@main.command(name="validate-config")
 @click.pass_context
 @click.argument("path", nargs=1, type=click.Path(exists=True, path_type=Path))
-def validate_config(ctx: click.Context, path: Path) -> None:
+def validate_config_command(ctx: click.Context, path: Path) -> None:
     """
-    validate the config(s) for the provided path(s)
+    validate the config provided
     """
-    exception_raised = False
+    exceptions = validate_config(path)
 
     try:
-        configs = read_configs([path])[0]
+        from rich import print as pprint
+    except ImportError:
+        from pprint import pprint  # type: ignore
 
-        def validate_rules(rules: List[str], path: Path, context: str) -> None:
-            for rule in rules:
-                try:
-                    qualified_rule = parse_rule(rule, path, configs)
-                    try:
-                        for _ in find_rules(qualified_rule):
-                            pass
-                    except Exception as e:
-                        nonlocal exception_raised
-                        print(
-                            f"Failed to import rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
-                        )
-                except Exception as e:
-                    nonlocal exception_raised
-                    exception_raised = True
-                    print(
-                        f"Failed to parse rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
-                    )
-
-        data = configs.data
-        validate_rules(data.get("enable", []), path, "global enable")
-        validate_rules(data.get("disable", []), path, "global disable")
-
-        for override in data.get("overrides", []):
-            override_path = Path(override.get("path", path))
-            validate_rules(
-                override.get("enable", []),
-                override_path,
-                f"override enable: `{override_path}`",
-            )
-            validate_rules(
-                override.get("disable", []),
-                override_path,
-                f"override disable: `{override_path}`",
-            )
-
-    except Exception as e:
-        exception_raised = True
-        print(f"Invalid config: {e.__class__.__name__}: {e}")
-
-    if exception_raised:
+    if exceptions:
+        for e in exceptions:
+            pprint(e)
         exit(-1)
