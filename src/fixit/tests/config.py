@@ -676,7 +676,7 @@ class ConfigTest(TestCase):
                     """
                 )
 
-                results = config.validate_config(path)
+                results = config.validate_config(path, parse_path=Path("."))
 
                 self.assertEqual(results, [])
 
@@ -694,10 +694,14 @@ class ConfigTest(TestCase):
                     [[tool.fixit.overrides]]
                     path = "SUPER_REAL_PATH"
                     enable = [".examples.noop"]
+
+                    [[tool.fixit.overrides]]
+                    path = "SUPER_REAL_PATH/BUT_ACTUALLY_REAL"
+                    enable = [".examples.basic.custom_object"]
                     """
                 )
 
-                results = config.validate_config(path)
+                results = config.validate_config(path, parse_path=Path("."))
 
                 self.assertEqual(results, [])
 
@@ -714,7 +718,7 @@ class ConfigTest(TestCase):
                     """
                 )
 
-                results = config.validate_config(path)
+                results = config.validate_config(path, parse_path=Path("."))
 
                 self.assertEqual(
                     results,
@@ -743,7 +747,7 @@ class ConfigTest(TestCase):
                 path = tdp / "file.py"
                 path.write_text("error")
 
-                results = config.validate_config(config_path)
+                results = config.validate_config(config_path, parse_path=Path("."))
 
                 self.assertEqual(
                     results,

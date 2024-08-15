@@ -594,11 +594,13 @@ def generate_config(
     return config
 
 
-def validate_config(path: Path) -> List[str]:
+def validate_config(path: Path, parse_path: Union[Path, None] = None) -> List[str]:
     """
     Validate the config provided. The provided path is expected to be a valid toml
     config file. Any exception found while parsing or importing will be added to a list
     of exceptions that are returned.
+
+    The parse_path parameter is used only in testing for when configs are added to temporary directories
     """
     exceptions: List[str] = []
     try:
@@ -620,7 +622,8 @@ def validate_config(path: Path) -> List[str]:
                         f"Failed to parse rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
                     )
 
-        parse_path = Path(".")
+        if not parse_path:
+            parse_path = path.parent
 
         data = configs.data
         validate_rules(data.get("enable", []), parse_path, "global enable")
