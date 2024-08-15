@@ -14,7 +14,7 @@ import click
 from fixit import __version__
 
 from .api import fixit_paths, print_result
-from .config import collect_rules, generate_config, parse_rule
+from .config import collect_rules, generate_config, parse_rule, validate_config
 from .ftypes import Config, LSPOptions, Options, OutputFormat, QualifiedRule, Tags
 from .rule import LintRule
 from .testing import generate_lint_rule_test_cases
@@ -349,3 +349,23 @@ def debug(ctx: click.Context, paths: Sequence[Path]) -> None:
             "disabled:",
             sorted(f"{rule()} ({reason})" for rule, reason in disabled.items()),
         )
+
+
+@main.command(name="validate-config")
+@click.pass_context
+@click.argument("path", nargs=1, type=click.Path(exists=True, path_type=Path))
+def validate_config_command(ctx: click.Context, path: Path) -> None:
+    """
+    validate the config provided
+    """
+    exceptions = validate_config(path)
+
+    try:
+        from rich import print as pprint
+    except ImportError:
+        from pprint import pprint  # type: ignore
+
+    if exceptions:
+        for e in exceptions:
+            pprint(e)
+        exit(-1)
