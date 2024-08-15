@@ -594,7 +594,7 @@ def generate_config(
     return config
 
 
-def validate_config(path: Path, parse_path: Union[Path, None] = None) -> List[str]:
+def validate_config(path: Path, parse_path: Optional[Path] = None) -> List[str]:
     """
     Validate the config provided. The provided path is expected to be a valid toml
     config file. Any exception found while parsing or importing will be added to a list
