@@ -680,6 +680,27 @@ class ConfigTest(TestCase):
 
                 self.assertEqual(results, [])
 
+    def test_validate_config_with_override(self) -> None:
+        with self.subTest("validate-config valid with overrides"):
+            with TemporaryDirectory() as td:
+                tdp = Path(td).resolve()
+                path = tdp / ".fixit.toml"
+                path.write_text(
+                    """
+                    [tool.fixit]
+                    disable = ["fixit.rules"]
+                    root = true
+
+                    [[tool.fixit.overrides]]
+                    path = "SUPER_REAL_PATH"
+                    enable = [".examples.noop"]
+                    """
+                )
+
+                results = config.validate_config(path)
+
+                self.assertEqual(results, [])
+
         with self.subTest("validate-config invalid config"):
             with TemporaryDirectory() as td:
                 tdp = Path(td).resolve()

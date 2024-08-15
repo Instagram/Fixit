@@ -604,10 +604,10 @@ def validate_config(path: Path) -> List[str]:
     try:
         configs = read_configs([path])[0]
 
-        def validate_rules(rules: List[str], path: Path, context: str) -> None:
+        def validate_rules(rules: List[str], parse_path: Path, context: str) -> None:
             for rule in rules:
                 try:
-                    qualified_rule = parse_rule(rule, path, configs)
+                    qualified_rule = parse_rule(rule, parse_path, configs)
                     try:
                         for _ in find_rules(qualified_rule):
                             pass
@@ -620,20 +620,22 @@ def validate_config(path: Path) -> List[str]:
                         f"Failed to parse rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
                     )
 
+        parse_path = Path(".")
+
         data = configs.data
-        validate_rules(data.get("enable", []), path, "global enable")
-        validate_rules(data.get("disable", []), path, "global disable")
+        validate_rules(data.get("enable", []), parse_path, "global enable")
+        validate_rules(data.get("disable", []), parse_path, "global disable")
 
         for override in data.get("overrides", []):
             override_path = Path(override.get("path", path))
             validate_rules(
                 override.get("enable", []),
-                override_path,
+                parse_path,
                 f"override enable: `{override_path}`",
             )
             validate_rules(
                 override.get("disable", []),
-                override_path,
+                parse_path,
                 f"override disable: `{override_path}`",
             )
 
