@@ -594,22 +594,21 @@ def generate_config(
     return config
 
 
-def validate_config(path: Path, parse_path: Optional[Path] = None) -> List[str]:
+def validate_config(path: Path) -> List[str]:
     """
     Validate the config provided. The provided path is expected to be a valid toml
     config file. Any exception found while parsing or importing will be added to a list
     of exceptions that are returned.
-
-    The parse_path parameter is used only in testing for when configs are added to temporary directories
     """
     exceptions: List[str] = []
     try:
+        root = path.parent
         configs = read_configs([path])[0]
 
-        def validate_rules(rules: List[str], parse_path: Path, context: str) -> None:
+        def validate_rules(rules: List[str], context: str) -> None:
             for rule in rules:
                 try:
-                    qualified_rule = parse_rule(rule, parse_path, configs)
+                    qualified_rule = parse_rule(rule, root, configs)
                     try:
                         for _ in find_rules(qualified_rule):
                             pass
@@ -622,23 +621,18 @@ def validate_config(path: Path, parse_path: Optional[Path] = None) -> List[str]:
                         f"Failed to parse rule `{rule}` for {context}: {e.__class__.__name__}: {e}"
                     )
 
-        if not parse_path:
-            parse_path = path.parent
-
         data = configs.data
-        validate_rules(data.get("enable", []), parse_path, "global enable")
-        validate_rules(data.get("disable", []), parse_path, "global disable")
+        validate_rules(data.get("enable", []), "global enable")
+        validate_rules(data.get("disable", []), "global disable")
 
         for override in data.get("overrides", []):
             override_path = Path(override.get("path", path))
             validate_rules(
                 override.get("enable", []),
-                parse_path,
                 f"override enable: `{override_path}`",
             )
             validate_rules(
                 override.get("disable", []),
-                parse_path,
                 f"override disable: `{override_path}`",
             )
 

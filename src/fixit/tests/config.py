@@ -676,7 +676,7 @@ class ConfigTest(TestCase):
                     """
                 )
 
-                results = config.validate_config(path, parse_path=Path("."))
+                results = config.validate_config(path)
 
                 self.assertEqual(results, [])
 
@@ -685,6 +685,10 @@ class ConfigTest(TestCase):
             with TemporaryDirectory() as td:
                 tdp = Path(td).resolve()
                 path = tdp / ".fixit.toml"
+                (tdp / "rule/ruledir").mkdir(parents=True, exist_ok=True)
+
+                (tdp / "rule/rule.py").write_text("# Rule")
+                (tdp / "rule/ruledir/rule.py").write_text("# Rule")
                 path.write_text(
                     """
                     [tool.fixit]
@@ -693,15 +697,15 @@ class ConfigTest(TestCase):
 
                     [[tool.fixit.overrides]]
                     path = "SUPER_REAL_PATH"
-                    enable = [".examples.noop"]
+                    enable = [".rule.rule"]
 
                     [[tool.fixit.overrides]]
                     path = "SUPER_REAL_PATH/BUT_ACTUALLY_REAL"
-                    enable = [".examples.basic.custom_object"]
+                    enable = [".rule.ruledir.rule"]
                     """
                 )
 
-                results = config.validate_config(path, parse_path=Path("."))
+                results = config.validate_config(path)
 
                 self.assertEqual(results, [])
 
@@ -718,7 +722,7 @@ class ConfigTest(TestCase):
                     """
                 )
 
-                results = config.validate_config(path, parse_path=Path("."))
+                results = config.validate_config(path)
 
                 self.assertEqual(
                     results,
@@ -747,7 +751,7 @@ class ConfigTest(TestCase):
                 path = tdp / "file.py"
                 path.write_text("error")
 
-                results = config.validate_config(config_path, parse_path=Path("."))
+                results = config.validate_config(config_path)
 
                 self.assertEqual(
                     results,
