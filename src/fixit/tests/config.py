@@ -487,7 +487,7 @@ class ConfigTest(TestCase):
         UseTypesFromTyping.TAGS = {"typing"}
         NoNamedTuple.TAGS = {"typing", "tuples"}
 
-        def collect_types(cfg: Config) -> List[Type[LintRule]]:
+        def collect_types(cfg: Config) -> list[Type[LintRule]]:
             return sorted([type(rule) for rule in config.collect_rules(cfg)], key=str)
 
         with self.subTest("everything"):

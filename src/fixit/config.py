@@ -72,7 +72,7 @@ class CollectionError(RuntimeError):
         super().__init__(msg)
         self.rule = rule
 
-    def __reduce__(self) -> Tuple[Type[RuntimeError], Any]:
+    def __reduce__(self) -> tuple[Type[RuntimeError], Any]:
         return type(self), (*self.args, self.rule)
 
 
@@ -174,7 +174,7 @@ def find_rules(rule: QualifiedRule) -> Iterable[Type[LintRule]]:
             raise CollectionError(f"could not import rule(s) {rule}", rule) from e
 
 
-def walk_module(module: ModuleType) -> Dict[str, Type[LintRule]]:
+def walk_module(module: ModuleType) -> dict[str, Type[LintRule]]:
     """
     Given a module object, return a mapping of all rule names to classes.
 
@@ -272,7 +272,7 @@ def collect_rules(
     return materialized_rules
 
 
-def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
+def locate_configs(path: Path, root: Optional[Path] = None) -> list[Path]:
     """
     Given a file path, locate all relevant config files in priority order.
 
@@ -307,7 +307,7 @@ def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
     return results
 
 
-def read_configs(paths: List[Path]) -> List[RawConfig]:
+def read_configs(paths: List[Path]) -> list[RawConfig]:
     """
     Read config data for each path given, and return their raw toml config values.
 
@@ -400,7 +400,7 @@ def parse_rule(
 
 
 def merge_configs(
-    path: Path, raw_configs: List[RawConfig], root: Optional[Path] = None
+    path: Path, raw_configs: list[RawConfig], root: Optional[Path] = None
 ) -> Config:
     """
     Given multiple raw configs, merge them in priority order.
@@ -594,7 +594,7 @@ def generate_config(
     return config
 
 
-def validate_config(path: Path) -> List[str]:
+def validate_config(path: Path) -> list[str]:
     """
     Validate the config provided. The provided path is expected to be a valid toml
     config file. Any exception found while parsing or importing will be added to a list
