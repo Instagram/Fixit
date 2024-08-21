@@ -40,6 +40,7 @@ Built-in Rules
 - :class:`UseAssertIn`
 - :class:`UseAssertIsNotNone`
 - :class:`UseAsyncSleepInAsyncDef`
+- :class:`UseBuiltInsTypes`
 - :class:`UseClsInClassmethod`
 - :class:`UseFstring`
 - :class:`UseTypesFromTyping`
@@ -1007,6 +1008,48 @@ Built-in Rules
             from time import sleep
             async def func():
                 sleep(1)
+.. class:: UseBuiltInsTypes
+
+    Enforces the use of built-in types in type annotations in place
+    of `typing.{typing_type}` for simplicity and consistency.
+
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+    .. attribute:: PYTHON_VERSION
+        :type: '>= 3.10'
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            def function(list: list[str]) -> None:
+                pass
+        .. code:: python
+
+            def function() -> None:
+                thing: dict[str, str] = {}
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            def function(list: List[str]) -> None:
+                pass
+
+            # suggested fix
+            def function(list: list[str]) -> None:
+                pass
+
+        .. code:: python
+
+            def func() -> None:
+                thing: Dict[str, str] = {}
+
+            # suggested fix
+            def func() -> None:
+                thing: dict[str, str] = {}
+
 .. class:: UseClsInClassmethod
 
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
