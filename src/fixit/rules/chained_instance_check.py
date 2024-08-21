@@ -139,7 +139,7 @@ class CollapseIsinstanceChecks(LintRule):
 
     def collect_targets(
         self, stack: Tuple[cst.BaseExpression, ...]
-    ) -> tuple[
+    ) -> Tuple[
         List[cst.BaseExpression], Dict[cst.BaseExpression, List[cst.BaseExpression]]
     ]:
         targets: Dict[cst.BaseExpression, List[cst.BaseExpression]] = {}
