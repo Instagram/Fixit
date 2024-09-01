@@ -48,7 +48,7 @@ dev = [
     "flake8 == 7.1.0",
     "flake8-bugbear == 24.4.26",
     "mypy == 1.11.1",
-    "ufmt == 2.7.0",
+    "ufmt == 2.7.1",
     "usort == 1.0.8.post1",
 ]
 lsp = [
