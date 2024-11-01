@@ -135,7 +135,7 @@ class RewriteToLiteral(LintRule):
                             cst.ensure_type(
                                 ele.value,
                                 (
-                                    cst.Tuple  # type: ignore
+                                    cst.Tuple
                                     if isinstance(ele.value, cst.Tuple)
                                     else cst.List
                                 ),
