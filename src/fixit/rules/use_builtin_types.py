@@ -110,7 +110,7 @@ class UseBuiltinTypes(LintRule):
         )
 
         if self.annotation_counter > 0 and is_typing_type:
-            correct_type = node.value.title()
+            correct_type = node.value.title().lower()
             scope = self.get_metadata(ScopeProvider, node)
             replacement = None
             if scope is not None and correct_type in scope:
