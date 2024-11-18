@@ -144,9 +144,9 @@ class UseFstring(LintRule):
         ),
     ]
 
-    _codegen: Optional[Callable[[cst.CSTNode], str]]
+    _codegen: Callable[[cst.CSTNode], str] | None
 
-    def visit_Module(self, node: cst.Module) -> Optional[bool]:
+    def visit_Module(self, node: cst.Module) -> bool | None:
         self._codegen = node.code_for_node
         return super().visit_Module(node)
 

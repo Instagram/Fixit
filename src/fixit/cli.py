@@ -89,11 +89,11 @@ def splash(
 @click.option("--print-metrics", is_flag=True, help="Print metrics of this run")
 def main(
     ctx: click.Context,
-    debug: Optional[bool],
-    config_file: Optional[Path],
+    debug: bool | None,
+    config_file: Path | None,
     tags: str,
     rules: str,
-    output_format: Optional[OutputFormat],
+    output_format: OutputFormat | None,
     output_template: str,
     print_metrics: bool,
 ) -> None:
@@ -258,8 +258,8 @@ def fix(
 def lsp(
     ctx: click.Context,
     stdio: bool,
-    tcp: Optional[int],
-    ws: Optional[int],
+    tcp: int | None,
+    ws: int | None,
     debounce_interval: float,
 ) -> None:
     """

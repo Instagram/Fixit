@@ -222,7 +222,7 @@ class DeprecatedABCImport(LintRule):
 
     def get_import_from(
         self, node: Union[cst.SimpleStatementLine, cst.BaseCompoundStatement]
-    ) -> Optional[cst.ImportFrom]:
+    ) -> cst.ImportFrom | None:
         """
         Iterate over a Statement Sequence and return a Statement if it is a
         `cst.ImportFrom` statement.

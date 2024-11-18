@@ -73,8 +73,8 @@ class FixitDeprecatedTestCaseKeywords(LintRule):
                 self.convert_linecol_to_range(node)
 
     def convert_linecol_to_range(self, node: Call) -> None:
-        line: Optional[BaseExpression] = None
-        col: Optional[BaseExpression] = None
+        line: BaseExpression | None = None
+        col: BaseExpression | None = None
         index_to_remove = []
         for ind, arg in enumerate(node.args):
             if not arg.keyword:

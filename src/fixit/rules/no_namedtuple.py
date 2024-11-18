@@ -186,7 +186,7 @@ class NoNamedTuple(LintRule):
         self, original_bases: Sequence[cst.Arg]
     ) -> Tuple[Optional[cst.Arg], List[cst.Arg]]:
         # Returns a tuple of NamedTuple base object if it exists, and a list of non-NamedTuple bases
-        namedtuple_base: Optional[cst.Arg] = None
+        namedtuple_base: cst.Arg | None = None
         new_bases: List[cst.Arg] = []
         for base_class in original_bases:
             if QualifiedNameProvider.has_name(
