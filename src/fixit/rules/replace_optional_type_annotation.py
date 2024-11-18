@@ -15,6 +15,7 @@ class ReplaceOptionalTypeAnnotation(LintRule):
     See https://docs.python.org/3/library/stdtypes.html#types-union.
     """
 
+    PYTHON_VERSION = ">= 3.10"
     MESSAGE: str = (
         "`T | None` is preferred over `Optional[T]` or `Union[T, None]` or `Union[None, T]`. "
         + "Learn more: https://docs.python.org/3/library/stdtypes.html#types-union"
