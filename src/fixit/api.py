@@ -100,7 +100,7 @@ def fixit_bytes(
     *,
     config: Config,
     autofix: bool = False,
-    metrics_hook: MetricsHook | None = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, Optional[FileContent]]:
     """
     Lint raw bytes content representing a single path, using the given configuration.
@@ -154,8 +154,8 @@ def fixit_stdin(
     path: Path,
     *,
     autofix: bool = False,
-    options: Options | None = None,
-    metrics_hook: MetricsHook | None = None,
+    options: Optional[Options] = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Wrapper around :func:`fixit_bytes` for formatting content from STDIN.
@@ -187,8 +187,8 @@ def fixit_file(
     path: Path,
     *,
     autofix: bool = False,
-    options: Options | None = None,
-    metrics_hook: MetricsHook | None = None,
+    options: Optional[Options] = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint a single file on disk, detecting and generating appropriate configuration.
@@ -223,8 +223,8 @@ def _fixit_file_wrapper(
     path: Path,
     *,
     autofix: bool = False,
-    options: Options | None = None,
-    metrics_hook: MetricsHook | None = None,
+    options: Optional[Options] = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> List[Result]:
     """
     Wrapper because generators can't be pickled or used directly via multiprocessing
@@ -239,9 +239,9 @@ def fixit_paths(
     paths: Iterable[Path],
     *,
     autofix: bool = False,
-    options: Options | None = None,
+    options: Optional[Options] = None,
     parallel: bool = True,
-    metrics_hook: MetricsHook | None = None,
+    metrics_hook: Optional[MetricsHook] = None,
 ) -> Generator[Result, bool, None]:
     """
     Lint multiple files or directories, recursively expanding each path.

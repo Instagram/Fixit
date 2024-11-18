@@ -36,7 +36,7 @@ class capture(Generic[Yield, Send, Return]):
 
     def __init__(self, generator: Generator[Yield, Send, Return]) -> None:
         self.generator = generator
-        self._send: Send | None = None
+        self._send: Optional[Send] = None
         self._result: Union[Return, object] = Sentinel
 
     def __iter__(self) -> Generator[Yield, Send, Return]:

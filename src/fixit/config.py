@@ -62,7 +62,7 @@ log = logging.getLogger(__name__)
 
 
 class ConfigError(ValueError):
-    def __init__(self, msg: str, config: RawConfig | None = None):
+    def __init__(self, msg: str, config: Optional[RawConfig] = None):
         super().__init__(msg)
         self.config = config
 
@@ -203,7 +203,7 @@ def collect_rules(
     config: Config,
     *,
     # out-param to capture reasons when disabling rules for debugging
-    debug_reasons: Dict[Type[LintRule], str] | None = None,
+    debug_reasons: Optional[Dict[Type[LintRule], str]] = None,
 ) -> Collection[LintRule]:
     """
     Import and return rules specified by `enables` and `disables`.
@@ -272,7 +272,7 @@ def collect_rules(
     return materialized_rules
 
 
-def locate_configs(path: Path, root: Path | None = None) -> List[Path]:
+def locate_configs(path: Path, root: Optional[Path] = None) -> List[Path]:
     """
     Given a file path, locate all relevant config files in priority order.
 
@@ -335,7 +335,7 @@ def read_configs(paths: List[Path]) -> List[RawConfig]:
 
 
 def get_sequence(
-    config: RawConfig, key: str, *, data: Dict[str, Any] | None = None
+    config: RawConfig, key: str, *, data: Optional[Dict[str, Any]] = None
 ) -> Sequence[str]:
     value: Sequence[str]
     if data:
@@ -352,7 +352,7 @@ def get_sequence(
 
 
 def get_options(
-    config: RawConfig, key: str, *, data: Dict[str, Any] | None = None
+    config: RawConfig, key: str, *, data: Optional[Dict[str, Any]] = None
 ) -> RuleOptionsTable:
     if data:
         mapping = data.pop(key, {})
@@ -379,7 +379,9 @@ def get_options(
     return rule_configs
 
 
-def parse_rule(rule: str, root: Path, config: RawConfig | None = None) -> QualifiedRule:
+def parse_rule(
+    rule: str, root: Path, config: Optional[RawConfig] = None
+) -> QualifiedRule:
     """
     Given a raw rule string, parse and return a QualifiedRule object
     """
@@ -398,7 +400,7 @@ def parse_rule(rule: str, root: Path, config: RawConfig | None = None) -> Qualif
 
 
 def merge_configs(
-    path: Path, raw_configs: List[RawConfig], root: Path | None = None
+    path: Path, raw_configs: List[RawConfig], root: Optional[Path] = None
 ) -> Config:
     """
     Given multiple raw configs, merge them in priority order.
@@ -411,8 +413,8 @@ def merge_configs(
     enable_rules: Set[QualifiedRule] = {QualifiedRule("fixit.rules")}
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
-    target_python_version: Version | None = Version(platform.python_version())
-    target_formatter: str | None = None
+    target_python_version: Optional[Version] = Version(platform.python_version())
+    target_formatter: Optional[str] = None
     output_format: OutputFormat = OutputFormat.fixit
     output_template: str = ""
 
@@ -421,9 +423,9 @@ def merge_configs(
         *,
         enable: Sequence[str] = (),
         disable: Sequence[str] = (),
-        options: RuleOptionsTable | None = None,
+        options: Optional[RuleOptionsTable] = None,
         python_version: Any = None,
-        formatter: str | None = None,
+        formatter: Optional[str] = None,
     ) -> None:
         nonlocal target_python_version
         nonlocal target_formatter
@@ -554,10 +556,10 @@ def merge_configs(
 
 
 def generate_config(
-    path: Path | None = None,
-    root: Path | None = None,
+    path: Optional[Path] = None,
+    root: Optional[Path] = None,
     *,
-    options: Options | None = None,
+    options: Optional[Options] = None,
 ) -> Config:
     """
     Given a file path, walk upwards looking for and applying cascading configs

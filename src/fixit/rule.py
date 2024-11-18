@@ -114,7 +114,7 @@ class LintRule(BatchableCSTVisitor):
     def __str__(self) -> str:
         return f"{self.__class__.__module__}:{self.__class__.__name__}"
 
-    _visit_hook: VisitHook | None = None
+    _visit_hook: Optional[VisitHook] = None
 
     def node_comments(self, node: CSTNode) -> Generator[str, None, None]:
         """
@@ -125,9 +125,11 @@ class LintRule(BatchableCSTVisitor):
         while not isinstance(node, Module):
             # trailing_whitespace can either be a property of the node itself, or in
             # case of blocks, be part of the block's body element
-            tw: TrailingWhitespace | None = getattr(node, "trailing_whitespace", None)
+            tw: Optional[TrailingWhitespace] = getattr(
+                node, "trailing_whitespace", None
+            )
             if tw is None:
-                body: BaseSuite | None = getattr(node, "body", None)
+                body: Optional[BaseSuite] = getattr(node, "body", None)
                 if isinstance(body, SimpleStatementSuite):
                     tw = body.trailing_whitespace
                 elif isinstance(body, IndentedBlock):
@@ -136,20 +138,20 @@ class LintRule(BatchableCSTVisitor):
             if tw and tw.comment:
                 yield tw.comment.value
 
-            comma: Comma | None = getattr(node, "comma", None)
+            comma: Optional[Comma] = getattr(node, "comma", None)
             if isinstance(comma, Comma):
                 tw = getattr(comma.whitespace_after, "first_line", None)
                 if tw and tw.comment:
                     yield tw.comment.value
 
-            rb: RightSquareBracket | None = getattr(node, "rbracket", None)
+            rb: Optional[RightSquareBracket] = getattr(node, "rbracket", None)
             if rb is not None:
                 tw = getattr(rb.whitespace_before, "first_line", None)
                 if tw and tw.comment:
                     yield tw.comment.value
 
-            el: Sequence[EmptyLine] | None = None
-            lb: LeftSquareBracket | None = getattr(node, "lbracket", None)
+            el: Optional[Sequence[EmptyLine]] = None
+            lb: Optional[LeftSquareBracket] = getattr(node, "lbracket", None)
             if lb is not None:
                 el = getattr(lb.whitespace_after, "empty_lines", None)
                 if el is not None:
@@ -163,7 +165,7 @@ class LintRule(BatchableCSTVisitor):
                     if line.comment:
                         yield line.comment.value
 
-            ll: Sequence[EmptyLine] | None = getattr(node, "leading_lines", None)
+            ll: Optional[Sequence[EmptyLine]] = getattr(node, "leading_lines", None)
             if ll is not None:
                 for line in ll:
                     if line.comment:
@@ -217,10 +219,10 @@ class LintRule(BatchableCSTVisitor):
     def report(
         self,
         node: CSTNode,
-        message: str | None = None,
+        message: Optional[str] = None,
         *,
-        position: Union[CodePosition, CodeRange] | None = None,
-        replacement: NodeReplacement[CSTNode] | None = None,
+        position: Optional[Union[CodePosition, CodeRange]] = None,
+        replacement: Optional[NodeReplacement[CSTNode]] = None,
     ) -> None:
         """
         Report a lint rule violation.

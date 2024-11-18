@@ -114,7 +114,7 @@ class RewriteToComprehension(LintRule):
                 exp = cst.ensure_type(node.args[0].value, cst.ListComp)
                 message_formatter = UNNECESSARY_LIST_COMPREHENSION
 
-            replacement: Union[cst.Call, cst.BaseComp] | None = None
+            replacement: Optional[Union[cst.Call, cst.BaseComp]] = None
             if call_name == "list":
                 replacement = node.deep_replace(
                     node, cst.ListComp(elt=exp.elt, for_in=exp.for_in)

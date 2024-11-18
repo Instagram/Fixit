@@ -6,10 +6,10 @@
 from typing import List, Optional, Sequence, Tuple
 
 import libcst as cst
-from libcst import ensure_type, MaybeSentinel, parse_expression
-from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 from fixit import Invalid, LintRule, Valid
+from libcst import ensure_type, MaybeSentinel, parse_expression
+from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 
 class NoNamedTuple(LintRule):
@@ -186,7 +186,7 @@ class NoNamedTuple(LintRule):
         self, original_bases: Sequence[cst.Arg]
     ) -> Tuple[Optional[cst.Arg], List[cst.Arg]]:
         # Returns a tuple of NamedTuple base object if it exists, and a list of non-NamedTuple bases
-        namedtuple_base: cst.Arg | None = None
+        namedtuple_base: Optional[cst.Arg] = None
         new_bases: List[cst.Arg] = []
         for base_class in original_bases:
             if QualifiedNameProvider.has_name(

@@ -63,9 +63,9 @@ class OutputFormat(str, Enum):
 @dataclass(frozen=True)
 class Invalid:
     code: str
-    range: CodeRange | None = None
-    expected_message: str | None = None
-    expected_replacement: str | None = None
+    range: Optional[CodeRange] = None
+    expected_message: Optional[str] = None
+    expected_replacement: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -105,8 +105,8 @@ QualifiedRuleRegex = re.compile(
 
 class QualifiedRuleRegexResult(TypedDict):
     module: str
-    name: str | None
-    local: str | None
+    name: Optional[str]
+    local: Optional[str]
 
 
 def is_sequence(value: Any) -> bool:
@@ -120,9 +120,9 @@ def is_collection(value: Any) -> bool:
 @dataclass(frozen=True)
 class QualifiedRule:
     module: str
-    name: str | None = None
-    local: str | None = None
-    root: Path | None = field(default=None, hash=False, compare=False)
+    name: Optional[str] = None
+    local: Optional[str] = None
+    root: Optional[Path] = field(default=None, hash=False, compare=False)
 
     def __str__(self) -> str:
         return self.module + (f":{self.name}" if self.name else "")
@@ -139,7 +139,7 @@ class Tags(Container[str]):
     exclude: Tuple[str, ...] = ()
 
     @staticmethod
-    def parse(value: str | None) -> "Tags":
+    def parse(value: Optional[str]) -> "Tags":
         if not value:
             return Tags()
 
@@ -185,11 +185,11 @@ class Options:
     Command-line options to affect runtime behavior
     """
 
-    debug: bool | None = None
-    config_file: Path | None = None
-    tags: Tags | None = None
+    debug: Optional[bool] = None
+    config_file: Optional[Path] = None
+    tags: Optional[Tags] = None
     rules: Sequence[QualifiedRule] = ()
-    output_format: OutputFormat | None = None
+    output_format: Optional[OutputFormat] = None
     output_template: str = ""
     print_metrics: bool = False
 
@@ -200,8 +200,8 @@ class LSPOptions:
     Command-line options to affect LSP runtime behavior
     """
 
-    tcp: int | None
-    ws: int | None
+    tcp: Optional[int]
+    ws: Optional[int]
     stdio: bool = True
     debounce_interval: float = 0.5
 
@@ -226,13 +226,13 @@ class Config:
     options: RuleOptionsTable = field(default_factory=dict)
 
     # filtering criteria
-    python_version: Version | None = field(
+    python_version: Optional[Version] = field(
         default_factory=lambda: Version(platform.python_version())
     )
     tags: Tags = field(default_factory=Tags)
 
     # post-run processing
-    formatter: str | None = None
+    formatter: Optional[str] = None
 
     # output formatting options
     output_format: OutputFormat = OutputFormat.fixit
@@ -263,7 +263,7 @@ class LintViolation:
     range: CodeRange
     message: str
     node: CSTNode
-    replacement: NodeReplacement[CSTNode] | None
+    replacement: Optional[NodeReplacement[CSTNode]]
     diff: str = ""
 
     @property
@@ -281,5 +281,5 @@ class Result:
     """
 
     path: Path
-    violation: LintViolation | None
-    error: Tuple[Exception, str] | None = None
+    violation: Optional[LintViolation]
+    error: Optional[Tuple[Exception, str]] = None

@@ -6,6 +6,8 @@
 
 from typing import Optional
 
+from fixit import Invalid, LintRule, Valid
+
 from libcst import (
     Arg,
     BaseExpression,
@@ -16,8 +18,6 @@ from libcst import (
     parse_expression,
 )
 from libcst.metadata import QualifiedNameProvider
-
-from fixit import Invalid, LintRule, Valid
 
 
 class FixitDeprecatedTestCaseKeywords(LintRule):
@@ -73,8 +73,8 @@ class FixitDeprecatedTestCaseKeywords(LintRule):
                 self.convert_linecol_to_range(node)
 
     def convert_linecol_to_range(self, node: Call) -> None:
-        line: BaseExpression | None = None
-        col: BaseExpression | None = None
+        line: Optional[BaseExpression] = None
+        col: Optional[BaseExpression] = None
         index_to_remove = []
         for ind, arg in enumerate(node.args):
             if not arg.keyword:

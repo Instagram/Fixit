@@ -8,9 +8,9 @@ from typing import List, Optional, Union
 import libcst as cst
 import libcst.matchers as m
 
-from libcst.metadata import ParentNodeProvider
-
 from fixit import Invalid, LintRule, Valid
+
+from libcst.metadata import ParentNodeProvider
 
 
 # The ABCs that have been moved to `collections.abc`
@@ -222,7 +222,7 @@ class DeprecatedABCImport(LintRule):
 
     def get_import_from(
         self, node: Union[cst.SimpleStatementLine, cst.BaseCompoundStatement]
-    ) -> cst.ImportFrom | None:
+    ) -> Optional[cst.ImportFrom]:
         """
         Iterate over a Statement Sequence and return a Statement if it is a
         `cst.ImportFrom` statement.

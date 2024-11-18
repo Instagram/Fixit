@@ -115,7 +115,7 @@ class NoStaticIfCondition(LintRule):
     ]
 
     @classmethod
-    def _extract_static_bool(cls, node: cst.BaseExpression) -> bool | None:
+    def _extract_static_bool(cls, node: cst.BaseExpression) -> Optional[bool]:
         if m.matches(node, m.Call()):
             # cannot reason about function calls
             return None

@@ -65,7 +65,7 @@ class LSP:
 
     def diagnostic_generator(
         self, uri: str, autofix: bool = False
-    ) -> Generator[Result, bool, Optional[FileContent]] | None:
+    ) -> Optional[Generator[Result, bool, Optional[FileContent]]]:
         """
         LSP wrapper (provides document state from `pygls`) for `fixit_bytes`.
         """
@@ -125,7 +125,7 @@ class LSP:
     def on_did_change(self, params: DidChangeTextDocumentParams) -> None:
         self.validate(params.text_document.uri, params.text_document.version)
 
-    def format(self, params: DocumentFormattingParams) -> List[TextEdit] | None:
+    def format(self, params: DocumentFormattingParams) -> Optional[List[TextEdit]]:
         generator = self.diagnostic_generator(params.text_document.uri, autofix=True)
         if generator is None:
             return None
@@ -164,7 +164,7 @@ class Debouncer:
     def __init__(self, f: Callable[..., Any], interval: float) -> None:
         self.f = f
         self.interval = interval
-        self._timer: threading.Timer | None = None
+        self._timer: Optional[threading.Timer] = None
         self._lock = threading.Lock()
 
     def __call__(self, *args: Any, **kwargs: Any) -> None:

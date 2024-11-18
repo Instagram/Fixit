@@ -59,7 +59,7 @@ class LintRunner:
         self,
         rules: Collection[LintRule],
         config: Config,
-        metrics_hook: MetricsHook | None = None,
+        metrics_hook: Optional[MetricsHook] = None,
     ) -> Generator[LintViolation, None, int]:
         """Run multiple `LintRule`s and yield any lint violations.
 

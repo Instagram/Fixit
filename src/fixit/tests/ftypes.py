@@ -106,7 +106,7 @@ class TypesTest(TestCase):
 
     def test_tags_bool(self) -> None:
         Tags = ftypes.Tags
-        tags: str | None
+        tags: Optional[str]
 
         for tags in (
             "hello",
