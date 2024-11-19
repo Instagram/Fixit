@@ -8,9 +8,9 @@ from typing import List, Optional, Union
 import libcst as cst
 import libcst.matchers as m
 
-from fixit import Invalid, LintRule, Valid
-
 from libcst.metadata import ParentNodeProvider
+
+from fixit import Invalid, LintRule, Valid
 
 
 # The ABCs that have been moved to `collections.abc`

@@ -6,10 +6,10 @@
 from typing import List, Optional, Sequence, Tuple
 
 import libcst as cst
-
-from fixit import Invalid, LintRule, Valid
 from libcst import ensure_type, MaybeSentinel, parse_expression
 from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
+
+from fixit import Invalid, LintRule, Valid
 
 
 class NoNamedTuple(LintRule):

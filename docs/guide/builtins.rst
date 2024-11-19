@@ -728,6 +728,8 @@ Built-in Rules
     .. attribute:: AUTOFIX
         :type: Yes
 
+    .. attribute:: PYTHON_VERSION
+        :type: '>= 3.10'
 
     .. attribute:: VALID
 
