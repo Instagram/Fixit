@@ -6,9 +6,9 @@
 from typing import Set
 
 import libcst
+from libcst.metadata import QualifiedNameProvider, ScopeProvider
 
 from fixit import Invalid, LintRule, Valid
-from libcst.metadata import QualifiedNameProvider, ScopeProvider
 
 
 REPLACE_TYPING_TYPE_ANNOTATION: str = (
