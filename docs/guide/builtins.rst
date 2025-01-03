@@ -1252,6 +1252,24 @@ Built-in Rules
             def function(list: list[str]) -> None:
                 pass
 
+.. class:: VariadicCallableSyntax
+
+    Callable types with arbitrary parameters are written as `Callable[..., T]`, not `Callable[[...], T]`
+
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+    .. attribute:: VALID
+
+        .. code:: python
+            from typing import Callable
+            x: Callable[..., int]
+    .. attribute:: INVALID
+
+        .. code:: python
+            from typing import Callable
+            x: Callable[[...], int]
+
 ``fixit.rules.extra``
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1493,21 +1511,3 @@ Built-in Rules
 
             from fixit import LintRule
             class CatsRuleDogsDroolRule(LintRule): ...
-    
-.. class:: VariadicCallableSyntax
-
-    Callable types with arbitrary parameters are written as `Callable[..., T]`, not `Callable[[...], T]`
-
-    .. attribute:: AUTOFIX
-        :type: Yes
-
-    .. attribute:: VALID
-
-        .. code:: python
-            from typing import Callable
-            x: Callable[..., int]
-    .. attribute:: INVALID
-
-        .. code:: python
-            from typing import Callable
-            x: Callable[[...], int]
