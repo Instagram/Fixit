@@ -94,9 +94,9 @@ QualifiedRuleRegex = re.compile(
     ^
     (?P<module>
         (?P<local>\.)?
-        [a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*
+        [a-zA-Z0-9_]+(\.[a-zA-Z0-9_-]+)*
     )
-    (?::(?P<name>[a-zA-Z0-9_]+))?
+    (?::(?P<name>[a-zA-Z0-9_-]+))?
     $
     """,
     re.VERBOSE,
