@@ -38,6 +38,9 @@ jobs:
       - name: Typecheck
         run: |
           python -m hatch run typecheck
+      - name: Pyrefly Typecheck
+        run: |
+          python -m hatch run pyrefly_check
       - name: Docs
         if: ${{ matrix.python-version != '3.8' && matrix.python-version != '3.9' }}
         run: |

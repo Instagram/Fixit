@@ -50,6 +50,7 @@ dev = [
     "mypy == 1.13.0",
     "ufmt == 2.8.0",
     "usort == 1.0.8.post1",
+    "pyrefly == 0.7.0",
 ]
 lsp = [
     "pygls[ws] ~= 1.3.1",
@@ -107,6 +108,7 @@ features = ["dev", "lsp", "pretty"]
 [tool.hatch.envs.default.scripts]
 test = "python -m fixit.tests"
 typecheck = "mypy --install-types --non-interactive src/fixit"
+pyrefly_check = "pyrefly check -c pyproject.toml"
 
 [tool.hatch.envs.lint.scripts]
 check = [
@@ -131,6 +133,8 @@ build = [
 [tool.mypy]
 strict = true
 python_version = "3.8"
+ignore_missing_imports = true
+warn_unused_ignores = false
 
 [tool.pyrefly]
 project_includes = [
@@ -141,6 +145,6 @@ search_path = [
     "src"
 ]
 site_package_path = [
-    "venv/lib/python3.13/site-packages"
+    "venv/lib/python3.12/site-packages"
 ]
-python_version = "3.13"
+python_version = "3.12"
