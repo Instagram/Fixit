@@ -131,3 +131,16 @@ build = [
 [tool.mypy]
 strict = true
 python_version = "3.8"
+
+[tool.pyrefly]
+project_includes = [
+    # Start by adding a single file and we'll expand as we go
+    "src/fixit/util.py"
+]
+search_path = [
+    "src"
+]
+site_package_path = [
+    "venv/lib/python3.13/site-packages"
+]
+python_version = "3.13"
