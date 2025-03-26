@@ -132,3 +132,12 @@ build = [
 strict = true
 python_version = "3.8"
 ignore_missing_imports = true
+
+[tool.pyrefly]
+project_includes = [
+    # Start by adding a single file and we'll expand as we go
+    "src/fixit/util.py"
+]
+search_path = [
+    "src"
+]
