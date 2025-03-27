@@ -63,6 +63,7 @@ jobs:
           python -m pip install -U pip hatch
           python -m hatch env create
           python -m hatch env create lint
+
       - name: Set SITE_PACKAGE_PATH
         run: echo "SITE_PACKAGE_PATH=$(python -m site --user-site)" >> $GITHUB_ENV
       - name: Typecheck
