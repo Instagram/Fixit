@@ -109,9 +109,14 @@ warn_unused_ignores = false
 [tool.pyrefly]
 project_includes = [
     # Start by adding a single file and we'll expand as we go
-    "src/fixit/util.py"
+    "src/fixit"
 ]
 search_path = [
     "src"
 ]
 python_version = "3.12"
+[tool.pyrefly.errors]
+bad-argument-type = false
+missing-attribute = false
+unexpected-keyword = false
+internal-error = false

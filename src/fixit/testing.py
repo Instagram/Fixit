@@ -184,6 +184,7 @@ def generate_lint_rule_test_cases(
             test_method.__name__ = test_method_name
             test_methods_to_add[test_method_name] = test_method
 
+        # pyrefly: ignore  # no-matching-overload
         test_case_class = type(rule_name, (LintRuleTestCase,), test_methods_to_add)
         test_case_classes.append(test_case_class)
 
@@ -227,4 +228,5 @@ def add_lint_rule_tests_to_module(
         test_module = module_attrs.get("__package__")
         assert isinstance(test_module, str)
         for test_case_class in test_case_classes:
+            # pyrefly: ignore  # no-access
             test_case_class.__module__ = test_module

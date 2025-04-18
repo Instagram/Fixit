@@ -91,6 +91,7 @@ class FixitDeprecatedImport(LintRule):
         if isinstance(node.module, libcst.Name) and isinstance(node.names, Sequence):
             module = node.module.value
 
+            # pyrefly: ignore  # not-iterable
             for alias in node.names:
                 fqname = f"{module}.{alias.name.value}"
 

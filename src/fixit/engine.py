@@ -118,6 +118,7 @@ class LintRunner:
         self.metrics["Count.Total"] = count
 
         if metrics_hook:
+            # pyrefly: ignore  # not-callable
             metrics_hook(self.metrics)
 
         return count

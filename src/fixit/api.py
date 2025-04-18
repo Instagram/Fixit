@@ -172,6 +172,7 @@ def fixit_stdin(
         content: FileContent = sys.stdin.buffer.read()
         config = generate_config(path, options=options)
 
+        # pyrefly: ignore  # invalid-yield
         updated = yield from fixit_bytes(
             path, content, config=config, autofix=autofix, metrics_hook=metrics_hook
         )
@@ -207,6 +208,7 @@ def fixit_file(
         content: FileContent = path.read_bytes()
         config = generate_config(path, options=options)
 
+        # pyrefly: ignore  # invalid-yield
         updated = yield from fixit_bytes(
             path, content, config=config, autofix=autofix, metrics_hook=metrics_hook
         )

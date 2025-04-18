@@ -230,6 +230,7 @@ def collect_rules(
                 rules = set(find_rules(qualified_rule))
                 if qualified_rule.name:
                     named_enables |= rules
+                # pyrefly: ignore  # not-callable
                 all_rules |= rules
             except Exception as e:
                 log.warning(
@@ -245,6 +246,7 @@ def collect_rules(
                         if r not in named_enables
                     }
                 )
+                # pyrefly: ignore  # not-callable
                 all_rules -= set(disabled_rules)
             except Exception as e:
                 log.warning(
@@ -255,6 +257,7 @@ def collect_rules(
             disabled_rules.update(
                 {R: "tags" for R in all_rules if R.TAGS not in config.tags}  # type: ignore[comparison-overlap]
             )
+            # pyrefly: ignore  # not-callable
             all_rules -= set(disabled_rules)
 
         if config.python_version is not None:
@@ -376,6 +379,7 @@ def get_options(
                     config=config,
                 )
 
+            # pyrefly: ignore  # bad-specialization
             rule_configs[rule_name][key] = value
 
     return rule_configs
@@ -438,13 +442,16 @@ def merge_configs(
         except ValueError:  # not relative to subpath
             return
 
+        # pyrefly: ignore  # unbound-name
         config_dir = config.path.parent
         for rule in enable:
+            # pyrefly: ignore  # unbound-name
             qual_rule = parse_rule(rule, config_dir, config)
             enable_rules.add(qual_rule)
             disable_rules.discard(qual_rule)
 
         for rule in disable:
+            # pyrefly: ignore  # unbound-name
             qual_rule = parse_rule(rule, config_dir, config)
             enable_rules.discard(qual_rule)
             disable_rules.add(qual_rule)
@@ -459,6 +466,7 @@ def merge_configs(
                 except InvalidVersion:
                     raise ConfigError(
                         f"'python-version' {python_version!r} is not valid",
+                        # pyrefly: ignore  # unbound-name
                         config=config,
                     )
 
@@ -468,6 +476,7 @@ def merge_configs(
         if formatter:
             if formatter not in FORMAT_STYLES:
                 raise ConfigError(
+                    # pyrefly: ignore  # unbound-name
                     f"'formatter' {formatter!r} not supported", config=config
                 )
 
@@ -502,6 +511,7 @@ def merge_configs(
 
         if value := data.pop("output-format", ""):
             try:
+                # pyrefly: ignore  # bad-assignment
                 output_format = OutputFormat(value)
             except ValueError as e:
                 raise ConfigError(
