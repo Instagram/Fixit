@@ -7,9 +7,9 @@ from typing import Dict, Iterator, List, Set, Tuple
 
 import libcst as cst
 import libcst.matchers as m
-from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 from fixit import Invalid, LintRule, Valid
+from libcst.metadata import QualifiedName, QualifiedNameProvider, QualifiedNameSource
 
 
 _ISINSTANCE = QualifiedName(
@@ -121,6 +121,7 @@ class CollapseIsinstanceChecks(LintRule):
             if replacement is None:
                 replacement = operand
             else:
+                # pyrefly: ignore
                 replacement = cst.BooleanOperation(
                     left=replacement, right=operand, operator=cst.Or()
                 )
