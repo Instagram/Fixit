@@ -145,6 +145,8 @@ class NoRedundantArgumentsSuper(LintRule):
         # `super(Foo.InnerFoo, self)` for example.
         if len(self.current_classes) > 1:
             for class_name in self.current_classes[1:]:
+                # pyrefly: ignore  # unknown
                 matcher = m.Attribute(value=matcher, attr=m.Name(value=class_name))
 
+        # pyrefly: ignore  # bad-return
         return matcher
