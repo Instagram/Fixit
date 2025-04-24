@@ -43,6 +43,7 @@ Built-in Rules
 - :class:`UseClsInClassmethod`
 - :class:`UseFstring`
 - :class:`UseTypesFromTyping`
+- :class:`VariadicCallableSyntax`
 
 .. class:: AvoidOrInExcept
 
@@ -1156,6 +1157,45 @@ Built-in Rules
 
             def function(list: list[str]) -> None:
                 pass
+.. class:: VariadicCallableSyntax
+
+    Callable types with arbitrary parameters are written as `Callable[..., T]`, not `Callable[[...], T]`
+
+    .. attribute:: AUTOFIX
+        :type: Yes
+
+
+    .. attribute:: VALID
+
+        .. code:: python
+
+            from typing import Callable
+            x: Callable[[int], int]
+        .. code:: python
+
+            from typing import Callable
+            x: Callable[[int, int, ...], int]
+
+    .. attribute:: INVALID
+
+        .. code:: python
+
+            from typing import Callable
+            x: Callable[[...], int] = ...
+
+            # suggested fix
+            from typing import Callable
+            x: Callable[..., int] = ...
+
+        .. code:: python
+
+            import typing as t
+            x: t.Callable[[...], int] = ...
+
+            # suggested fix
+            import typing as t
+            x: t.Callable[..., int] = ...
+
 
 ``fixit.rules.extra``
 ^^^^^^^^^^^^^^^^^^^^^
