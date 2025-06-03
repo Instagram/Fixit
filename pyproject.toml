@@ -23,9 +23,9 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
-    "click >= 8.0",
+    "click >= 8.0, < 8.2",
     "libcst >= 0.3.18",
     "moreorless >= 0.4.0",
     "packaging >= 21",
