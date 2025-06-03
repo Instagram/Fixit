@@ -100,9 +100,11 @@ exclude = [
 ]
 
 [tool.hatch.envs.all]
-features = ["dev", "docs", "lsp", "pretty"]
+installer = "uv"
+features = ["dev", "lsp", "pretty"]
 
 [tool.hatch.envs.default]
+installer = "uv"
 features = ["dev", "lsp", "pretty"]
 
 [tool.hatch.envs.default.scripts]
@@ -123,7 +125,9 @@ fix = [
 ]
 
 [tool.hatch.envs.docs]
+installer = "uv"
 features = ["docs"]
+
 [tool.hatch.envs.docs.scripts]
 build = [
     "python scripts/document_rules.py",
