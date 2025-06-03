@@ -36,7 +36,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           activate-environment: true
       - name: Install
-        run: make EXTRA=dev,lsp
+        run: make EXTRAS=dev,lsp install
       - name: Test
         run: make test
   
@@ -50,7 +50,7 @@ jobs:
           python-version: "3.12"
           activate-environment: true
       - name: Install
-        run: make EXTRA=dev
+        run: make EXTRAS=dev install
       - name: Pyrefly
         run: pyrefly check -c pyproject.toml
 
@@ -64,7 +64,7 @@ jobs:
           python-version: "3.12"
           activate-environment: true
       - name: Install
-        run: make EXTRA=docs
+        run: make EXTRAS=docs install
       - name: Docs
         run: make html
       - name: Generated changes
