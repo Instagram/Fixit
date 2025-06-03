@@ -33,20 +33,15 @@ jobs:
           cache-suffix: ${{ matrix.python-version }}
           python-version: ${{ matrix.python-version }}
           activate-environment: true
-      - name: Install
-        run: |
-          python -m pip install -U pip hatch
-          python -m hatch env create
-          python -m hatch env create lint
       - name: Test
         run: |
-          python -m hatch run test
+          uv run hatch run test
       - name: Lint
         run: |
-          python -m hatch run lint:check
+          uv run hatch run lint:check
       - name: Typecheck
         run: |
-          python -m hatch run typecheck
+          uv run hatch run typecheck
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -56,12 +51,9 @@ jobs:
         with:
           python-version: "3.12"
           activate-environment: true
-      - name: Install
-        run: |
-          python -m pip install -U pip hatch
       - name: Docs
         run: |
-          python -m hatch run docs:build
+          uv run hatch run docs:build
       - name: Generated changes
         run: git diff --exit-code
   pyrefly:
@@ -77,11 +69,6 @@ jobs:
         with:
           python-version: "3.12"
           activate-environment: true
-      - name: Install
-        run: |
-          python -m pip install -U pip hatch
-          python -m hatch env create
-          python -m hatch env create lint
       - name: Typecheck
         run: |
-          python -m hatch run pyrefly_check
+          uv run hatch run pyrefly_check
