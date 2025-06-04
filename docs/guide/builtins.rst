@@ -1253,13 +1253,15 @@ Built-in Rules
                 pass
 .. class:: VariadicCallableSyntax
 
-    Callable types with arbitrary parameters are written as `Callable[..., T]`, not `Callable[[...], T]`
+    Callable types with arbitrary parameters should be written as `Callable[..., T]`
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1271,6 +1273,7 @@ Built-in Rules
             x: Callable[[int, int, ...], int]
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
