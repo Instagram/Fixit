@@ -45,6 +45,7 @@ docs = [
 dev = [
     "attribution == 1.8.0",
     "black == 24.4.2",
+    "build > 1",
     "flake8 == 7.1.0",
     "flake8-bugbear == 24.10.31",
     "mypy == 1.13.0",
@@ -97,37 +98,6 @@ exclude = [
     "/.github",
     "/examples",
     "/legacy",
-]
-
-[tool.hatch.envs.all]
-features = ["dev", "docs", "lsp", "pretty"]
-
-[tool.hatch.envs.default]
-features = ["dev", "lsp", "pretty"]
-
-[tool.hatch.envs.default.scripts]
-test = "python -m fixit.tests"
-typecheck = "mypy --install-types --non-interactive src/fixit"
-pyrefly_check = "pyrefly check -c pyproject.toml"
-
-[tool.hatch.envs.lint.scripts]
-check = [
-    "flake8 src/fixit scripts",
-    "fixit lint src/fixit scripts",
-    "ufmt check src/fixit scripts",
-    "python scripts/check_copyright.py",
-]
-fix = [
-    "fixit fix --automatic src/fixit scripts",
-    "ufmt format src/fixit scripts",
-]
-
-[tool.hatch.envs.docs]
-features = ["docs"]
-[tool.hatch.envs.docs.scripts]
-build = [
-    "python scripts/document_rules.py",
-    "sphinx-build -a -b html docs html",
 ]
 
 [tool.mypy]

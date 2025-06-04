@@ -1,36 +1,48 @@
-all: format test lint html
+SRC:=src/fixit/ scripts/
+PKG:=fixit
+EXTRAS:=dev,docs,lsp,pretty
 
-.PHONY: venv
-venv:
-	hatch env remove all
-	hatch env create all
-	ln -sf "$$(hatch env find all)" .venv
-	@echo "Run \`source .venv/bin/activate\` to activate virtualenv"
+UV:=$(shell uv --version)
+ifdef UV
+	VENV:=uv venv
+	PIP:=uv pip
+else
+	VENV:=python -m venv
+	PIP:=python -m pip
+endif
 
-.PHONY: format
-format:
-	hatch run lint:fix
+all: venv test lint html
 
-.PHONY: test
+install:
+	$(PIP) install -Ue .[$(EXTRAS)]
+
+.venv:
+	$(VENV) --prompt fixit .venv
+
+venv: .venv
+	source .venv/bin/activate && make install
+	echo 'run `source .venv/bin/activate` to activate virtualenv'
+
 test:
-	hatch run test
-	hatch run typecheck
+	python -m $(PKG).tests
+	python -m mypy -p $(PKG)
+	pyrefly check -c pyproject.toml
 
-.PHONY: lint
 lint:
-	hatch run lint:check
+	python -m flake8 $(SRC)
+	python -m fixit lint $(SRC)
+	python -m ufmt check $(SRC)
+	python scripts/check_copyright.py
 
-.PHONY: html
 html: docs/*
-	hatch run docs:build
+	python scripts/document_rules.py
+	sphinx-build -ab html docs html
 
-.PHONY: release
-release:
-	rm -rf dist/
-	hatch build
-	hatch publish
+format:
+	python -m ufmt format $(SRC)
 
-.PHONY: distclean
-distclean:
-	hatch env prune
-	rm -f .venv
+clean:
+	rm -rf .mypy_cache build dist html *.egg-info
+
+distclean: clean
+	rm -rf .venv
