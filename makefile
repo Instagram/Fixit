@@ -11,13 +11,13 @@ else
 	PIP:=python -m pip
 endif
 
-all: .venv install test lint html
+all: venv test lint html
 
 install:
 	$(PIP) install -Ue .[$(EXTRAS)]
 
 .venv:
-	$(VENV) .venv
+	$(VENV) --prompt fixit .venv
 
 venv: .venv
 	source .venv/bin/activate && make install

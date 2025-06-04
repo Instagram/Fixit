@@ -2,58 +2,60 @@
 
 ## Setup
 
-To work on Fixit, you'll need to use [Hatch](https://hatch.pypa.io/latest/).
-We recommend installing it via [pipx][], but any of
-[these alternatives will work](https://hatch.pypa.io/latest/install/).
+Fixit requires Python 3.9 or newer. We recommend using [uv][] to install Python:
 
-Fixit requires at least Python 3.8. If you do not have an appropriate version,
-or if you would like to test with newer runtimes, you can use
-[pyenv](https://github.com/pyenv/pyenv) to build and manage versions.
+```shell-session
+$ uv python install 3.13
 
+$ uv python pin 3.13
+```
+
+You can then use `make` to create a new environment and install dependencies:
+
+```shell-session
+$ make venv
+```
+
+Once created, activate the environment:
+
+```shell-session
+$ source .venv/bin/activate
+
+(fixit) $
+```
 
 ## Developing
 
-Fixit can be built and run locally using hatch:
+Once activated, Fixit can be run locally:
 
 ```shell-session
-$ hatch env run -- fixit [args]
+(fixit) $ fixit [args]
 ```
 
-You can also use the managed virtualenv:
+To run the test suite, type checker, and linters:
 
 ```shell-session
-$ hatch shell
+$ make test
 
-$ fixit [args]
-```
-
-To run the test suite, type checker, and linters individually:
-
-```shell-session
-$ hatch run test
-
-$ hatch run typecheck
-
-$ hatch run lint:check
+$ make lint
 ```
 
 To format code, sort imports, and apply automatic lint fixes:
 
 ```shell-session
-$ hatch run lint:fix
+$ make format
 ```
 
 Documentation is built using sphinx. You can generate and view the documentation
 locally in your browser:
 
 ```shell-session
-$ hatch run docs:build
+$ make html
 
 $ open html/index.html
 ```
 
-To run the full test, typecheck, lint suite, and build the docs all at once,
-you can use make:
+To run the full test, typecheck, lint suite, and build the docs all at once:
 
 ```shell-session
 $ make
@@ -87,7 +89,7 @@ $ ghstack submit
 You can ensure your changes are well formatted, and imports are sorted:
 
 ```shell-session
-$ hatch run lint:fix
+$ make format
 ```
 
 If you are using VS Code as your editor, you can use the
@@ -97,14 +99,10 @@ to easily enable formatting and import sorting while developing.
 
 ## VS Code
 
-To help VS Code find your hatch environments, and all of Fixit's dependencies,
-you can symlink the appropriate hatch environments into your local checkout:
+Make sure you've created an environment for Fixit:
 
 ```shell-session
-$ hatch env create
-...
-
-$ ln -s $(hatch env find) .venv
+$ make venv
 ```
 
 Now, the VS Code Python module should be able to find and offer the local
@@ -154,10 +152,10 @@ builds and depends on changes from the previous PR.
 Unfortunately, ghstack requires push access to the upstream repo, so this can
 only be used by project maintainers.
 
-ghstack is a Python package, and we recommend installing it using [pipx][]:
+ghstack is a Python package, and we recommend installing it using [uv][]:
 
 ```shell-session
-$ pipx install ghstack
+$ uv tool install ghstack
 ```
 
 Once installed, you can run ghstack to submit a stack of PRs from your active
@@ -180,3 +178,4 @@ $ ghstack land $PR_URL
 [gh]: https://cli.github.com/
 [ghstack]: https://github.com/ezyang/ghstack
 [pipx]: https://pypa.github.io/pipx/
+[uv]: https://docs.astral.sh/uv/
