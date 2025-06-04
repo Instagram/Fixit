@@ -12,7 +12,7 @@ from fixit import Invalid, LintRule, Valid
 
 class VariadicCallableSyntax(LintRule):
     """
-    Callable types with arbitrary parameters are written as `Callable[..., T]`, not `Callable[[...], T]`
+    Callable types with arbitrary parameters should be written as `Callable[..., T]`
     """
 
     METADATA_DEPENDENCIES = (QualifiedNameProvider,)
@@ -106,9 +106,6 @@ class VariadicCallableSyntax(LintRule):
         ),
     ]
 
-    def __init__(self) -> None:
-        super().__init__()
-
     def visit_Subscript(self, node: cst.Subscript) -> None:
         if not QualifiedNameProvider.has_name(
             self,
@@ -116,19 +113,17 @@ class VariadicCallableSyntax(LintRule):
             QualifiedName(name="typing.Callable", source=QualifiedNameSource.IMPORT),
         ):
             return
-        node_matches = len(node.slice) == 2 and m.matches(
+        if len(node.slice) == 2 and m.matches(
             node.slice[0],
             m.SubscriptElement(
                 slice=m.Index(value=m.List(elements=[m.Element(m.Ellipsis())]))
             ),
-        )
-        if not node_matches:
-            return
-        slices = list(node.slice)
-        slices[0] = cst.SubscriptElement(cst.Index(cst.Ellipsis()))
-        new_node = node.with_changes(slice=slices)
-        self.report(
-            node,
-            "Callable types with arbitrary parameters are written as `Callable[..., T]`, not `Callable[[...], T]`",
-            replacement=node.deep_replace(node, new_node),
-        )
+        ):
+            slices = list(node.slice)
+            slices[0] = cst.SubscriptElement(cst.Index(cst.Ellipsis()))
+            new_node = node.with_changes(slice=slices)
+            self.report(
+                node,
+                self.__doc__,
+                replacement=node.deep_replace(node, new_node),
+            )
