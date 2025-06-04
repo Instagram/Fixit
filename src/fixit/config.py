@@ -262,7 +262,9 @@ def collect_rules(
                 {
                     R: "python-version"
                     for R in all_rules
-                    if config.python_version not in SpecifierSet(R.PYTHON_VERSION)
+                    if R.PYTHON_VERSION
+                    and config.python_version
+                    not in SpecifierSet(R.PYTHON_VERSION, prereleases=True)
                 }
             )
             all_rules -= set(disabled_rules)
