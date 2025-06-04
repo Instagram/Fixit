@@ -539,7 +539,15 @@ class ConfigTest(TestCase):
         with self.subTest("version match"):
             rules = collect_types(
                 Config(
-                    python_version=Version("3.7"),
+                    python_version=Version("3.7.10"),
+                )
+            )
+            self.assertIn(UseTypesFromTyping, rules)
+
+        with self.subTest("version match alpha"):
+            rules = collect_types(
+                Config(
+                    python_version=Version("3.7.10a3"),
                 )
             )
             self.assertIn(UseTypesFromTyping, rules)
@@ -547,7 +555,15 @@ class ConfigTest(TestCase):
         with self.subTest("version mismatch"):
             rules = collect_types(
                 Config(
-                    python_version=Version("3.10"),
+                    python_version=Version("3.10.5"),
+                )
+            )
+            self.assertNotIn(UseTypesFromTyping, rules)
+
+        with self.subTest("version mismatch alpha"):
+            rules = collect_types(
+                Config(
+                    python_version=Version("3.10.5a4"),
                 )
             )
             self.assertNotIn(UseTypesFromTyping, rules)
