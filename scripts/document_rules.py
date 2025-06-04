@@ -43,25 +43,30 @@ Built-in Rules
 
 {% for rule in rules %}
 .. class:: {{ rule.__name__ }}
-{{ rule.__doc__.rstrip() }}
+
+{{ redent(rule.__doc__, "    ") }}
 
 {% if rule.MESSAGE %}
     .. attribute:: MESSAGE
+        :no-index:
 
 {{ redent(rule.MESSAGE, "        ") }}
 
 {% endif %}
 {% if rule.AUTOFIX %}
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 {% endif %}
 {% if rule.PYTHON_VERSION %}
     .. attribute:: PYTHON_VERSION
+        :no-index:
         :type: {{ repr(rule.PYTHON_VERSION) }}
 {% endif %}
 
     .. attribute:: VALID
+        :no-index:
 
 {% for case in rule.VALID[:2] %}
         .. code:: python
@@ -70,6 +75,7 @@ Built-in Rules
 {% endfor %}
 
     .. attribute:: INVALID
+        :no-index:
 
 {% for case in rule.INVALID[:2] %}
         .. code:: python

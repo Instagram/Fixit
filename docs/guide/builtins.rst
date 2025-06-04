@@ -102,11 +102,13 @@ Built-in Rules
         Exc2:
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Avoid using 'or' in an except block. For example:'except ValueError or TypeError' only catches 'ValueError'. Instead, use parentheses, 'except (ValueError, TypeError)'
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -116,6 +118,7 @@ Built-in Rules
                 pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -132,14 +135,17 @@ Built-in Rules
     the second argument is a tuple of all types can be used.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Multiple isinstance calls with the same target but different types can be collapsed into a single call with a tuple of types.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -149,6 +155,7 @@ Built-in Rules
             foo(x, y) or foo(x, z)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -171,14 +178,17 @@ Built-in Rules
     while ``is`` checks identity (https://docs.python.org/3/reference/expressions.html#is).
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Don't use `is` or `is not` to compare primitives, as they compare references. Use == or != instead.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -188,6 +198,7 @@ Built-in Rules
             a == '1'
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -210,14 +221,17 @@ Built-in Rules
     See Flake8 rules E711 (https://www.flake8rules.com/rules/E711.html) and E712 (https://www.flake8rules.com/rules/E712.html).
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Comparisons to singleton primitives should not be done with == or !=, as they check equality rather than identity. Use `is` or `is not` instead.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -227,6 +241,7 @@ Built-in Rules
             if not x: pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -249,16 +264,20 @@ Built-in Rules
     These ABCs are import errors starting in Python 3.10.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         ABCs must be imported from collections.abc
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
     .. attribute:: PYTHON_VERSION
+        :no-index:
         :type: '>= 3.3'
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -268,6 +287,7 @@ Built-in Rules
             from collections.abc import Container, Hashable
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -290,14 +310,17 @@ Built-in Rules
     See https://docs.python.org/3/library/unittest.html#deprecated-aliases
 
     .. attribute:: MESSAGE
+        :no-index:
 
         {deprecated} is deprecated, use {replacement} instead
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -307,6 +330,7 @@ Built-in Rules
             self.assertNotEqual(a, b)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -330,14 +354,17 @@ Built-in Rules
     calls to ``assertTrue``, ``assertFalse`` and ``assertIsNone``.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         "assertTrue" does not compare its arguments, use "assertEqual" or other appropriate functions.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -347,6 +374,7 @@ Built-in Rules
             self.assertTrue(data.is_valid(), "is_valid() method")
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -368,14 +396,17 @@ Built-in Rules
     Explicitly inheriting from ``object`` is redundant, so removing it keeps the code simpler.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Inheriting from object is a no-op.  'class Foo:' is just fine =)
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -386,6 +417,7 @@ Built-in Rules
                 pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -413,14 +445,17 @@ Built-in Rules
     ``@dataclass`` is faster at reading an object's nested properties and executing its methods. (`benchmark <https://medium.com/@jacktator/dataclass-vs-namedtuple-vs-object-for-performance-optimization-in-python-691e234253b9>`_)
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Instead of NamedTuple, consider using the @dataclass decorator from dataclasses instead for simplicity, efficiency and consistency.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -434,6 +469,7 @@ Built-in Rules
                 pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -468,14 +504,17 @@ Built-in Rules
     Remove redundant arguments when using super for readability.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Do not use arguments when calling super for the parent class. See https://www.python.org/dev/peps/pep-3135/
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -489,6 +528,7 @@ Built-in Rules
                     super(Bar, self).foo(bar)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -519,14 +559,17 @@ Built-in Rules
     Remove redundant f-string without placeholders.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         f-string doesn't have placeholders, remove redundant f-string.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -536,6 +579,7 @@ Built-in Rules
             good: str = f"with_arg{arg}"
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -558,10 +602,12 @@ Built-in Rules
     be safely replaced by that callable.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -571,6 +617,7 @@ Built-in Rules
             lambda x: foo(x, y)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -591,10 +638,12 @@ Built-in Rules
     A derivative of flake8-comprehensions's C407 rule.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -604,6 +653,7 @@ Built-in Rules
             all(val for val in iterable)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -624,11 +674,13 @@ Built-in Rules
     Discourages ``if`` conditions which evaluate to a static value (e.g. ``or True``, ``and False``, etc).
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Your if condition appears to evaluate to a static value (e.g. `or True`, `and False`). Please double check this logic and if it is actually temporary debug code.
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -640,6 +692,7 @@ Built-in Rules
                 pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -657,14 +710,17 @@ Built-in Rules
     and thus forward references no longer need to use string annotation style.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         String type hints are no longer necessary in Python, use the type identifier directly.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -681,6 +737,7 @@ Built-in Rules
                 return Class
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -722,14 +779,17 @@ Built-in Rules
     See https://docs.python.org/3/library/typing.html#typing.Optional to learn more about Optionals.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         `Optional[T]` is preferred over `Union[T, None]` or `Union[None, T]`. Learn more: https://docs.python.org/3/library/typing.html#typing.Optional
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -741,6 +801,7 @@ Built-in Rules
                 pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -767,10 +828,12 @@ Built-in Rules
     comprehension.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -780,6 +843,7 @@ Built-in Rules
             {val for val in iterable}
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -802,10 +866,12 @@ Built-in Rules
     set, or dict since there is literal syntax for these types.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -815,6 +881,7 @@ Built-in Rules
             ()
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -839,14 +906,17 @@ Built-in Rules
     Feel free to add other methods and such -- it should only affect class attributes.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         It appears you are using the @sorted-attributes directive and the class variables are unsorted. See the lint autofix suggestion.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -862,6 +932,7 @@ Built-in Rules
                 A = 'zzz123'
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -901,15 +972,18 @@ Built-in Rules
     Use ``assertIn(x, y)`` and ``assertNotIn(x, y)``) instead.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Use assertIn/assertNotIn instead of assertTrue/assertFalse for inclusion check.
         See https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertIn)
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -919,6 +993,7 @@ Built-in Rules
             self.assertIn(f(), b)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -940,15 +1015,18 @@ Built-in Rules
     Use ``assertIsNotNone(x)`` and ``assertIsNone(x)``) instead.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         "assertTrue" and "assertFalse" are deprecated. Use "assertIsNotNone" and "assertIsNone" instead.
         See https://docs.python.org/3.8/library/unittest.html#deprecated-aliases
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -958,6 +1036,7 @@ Built-in Rules
             self.assertIsNone(x)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -978,11 +1057,13 @@ Built-in Rules
     Detect if asyncio.sleep is used in an async function
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Use asyncio.sleep in async function
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -996,6 +1077,7 @@ Built-in Rules
                 sleep(1)
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1012,14 +1094,17 @@ Built-in Rules
     Enforces using ``cls`` as the first argument in a ``@classmethod``.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         When using @classmethod, the first argument must be `cls`.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1036,6 +1121,7 @@ Built-in Rules
                     pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1088,14 +1174,17 @@ Built-in Rules
         This discrepancy in the type of exception raised could potentially break the logic in the code where the exception is handled
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Do not use printf style formatting or .format(). Use f-string instead to be more readable and efficient. See https://www.python.org/dev/peps/pep-0498/
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1105,6 +1194,7 @@ Built-in Rules
             "hey"
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1123,12 +1213,15 @@ Built-in Rules
     as a valid type before Python ``3.10``.
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
     .. attribute:: PYTHON_VERSION
+        :no-index:
         :type: '< 3.10'
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1140,6 +1233,7 @@ Built-in Rules
                 thing: Dict[str, str] = {}
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1174,14 +1268,17 @@ Built-in Rules
     may unintentionally end up with mutable objects.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         When using dataclasses, explicitly specify a frozen keyword argument. Example: `@dataclass(frozen=True)` or `@dataclass(frozen=False)`. Docs: https://docs.python.org/3/library/dataclasses.html
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1194,6 +1291,7 @@ Built-in Rules
             class Cls: pass
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1233,11 +1331,13 @@ Built-in Rules
     sometimes accidentally silence warnings unexpectedly.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         noqa is deprecated. Use `lint-fixme` or `lint-ignore` instead.
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1249,6 +1349,7 @@ Built-in Rules
             'ab' 'cd'
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1274,14 +1375,17 @@ Built-in Rules
     Upgrade lint rules to replace deprecated imports with their replacements.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Fixit deprecated import {old_name}, use {new_name} instead
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1291,6 +1395,7 @@ Built-in Rules
             from fixit import Invalid
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1312,14 +1417,17 @@ Built-in Rules
     and convert the line and column values into a CodeRange.
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Fix deprecated Valid/Invalid keyword arguments
 
     .. attribute:: AUTOFIX
+        :no-index:
         :type: Yes
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1331,6 +1439,7 @@ Built-in Rules
             )
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
@@ -1355,11 +1464,13 @@ Built-in Rules
     Remove the "Rule" suffix from lint rule class names
 
     .. attribute:: MESSAGE
+        :no-index:
 
         Do not end lint rule subclasses with 'Rule'
 
 
     .. attribute:: VALID
+        :no-index:
 
         .. code:: python
 
@@ -1371,6 +1482,7 @@ Built-in Rules
             class CatsRuleDogsDrool(LintRule): ...
 
     .. attribute:: INVALID
+        :no-index:
 
         .. code:: python
 
