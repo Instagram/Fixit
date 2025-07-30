@@ -48,7 +48,7 @@ dev = [
     "build > 1",
     "flake8 == 7.3.0",
     "flake8-bugbear == 24.12.12",
-    "mypy == 1.16.0",
+    "mypy == 1.17.0",
     "ufmt == 2.8.0",
     "usort == 1.0.8.post1",
     "pyrefly == 0.26.0",
