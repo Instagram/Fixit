@@ -76,7 +76,7 @@ version_file = false
 ignored_authors = ["dependabot"]
 
 [tool.black]
-target-version = ["py38"]
+target-version = ["py39"]
 
 [tool.fixit]
 enable = ["fixit.rules"]
@@ -102,7 +102,7 @@ exclude = [
 
 [tool.mypy]
 strict = true
-python_version = "3.8"
+python_version = "3.9"
 ignore_missing_imports = true
 warn_unused_ignores = false
 
