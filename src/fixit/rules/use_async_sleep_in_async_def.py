@@ -120,6 +120,7 @@ class UseAsyncSleepInAsyncDef(LintRule):
     def visit_FunctionDef(self, node: cst.FunctionDef) -> None:
         self.async_func = node.asynchronous is not None
 
+    # pyrefly: ignore  # bad-override
     def leave_FunctionDef(self, node: cst.FunctionDef) -> None:
         self.async_func = False
 
