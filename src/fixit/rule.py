@@ -103,6 +103,7 @@ class LintRule(BatchableCSTVisitor):
 
     def __init_subclass__(cls) -> None:
         if ParentNodeProvider not in cls.METADATA_DEPENDENCIES:
+            # pyrefly: ignore  # read-only
             cls.METADATA_DEPENDENCIES = (*cls.METADATA_DEPENDENCIES, ParentNodeProvider)
 
         invalid: List[Union[str, Invalid]] = getattr(cls, "INVALID", [])
@@ -273,6 +274,7 @@ class LintRule(BatchableCSTVisitor):
                         return func(node)
                 return func(node)
 
+            # pyrefly: ignore  # bad-return
             return wrapper
 
         return {

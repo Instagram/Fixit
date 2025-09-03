@@ -75,6 +75,7 @@ def splash(
 @click.option(
     "--output-format",
     "-o",
+    # pyrefly: ignore  # bad-argument-count, no-matching-overload
     type=click.Choice([o.name for o in OutputFormat], case_sensitive=False),
     show_choices=True,
     default=None,

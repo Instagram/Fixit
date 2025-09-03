@@ -28,6 +28,7 @@ from ..util import chdir
 
 
 class ConfigTest(TestCase):
+    # pyrefly: ignore  # bad-override
     maxDiff = None
 
     def setUp(self) -> None:
@@ -456,6 +457,7 @@ class ConfigTest(TestCase):
         ):
             with self.subTest(name):
                 actual = config.generate_config(path, root, options=options)
+                # pyrefly: ignore  # no-matching-overload, no-matching-overload
                 self.assertDictEqual(asdict(expected), asdict(actual))
 
     def test_invalid_config(self) -> None:

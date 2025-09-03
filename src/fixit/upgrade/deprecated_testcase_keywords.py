@@ -63,6 +63,7 @@ class FixitDeprecatedTestCaseKeywords(LintRule):
         ),
     ]
 
+    # pyrefly: ignore  # bad-override
     def visit_Module(self, module: Module) -> None:
         self.module = module
 
