@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.2.0 - 2025-11-04
+
+New:
+
+- Add `fixit lsp` subcommands for LSP support by @llllvvuu (#390)
+- Add `fixit validate-config` command by @surge119 (#480)
+- Make format of fixit's terminal output configurable by @jvllmr (#437)
+- Allow a targeted (named rule) enable to override a module disable by @amyreese (#464)
+- Lintrule collections abc by @surge119 (#460)
+- Add fixit rule for variadic callable syntax by @yangdanny97 (#501)
+
+Fixed:
+
+- Fix Minor Typo in the Docs by @max-muoto (#407)
+- Add Logging for Timing Metrics by @surge119 (#473)
+- Update DeprecatedABCImport Rule by @surge119 (#474)
+- Add More Metrics to be Logged by LoggerHook by @surge119 (#475)
+- Improved the Handling of Errors in Rule Collection by @surge119 (#479)
+- Fix validate config by @surge119 (#481)
+- Allow dash in rule names by @zsol (#503)
+- Add basic pyrefly configuration by @maggiemoss (#505)
+- Update pyrefly configuration. by @rchen152 (#507)
+- Make 3.9 minimum supported Python by @amyreese (#510)
+- Replace hatch with make+uv, separate docs builds by @amyreese (#511)
+- Fix version specifier matching for prerelease versions by @amyreese (#515)
+- Enable testing on 3.14/3.14t by @amyreese (#516)
+- Better generated docs, add no-index by @amyreese (#517)
+
+
 ## 2.1.0 - 2023-10-25
 
 Minor feature release
