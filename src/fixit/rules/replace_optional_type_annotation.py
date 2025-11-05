@@ -93,7 +93,7 @@ class ReplaceOptionalTypeAnnotation(LintRule):
                     nones += 1
                 else:
                     indexes.append(s.slice)
-            if not (nones > 1) and len(indexes) == 1:
+            if nones <= 1 and len(indexes) == 1:
                 inner_type = cst.ensure_type(indexes[0], cst.Index).value
                 replacement = original_node.with_changes(
                     annotation=cst.BinaryOperation(
