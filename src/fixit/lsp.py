@@ -16,13 +16,14 @@ from lsprotocol.types import (
     DidOpenTextDocumentParams,
     DocumentFormattingParams,
     Position,
+    PublishDiagnosticsParams,
     Range,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_FORMATTING,
     TextEdit,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 from pygls.workspace.text_document import TextDocument
 
 from .__version__ import __version__
@@ -69,12 +70,12 @@ class LSP:
         """
         LSP wrapper (provides document state from `pygls`) for `fixit_bytes`.
         """
-        path = Uri.to_fs_path(uri)
-        if not path:
+        path_uri = Uri.to_fs_path(uri)
+        if not path_uri:
             return None
-        path = Path(path)
+        path = Path(path_uri)
 
-        doc: TextDocument = self.lsp.workspace.get_document(uri)  # type: ignore[no-untyped-call]
+        doc: TextDocument = self.lsp.workspace.get_text_document(uri)  # type: ignore[no-untyped-call]
         return fixit_bytes(
             path,
             doc.source.encode(),
@@ -107,7 +108,9 @@ class LSP:
                 source="fixit",
             )
             diagnostics.append(diagnostic)
-        self.lsp.publish_diagnostics(uri, diagnostics, version=version)
+        self.lsp.text_document_publish_diagnostics(
+            PublishDiagnosticsParams(uri, diagnostics, version)
+        )
 
     def validate(self, uri: str, version: int) -> None:
         """
@@ -137,7 +140,9 @@ class LSP:
         if not formatted_content:
             return None
 
-        doc: TextDocument = self.lsp.workspace.get_document(params.text_document.uri)  # type: ignore[no-untyped-call]
+        doc: TextDocument = self.lsp.workspace.get_text_document(
+            params.text_document.uri
+        )
         entire_range = Range(
             start=Position(line=0, character=0),
             end=Position(line=len(doc.lines) - 1, character=len(doc.lines[-1])),
