@@ -76,10 +76,10 @@ class LintRule(BatchableCSTVisitor):
     __ https://peps.python.org/pep-0440/#version-specifiers
     """
 
-    VALID: ClassVar[List[Union[str, Valid]]]
+    VALID: ClassVar[Sequence[Union[str, Valid]]]
     "Test cases that should produce no errors/reports"
 
-    INVALID: ClassVar[List[Union[str, Invalid]]]
+    INVALID: ClassVar[Sequence[Union[str, Invalid]]]
     "Test cases that are expected to produce errors, with optional replacements"
 
     AUTOFIX = False  # set by __subclass_init__
