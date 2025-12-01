@@ -51,7 +51,7 @@ dev = [
     "mypy == 1.18.2",
     "ufmt == 2.8.0",
     "usort == 1.0.8.post1",
-    "pyrefly == 0.39.4",
+    "pyrefly == 0.43.1",
 ]
 lsp = [
     "pygls[ws] ~= 2.0.0",
