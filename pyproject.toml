@@ -44,7 +44,7 @@ docs = [
 ]
 dev = [
     "attribution == 1.8.0",
-    "black == 25.9.0",
+    "black == 25.11.0",
     "build > 1",
     "flake8 == 7.3.0",
     "flake8-bugbear == 24.12.12",
