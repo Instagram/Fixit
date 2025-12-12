@@ -1474,9 +1474,9 @@ Built-in Rules
 
         .. code:: python
 
-            from fixit import InvalidTestCase
+            from fixit import Invalid
 
-            InvalidTestCase(
+            Invalid(
                 "print('hello')",
                 message="oops",
             )
@@ -1486,8 +1486,8 @@ Built-in Rules
 
         .. code:: python
 
-            from fixit import InvalidTestCase
-            InvalidTestCase(
+            from fixit import Invalid
+            Invalid(
                 "print('hello')",
                 line=3,
                 column=10,
@@ -1497,8 +1497,8 @@ Built-in Rules
             )
 
             # suggested fix
-            from fixit import InvalidTestCase
-            InvalidTestCase(
+            from fixit import Invalid
+            Invalid(
                 "print('hello')",
                 range = CodeRange(start=CodePosition(3, 10), end=CodePosition(1 + 3, 0)))
 
@@ -1535,4 +1535,3 @@ Built-in Rules
 
             from fixit import LintRule
             class CatsRuleDogsDroolRule(LintRule): ...
-    
