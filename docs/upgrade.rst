@@ -159,6 +159,8 @@ in a future release:
 
 All renames should be automatically upgraded with the ``fixit upgrade`` command.
 
+.. _v2-api-changes:
+
 Changes
 %%%%%%%
 

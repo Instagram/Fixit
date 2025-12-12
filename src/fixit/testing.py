@@ -207,7 +207,7 @@ def add_lint_rule_tests_to_module(
     If argument is omitted, will default to the `LintRuleTestCase` class from fixit.common.testing.
 
     custom_test_method_name: A member method of the class passed into `test_case_type` parameter that contains the logic around asserting success or failure of
-    LintRule's `ValidTestCase` and `InvalidTestCase` test cases. The method will be dynamically renamed to `test_<VALID/INVALID>_<test case index>` for discovery
+    LintRule's `Valid` and `Invalid` test cases. The method will be dynamically renamed to `test_<VALID/INVALID>_<test case index>` for discovery
     by unittest. If argument is omitted, `add_lint_rule_tests_to_module` will look for a test method named `_test_method` member of `test_case_type`.
 
     fixture_dir: The directory in which fixture files for the passed rules live. Necessary only if any lint rules require fixture data for testing.

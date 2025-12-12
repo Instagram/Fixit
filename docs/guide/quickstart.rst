@@ -143,7 +143,7 @@ Custom Rules
 Fixit makes it easy to write and enable new lint rules, directly in your
 existing codebase alongside the code they will be linting.
 
-Lint rules in Fixit are built on top of `LibCST <https://libcst.rtfd.io>`_ 
+Lint rules in Fixit are built on top of `LibCST <https://libcst.rtfd.io>`_
 using a :class:`~fixit.LintRule` to combine visitors and tests together
 in a single unit. A (very) simple rule looks like this:
 
@@ -151,17 +151,17 @@ in a single unit. A (very) simple rule looks like this:
 
     # teambread/rules/hollywood.py
 
-    from fixit import LintRule, InvalidTestCase, ValidTestCase
+    from fixit import LintRule, Invalid, Valid
     import libcst
 
     class HollywoodNameRule(LintRule):
         # clean code samples
         VALID = [
-            ValidTestCase('name = "Susan"'),
+            Valid('name = "Susan"'),
         ]
         # code that triggers this rule
         INVALID = [
-            InvalidTestCase('name = "Paul"'),
+            Invalid('name = "Paul"'),
         ]
 
         def visit_SimpleString(self, node: libcst.SimpleString) -> None:
