@@ -164,7 +164,7 @@ def gen_all_test_methods(rules: Collection[LintRule]) -> Sequence[TestCasePrecur
 
 def generate_lint_rule_test_cases(
     rules: Collection[LintRule],
-) -> List[Type[unittest.TestCase]]:
+) -> list[Type[unittest.TestCase]]:
     test_case_classes: List[Type[unittest.TestCase]] = []
     for test_case in gen_all_test_methods(rules):
         rule_name = type(test_case.rule).__name__
@@ -191,7 +191,7 @@ def generate_lint_rule_test_cases(
 
 
 def add_lint_rule_tests_to_module(
-    module_attrs: Dict[str, Any], rules: Collection[LintRule]
+    module_attrs: dict[str, Any], rules: Collection[LintRule]
 ) -> None:
     """
     Generates classes inheriting from `unittest.TestCase` from the data available in `rules` and adds these to module_attrs.
