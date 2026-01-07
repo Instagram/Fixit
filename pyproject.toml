@@ -48,10 +48,10 @@ dev = [
     "build > 1",
     "flake8 == 7.3.0",
     "flake8-bugbear == 24.12.12",
-    "mypy == 1.18.2",
+    "mypy == 1.19.1",
     "ufmt == 2.8.0",
     "usort == 1.0.8.post1",
-    "pyrefly == 0.39.4",
+    "pyrefly == 0.46.3",
 ]
 lsp = [
     "pygls[ws] ~= 2.0.0",
