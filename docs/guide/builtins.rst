@@ -1459,10 +1459,19 @@ Built-in Rules
     Modify lint rule test cases from Fixit 1 to remove deprecated keyword arguments
     and convert the line and column values into a CodeRange.
 
+    .. important::
+       The use of ``fixit.ValidTestCase`` and ``fixit.InvalidTestCase`` have been
+       deprecated. This rule provides upgrades only to the temporary aliases.
+
+       Use ``fixit upgrade`` to replace the aliases with :class:`fixit.Valid` and
+       :class:`fixit.Invalid`.
+
+       See the :ref:`Version 2 API Changes <v2-api-changes>` for more details.
+
     .. attribute:: MESSAGE
         :no-index:
 
-        Fix deprecated Valid/Invalid keyword arguments
+        Fix deprecated ValidTestCase/InvalidTestCase keyword arguments
 
     .. attribute:: AUTOFIX
         :no-index:
@@ -1487,6 +1496,7 @@ Built-in Rules
         .. code:: python
 
             from fixit import InvalidTestCase
+
             InvalidTestCase(
                 "print('hello')",
                 line=3,
@@ -1498,6 +1508,7 @@ Built-in Rules
 
             # suggested fix
             from fixit import InvalidTestCase
+
             InvalidTestCase(
                 "print('hello')",
                 range = CodeRange(start=CodePosition(3, 10), end=CodePosition(1 + 3, 0)))
