@@ -33,7 +33,7 @@ Built-in Rules
 - :class:`NoRedundantListComprehension`
 - :class:`NoStaticIfCondition`
 - :class:`NoStringTypeAnnotation`
-- :class:`ReplaceUnionWithOptional`
+- :class:`ReplaceOptionalTypeAnnotation`
 - :class:`RewriteToComprehension`
 - :class:`RewriteToLiteral`
 - :class:`SortedAttributes`
@@ -774,31 +774,33 @@ Built-in Rules
             async def foo() -> Class:
                 return await Class()
 
-.. class:: ReplaceUnionWithOptional
+.. class:: ReplaceOptionalTypeAnnotation
 
-    Enforces the use of ``Optional[T]`` over ``Union[T, None]`` and ``Union[None, T]``.
-    See https://docs.python.org/3/library/typing.html#typing.Optional to learn more about Optionals.
+    Enforces the use of ``T | None`` over ``Optional[T]`` and ``Union[T, None]`` and ``Union[None, T]``.
+    See https://docs.python.org/3/library/stdtypes.html#types-union.
 
     .. attribute:: MESSAGE
         :no-index:
 
-        `Optional[T]` is preferred over `Union[T, None]` or `Union[None, T]`. Learn more: https://docs.python.org/3/library/typing.html#typing.Optional
+        `T | None` is preferred over `Optional[T]` or `Union[T, None]` or `Union[None, T]`. Learn more: https://docs.python.org/3/library/stdtypes.html#types-union
 
     .. attribute:: AUTOFIX
         :no-index:
         :type: Yes
 
+    .. attribute:: PYTHON_VERSION
+        :type: '>= 3.10'
 
     .. attribute:: VALID
         :no-index:
 
         .. code:: python
 
-            def func() -> Optional[str]:
+            def func() -> str | None:
                 pass
         .. code:: python
 
-            def func() -> Optional[Dict]:
+            def func() -> Dict | None:
                 pass
 
     .. attribute:: INVALID
@@ -806,17 +808,20 @@ Built-in Rules
 
         .. code:: python
 
-            def func() -> Union[str, None]:
+            def func() -> Optional[str]:
                 pass
+
+            # suggested fix
+            def func() -> str | None:
+                pass
+
         .. code:: python
 
-            from typing import Optional
             def func() -> Union[Dict[str, int], None]:
                 pass
 
             # suggested fix
-            from typing import Optional
-            def func() -> Optional[Dict[str, int]]:
+            def func() -> Dict[str, int] | None:
                 pass
 
 .. class:: RewriteToComprehension
