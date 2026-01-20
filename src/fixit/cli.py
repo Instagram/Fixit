@@ -22,7 +22,7 @@ from .util import capture
 
 
 def splash(
-    visited: Set[Path], dirty: Set[Path], autofixes: int = 0, fixed: int = 0
+    visited: set[Path], dirty: set[Path], autofixes: int = 0, fixed: int = 0
 ) -> None:
     def f(v: int) -> str:
         return "file" if v == 1 else "files"
