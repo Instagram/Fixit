@@ -218,27 +218,44 @@ def fix(
         visited.add(result.path)
         # for STDIN, we need STDOUT to equal the fixed content, so
         # move everything else to STDERR
-        if print_result(
+        is_dirty = print_result(
             result,
             show_diff=interactive or diff,
             stderr=is_stdin,
             output_format=config.output_format,
             output_template=config.output_template,
-        ):
+        )
+        if is_dirty:
             dirty.add(result.path)
-            if autofix and result.violation and result.violation.autofixable:
-                autofixes += 1
-                fixed += 1
-        if interactive and result.violation and result.violation.autofixable:
+
+        if result.error:
+            exit_code |= 2
+            continue
+
+        violation = result.violation
+        if not violation:
+            continue
+
+        violation_fixed = False
+        if violation.autofixable:
             autofixes += 1
-            answer = click.prompt(
-                "Apply autofix?", default="y", type=click.Choice("ynq", False)
-            )
-            if answer == "y":
-                generator.respond(True)  # noqa: B038
+            if autofix:
                 fixed += 1
-            elif answer == "q":
-                break
+                violation_fixed = True
+            elif interactive:
+                answer = click.prompt(
+                    "Apply autofix?", default="y", type=click.Choice("ynq", False)
+                )
+                if answer == "y":
+                    generator.respond(True)  # noqa: B038
+                    fixed += 1
+                    violation_fixed = True
+                elif answer == "q":
+                    exit_code |= 1
+                    break
+
+        if not violation_fixed:
+            exit_code |= 1
 
     splash(visited, dirty, autofixes, fixed)
     ctx.exit(exit_code)
