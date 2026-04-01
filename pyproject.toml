@@ -54,7 +54,7 @@ dev = [
     "pyrefly == 0.54.0",
 ]
 lsp = [
-    "pygls[ws] ~= 2.0.0",
+    "pygls[ws] >= 2.0,< 2.2",
 ]
 pretty = [
     "rich >= 12.6.0",
