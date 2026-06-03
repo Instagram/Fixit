@@ -47,7 +47,7 @@ dev = [
     "black == 26.3.1",
     "build > 1",
     "flake8 == 7.3.0",
-    "flake8-bugbear == 24.12.12",
+    "flake8-bugbear == 25.11.29",
     "ufmt == 2.8.0",
     "usort == 1.0.8.post1",
     "pyrefly == 0.63.1",
