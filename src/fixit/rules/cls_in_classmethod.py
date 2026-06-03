@@ -22,7 +22,7 @@ CLS = "cls"
 
 class _RenameTransformer(cst.CSTTransformer):
     def __init__(
-        self, names: List[Union[cst.Name, cst.BaseString, cst.Attribute]], new_name: str
+        self, names: list[Union[cst.Name, cst.BaseString, cst.Attribute]], new_name: str
     ) -> None:
         self.names = names
         self.new_name = new_name

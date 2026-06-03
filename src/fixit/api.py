@@ -225,7 +225,7 @@ def _fixit_file_wrapper(
     autofix: bool = False,
     options: Optional[Options] = None,
     metrics_hook: Optional[MetricsHook] = None,
-) -> List[Result]:
+) -> list[Result]:
     """
     Wrapper because generators can't be pickled or used directly via multiprocessing
     TODO: replace this with some sort of queue or whatever

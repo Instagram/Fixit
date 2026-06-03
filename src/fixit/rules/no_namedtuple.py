@@ -184,7 +184,7 @@ class NoNamedTuple(LintRule):
 
     def partition_bases(
         self, original_bases: Sequence[cst.Arg]
-    ) -> Tuple[Optional[cst.Arg], List[cst.Arg]]:
+    ) -> tuple[Optional[cst.Arg], List[cst.Arg]]:
         # Returns a tuple of NamedTuple base object if it exists, and a list of non-NamedTuple bases
         namedtuple_base: Optional[cst.Arg] = None
         new_bases: List[cst.Arg] = []
