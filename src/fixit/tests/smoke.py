@@ -209,6 +209,53 @@ class SmokeTest(TestCase):
             self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.output)
             self.assertEqual(result.exit_code, 3)
 
+    def test_fix_exit_codes(self) -> None:
+        with self.subTest("unfixable violation"):
+            with TemporaryDirectory() as td:
+                tdp = Path(td).resolve()
+                dirty = tdp / "dirty.py"
+                dirty.write_text(
+                    "try:\n    pass\nexcept ValueError or KeyError:\n    pass\n"
+                )
+
+                result = self.runner.invoke(
+                    main, ["fix", "--automatic", dirty.as_posix()], catch_exceptions=False
+                )
+
+                self.assertIn("AvoidOrInExcept", result.output)
+                self.assertEqual(result.exit_code, 1)
+
+        with self.subTest("syntax error"):
+            with TemporaryDirectory() as td:
+                tdp = Path(td).resolve()
+                broken = tdp / "broken.py"
+                broken.write_text("print)\n")
+
+                result = self.runner.invoke(
+                    main,
+                    ["fix", "--automatic", broken.as_posix()],
+                    catch_exceptions=False,
+                )
+
+                self.assertIn("EXCEPTION: Syntax Error", result.output)
+                self.assertEqual(result.exit_code, 2)
+
+        with self.subTest("violations and errors together"):
+            with TemporaryDirectory() as td:
+                tdp = Path(td).resolve()
+                (tdp / "dirty.py").write_text(
+                    "try:\n    pass\nexcept ValueError or KeyError:\n    pass\n"
+                )
+                (tdp / "broken.py").write_text("print)\n")
+
+                result = self.runner.invoke(
+                    main, ["fix", "--automatic", td], catch_exceptions=False
+                )
+
+                self.assertIn("AvoidOrInExcept", result.output)
+                self.assertIn("EXCEPTION: Syntax Error", result.output)
+                self.assertEqual(result.exit_code, 3)
+
     def test_directory_with_autofixes(self) -> None:
         with TemporaryDirectory() as td:
             tdp = Path(td).resolve()
