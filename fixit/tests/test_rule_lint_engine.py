@@ -48,6 +48,30 @@ class ParenthesizeAttributeLintRule(CstLintRule):
 
 
 class RuleLintEngineTest(UnitTest):
+    def test_does_not_report_used_suppression(self) -> None:
+        reports = rule_lint_engine.lint_file(
+            Path("example.py"),
+            b"# lint-ignore: BadCallCstLintRule: test\nbad_call()\n",
+            config=LintConfig(),
+            rules={BadCallCstLintRule},
+            find_unused_suppressions=True,
+        )
+
+        self.assertEqual(list(reports), [])
+
+    def test_reports_unused_suppression(self) -> None:
+        reports = rule_lint_engine.lint_file(
+            Path("example.py"),
+            b"# lint-ignore: BadCallCstLintRule: test\npass\n",
+            config=LintConfig(),
+            rules={BadCallCstLintRule},
+            find_unused_suppressions=True,
+        )
+
+        self.assertEqual(
+            [report.code for report in reports], ["RemoveUnusedSuppressionsRule"]
+        )
+
     @data_provider(
         {
             "good_call": {

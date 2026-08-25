@@ -7,7 +7,7 @@ import io
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast, Collection, List, Optional, Sequence, Type
+from typing import cast, Collection, List, Optional, Sequence, Type, Union
 
 import libcst as cst
 from libcst.metadata import MetadataWrapper
@@ -32,10 +32,12 @@ def _get_tokens(source: bytes) -> Sequence[tokenize.TokenInfo]:
 
 
 def _visit_cst_rules_with_context(
-    wrapper: MetadataWrapper, rules: Collection[Type[CstLintRule]], context: CstContext
-) -> None:
+    wrapper: MetadataWrapper,
+    rules: Collection[Union[Type[CstLintRule], CstLintRule]],
+    context: CstContext,
+) -> Sequence[CstLintRule]:
     # construct the rules with the context
-    rule_instances = [r(context) for r in rules]
+    rule_instances = [r if isinstance(r, CstLintRule) else r(context) for r in rules]
     rule_instances = [r for r in rule_instances if not r.should_skip_file()]
 
     # before_visit/after_leave are used to update the context
@@ -45,10 +47,33 @@ def _visit_cst_rules_with_context(
     def after_leave(node: cst.CSTNode) -> None:
         context.node_stack.pop()
 
-    # visit the tree, dispatching to each rule as needed
-    wrapper.visit_batched(
-        rule_instances, before_visit=before_visit, after_leave=after_leave
+    dependencies_by_rule = [
+        (rule, rule.get_inherited_dependencies()) for rule in rule_instances
+    ]
+    resolved_metadata = wrapper.resolve_many(
+        {
+            dependency
+            for _, dependencies in dependencies_by_rule
+            for dependency in dependencies
+        }
     )
+    for rule, dependencies in dependencies_by_rule:
+        rule.metadata = {
+            dependency: resolved_metadata[dependency] for dependency in dependencies
+        }
+
+    try:
+        cst.visit_batched(
+            wrapper.module,
+            rule_instances,
+            before_visit=before_visit,
+            after_leave=after_leave,
+        )
+    finally:
+        for rule in rule_instances:
+            rule.metadata = {}
+
+    return rule_instances
 
 
 def lint_file(
@@ -111,9 +136,24 @@ def lint_file(
 
     if cst_wrapper is None:
         cst_wrapper = MetadataWrapper(cst.parse_module(source), unsafe_skip_copy=True)
+    unused_suppressions_rule = None
     if cst_rules:
         cst_context = CstContext(cst_wrapper, source, file_path, config)
-        _visit_cst_rules_with_context(cst_wrapper, cst_rules, cst_context)
+        rules_to_visit = cst_rules
+        if (
+            find_unused_suppressions
+            and ignore_info is not None
+            and ignore_info.suppression_comments
+        ):
+            unused_suppressions_rule = RemoveUnusedSuppressionsRule(
+                cst_context,
+                ignore_info=ignore_info,
+                rules=cst_rules,
+                defer_reports=True,
+            )
+            rules_to_visit = [*cst_rules, unused_suppressions_rule]
+
+        _visit_cst_rules_with_context(cst_wrapper, rules_to_visit, cst_context)
         reports.extend(cst_context.reports)
 
     if pseudo_rules:
@@ -125,21 +165,10 @@ def lint_file(
     if ignore_info is not None:
         # filter the accumulated errors that should be suppressed and report unused suppressions
         reports = [r for r in reports if not ignore_info.should_ignore_report(r)]
-        if find_unused_suppressions and cst_rules:
-            # We had to make sure to call ignore_info.should_ignore_report before running our
-            # RemoveUnusedSuppressionsRule because ignore_info needs to be up to date for it to work.
-            # We can construct a new context since we want a fresh set of reports to append to reports.
-            config.rule_config[RemoveUnusedSuppressionsRule.__name__] = {
-                "ignore_info": ignore_info,
-                "rules": cst_rules,
-            }
-            unused_suppressions_context = CstContext(
-                cst_wrapper, source, file_path, config
-            )
-            _visit_cst_rules_with_context(
-                cst_wrapper, [RemoveUnusedSuppressionsRule], unused_suppressions_context
-            )
-            reports.extend(unused_suppressions_context.reports)
+        if unused_suppressions_rule is not None:
+            report_count = len(cst_context.reports)
+            unused_suppressions_rule.report_unused_suppressions()
+            reports.extend(cst_context.reports[report_count:])
 
     return reports
 

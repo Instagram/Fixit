@@ -3,10 +3,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import cast, Collection, List, Sequence
+from typing import cast, Collection, List, Optional, Sequence, Tuple, Type
 
 import libcst as cst
-from libcst.metadata import ParentNodeProvider, PositionProvider
+from libcst.metadata import PositionProvider
 
 from fixit.common.base import CstContext, CstLintRule
 from fixit.common.ignores import AllRulesType, IgnoreInfo, SuppressionComment
@@ -98,25 +98,29 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
     It requires a completed reports dict in order to work properly.
     """
 
-    METADATA_DEPENDENCIES = (ParentNodeProvider,)
-
     def __init__(
         self,
         context: CstContext,
+        *,
+        ignore_info: Optional[IgnoreInfo] = None,
+        rules: Optional[Collection[Type[CstLintRule]]] = None,
+        defer_reports: bool = False,
     ) -> None:
         # TODO: Support Flake8 suppressions.
         super().__init__(context)
-        ignore_info: object = self.context.config.rule_config[self.__class__.__name__][
-            "ignore_info"
-        ]
-        rules: object = self.context.config.rule_config[self.__class__.__name__][
-            "rules"
-        ]
+        rule_config = self.context.config.rule_config.get(self.__class__.__name__, {})
+        if ignore_info is None:
+            ignore_info = cast(IgnoreInfo, rule_config["ignore_info"])
+        if rules is None:
+            rules = cast(Collection[Type[CstLintRule]], rule_config["rules"])
         assert isinstance(ignore_info, IgnoreInfo)
-        assert isinstance(rules, list)
 
         self.ignore_info: IgnoreInfo = ignore_info
         self.rule_names: Collection[str] = {r.__name__ for r in rules}
+        self.defer_reports = defer_reports
+        self.pending_suppressions: List[
+            Tuple[cst.CSTNode, str, int, SuppressionComment, int]
+        ] = []
 
     def _handle_emptyline_sequence_attribute(
         self, node: cst.CSTNode, attribute_name: str
@@ -209,6 +213,39 @@ class RemoveUnusedSuppressionsRule(CstLintRule):
             self._handle_emptyline_sequence_attribute(node, "empty_lines")
 
     def _handle_suppression_comment(
+        self,
+        parent_node: cst.CSTNode,
+        parent_attribute_name: str,
+        index: int,
+        local_supp_comment: SuppressionComment,
+        comment_physical_line: int,
+    ) -> None:
+        if self.defer_reports:
+            self.pending_suppressions.append(
+                (
+                    parent_node,
+                    parent_attribute_name,
+                    index,
+                    local_supp_comment,
+                    comment_physical_line,
+                )
+            )
+            return
+
+        self._report_unused_suppression(
+            parent_node,
+            parent_attribute_name,
+            index,
+            local_supp_comment,
+            comment_physical_line,
+        )
+
+    def report_unused_suppressions(self) -> None:
+        for pending_suppression in self.pending_suppressions:
+            self._report_unused_suppression(*pending_suppression)
+        self.pending_suppressions.clear()
+
+    def _report_unused_suppression(
         self,
         parent_node: cst.CSTNode,
         parent_attribute_name: str,
