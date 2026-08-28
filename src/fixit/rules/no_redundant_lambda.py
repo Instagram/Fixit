@@ -34,6 +34,11 @@ class NoRedundantLambda(LintRule):
         Valid("lambda x, y: foo(y=x, x=y)"),
         Valid("lambda x, y, *z: foo(x, y, z)"),
         Valid("lambda x, y, **z: foo(x, y, z)"),
+        # The callee is re-evaluated on every call of the lambda, but only once
+        # if the lambda is replaced by it. See issue #509.
+        Valid("lambda: datetime.now().isoformat()"),
+        Valid("lambda x: get_handler().handle(x)"),
+        Valid("lambda x: foo()[0](x)"),
     ]
     INVALID = [
         Invalid("lambda: self.func()", expected_replacement="self.func"),
@@ -72,6 +77,15 @@ class NoRedundantLambda(LintRule):
             ),
         ):
             call = cst.ensure_type(node.body, cst.Call)
+
+            # Unwrapping is only safe while the callee itself is evaluated on
+            # every call. If it contains a call of its own, that call would be
+            # evaluated once, at definition time, and its result frozen:
+            #   lambda: datetime.now().isoformat()  ->  datetime.now().isoformat
+            # See issue #509.
+            if m.findall(call.func, m.Call()):
+                return
+
             full_name = get_full_name_for_node(call)
             if full_name is None:
                 full_name = "function"
