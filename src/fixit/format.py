@@ -48,9 +48,16 @@ class BlackFormatter(Formatter):
         import ufmt.util
 
         mode = ufmt.util.make_black_config(path)
-        content = black.format_file_contents(
-            module.bytes.decode("utf-8"), fast=False, mode=mode
-        )
+        try:
+            content = black.format_file_contents(
+                module.bytes.decode("utf-8"), fast=False, mode=mode
+            )
+        except black.NothingChanged:
+            # black signals "this is already formatted" by raising rather than
+            # by returning the content unchanged. That is a successful no-op,
+            # and letting it propagate discards the autofix that produced this
+            # module.
+            return module.bytes
         return content.encode("utf-8")
 
 
