@@ -612,7 +612,7 @@ class ConfigTest(TestCase):
                 )
             )
 
-            runner = CliRunner(mix_stderr=False)
+            runner = CliRunner()
             content = "name = '{name}'.format(name='Jane Doe')"
             filepath = self.tdp / "f_string.py"
             filepath.write_text(content)
@@ -622,13 +622,13 @@ class ConfigTest(TestCase):
                 result = runner.invoke(
                     main, ["lint", filepath.as_posix()], catch_exceptions=False
                 )
-                self.assertRegex(result.output, output_format_regex)
+                self.assertRegex(result.stdout, output_format_regex)
 
             with self.subTest("fixing vscode"):
                 result = runner.invoke(
                     main, ["fix", filepath.as_posix()], catch_exceptions=False
                 )
-                self.assertRegex(result.output, output_format_regex)
+                self.assertRegex(result.stdout, output_format_regex)
 
             custom_output_format_regex = r".*f_string\.py|\d+|\d+ UseFstring: .+"
             custom_output_format = (
@@ -648,13 +648,13 @@ class ConfigTest(TestCase):
                 result = runner.invoke(
                     main, ["lint", filepath.as_posix()], catch_exceptions=False
                 )
-                self.assertRegex(result.output, custom_output_format_regex)
+                self.assertRegex(result.stdout, custom_output_format_regex)
 
             with self.subTest("fixing custom"):
                 result = runner.invoke(
                     main, ["fix", filepath.as_posix()], catch_exceptions=False
                 )
-                self.assertRegex(result.output, custom_output_format_regex)
+                self.assertRegex(result.stdout, custom_output_format_regex)
 
             with self.subTest("override output-format"):
                 result = runner.invoke(
@@ -662,7 +662,7 @@ class ConfigTest(TestCase):
                     ["--output-format", "vscode", "lint", filepath.as_posix()],
                     catch_exceptions=True,
                 )
-                self.assertRegex(result.output, output_format_regex)
+                self.assertRegex(result.stdout, output_format_regex)
 
             with self.subTest("override output-template"):
                 result = runner.invoke(
@@ -676,7 +676,7 @@ class ConfigTest(TestCase):
                     catch_exceptions=True,
                 )
                 self.assertRegex(
-                    result.output, r"file .*f_string\.py line \d+ rule UseFstring"
+                    result.stdout, r"file .*f_string\.py line \d+ rule UseFstring"
                 )
 
     def test_validate_config(self) -> None:

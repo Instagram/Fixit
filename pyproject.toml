@@ -25,7 +25,7 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-    "click >= 8.0, < 8.2",
+    "click >= 8.3.3, < 9",
     "libcst >= 0.3.18",
     "moreorless >= 0.4.0",
     "packaging >= 21",
@@ -48,7 +48,7 @@ dev = [
     "build > 1",
     "flake8 == 7.3.0",
     "flake8-bugbear == 24.12.12",
-    "ufmt == 2.8.0",
+    "ufmt == 2.9.1",
     "usort == 1.0.8.post1",
     "pyrefly == 0.63.1",
 ]

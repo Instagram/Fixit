@@ -47,7 +47,18 @@ def splash(
         click.secho(f"🧼 {len(visited)} {f(len(visited))} clean 🧼", err=True)
 
 
-@click.group()
+class _FixitGroup(click.Group):
+    """Keep the pre-Click 8.2 behavior for an empty command line."""
+
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            click.echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
+        return super().parse_args(ctx, args)
+
+
+@click.group(cls=_FixitGroup)
 @click.pass_context
 @click.version_option(__version__, "--version", "-V", prog_name="fixit")
 @click.option(

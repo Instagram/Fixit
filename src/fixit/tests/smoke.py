@@ -20,7 +20,22 @@ from fixit.cli import main
 
 class SmokeTest(TestCase):
     def setUp(self) -> None:
-        self.runner = CliRunner(mix_stderr=False)
+        self.runner = CliRunner()
+
+    def test_cli_without_args_shows_help(self) -> None:
+        result = self.runner.invoke(main, [])
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertRegex(result.stdout, r"^Usage: ")
+        self.assertIn("Commands:", result.stdout)
+        self.assertEqual(result.stderr, "")
+
+    def test_cli_options_without_command_fail(self) -> None:
+        result = self.runner.invoke(main, ["--debug"])
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("Error: Missing command.", result.stderr)
 
     def test_cli_version(self) -> None:
         result = self.runner.invoke(main, ["--version"])
@@ -66,10 +81,10 @@ class SmokeTest(TestCase):
                     main, ["lint", path.as_posix()], catch_exceptions=False
                 )
 
-                self.assertNotEqual(result.output, "")
+                self.assertNotEqual(result.stdout, "")
                 self.assertNotEqual(result.exit_code, 0)
                 self.assertRegex(
-                    result.output,
+                    result.stdout,
                     r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
                 )
                 self.assertEqual(content, path.read_text(), "file unexpectedly changed")
@@ -82,10 +97,10 @@ class SmokeTest(TestCase):
                     catch_exceptions=False,
                 )
 
-                self.assertNotEqual(result.output, "")
+                self.assertNotEqual(result.stdout, "")
                 self.assertEqual(result.exit_code, 0)
                 self.assertRegex(
-                    result.output,
+                    result.stdout,
                     r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
                 )
                 self.assertEqual(
@@ -102,10 +117,10 @@ class SmokeTest(TestCase):
                     catch_exceptions=False,
                 )
 
-                self.assertNotEqual(result.output, "")
+                self.assertNotEqual(result.stdout, "")
                 self.assertEqual(result.exit_code, 0)
                 self.assertRegex(
-                    result.output,
+                    result.stdout,
                     r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
                 )
                 self.assertEqual(
@@ -120,10 +135,10 @@ class SmokeTest(TestCase):
                     catch_exceptions=False,
                 )
 
-                self.assertNotEqual(result.output, "")
+                self.assertNotEqual(result.stdout, "")
                 self.assertNotEqual(result.exit_code, 0)
                 self.assertRegex(
-                    result.output,
+                    result.stdout,
                     r"file\.py@\d+:\d+ NoRedundantFString: .+ \(has autofix\)",
                 )
 
@@ -136,7 +151,7 @@ class SmokeTest(TestCase):
                 )
 
                 self.assertEqual(result.exit_code, 0)
-                self.assertEqual(expected_format, result.output, "unexpected stdout")
+                self.assertEqual(expected_format, result.stdout, "unexpected stdout")
 
             with self.subTest("LSP"):
                 path.write_text(content)
@@ -161,20 +176,20 @@ class SmokeTest(TestCase):
 
                 self.assertEqual(result.exit_code, 0)
                 self.assertRegex(
-                    result.output,
+                    result.stdout,
                     r"file\.py\".+\"range\".+\"start\".+\"end\".+\"severity\": 2, \"code\": \"NoRedundantFString\", \"source\": \"fixit\"",
                 )
 
     def test_this_file_is_clean(self) -> None:
         path = Path(__file__).resolve().as_posix()
         result = self.runner.invoke(main, ["lint", path], catch_exceptions=False)
-        self.assertEqual(result.output, "")
+        self.assertEqual(result.stdout, "")
         self.assertEqual(result.exit_code, 0)
 
     def test_this_project_is_clean(self) -> None:
         project_dir = Path(__file__).resolve().parent.parent.as_posix()
         result = self.runner.invoke(main, ["lint", project_dir], catch_exceptions=False)
-        self.assertEqual(result.output, "")
+        self.assertEqual(result.stdout, "")
         self.assertEqual(result.exit_code, 0)
 
     def test_directory_with_violations(self) -> None:
@@ -184,7 +199,7 @@ class SmokeTest(TestCase):
             (tdp / "dirty.py").write_text("name = 'Kirby'\nprint('hello %s' % name)\n")
 
             result = self.runner.invoke(main, ["lint", td])
-            self.assertIn("dirty.py@2:6 UseFstring:", result.output)
+            self.assertIn("dirty.py@2:6 UseFstring:", result.stdout)
             self.assertEqual(result.exit_code, 1)
 
     def test_directory_with_errors(self) -> None:
@@ -194,7 +209,7 @@ class SmokeTest(TestCase):
             (tdp / "broken.py").write_text("print)\n")
 
             result = self.runner.invoke(main, ["lint", td])
-            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.output)
+            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.stdout)
             self.assertEqual(result.exit_code, 2)
 
     def test_directory_with_violations_and_errors(self) -> None:
@@ -205,8 +220,8 @@ class SmokeTest(TestCase):
             (tdp / "broken.py").write_text("print)\n")
 
             result = self.runner.invoke(main, ["lint", td])
-            self.assertIn("dirty.py@2:6 UseFstring:", result.output)
-            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.output)
+            self.assertIn("dirty.py@2:6 UseFstring:", result.stdout)
+            self.assertIn("broken.py: EXCEPTION: Syntax Error @ 1:", result.stdout)
             self.assertEqual(result.exit_code, 3)
 
     def test_directory_with_autofixes(self) -> None:
@@ -256,7 +271,7 @@ class SmokeTest(TestCase):
 
             result = self.runner.invoke(main, ["fix", "--automatic", td])
             errors = defaultdict(list)
-            for line in result.output.splitlines():
+            for line in result.stdout.splitlines():
                 fn, _, error = line.partition("@")
                 short, _, _ = error.partition(": ")
                 errors[Path(fn)].append(short)
@@ -311,7 +326,7 @@ class SmokeTest(TestCase):
                     catch_exceptions=False,
                 )
 
-                self.assertEqual(result.output, "")
+                self.assertEqual(result.stdout, "")
                 self.assertEqual(result.exit_code, 0)
 
         with self.subTest("fix"):
@@ -330,5 +345,5 @@ class SmokeTest(TestCase):
                     catch_exceptions=False,
                 )
 
-                self.assertEqual(result.output, "")
+                self.assertEqual(result.stdout, "")
                 self.assertEqual(result.exit_code, 0)
