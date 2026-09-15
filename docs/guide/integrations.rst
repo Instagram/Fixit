@@ -8,12 +8,33 @@ Integrations
 IDE
 ^^^
 
-Fixit can be used to lint as you type as well as to format files.
+Fixit can be used to lint as you type, to format files, and to apply or silence
+individual lint errors from your editor's code action menu.
 
 To get this functionality, install the ``lsp`` extras (e.g.
 ``pip install "fixit[lsp]"``) then set up an LSP client to launch and connect to
 the Fixit LSP server. See the :ref:`lsp command <lsp_command>` for command
 usage details.
+
+.. _code_actions:
+
+Code actions
+%%%%%%%%%%%%
+
+Placing the cursor on a lint error and opening your editor's code action menu
+(the "light bulb" in VSCode, ``vim.lsp.buf.code_action()`` in Neovim) offers
+a quickfix for every Fixit error under the cursor or selection:
+
+- **Fix <RuleName>** applies that rule's autofix, and only that one, leaving
+  every other error in the file alone. Offered only for errors that have an
+  autofix.
+
+- **Silence <RuleName> with # lint-fixme** and **Silence <RuleName> with
+  # lint-ignore** insert a :ref:`suppression comment <suppressions>` above the
+  statement that triggered the error, indented to match it.
+
+To apply every available autofix in a file at once, format the document
+(``textDocument/formatting``) instead.
 
 Examples of client setup:
 
