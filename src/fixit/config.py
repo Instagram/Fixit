@@ -62,7 +62,7 @@ log = logging.getLogger(__name__)
 
 
 class ConfigError(ValueError):
-    def __init__(self, msg: str, config: Optional[RawConfig] = None):
+    def __init__(self, msg: str, config: Optional[Config | RawConfig] = None):
         super().__init__(msg)
         self.config = config
 
@@ -250,6 +250,12 @@ def collect_rules(
                 log.warning(
                     f"Failed to load rules '{qualified_rule.module}': {e.__class__.__name__}: {e}"
                 )
+
+        if (formatter := config.formatter) and formatter not in FORMAT_STYLES:
+            raise ConfigError(
+                f"'formatter' {formatter!r} not supported", config=config
+            )
+
 
         if config.tags:
             disabled_rules.update(
@@ -466,11 +472,6 @@ def merge_configs(
                 target_python_version = None
 
         if formatter:
-            if formatter not in FORMAT_STYLES:
-                raise ConfigError(
-                    f"'formatter' {formatter!r} not supported", config=config
-                )
-
             target_formatter = formatter
 
     for config in reversed(raw_configs):

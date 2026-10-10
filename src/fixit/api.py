@@ -14,7 +14,7 @@ import click
 import trailrunner
 from moreorless.click import echo_color_precomputed_diff
 
-from .config import collect_rules, generate_config
+from .config import ConfigError, collect_rules, generate_config
 from .engine import LintRunner
 from .format import format_module
 from .ftypes import (
@@ -142,6 +142,9 @@ def fixit_bytes(
             updated = runner.apply_replacements(pending_fixes)
             return format_module(updated, path, config)
 
+    except ConfigError:
+        raise
+
     except Exception as error:
         # TODO: this is not the right place to catch errors
         LOG.debug("Exception while linting", exc_info=error)
@@ -178,6 +181,9 @@ def fixit_stdin(
         if autofix:
             sys.stdout.buffer.write(updated or content)
 
+    except ConfigError:
+        raise
+
     except Exception as error:
         LOG.debug("Exception while fixit_stdin", exc_info=error)
         yield Result(path, violation=None, error=(error, traceback.format_exc()))
@@ -213,6 +219,9 @@ def fixit_file(
         if updated and updated != content:
             LOG.info(f"{path}: writing changes to file")
             path.write_bytes(updated)
+
+    except ConfigError:
+        raise
 
     except Exception as error:
         LOG.debug("Exception while fixit_file", exc_info=error)
