@@ -10,7 +10,6 @@ import pkgutil
 import platform
 import sys
 from contextlib import contextmanager, ExitStack
-
 from pathlib import Path
 from types import ModuleType
 from typing import (
@@ -35,6 +34,7 @@ from packaging.version import InvalidVersion, Version
 from .format import FORMAT_STYLES
 from .ftypes import (
     Config,
+    current_python_version,
     is_collection,
     is_sequence,
     Options,
@@ -415,7 +415,7 @@ def merge_configs(
     enable_rules: Set[QualifiedRule] = {QualifiedRule("fixit.rules")}
     disable_rules: Set[QualifiedRule] = set()
     rule_options: RuleOptionsTable = {}
-    target_python_version: Optional[Version] = Version(platform.python_version())
+    target_python_version: Optional[Version] = current_python_version()
     target_formatter: Optional[str] = None
     output_format: OutputFormat = OutputFormat.fixit
     output_template: str = ""
