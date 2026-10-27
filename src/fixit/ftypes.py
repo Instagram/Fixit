@@ -206,6 +206,16 @@ class LSPOptions:
     debounce_interval: float = 0.5
 
 
+def current_python_version() -> Version:
+    """
+    Return the running Python version as a packaging Version object.
+
+    Strips any trailing '+' from VCS checkout builds (e.g. '3.13.15+')
+    to ensure compatibility with PEP 440 version parsing.
+    """
+    return Version(platform.python_version().rstrip("+"))
+
+
 @dataclass
 class Config:
     """
@@ -226,9 +236,7 @@ class Config:
     options: RuleOptionsTable = field(default_factory=dict)
 
     # filtering criteria
-    python_version: Optional[Version] = field(
-        default_factory=lambda: Version(platform.python_version())
-    )
+    python_version: Optional[Version] = field(default_factory=current_python_version)
     tags: Tags = field(default_factory=Tags)
 
     # post-run processing

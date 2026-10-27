@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 from typing import List, Sequence, Tuple, Type
 from unittest import TestCase
+from unittest.mock import patch
 
 from click.testing import CliRunner
 
@@ -350,6 +351,17 @@ class ConfigTest(TestCase):
             with self.subTest(name):
                 actual = config.merge_configs(target, raw_configs)
                 self.assertEqual(expected, actual)
+
+    def test_merge_configs_vcs_python_version(self) -> None:
+        target = self.tdp / "foo.py"
+        with patch("platform.python_version", return_value="3.13.15+"):
+            cfg = config.merge_configs(target, [])
+            self.assertEqual(cfg.python_version, Version("3.13.15"))
+
+    def test_config_default_vcs_python_version(self) -> None:
+        with patch("platform.python_version", return_value="3.13.15+"):
+            cfg = Config()
+            self.assertEqual(cfg.python_version, Version("3.13.15"))
 
     def test_generate_config(self) -> None:
         for name, path, root, options, expected in (
